@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 07 课 状态机:三段式写法</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="07" data-root="../">
+
+<aside class="side">
+  <a class="brand" href="../index.html">Verilog 十二课<span>FPGA RTL 实训</span></a>
+  <ol></ol>
+  <div class="foot">
+    <button class="themer" type="button">主题</button>
+    <p>iverilog + GTKWave<br>Vivado / Quartus 可选</p>
+  </div>
+</aside>
+
+<main>
+<div class="ruler"></div>
+
+<p class="eyebrow">Lesson 07 <em>／ 有限状态机</em></p>
+<h1>状态机:三段式写法</h1>
+<p class="lede">凡是“要分几步做完、每步的动作取决于现在走到哪一步”的电路,都是状态机。协议解析、总线时序、启动流程,全部如此。三段式写法是工业界的默认答案 —— 把它写成肌肉记忆,以后所有时序逻辑都有地方放。</p>
+
+<dl class="goals">
+  <dt>学完这一课你能</dt>
+  <dd>画出状态转移图,并一对一地翻译成三段式代码</dd>
+  <dd>说清三段各自负责什么,以及为什么第二段第一行要写默认值</dd>
+  <dd>在二进制、独热、格雷三种状态编码之间做出选择</dd>
+  <dd>写出带计时器的状态机(交通灯),并保证输出永远处于安全状态</dd>
+</dl>
+
+<nav class="toc"><h2>本课路线</h2><ol></ol></nav>
+
+<h2 id="s1">先画图,再写代码</h2>
+<p>状态机的难点不在语法,在于<strong>把需求想清楚</strong>。顺序永远是:列出状态 → 画转移图 → 逐条翻译成 <code>case</code>。跳过画图直接写代码,通常会漏掉某个转移条件,而漏掉的那一条恰恰是最难在仿真里撞上的。</p>
+<p>下面这个例子:在一串比特流里找出 <code>1101</code>,允许重叠(<code>1101101</code> 算两次)。状态的含义就是“<em>目前已经攒到了多长的有效前缀</em>”。</p>
+
+<figure class="dia">
+<svg viewBox="0 0 640 290" role="img" aria-label="1101 序列检测器的状态转移图:S0 到 S4 五个状态,每个状态代表已收到的有效前缀,S4 是命中状态;收到 0 时 S1、S3、S4 都退回 S0,S2 收到 0 前进到 S3,S2 收到 1 停在原地">
+  <defs>
+    <marker id="ar-7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon class="d-mk" points="0,1 10,5 0,9"/>
+    </marker>
+  </defs>
+
+  <text class="d-sub" x="6" y="100" text-anchor="start">复位</text>
+  <line class="d-arw" x1="6" y1="110" x2="31" y2="110" marker-end="url(#ar-7)"/>
+
+  <circle class="d-box" cx="60"  cy="110" r="26"/>
+  <text class="d-txt" x="60"  y="106">S0</text>
+  <text class="d-sub" x="60"  y="122">—</text>
+
+  <circle class="d-box" cx="190" cy="110" r="26"/>
+  <text class="d-txt" x="190" y="106">S1</text>
+  <text class="d-sub" x="190" y="122">1</text>
+
+  <circle class="d-box" cx="320" cy="110" r="26"/>
+  <text class="d-txt" x="320" y="106">S2</text>
+  <text class="d-sub" x="320" y="122">11</text>
+
+  <circle class="d-box" cx="450" cy="110" r="26"/>
+  <text class="d-txt" x="450" y="106">S3</text>
+  <text class="d-sub" x="450" y="122">110</text>
+
+  <circle class="d-box-hl" cx="580" cy="110" r="26"/>
+  <circle class="d-arw" cx="580" cy="110" r="31"/>
+  <text class="d-txt" x="580" y="106">S4</text>
+  <text class="d-sub" x="580" y="122">1101</text>
+  <text class="d-edge-hl" x="580" y="62" text-anchor="middle">found = 1</text>
+
+  <line class="d-arw" x1="86"  y1="110" x2="162" y2="110" marker-end="url(#ar-7)"/>
+  <text class="d-edge" x="124" y="102" text-anchor="middle">1</text>
+  <line class="d-arw" x1="216" y1="110" x2="292" y2="110" marker-end="url(#ar-7)"/>
+  <text class="d-edge" x="254" y="102" text-anchor="middle">1</text>
+  <line class="d-arw" x1="346" y1="110" x2="422" y2="110" marker-end="url(#ar-7)"/>
+  <text class="d-edge" x="384" y="102" text-anchor="middle">0</text>
+  <line class="d-arw" x1="476" y1="110" x2="548" y2="110" marker-end="url(#ar-7)"/>
+  <text class="d-edge" x="512" y="102" text-anchor="middle">1</text>
+
+  <path class="d-arw" d="M 46,90 C 26,48 94,48 74,90" marker-end="url(#ar-7)"/>
+  <text class="d-edge" x="60" y="52" text-anchor="middle">0</text>
+  <path class="d-arw" d="M 306,90 C 286,48 354,48 334,90" marker-end="url(#ar-7)"/>
+  <text class="d-edge" x="320" y="52" text-anchor="middle">1</text>
+
+  <path class="d-arw-hl" d="M 578,84 Q 458,14 342,86" marker-end="url(#ar-7)"/>
+  <text class="d-edge-hl" x="454" y="26" text-anchor="middle">1 —— 末位的 1 可以复用</text>
+
+  <path class="d-arw" d="M 174,132 Q 125,178 78,133" marker-end="url(#ar-7)"/>
+  <text class="d-edge" x="125" y="174" text-anchor="middle">0</text>
+  <path class="d-arw" d="M 436,134 Q 250,222 70,136" marker-end="url(#ar-7)"/>
+  <text class="d-edge" x="250" y="214" text-anchor="middle">0</text>
+  <path class="d-arw" d="M 566,136 Q 320,270 64,138" marker-end="url(#ar-7)"/>
+  <text class="d-edge" x="320" y="262" text-anchor="middle">0</text>
+</svg>
+<figcaption><b>圈里的第二行就是这个状态的全部含义。</b>三条往回的长弧是“<code>0</code> 把已攒的前缀打断了,重新开始”。两个自环是原地不动:<code>S0</code> 收到 <code>0</code> 本来就没前缀,<code>S2</code> 收到 <code>1</code> 后末两位仍是 <code>11</code>。最关键的是 <code>S4</code> 回到 <code>S2</code> 那条弧 —— 命中之后末位那个 <code>1</code> 还能当下一次的开头,这就是“允许重叠”。</figcaption>
+</figure>
+
+<h2 id="s2">三段式:每段只干一件事</h2>
+<div class="tw">
+<table>
+  <caption>三段的分工</caption>
+  <thead><tr><th>段</th><th>写法</th><th>负责</th></tr></thead>
+  <tbody>
+    <tr><td>第一段</td><td><code>always @(posedge clk)</code> + <code>&lt;=</code></td><td>只有一句 <code>state &lt;= next_state;</code> 加复位</td></tr>
+    <tr><td>第二段</td><td><code>always @(*)</code> + <code>=</code></td><td>算 <code>next_state</code>。<strong>纯组合,不带任何寄存器</strong></td></tr>
+    <tr><td>第三段</td><td>组合或时序,看需要</td><td>算输出。Moore 只看 <code>state</code>,Mealy 还看输入</td></tr>
+  </tbody>
+</table>
+</div>
+<p>为什么非要分开?因为<strong>分开之后每一段都不可能写错</strong>:第一段是模板,第二段是转移图的逐条翻译,第三段是输出表。混在一个 <code>always</code> 里写(所谓一段式),状态更新和输出更新会互相干扰,改需求时极易漏改。</p>
+<div class="box pit">
+  <b>第二段的第一行是全课最重要的一行</b>
+  <pre>always @(*) begin
+    next_state = state;      // ← 这一行
+    case (state)
+        …
+    endcase
+end</pre>
+  <p>它保证<strong>任何路径下 <code>next_state</code> 都有值</strong>,于是这个组合块不会退化成锁存器(第 05 课)。同时它表达了正确的语义:“没写明要跳走的,就留在原地”。有了它,<code>case</code> 里只需要写<em>真正要跳转</em>的分支,代码短一半。</p>
+</div>
+
+<figure class="file">
+  <figcaption><span class="path">code/lesson07/seq_det.v</span><span class="note">可综合 · 上面那张图的逐条翻译</span></figcaption>
+  <div class="body"><pre><code>module seq_det (
+    input  wire clk,
+    input  wire rst_n,
+    input  wire din,           // 串行输入,一个时钟一位
+    output reg  found          // 检测到 1101,拉高一个时钟周期
+);
+
+    // 状态含义就是“目前已经收到的有效前缀”
+    localparam S0 = 3'd0,      // 没有有用的前缀
+               S1 = 3'd1,      // 已收到 1
+               S2 = 3'd2,      // 已收到 11
+               S3 = 3'd3,      // 已收到 110
+               S4 = 3'd4;      // 已收到 1101 —— 命中
+
+    reg [2:0] state, next_state;
+
+    // ---------- 第一段:状态寄存 ----------
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) state &lt;= S0;
+        else        state &lt;= next_state;
+    end
+
+    // ---------- 第二段:下一状态的纯组合逻辑 ----------
+    always @(*) begin
+        next_state = state;                    // 默认保持,这一行专门用来防锁存器
+        case (state)
+            S0: next_state = din ? S1 : S0;
+            S1: next_state = din ? S2 : S0;
+            S2: next_state = din ? S2 : S3;    // 连续的 1 停在 S2
+            S3: next_state = din ? S4 : S0;
+            S4: next_state = din ? S2 : S0;    // 命中后,末位那个 1 可以复用
+            default: next_state = S0;
+        endcase
+    end
+
+    // ---------- 第三段:输出寄存 ----------
+    // 用 next_state 判断,这样 found 和 state 进入 S4 是同一拍
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) found &lt;= 1'b0;
+        else        found &lt;= (next_state == S4);
+    end
+
+endmodule</code></pre></div>
+</figure>
+<div class="box tip">
+  <b>第三段为什么用 next_state 而不是 state</b>
+  <p>如果写 <code>found &lt;= (state == S4);</code>,那么 <code>found</code> 会比 <code>state</code> <strong>晚一拍</strong> —— 状态早已离开 S4,<code>found</code> 才亮起来。用 <code>next_state</code> 判断,寄存之后 <code>found</code> 和 <code>state == S4</code> 落在同一拍,时序干净。</p>
+  <p>另一种同样正确的写法是 <code>assign found = (state == S4);</code>(纯组合输出)。它没有延迟,但输出上可能带组合毛刺。<strong>接到片外或者作为别的模块的使能时,一律用寄存版</strong>。</p>
+</div>
+
+<h2 id="s3">Moore 还是 Mealy</h2>
+<div class="tw">
+<table>
+  <caption>两种输出方式</caption>
+  <thead><tr><th></th><th>Moore</th><th>Mealy</th></tr></thead>
+  <tbody>
+    <tr><td>输出取决于</td><td>只看当前状态</td><td>当前状态 <em>和</em> 当前输入</td></tr>
+    <tr><td>响应速度</td><td>慢一拍</td><td>同一拍就出结果</td></tr>
+    <tr><td>状态数</td><td>通常多一个(本例的 S4)</td><td>少一个</td></tr>
+    <tr><td>输出毛刺</td><td>不受输入抖动影响</td><td>输入一抖,输出跟着抖</td></tr>
+    <tr><td>建议</td><td><span class="tag syn">默认选它</span></td><td>确实需要少一拍延迟时才用</td></tr>
+  </tbody>
+</table>
+</div>
+<p>本例的 Mealy 版本可以去掉 <code>S4</code>,直接写 <code>assign found = (state == S3) &amp; din;</code> —— 少一个状态、少一拍延迟。但 <code>found</code> 从此直接挂在 <code>din</code> 上,<code>din</code> 有任何毛刺都会传出去。<strong>先写 Moore,时序不够再改 Mealy</strong>。</p>
+
+<h2 id="s4">状态编码:三种选法</h2>
+<div class="tw">
+<table>
+  <caption>N 个状态的三种编码</caption>
+  <thead><tr><th>编码</th><th>位宽</th><th>特点</th><th>什么时候用</th></tr></thead>
+  <tbody>
+    <tr><td>二进制</td><td><code>$clog2(N)</code></td><td>触发器最少,但译码逻辑较深</td><td>状态多(&gt; 16)、面积紧</td></tr>
+    <tr><td>独热(one-hot)</td><td><code>N</code></td><td>每个状态一位,译码只要看一位,最快</td><td><strong>FPGA 上的默认选择</strong></td></tr>
+    <tr><td>格雷</td><td><code>$clog2(N)</code></td><td>相邻状态只变一位,跳变时毛刺少</td><td>状态要送出芯片或跨时钟域</td></tr>
+  </tbody>
+</table>
+</div>
+<p>FPGA 里触发器多到用不完,而 LUT 的级数直接决定主频,所以独热编码通常是赢的。好消息是<strong>你不用手写独热</strong> —— 用 <code>localparam</code> 给状态起名字,再让工具去选编码:</p>
+<figure class="file">
+  <figcaption><span class="path">写法示例</span><span class="note">Vivado / Quartus 都认这类属性</span></figcaption>
+  <div class="body"><pre><code>// Vivado:让工具用独热编码
+(* fsm_encoding = "one_hot" *) reg [2:0] state;
+
+// 也可以设成 "sequential"(二进制)、"gray"、"none"(照你写的来)
+
+// Quartus 的写法
+reg [2:0] state /* synthesis syn_encoding = "one-hot" */;</code></pre></div>
+</figure>
+<div class="box pit">
+  <b>不要为了“看起来专业”手写独热</b>
+  <p>手写独热(<code>localparam S0 = 5'b00001, S1 = 5'b00010, …</code>)会让 <code>case</code> 的比较变成 5 位全等比较,反而可能比工具自己做的差;而且加一个状态就要把所有常量重排一遍。<strong>用名字写代码,把编码交给属性</strong>,这是可读性和性能都最好的组合。</p>
+</div>
+
+<h2 id="s5">交通灯:带计时器的状态机</h2>
+<p>大多数真实状态机不是靠输入触发跳转,而是靠<strong>时间</strong>:这一步做够多久就进下一步。做法是给状态机配一个计时器,<em>状态一换就清零</em>。</p>
+<figure class="file">
+  <figcaption><span class="path">code/lesson07/traffic.v</span><span class="note">可综合 · 输出默认全红</span></figcaption>
+  <div class="body"><pre><code>    reg  [1:0] state, next_state;
+    reg  [$clog2(T_GREEN)-1:0] timer;
+
+    // 当前状态该数到多少
+    wire [$clog2(T_GREEN)-1:0] limit =
+        (state == NS_G || state == EW_G) ? T_GREEN - 1 : T_YELLOW - 1;
+    wire timeout = (timer == limit);
+
+    // ---------- 第一段 ----------
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) state &lt;= NS_G;
+        else        state &lt;= next_state;
+    end
+
+    // ---------- 计时器:状态一换就清零 ----------
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)                   timer &lt;= 0;
+        else if (state != next_state) timer &lt;= 0;
+        else                          timer &lt;= timer + 1'b1;
+    end
+
+    // ---------- 第二段 ----------
+    always @(*) begin
+        next_state = state;
+        case (state)
+            NS_G:    next_state = timeout ? NS_Y : NS_G;
+            NS_Y:    next_state = timeout ? EW_G : NS_Y;
+            EW_G:    next_state = timeout ? EW_Y : EW_G;
+            default: next_state = timeout ? NS_G : EW_Y;
+        endcase
+    end
+
+    // ---------- 第三段:输出 ----------
+    always @(*) begin
+        ns = RED;                    // 默认全红 —— 万一状态跑飞了也是最安全的
+        ew = RED;
+        case (state)
+            NS_G:    begin ns = GRN; ew = RED; end
+            NS_Y:    begin ns = YEL; ew = RED; end
+            EW_G:    begin ns = RED; ew = GRN; end
+            default: begin ns = RED; ew = YEL; end
+        endcase
+    end</code></pre></div>
+</figure>
+<ul>
+  <li><code>state != next_state</code> 是“<strong>本拍即将换状态</strong>”的判据,用它清零计时器,新状态一进来就从 0 开始数。</li>
+  <li><code>limit</code> 用一个组合表达式在两个时长之间选,比给每个状态各配一个计时器省得多。</li>
+  <li>第三段开头 <code>ns = RED; ew = RED;</code> 既是防锁存器的默认值,<strong>也是安全默认值</strong>:哪怕状态编码跑到了非法值,输出也是全红而不是两边同时绿。安全相关的设计都该这么写。</li>
+</ul>
+
+<h2 id="s6">跑仿真</h2>
+<div class="term"><pre><span class="cmd">.\sim.bat lesson07 seq_det_tb</span>
+[TB] 码流 110110101101(从最高位开始送),期望命中 3 次
+[TB]  150 ns  第 1 次命中
+[TB]  210 ns  第 2 次命中
+[TB]  310 ns  第 3 次命中
+[结果] 命中 3 次 —— 正确
+
+<span class="cmd">.\sim.bat lesson07 traffic_tb</span>
+[TB] T_GREEN=5  T_YELLOW=2,灯的编码是 {红,黄,绿}
+[TB]  时刻      ns    ew
+[TB]   51 ns   001  100
+[TB]   71 ns   001  100
+[TB]   91 ns   001  100
+[TB]  111 ns   001  100
+[TB]  131 ns   010  100
+[TB]  151 ns   010  100
+[TB]  171 ns   100  001
+[TB]  191 ns   100  001
+[TB]  211 ns   100  001
+[TB]  231 ns   100  001
+[TB]  251 ns   100  001
+[TB]  271 ns   100  010
+[TB]  291 ns   100  010
+[TB]  311 ns   001  100
+   ...</pre></div>
+<p>第一段主路绿只打印了 4 行而不是 5 行 —— 因为复位释放后的第一个周期还没进 <code>for</code> 循环就过去了。<strong>这类“少一行”几乎总是打印时机的问题,不是逻辑问题</strong>;真要确认周期数,去波形上量,或者把计数改成由 DUT 内部的 <code>timer</code> 来判断。</p>
+<div class="box tip">
+  <b>状态机在 GTKWave 里怎么看</b>
+  <p>把 <code>u_det.state</code> 拖出来,右键 → <em>Data Format → Decimal</em>,就能直接读出 0…4 的状态序列;再把 <code>din</code> 和 <code>found</code> 放在它上下,一眼就能对着转移图核对每一次跳转。<strong>调状态机的标准姿势:三行波形 —— 输入、state、输出。</strong></p>
+  <p>用 SystemVerilog 的 <code>typedef enum</code> 定义状态时,好一些的波形工具会直接显示状态<em>名字</em>而不是数字,可读性提升很大;iverilog + GTKWave 组合下还是显示数字。</p>
+</div>
+
+<h2 id="ex">练习</h2>
+<ol class="tasks">
+<li>
+  <h3>改成检测 1011<span class="lv">热身</span></h3>
+  <p>先在纸上画出检测 <code>1011</code> 的状态转移图(同样允许重叠),再改 <code>seq_det.v</code>。用码流 <code>1011011</code> 验证:应该命中几次?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>状态含义还是“已收到的前缀”:S0(—)、S1(1)、S2(10)、S3(101)、S4(1011)。转移:</p>
+    <pre>S0: din ? S1 : S0
+S1: din ? S1 : S2      // 连续的 1 停在 S1(末位仍是 1)
+S2: din ? S3 : S0
+S3: din ? S4 : S2      // 收到 0 时,末两位变成 "10" → 退到 S2 而不是 S0
+S4: din ? S1 : S2      // 命中后末位是 1 → S1;末位接 0 → "10" → S2</pre>
+    <p><code>1011011</code> 命中 <strong>2 次</strong>:第 1–4 位 <code>1011</code>,第 4–7 位 <code>1011</code>(重叠)。</p>
+    <p>注意 <code>S3</code> 收到 <code>0</code> 退到 <code>S2</code> 而不是 <code>S0</code> —— 这是和 <code>1101</code> 那题最大的区别,也是最容易写错的一条。<strong>判断“退到哪里”的方法:把当前已收到的串加上新来的这一位,再找它最长的、同时也是目标串前缀的后缀。</strong></p>
+  </div></details>
+</li>
+<li>
+  <h3>自动售货机<span class="lv">动手</span></h3>
+  <p>写 <code>vending.v</code>:商品 1.5 元,只接受 5 角和 1 元硬币(两个单周期脉冲输入 <code>coin50</code>、<code>coin100</code>)。凑够 1.5 元出货(<code>dispense</code> 脉冲);投到 2 元要找回 5 角(<code>change50</code> 脉冲)。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>状态就是“当前已投入的金额”:<code>M0</code>(0)、<code>M50</code>、<code>M100</code>。1.5 元和 2 元不需要状态 —— 到了就立刻出货并回到 <code>M0</code>。</p>
+    <pre>localparam M0 = 2'd0, M50 = 2'd1, M100 = 2'd2;
+reg [1:0] state, next_state;
+
+always @(posedge clk or negedge rst_n)
+    if (!rst_n) state &lt;= M0;
+    else        state &lt;= next_state;
+
+always @(*) begin
+    next_state = state;
+    case (state)
+        M0:   if (coin50) next_state = M50;
+              else if (coin100) next_state = M100;
+        M50:  if (coin50) next_state = M100;
+              else if (coin100) next_state = M0;   // 1.5 元,出货
+        M100: if (coin50) next_state = M0;         // 1.5 元,出货
+              else if (coin100) next_state = M0;   // 2.0 元,出货 + 找零
+        default: next_state = M0;
+    endcase
+end
+
+// 输出:Mealy,因为出货取决于“哪一枚硬币刚进来”
+always @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+        dispense &lt;= 1'b0;
+        change50 &lt;= 1'b0;
+    end else begin
+        dispense &lt;= (state == M50  &amp;&amp; coin100)
+                 || (state == M100 &amp;&amp; (coin50 || coin100));
+        change50 &lt;= (state == M100 &amp;&amp; coin100);
+    end
+end</pre>
+    <p>这题的价值在于:<strong>状态数应该等于“需要记住的信息量”,而不是流程图上的框数</strong>。“已投 1.5 元”不需要状态,因为一到就立刻处理完了。新手常见的错误是给每个金额都建状态,结果状态数翻倍还容易漏转移。</p>
+    <p>TB 要覆盖的路径:5+5+5、5+100、100+5、100+100(带找零)、以及“投一半不投了”。</p>
+  </div></details>
+</li>
+<li>
+  <h3>给交通灯加行人按钮<span class="lv">动手</span></h3>
+  <p>加一个输入 <code>ped_req</code>(行人请求,单周期脉冲)。要求:主路绿灯期间收到请求,把绿灯<strong>剩余时间截短</strong>(最多再走 <code>T_MIN</code> 拍就转黄);其他状态下请求先记下来,不影响当前流程。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <pre>reg ped_pending;                     // 记住有人按过
+
+always @(posedge clk or negedge rst_n) begin
+    if (!rst_n)                        ped_pending &lt;= 1'b0;
+    else if (ped_req)                  ped_pending &lt;= 1'b1;
+    else if (state == NS_Y)            ped_pending &lt;= 1'b0;  // 已经响应了,清掉
+end
+
+// 绿灯的结束条件多了一条:有人在等,且最短绿灯时间已过
+wire ns_done = timeout
+            || (ped_pending &amp;&amp; state == NS_G &amp;&amp; timer &gt;= T_MIN - 1);
+
+always @(*) begin
+    next_state = state;
+    case (state)
+        NS_G:    next_state = ns_done ? NS_Y : NS_G;
+        NS_Y:    next_state = timeout ? EW_G : NS_Y;
+        EW_G:    next_state = timeout ? EW_Y : EW_G;
+        default: next_state = timeout ? NS_G : EW_Y;
+    endcase
+end</pre>
+    <p>两个要点。一是 <strong><code>ped_pending</code> 这个“记事本”寄存器</strong>:请求是单周期脉冲,状态机不一定当场就能处理,必须先存下来。这是同步设计里极常见的模式 —— 事件用脉冲传递,用寄存器记住。</p>
+    <p>二是 <code>T_MIN</code> <strong>最短绿灯时间</strong>:不能让行人按一下就立刻切灯,否则正在通过路口的车会被拦在中间。真实控制系统里这类“最小驻留时间”约束到处都是。</p>
+  </div></details>
+</li>
+<li>
+  <h3>状态跑飞了怎么办<span class="lv">想清楚</span></h3>
+  <p><code>seq_det</code> 的 <code>state</code> 是 3 位,能表示 8 个值,但只用了 5 个。剩下 3 个编码万一被进入了,会发生什么?<code>default: next_state = S0;</code> 起了什么作用?独热编码时情况又如何?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>3 位里有 3 个<strong>非法编码</strong>(5、6、7)。正常逻辑到不了它们,但复位不完全、上电瞬间、或者极端情况下的单粒子翻转都可能让状态落进去。</p>
+    <p><code>default: next_state = S0;</code> 就是<strong>自恢复</strong>:任何非法状态下一拍就回到 S0,机器最多错一拍。如果没有这一句,第二段第一行的 <code>next_state = state;</code> 会让它<em>永远卡在非法状态</em> —— 整个模块死掉,而且波形上看起来只是“state 一直是 6”,很难联想到原因。</p>
+    <p>独热编码更需要注意:N 位有 <code>2^N − N</code> 个非法编码,比二进制多得多。而且工具做完编码转换后,你写的 <code>default</code> 未必还覆盖得到所有非法组合。两家工具都提供了专门的开关来自动插入恢复逻辑:</p>
+    <pre>// Vivado
+(* fsm_safe_state = "reset_state" *) reg [2:0] state;
+
+// Quartus 在 Settings → Compiler Settings → Advanced 里
+// 打开 "Safe State Machine"</pre>
+    <p>什么时候必须开:<strong>会造成物理伤害或数据损坏的设计</strong>(电机控制、电源时序、这一课的交通灯)。普通消费电子里,写好 <code>default</code> 通常就够了。</p>
+  </div></details>
+</li>
+</ol>
+
+<nav class="pager"></nav>
+</main>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

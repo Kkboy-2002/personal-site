@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADC / DAC 交互式教学</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>ADC / DAC 交互式教学</h1>
+  <p class="subtitle">模数转换器与数模转换器 —— 从原理到仿真实验</p>
+  <nav>
+    <a href="#intro">概述</a>
+    <a href="#sampling">采样与混叠</a>
+    <a href="#quantization">量化</a>
+    <a href="#dac">DAC 原理</a>
+    <a href="#adc">ADC 类型</a>
+    <a href="#sar">SAR 仿真</a>
+    <a href="#params">关键参数</a>
+    <a href="#quiz">自测</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ============ 概述 ============ -->
+<section id="intro">
+  <h2>1. 概述：数字世界与模拟世界的桥梁</h2>
+  <p>现实世界的信号（声音、温度、光强、电压）是<b>连续的模拟信号</b>，而计算机与单片机只能处理<b>离散的数字信号</b>。ADC 与 DAC 就是两者之间的桥梁：</p>
+  <div class="chain">
+    <div class="chain-box analog">模拟信号<br><small>传感器 / 麦克风</small></div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-box adc">ADC<br><small>采样·保持·量化·编码</small></div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-box digital">数字系统<br><small>MCU / DSP / 计算机</small></div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-box adc">DAC<br><small>数字→模拟</small></div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-box analog">模拟输出<br><small>扬声器 / 执行器</small></div>
+  </div>
+  <div class="cards">
+    <div class="card">
+      <h3>ADC（Analog-to-Digital Converter）</h3>
+      <p>模数转换器：把连续电压值转换为离散的数字编码。四个基本步骤：</p>
+      <ol>
+        <li><b>采样</b>：按固定周期读取瞬时值</li>
+        <li><b>保持</b>：将采样值维持到转换结束</li>
+        <li><b>量化</b>：把幅度归入有限个电平</li>
+        <li><b>编码</b>：输出二进制码</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3>DAC（Digital-to-Analog Converter）</h3>
+      <p>数模转换器：把数字编码转换为对应的模拟电压/电流。核心思想是<b>按位加权求和</b>：</p>
+      <div class="formula">V<sub>out</sub> = V<sub>REF</sub> × (D / 2<sup>N</sup>)</div>
+      <p>其中 D 为 N 位数字量（0 ~ 2<sup>N</sup>−1），V<sub>REF</sub> 为参考电压。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 采样与混叠 ============ -->
+<section id="sampling">
+  <h2>2. 采样定理与混叠（Aliasing）</h2>
+  <p><b>奈奎斯特采样定理</b>：要无失真地恢复信号，采样频率 f<sub>s</sub> 必须大于信号最高频率 f<sub>in</sub> 的 <b>2 倍</b>。否则高频信号会"伪装"成低频信号，即<b>混叠</b>。</p>
+  <div class="formula">f<sub>s</sub> &gt; 2 · f<sub>in</sub>（工程上常取 f<sub>s</sub> ≥ (2.5~4) · f<sub>in</sub>）</div>
+
+  <div class="lab">
+    <div class="lab-controls">
+      <label>信号频率 f<sub>in</sub> = <span id="sigFreqVal">5</span> Hz
+        <input type="range" id="sigFreq" min="1" max="60" step="1" value="5">
+      </label>
+      <label>采样频率 f<sub>s</sub> = <span id="sampFreqVal">50</span> Hz
+        <input type="range" id="sampFreq" min="2" max="120" step="1" value="50">
+      </label>
+      <label class="chk"><input type="checkbox" id="showRecon"> 显示重建（混叠）波形</label>
+      <div class="status" id="nyquistStatus"></div>
+      <p class="hint">试一试：把采样频率调到低于信号频率的 2 倍，观察采样点如何"骗过"系统，重建出一个错误的低频波。</p>
+    </div>
+    <canvas id="samplingCanvas" width="860" height="340"></canvas>
+  </div>
+</section>
+
+<!-- ============ 量化 ============ -->
+<section id="quantization">
+  <h2>3. 量化：分辨率与量化误差</h2>
+  <p><b>量化</b>是把连续的幅度值近似为有限个离散电平的过程。N 位 ADC 把量程分为 2<sup>N</sup> 级，最小可分辨电压称为 <b>1 LSB</b>：</p>
+  <div class="formula">1 LSB = V<sub>REF</sub> / 2<sup>N</sup> &nbsp;&nbsp;&nbsp;&nbsp; 量化误差 ≤ ±0.5 LSB &nbsp;&nbsp;&nbsp;&nbsp; SNR<sub>max</sub> ≈ 6.02N + 1.76 dB</div>
+
+  <div class="lab">
+    <div class="lab-controls">
+      <label>位数 N = <span id="bitsVal">3</span> bit（共 <span id="levelsVal">8</span> 级）
+        <input type="range" id="bits" min="1" max="8" step="1" value="3">
+      </label>
+      <label>参考电压 V<sub>REF</sub> = <span id="vrefVal">5.0</span> V
+        <input type="range" id="vref" min="1" max="10" step="0.5" value="5">
+      </label>
+      <label>输入信号幅度（%V<sub>REF</sub>）= <span id="ampVal">90</span>%
+        <input type="range" id="amp" min="10" max="100" step="5" value="90">
+      </label>
+      <div class="status" id="quantStatus"></div>
+      <p class="hint">位数越高，台阶越细、量化误差越小。观察 1 bit 与 8 bit 的巨大差别。</p>
+    </div>
+    <canvas id="quantCanvas" width="860" height="340"></canvas>
+  </div>
+</section>
+
+<!-- ============ DAC ============ -->
+<section id="dac">
+  <h2>4. DAC 原理与 R-2R 梯形网络仿真</h2>
+  <p>DAC 的核心是<b>按位加权</b>：每一位二进制码控制一个开关，将该位的权重电压接入求和网络。最常见的实现是 <b>R-2R 梯形电阻网络</b>——只需两种阻值，每一位节点处的等效电阻都把它"对半分"，从而天然形成 1/2、1/4、1/8… 的权重。</p>
+  <div class="cards">
+    <div class="card">
+      <h3>常见 DAC 结构</h3>
+      <ul>
+        <li><b>权电阻型</b>：每位电阻按 2 的幂取值，位多时阻值范围过大，难以集成</li>
+        <li><b>R-2R 梯形</b>：只用 R 和 2R，精度好，主流片内 DAC 结构</li>
+        <li><b>电流舵型（Current Steering）</b>：高速视频 DAC 常用</li>
+        <li><b>Σ-Δ（Sigma-Delta）型</b>：1 bit + 噪声整形，音频 DAC 主流</li>
+        <li><b>PWM + 滤波</b>：单片机无 DAC 时的简易替代方案</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>操作下方 8 位开关</h3>
+      <p>点击每一位的开关（1/0），观察输出电压如何按权重叠加：</p>
+      <div class="formula">V<sub>out</sub> = V<sub>REF</sub> × Σ b<sub>i</sub>·2<sup>−(i+1)</sup></div>
+      <div class="dac-buttons">
+        <button id="dacZero">全部清零</button>
+        <button id="dacFull">全部置一</button>
+        <button id="dacHalf">MSB 置一</button>
+        <button id="dacRandom">随机</button>
+        <button id="dacRamp">斜坡演示</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab">
+    <div class="lab-controls">
+      <label>V<sub>REF</sub> = <span id="dacVrefVal">5.0</span> V
+        <input type="range" id="dacVref" min="1" max="10" step="0.5" value="5">
+      </label>
+      <div class="dac-readout">
+        <span>数字量 D = <b id="dacD">0</b></span>
+        <span>V<sub>out</sub> = <b id="dacVout">0.000</b> V</span>
+        <span>1 LSB = <b id="dacLsb">0.0195</b> V</span>
+      </div>
+    </div>
+    <div id="dacSwitches" class="dac-switches"></div>
+    <div class="dac-meter">
+      <div class="dac-bar-track"><div class="dac-bar-fill" id="dacBar"></div></div>
+    </div>
+    <canvas id="dacCanvas" width="860" height="180"></canvas>
+  </div>
+</section>
+
+<!-- ============ ADC 类型 ============ -->
+<section id="adc">
+  <h2>5. 常见 ADC 类型对比</h2>
+  <table class="compare">
+    <thead>
+      <tr><th>类型</th><th>原理简述</th><th>速度</th><th>分辨率</th><th>功耗/成本</th><th>典型应用</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>逐次逼近型 SAR</b></td>
+        <td>内部 DAC 从 MSB 到 LSB 逐位试探比较，N 位需 N 个时钟周期</td>
+        <td>中（~10 MSPS）</td>
+        <td>8~18 bit</td>
+        <td>低，性价比高</td>
+        <td>MCU 内置 ADC、数据采集</td>
+      </tr>
+      <tr>
+        <td><b>闪存型 Flash</b></td>
+        <td>2<sup>N</sup>−1 个比较器并行比较，一个周期出结果</td>
+        <td>极快（GSPS 级）</td>
+        <td>低（≤10 bit）</td>
+        <td>极高，面积大</td>
+        <td>示波器、视频采集</td>
+      </tr>
+      <tr>
+        <td><b>Σ-Δ（Sigma-Delta）</b></td>
+        <td>1 bit 高速调制 + 过采样 + 噪声整形，数字滤波抽取</td>
+        <td>慢</td>
+        <td>极高（16~32 bit）</td>
+        <td>中</td>
+        <td>音频、精密测量、电子秤</td>
+      </tr>
+      <tr>
+        <td><b>双积分型</b></td>
+        <td>对输入积分固定时间，再用基准反向积分计时</td>
+        <td>很慢</td>
+        <td>中高（抗干扰好）</td>
+        <td>极低</td>
+        <td>数字万用表、温度表</td>
+      </tr>
+      <tr>
+        <td><b>流水线型 Pipeline</b></td>
+        <td>多级"子 SAR"级联流水处理，兼顾速度与精度</td>
+        <td>快（百 MSPS）</td>
+        <td>中高（12~16 bit）</td>
+        <td>较高</td>
+        <td>通信基站、医学成像</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============ SAR 仿真 ============ -->
+<section id="sar">
+  <h2>6. SAR ADC 逐次逼近过程仿真</h2>
+  <p>SAR ADC 像"二分法猜数字"：先置 MSB=1，用内部 DAC 转换后与输入电压比较——若 DAC 输出 ≤ 输入则保留 1，否则清 0；然后依次测试下一位，N 次比较后得到最终结果。</p>
+
+  <div class="lab">
+    <div class="lab-controls">
+      <label>输入电压 V<sub>in</sub> = <span id="sarVinVal">3.27</span> V
+        <input type="range" id="sarVin" min="0" max="4.99" step="0.01" value="3.27">
+      </label>
+      <div class="dac-buttons">
+        <button id="sarStart">开始转换</button>
+        <button id="sarStep">单步</button>
+        <button id="sarReset">复位</button>
+      </div>
+      <div class="sar-readout">
+        <span>当前试探码：<b id="sarCode">--------</b></span>
+        <span>内部 DAC 输出：<b id="sarDacV">0.000</b> V</span>
+        <span>比较结果：<b id="sarCmp">—</b></span>
+      </div>
+    </div>
+    <div id="sarSteps" class="sar-steps"></div>
+    <div class="sar-result" id="sarResult">点击"开始转换"观看 8 位逐次逼近过程</div>
+  </div>
+</section>
+
+<!-- ============ 参数 ============ -->
+<section id="params">
+  <h2>7. 关键性能参数</h2>
+  <div class="cards">
+    <div class="card">
+      <h3>分辨率（Resolution）</h3>
+      <p>输出码的位数 N。N 越大，可分辨的最小变化 1 LSB = V<sub>REF</sub>/2<sup>N</sup> 越小。例如 12 bit、3.3 V 量程时 1 LSB ≈ 0.8 mV。</p>
+    </div>
+    <div class="card">
+      <h3>采样率（Sample Rate）</h3>
+      <p>每秒完成的转换次数（SPS / MSPS）。需满足奈奎斯特条件，并留出抗混叠滤波器的过渡带。</p>
+    </div>
+    <div class="card">
+      <h3>SNR 与 ENOB</h3>
+      <p>信噪比 SNR 衡量噪声水平，理论上限 6.02N+1.76 dB。<b>有效位数</b> ENOB = (SINAD−1.76)/6.02，实际芯片 ENOB 总小于标称位数。</p>
+    </div>
+    <div class="card">
+      <h3>线性度 INL / DNL</h3>
+      <p><b>DNL</b>：相邻码对应步进与理想 1 LSB 的偏差；<b>INL</b>：整条传输曲线与理想直线的偏差。DNL &lt; −1 LSB 会出现"失码"。</p>
+    </div>
+    <div class="card">
+      <h3>建立时间与失调/增益误差</h3>
+      <p><b>建立时间</b>：DAC 输出稳定到指定精度所需时间；<b>失调误差</b>（曲线平移）与<b>增益误差</b>（斜率偏差）是两类系统性误差，可通过校准消除。</p>
+    </div>
+    <div class="card">
+      <h3>孔径时间与抖动</h3>
+      <p><b>孔径抖动</b>（Aperture Jitter）造成采样时刻不确定，对高频信号影响显著：SNR<sub>jitter</sub> = −20·log₁₀(2π·f<sub>in</sub>·t<sub>jitter</sub>)。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 自测 ============ -->
+<section id="quiz">
+  <h2>8. 知识自测</h2>
+  <div id="quizBox"></div>
+  <div class="quiz-score" id="quizScore"></div>
+</section>
+
+</main>
+
+<footer>
+  <p>ADC / DAC 交互式教学 · 所有仿真均在浏览器本地运行（HTML + CSS + JavaScript）</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

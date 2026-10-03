@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>泰拉瑞亚 - 像素沙盒</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#000;font-family:"Segoe UI",sans-serif;}
+  #game{display:block;image-rendering:pixelated;}
+  #hud{position:fixed;top:8px;left:8px;color:#fff;text-shadow:1px 1px 2px #000;font-size:14px;user-select:none;pointer-events:none;}
+  #hotbar{position:fixed;top:8px;left:50%;transform:translateX(-50%);display:flex;gap:4px;user-select:none;}
+  .slot{width:48px;height:48px;background:rgba(30,30,60,.75);border:2px solid #556;border-radius:6px;display:flex;align-items:center;justify-content:center;position:relative;}
+  .slot.active{border-color:#ffd700;background:rgba(80,70,20,.8);}
+  .slot canvas{image-rendering:pixelated;}
+  .slot .cnt{position:absolute;right:3px;bottom:1px;color:#fff;font-size:11px;text-shadow:1px 1px 1px #000;}
+  .slot .key{position:absolute;left:3px;top:1px;color:#aab;font-size:10px;}
+  #help{position:fixed;bottom:8px;left:8px;color:#ccd;text-shadow:1px 1px 2px #000;font-size:12px;user-select:none;}
+  #health{position:fixed;top:64px;left:50%;transform:translateX(-50%);display:flex;gap:2px;}
+  #tooltip{position:fixed;pointer-events:none;color:#ffe;background:rgba(0,0,0,.65);padding:2px 8px;border-radius:4px;font-size:12px;display:none;z-index:10;}
+  /* Boss 血条 */
+  #bossbar{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);width:420px;display:none;}
+  #bossbar .name{color:#ffb0b0;text-align:center;text-shadow:1px 1px 2px #000;font-size:14px;margin-bottom:3px;}
+  #bossbar .bg{height:16px;background:rgba(0,0,0,.6);border:2px solid #a04040;border-radius:8px;overflow:hidden;}
+  #bossbar .fill{height:100%;background:linear-gradient(#ff6060,#c02020);width:100%;transition:width .15s;}
+  /* 合成面板 */
+  #craft{position:fixed;right:10px;top:70px;width:290px;max-height:70vh;overflow-y:auto;background:rgba(15,15,35,.92);border:2px solid #556;border-radius:8px;padding:10px;display:none;color:#eee;user-select:none;}
+  #craft h3{margin:0 0 8px;font-size:15px;color:#ffd700;}
+  .tabs{display:flex;gap:6px;margin-bottom:8px;}
+  .tab{padding:3px 12px;border-radius:5px;background:rgba(255,255,255,.08);cursor:pointer;font-size:13px;color:#bbc;}
+  .tab.cur{background:rgba(255,215,0,.25);color:#ffd700;font-weight:bold;}
+  .tab:hover{background:rgba(255,215,0,.15);}
+  .recipe{display:flex;align-items:center;gap:8px;padding:5px;border-radius:6px;margin-bottom:4px;background:rgba(255,255,255,.05);}
+  .recipe.ok{cursor:pointer;}
+  .recipe.ok:hover{background:rgba(255,215,0,.18);}
+  .recipe.no{opacity:.45;}
+  .recipe canvas{image-rendering:pixelated;flex:none;}
+  .recipe .info{font-size:12px;line-height:1.35;}
+  .recipe .info b{font-size:13px;}
+  .recipe .info .sub{color:#8fc7ff;font-size:11px;}
+  .recipe .need{color:#aab;}
+  .recipe .need .lack{color:#ff7070;}
+  #msg{position:fixed;top:120px;left:50%;transform:translateX(-50%);color:#ffd700;font-size:20px;text-shadow:2px 2px 3px #000;pointer-events:none;opacity:0;transition:opacity .4s;}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud"></div>
+<div id="hotbar"></div>
+<div id="health"></div>
+<div id="tooltip"></div>
+<div id="bossbar"><div class="name">克苏鲁之眼</div><div class="bg"><div class="fill"></div></div></div>
+<div id="craft"><h3>⚒ 合成 (C 关闭)</h3><div id="recipes"></div></div>
+<div id="msg"></div>
+<div id="help">A/D 移动 | 空格 跳跃 | 左键 挖掘/攻击 | 右键 放置/使用 | 1-9/滚轮 选择 | C 合成</div>
+<script src="js/textures.js"></script>
+<script src="js/world.js"></script>
+<script src="js/player.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

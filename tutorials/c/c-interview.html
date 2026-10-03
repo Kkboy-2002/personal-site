@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C 面试考点手册</title>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#EDF0F3; --surface:#FFFFFF; --ink:#172029; --muted:#5D6B78; --line:#D3DAE1; --soft:#F5F7F9;
+  --accent:#2F57C9; --accent-ink:#FFFFFF; --amber:rgba(245,197,66,.42); --red:#D33F49; --green:#1F8A4C;
+  --code-bg:#F8FAFC; --kw:#7A3E9D; --str:#237A3F; --num:#B45309; --com:#7B8794; --pre:#0E7490;
+  --term-bg:#10161C; --term-ink:#D7E0E8; --shadow:0 1px 2px rgba(23,32,41,.06),0 8px 24px -12px rgba(23,32,41,.18);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0F1419; --surface:#161C23; --ink:#E4EAF0; --muted:#90A0AE; --line:#263038; --soft:#1C242D;
+  --accent:#7A9BFF; --accent-ink:#0F1419; --amber:rgba(245,197,66,.22); --red:#F0616A; --green:#4CC57E;
+  --code-bg:#12181F; --kw:#C48BE0; --str:#7ED39A; --num:#F0A050; --com:#6E7C8A; --pre:#5CC3DB;
+  --term-bg:#0A0E12; --term-ink:#D7E0E8; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}}
+:root[data-theme="dark"]{
+  --bg:#0F1419; --surface:#161C23; --ink:#E4EAF0; --muted:#90A0AE; --line:#263038; --soft:#1C242D;
+  --accent:#7A9BFF; --accent-ink:#0F1419; --amber:rgba(245,197,66,.22); --red:#F0616A; --green:#4CC57E;
+  --code-bg:#12181F; --kw:#C48BE0; --str:#7ED39A; --num:#F0A050; --com:#6E7C8A; --pre:#5CC3DB;
+  --term-bg:#0A0E12; --term-ink:#D7E0E8; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;padding-block:0 48px;padding-inline:20px}
+code,pre,.code,.vars,.editor{font-family:"IBM Plex Mono",ui-monospace,Consolas,"SFMono-Regular",Menlo,monospace}
+a{color:var(--accent)}
+.wrap{max-width:1180px;margin:0 auto}
+.masthead{padding-block:36px 20px;border-bottom:1px solid var(--line);margin-bottom:24px;display:flex;flex-wrap:wrap;align-items:end;gap:12px 32px}
+.masthead h1{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.masthead h1 small{display:block;font-family:"IBM Plex Sans",sans-serif;font-weight:400;font-size:15px;color:var(--muted);letter-spacing:0;margin-top:8px}
+.legend{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px;margin-left:auto}
+.legend b{font-weight:500;color:var(--ink)}
+.legend .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--red);vertical-align:middle;margin-right:5px}
+.legend .bar{display:inline-block;width:14px;height:11px;background:var(--amber);vertical-align:middle;margin-right:5px;border-left:3px solid #E0A800}
+.layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:32px;align-items:start}
+nav{position:sticky;top:16px;display:flex;flex-direction:column;gap:2px;font-size:13.5px}
+nav a{color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:6px;border-left:2px solid transparent;display:flex;gap:8px;align-items:baseline;line-height:1.35}
+nav a .nt{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);opacity:.7;min-width:34px;white-space:nowrap}
+nav a:hover{background:var(--soft);color:var(--ink)}
+nav a.on{color:var(--ink);border-left-color:var(--accent);background:var(--soft);font-weight:500}
+.topic{padding-block:28px;border-top:1px solid var(--line)}
+.topic:first-child{border-top:0;padding-top:4px}
+.topic header{display:flex;align-items:baseline;gap:12px;margin-bottom:8px}
+.topic h2{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:600;font-size:24px;margin:0;letter-spacing:-.005em}
+.tag{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600;padding:2px 7px;border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:4px;white-space:nowrap}
+.points{margin:0 0 14px;padding-left:1.2em;max-width:68ch;color:var(--ink)}
+.points li{margin:3px 0}
+.points code,.answer code{font-size:.9em;background:var(--soft);padding:1px 5px;border-radius:4px}
+.answer{margin:14px 0 0;max-width:72ch;color:var(--muted);font-size:14px;padding-left:14px;border-left:3px solid var(--line)}
+.answer strong{color:var(--ink);font-weight:600;margin-right:8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+
+.runner{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,1fr);gap:14px}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden;min-width:0}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--soft)}
+.btn{font:inherit;font-size:13px;font-weight:500;padding:5px 12px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn:focus-visible,.gut:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
+.btn.ghost{background:transparent}
+.status{margin-left:auto;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.status.s-run{color:#9A6B00}
+:root[data-theme="dark"] .status.s-run{color:#F2C14E}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .status.s-run{color:#F2C14E}}
+.status.s-done{color:var(--green)}
+.status.s-err{color:var(--red)}
+.code{background:var(--code-bg);font-size:13px;line-height:1.55;padding-block:8px;overflow-x:auto;max-height:440px;overflow-y:auto;font-variant-ligatures:none}
+.ln{display:flex;min-width:max-content;padding-right:16px}
+.gut{width:44px;flex:0 0 44px;text-align:right;padding-right:10px;color:var(--com);user-select:none;cursor:pointer;position:relative;font-variant-numeric:tabular-nums}
+.gut:hover{color:var(--red)}
+.ln.bp .gut::before{content:"";position:absolute;left:8px;top:50%;width:9px;height:9px;margin-top:-4.5px;border-radius:50%;background:var(--red)}
+.src{white-space:pre;padding-left:8px;flex:1}
+.ln.cur{background:var(--amber);box-shadow:inset 3px 0 0 #E0A800}
+.ln.err{background:color-mix(in srgb,var(--red) 18%,transparent);box-shadow:inset 3px 0 0 var(--red)}
+.c-kw{color:var(--kw);font-weight:500}.c-str{color:var(--str)}.c-num{color:var(--num)}.c-com{color:var(--com);font-style:italic}.c-pre{color:var(--pre)}
+.editor{display:block;width:100%;min-height:300px;border:0;resize:vertical;font-size:13px;line-height:1.55;padding:10px 12px;background:var(--code-bg);color:var(--ink);tab-size:4}
+.editor:focus{outline:2px solid var(--accent);outline-offset:-2px}
+.side{display:flex;flex-direction:column}
+.watch{flex:1;min-height:120px}
+.ph{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:7px 12px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.ph .stack{text-transform:none;letter-spacing:0;font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--accent)}
+.vars{width:100%;border-collapse:collapse;font-size:12.5px}
+.vars td{padding:4px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.4}
+.vars tr:last-child td{border-bottom:0}
+.vars .vn{white-space:nowrap;font-weight:500}
+.vars .vt{color:var(--muted);white-space:nowrap}
+.vars small{display:block;font-size:10.5px;color:var(--com);font-weight:400}
+.vars .vv{word-break:break-all;font-variant-numeric:tabular-nums}
+.vars .empty{color:var(--muted);font-family:"IBM Plex Sans",sans-serif;padding:12px}
+.term{border-top:1px solid var(--line);background:var(--term-bg);color:var(--term-ink)}
+.term .ph{color:#8A98A6;border-bottom-color:#243040}
+.out{margin:0;padding:10px 12px;font-size:13px;line-height:1.5;min-height:72px;max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-all}
+.out:empty::before{content:"（尚无输出）";color:#5A6A7A}
+.foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);max-width:72ch}
+@media (max-width:900px){.layout{grid-template-columns:1fr}nav{position:static;flex-direction:row;flex-wrap:wrap;gap:4px}nav a{border-left:0;border:1px solid var(--line)}nav a .nt{display:none}.runner{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <h1>C 语言高频面试考点<small>14 个考点，每个配一段可单步、可打断点的最小代码。模拟 64 位 Linux：int 4 字节，long 与指针 8 字节，小端。</small></h1>
+    <div class="legend"><span><b>单步</b> 逐语句执行</span><span><span class="dot"></span><b>断点</b> 点击行号</span><span><span class="bar"></span><b>当前行</b> 尚未执行</span></div>
+  </header>
+  <div class="layout">
+    <nav id="nav" aria-label="考点目录"></nav>
+    <main id="topics"></main>
+  </div>
+  <p class="foot">代码在浏览器内由一个 C 子集解释器执行：支持指针、数组、结构体/联合、函数指针、递归、宏、malloc/free 与常用 printf 格式；地址是模拟值，与真实编译器略有差异。空指针解引用、double free、除零、死循环都会被拦截并提示。可点"编辑"改代码验证自己的猜想。</p>
+</div>
+<script>
+/* ===== C 子集解释器：字节级内存模拟 + 生成器驱动（可单步 / 断点） ===== */
+const CInterp = (() => {
+const TYPEKW = new Set(['int','char','short','long','float','double','void','unsigned','signed','const','static','struct','union','typedef']);
+const KW = new Set([...TYPEKW,'if','else','while','do','for','return','break','continue','sizeof']);
+const PUNCT = ['<<=','>>=','->','++','--','<<','>>','<=','>=','==','!=','&&','||','+=','-=','*=','/=','%=','&=','|=','^=','...'];
+const ESC = {n:'\n',t:'\t','0':'\0','\\':'\\',"'":"'",'"':'"',r:'\r'};
+const enc = new TextEncoder(), dec = new TextDecoder();
+class CError extends Error { constructor(m, line) { super(m); this.line = line; } }
+const hex = a => '0x' + a.toString(16);
+
+/* ---------- 词法 + 预处理 ---------- */
+function tokenize(src, macros) {
+  const toks = []; let i = 0, line = 1; const n = src.length;
+  const push = (t, v) => toks.push({t, v, line});
+  while (i < n) {
+    const c = src[i];
+    if (c === '\n') { line++; i++; continue; }
+    if (c === ' ' || c === '\t' || c === '\r') { i++; continue; }
+    if (c === '/' && src[i+1] === '/') { while (i < n && src[i] !== '\n') i++; continue; }
+    if (c === '/' && src[i+1] === '*') { i += 2; while (i < n && !(src[i] === '*' && src[i+1] === '/')) { if (src[i] === '\n') line++; i++; } i += 2; continue; }
+    if (c === '#') {
+      let j = i; while (j < n && src[j] !== '\n') j++;
+      const ln = src.slice(i+1, j).trim(); i = j;
+      const m = ln.match(/^define\s+(\w+)(\([^)]*\))?\s*(.*)$/);
+      if (m && macros) { const params = m[2] ? m[2].slice(1,-1).split(',').map(s => s.trim()).filter(Boolean) : null; macros.set(m[1], {params, body: tokenize(m[3], null)}); }
+      continue;
+    }
+    if (/[A-Za-z_]/.test(c)) { let j = i; while (j < n && /[A-Za-z0-9_]/.test(src[j])) j++; const w = src.slice(i, j); i = j; push(KW.has(w) ? 'kw' : 'id', w); continue; }
+    if (/[0-9]/.test(c) || (c === '.' && /[0-9]/.test(src[i+1] || ''))) {
+      let j = i;
+      if (c === '0' && /[xX]/.test(src[i+1] || '')) { j += 2; while (/[0-9a-fA-F]/.test(src[j] || '')) j++; }
+      else { while (/[0-9.]/.test(src[j] || '')) j++; if (/[eE]/.test(src[j] || '')) { j++; if (/[+-]/.test(src[j] || '')) j++; while (/[0-9]/.test(src[j] || '')) j++; } }
+      const text = src.slice(i, j); let suf = ''; while (/[uUlLfF]/.test(src[j] || '')) { suf += src[j].toLowerCase(); j++; } i = j;
+      push('num', {text, suf}); continue;
+    }
+    if (c === '"') { let j = i+1, s = ''; while (j < n && src[j] !== '"') { if (src[j] === '\\') { s += ESC[src[j+1]] ?? src[j+1]; j += 2; } else s += src[j++]; } i = j+1; push('str', s); continue; }
+    if (c === "'") { let j = i+1, s; if (src[j] === '\\') { s = ESC[src[j+1]] ?? src[j+1]; j += 2; } else s = src[j++]; if (src[j] !== "'") throw new CError('字符常量未闭合', line); i = j+1; push('chr', s.charCodeAt(0)); continue; }
+    const op = PUNCT.find(p => src.startsWith(p, i)) || c; i += op.length; push('op', op);
+  }
+  return toks;
+}
+function expand(toks, macros) {
+  const out = []; let i = 0, changed = false;
+  while (i < toks.length) {
+    const tk = toks[i];
+    if (tk.t === 'id' && macros.has(tk.v)) {
+      const m = macros.get(tk.v);
+      if (!m.params) { out.push(...m.body.map(b => ({...b, line: tk.line}))); i++; changed = true; continue; }
+      if (toks[i+1] && toks[i+1].v === '(') {
+        let depth = 0, j = i+1; const args = []; let cur = [];
+        for (;;) { j++; const a = toks[j]; if (!a) throw new CError('宏参数不完整', tk.line);
+          if (a.v === '(') depth++;
+          if (a.v === ')') { if (depth === 0) { if (cur.length || args.length) args.push(cur); break; } depth--; }
+          if (a.v === ',' && depth === 0) { args.push(cur); cur = []; continue; }
+          cur.push(a); }
+        const map = new Map(m.params.map((p, k) => [p, args[k] || []]));
+        for (const b of m.body) { if (b.t === 'id' && map.has(b.v)) out.push(...map.get(b.v).map(x => ({...x, line: tk.line}))); else out.push({...b, line: tk.line}); }
+        i = j+1; changed = true; continue;
+      }
+    }
+    out.push(tk); i++;
+  }
+  return {out, changed};
+}
+
+/* ---------- 类型 ---------- */
+const SZ = {char:1, short:2, int:4, long:8, float:4, double:8, ptr:8, void:1, fn:1};
+const mk = (k, unsigned) => ({k, unsigned: !!unsigned});
+const T = {int: mk('int'), char: mk('char'), long: mk('long'), ulong: mk('long', true), double: mk('double'), float: mk('float'), void: mk('void')};
+const ptr = to => ({k: 'ptr', to});
+function sizeOf(t) { if (t.k === 'arr') return t.n * sizeOf(t.of); if (t.k === 'struct') return t.size; return SZ[t.k]; }
+function alignOf(t) { if (t.k === 'arr') return alignOf(t.of); if (t.k === 'struct') return t.align; return SZ[t.k]; }
+function typeStr(t) {
+  switch (t.k) {
+    case 'ptr': return t.to.k === 'fn' ? 'fn *' : typeStr(t.to) + (t.to.k === 'ptr' ? '*' : ' *');
+    case 'arr': return typeStr(t.of) + '[' + t.n + ']';
+    case 'struct': return (t.union ? 'union ' : 'struct ') + t.name;
+    case 'fn': return 'fn';
+    default: return (t.unsigned ? 'unsigned ' : '') + t.k;
+  }
+}
+function promote(t) { return (t.k === 'char' || t.k === 'short') ? T.int : t; }
+function arith(a, b) {
+  a = promote(a); b = promote(b);
+  if (a.k === 'double' || b.k === 'double') return T.double;
+  if (a.k === 'float' || b.k === 'float') return T.float;
+  if (a.k === 'long' || b.k === 'long') return mk('long', (a.k === 'long' && a.unsigned) || (b.k === 'long' && b.unsigned));
+  if (a.k === 'ptr' || b.k === 'ptr') return T.long;
+  return mk('int', a.unsigned || b.unsigned);
+}
+function coerce(t, v) {
+  switch (t.k) {
+    case 'char': return t.unsigned ? v & 255 : (v << 24) >> 24;
+    case 'short': return t.unsigned ? v & 65535 : (v << 16) >> 16;
+    case 'int': return t.unsigned ? v >>> 0 : v | 0;
+    case 'long': v = Math.trunc(v); return t.unsigned && v < 0 ? Number(BigInt.asUintN(64, BigInt(v))) : v;
+    case 'float': return Math.fround(v);
+    case 'double': return v;
+    case 'ptr': return v >>> 0;
+    default: return v;
+  }
+}
+function parseNum({text, suf}) {
+  let v, t;
+  if (/^0[xX]/.test(text)) { v = parseInt(text, 16); t = 'int'; }
+  else if (/[.eE]/.test(text)) { v = parseFloat(text); t = suf.includes('f') ? 'float' : 'double'; }
+  else { v = parseInt(text, 10); t = 'int'; }
+  if (t === 'int') { const u = suf.includes('u'), l = suf.includes('l') || v > 2147483647; t = mk(l ? 'long' : 'int', u); } else t = mk(t);
+  return {v, t};
+}
+const truthy = v => v.v !== 0 && !Number.isNaN(v.v);
+
+/* ---------- 语法分析 ---------- */
+const BIN = [['||'],['&&'],['|'],['^'],['&'],['==','!='],['<','>','<=','>='],['<<','>>'],['+','-'],['*','/','%']];
+class Parser {
+  constructor(toks) {
+    this.toks = toks; this.p = 0; this.structs = new Map();
+    this.typedefs = new Map([['size_t', T.ulong], ['bool', T.char], ['int8_t', T.char], ['uint8_t', mk('char', true)], ['int16_t', mk('short')], ['uint16_t', mk('short', true)], ['int32_t', T.int], ['uint32_t', mk('int', true)], ['int64_t', T.long], ['uint64_t', T.ulong]]);
+  }
+  peek(o = 0) { return this.toks[this.p + o] || {t: 'eof', v: '文件末尾', line: (this.toks[this.toks.length-1] || {}).line || 1}; }
+  next() { return this.toks[this.p++]; }
+  is(v, o = 0) { const t = this.peek(o); return (t.t === 'op' || t.t === 'kw') && t.v === v; }
+  eat(v) { if (this.is(v)) { this.p++; return true; } return false; }
+  expect(v) { if (!this.eat(v)) { const t = this.peek(); throw new CError(`语法错误: 期望 '${v}'，遇到 '${t.v.text || t.v}'`, t.line); } }
+  isTypeStart(o = 0) { const t = this.peek(o); return (t.t === 'kw' && TYPEKW.has(t.v)) || (t.t === 'id' && this.typedefs.has(t.v)); }
+  program() { const items = []; while (this.peek().t !== 'eof') items.push(...this.declaration(true)); return items; }
+  typeSpec() {
+    let u = false, base = null, isStatic = false, isTypedef = false, seen = false;
+    for (;;) {
+      const tk = this.peek();
+      if (tk.t === 'kw' && TYPEKW.has(tk.v)) {
+        seen = true;
+        if (tk.v === 'struct' || tk.v === 'union') { this.next(); base = this.structSpec(tk.v === 'union'); continue; }
+        if (tk.v === 'static') isStatic = true; else if (tk.v === 'typedef') isTypedef = true; else if (tk.v === 'unsigned') u = true;
+        else if (tk.v === 'long') base = base === 'double' ? 'double' : 'long';
+        else if (tk.v === 'int') { if (base !== 'long' && base !== 'short') base = 'int'; }
+        else if (tk.v !== 'const' && tk.v !== 'signed') base = tk.v;
+        this.next();
+      } else if (tk.t === 'id' && this.typedefs.has(tk.v) && !base && !u) { seen = true; base = this.typedefs.get(tk.v); this.next(); }
+      else break;
+    }
+    if (!seen) return null;
+    if (!base) base = 'int';
+    return {t: typeof base === 'string' ? mk(base, u) : base, isStatic, isTypedef};
+  }
+  structSpec(union) {
+    let name = null; if (this.peek().t === 'id') name = this.next().v;
+    if (this.eat('{')) {
+      let t = name && this.structs.get(name);
+      if (!t) { t = {k: 'struct', name: name || '<匿名>', members: [], size: 0, align: 1, union}; if (name) this.structs.set(name, t); }
+      let off = 0, al = 1;
+      while (!this.eat('}')) {
+        const ts = this.typeSpec(); if (!ts) throw new CError('结构体成员需要类型', this.peek().line);
+        do { const d = this.declarator(ts.t); const s = sizeOf(d.t), a = alignOf(d.t); al = Math.max(al, a);
+          let o; if (union) { o = 0; off = Math.max(off, s); } else { o = Math.ceil(off / a) * a; off = o + s; }
+          t.members.push({name: d.name, t: d.t, off: o}); } while (this.eat(','));
+        this.expect(';');
+      }
+      t.size = Math.ceil(off / al) * al; t.align = al; return t;
+    }
+    if (name && this.structs.has(name)) return this.structs.get(name);
+    const t = {k: 'struct', name, members: [], size: 0, align: 1, union}; if (name) this.structs.set(name, t); return t;
+  }
+  params() {
+    const ps = []; if (this.is('void') && this.is(')', 1)) this.next();
+    while (!this.is(')')) { if (this.eat('...')) break; const ts = this.typeSpec(); if (!ts) throw new CError('参数需要类型', this.peek().line);
+      const d = this.declarator(ts.t, true); let t = d.t; if (t.k === 'arr') t = ptr(t.of); if (t.k === 'fn') t = ptr(t); ps.push({name: d.name, t}); if (!this.eat(',')) break; }
+    this.expect(')'); return ps;
+  }
+  declarator(base, abstract) {
+    let t = base;
+    while (this.eat('*')) { t = ptr(t); while (this.eat('const')); }
+    let name = null;
+    if (this.is('(') && this.is('*', 1)) {
+      this.next(); this.next(); name = this.next().v;
+      const dims = this.dims(); this.expect(')'); this.expect('('); const params = this.params();
+      t = ptr({k: 'fn', ret: t, params}); for (let i = dims.length-1; i >= 0; i--) t = {k: 'arr', of: t, n: dims[i]};
+      return {name, t};
+    }
+    if (this.peek().t === 'id') name = this.next().v; else if (!abstract) throw new CError(`期望标识符，遇到 '${this.peek().v.text || this.peek().v}'`, this.peek().line);
+    if (this.eat('(')) return {name, t: {k: 'fn', ret: t, params: this.params()}, isFn: true};
+    const dims = this.dims(); for (let i = dims.length-1; i >= 0; i--) t = {k: 'arr', of: t, n: dims[i]};
+    return {name, t};
+  }
+  dims() { const d = []; while (this.eat('[')) { d.push(this.is(']') ? null : this.constEval(this.cond())); this.expect(']'); } return d; }
+  constEval(e) {
+    switch (e.k) {
+      case 'num': return e.v;
+      case 'un': { const v = this.constEval(e.e); return e.op === '-' ? -v : e.op === '~' ? ~v : e.op === '!' ? +!v : v; }
+      case 'sizeofT': return sizeOf(e.t);
+      case 'bin': { const a = this.constEval(e.l), b = this.constEval(e.r);
+        switch (e.op) { case '+': return a+b; case '-': return a-b; case '*': return a*b; case '/': return Math.trunc(a/b); case '%': return a%b; case '<<': return a<<b; case '>>': return a>>b; case '&': return a&b; case '|': return a|b; case '^': return a^b; } }
+    }
+    throw new CError('数组大小必须是常量表达式', e.line);
+  }
+  declaration(top) {
+    const line = this.peek().line; const ts = this.typeSpec();
+    if (!ts) throw new CError(`语法错误: 意外的 '${this.peek().v.text || this.peek().v}'`, line);
+    if (this.eat(';')) return [];
+    const out = [];
+    do {
+      const d = this.declarator(ts.t);
+      if (ts.isTypedef) { this.typedefs.set(d.name, d.t); continue; }
+      if (d.isFn) {
+        if (this.is('{')) { if (!top) throw new CError('不能在函数内定义函数', line); const body = this.block(); out.push({k: 'fn', name: d.name, ret: d.t.ret, params: d.t.params, body, line}); return out; }
+        continue;
+      }
+      let init = null; if (this.eat('=')) init = this.initializer();
+      out.push({k: 'decl', t: d.t, name: d.name, init, isStatic: ts.isStatic, line});
+    } while (this.eat(','));
+    this.expect(';'); return out;
+  }
+  initializer() {
+    if (this.eat('{')) { const items = []; const line = this.peek().line; while (!this.is('}')) { items.push(this.initializer()); if (!this.eat(',')) break; } this.expect('}'); return {k: 'list', items, line}; }
+    return this.assign();
+  }
+  block() { const line = this.peek().line; this.expect('{'); const body = []; while (!this.eat('}')) { if (this.peek().t === 'eof') throw new CError("缺少 '}'", line); body.push(this.statement()); } return {k: 'block', body, line}; }
+  statement() {
+    const line = this.peek().line;
+    if (this.is('{')) return this.block();
+    if (this.isTypeStart()) return {k: 'decls', decls: this.declaration(false), line};
+    if (this.eat('if')) { this.expect('('); const c = this.expr(); this.expect(')'); const a = this.statement(); let b = null; if (this.eat('else')) b = this.statement(); return {k: 'if', c, a, b, line}; }
+    if (this.eat('while')) { this.expect('('); const c = this.expr(); this.expect(')'); return {k: 'while', c, body: this.statement(), line}; }
+    if (this.eat('do')) { const body = this.statement(); this.expect('while'); this.expect('('); const c = this.expr(); this.expect(')'); this.expect(';'); return {k: 'do', c, body, line}; }
+    if (this.eat('for')) {
+      this.expect('('); let init = null;
+      if (this.isTypeStart()) init = {k: 'decls', decls: this.declaration(false), line}; else { if (!this.is(';')) init = {k: 'expr', e: this.expr(), line}; this.expect(';'); }
+      const c = this.is(';') ? null : this.expr(); this.expect(';'); const step = this.is(')') ? null : this.expr(); this.expect(')');
+      return {k: 'for', init, c, step, body: this.statement(), line};
+    }
+    if (this.eat('return')) { const e = this.is(';') ? null : this.expr(); this.expect(';'); return {k: 'return', e, line}; }
+    if (this.eat('break')) { this.expect(';'); return {k: 'break', line}; }
+    if (this.eat('continue')) { this.expect(';'); return {k: 'continue', line}; }
+    if (this.eat(';')) return {k: 'empty', line};
+    const e = this.expr(); this.expect(';'); return {k: 'expr', e, line};
+  }
+  expr() { let e = this.assign(); while (this.eat(',')) e = {k: 'comma', a: e, b: this.assign(), line: e.line}; return e; }
+  assign() {
+    const l = this.cond(); const tk = this.peek();
+    if (tk.t === 'op' && ['=','+=','-=','*=','/=','%=','&=','|=','^=','<<=','>>='].includes(tk.v)) { this.next(); return {k: 'assign', op: tk.v, l, r: this.assign(), line: tk.line}; }
+    return l;
+  }
+  cond() { const c = this.binary(0); if (this.eat('?')) { const a = this.expr(); this.expect(':'); const b = this.cond(); return {k: 'cond', c, a, b, line: c.line}; } return c; }
+  binary(lvl) {
+    if (lvl === BIN.length) return this.unary();
+    let l = this.binary(lvl+1);
+    for (;;) { const tk = this.peek(); if (tk.t === 'op' && BIN[lvl].includes(tk.v)) { this.next(); l = {k: 'bin', op: tk.v, l, r: this.binary(lvl+1), line: tk.line}; } else return l; }
+  }
+  unary() {
+    const tk = this.peek();
+    if (tk.t === 'op' && ['-','+','!','~','*','&','++','--'].includes(tk.v)) { this.next(); return {k: 'un', op: tk.v, e: this.unary(), line: tk.line}; }
+    if (tk.t === 'kw' && tk.v === 'sizeof') { this.next(); if (this.is('(') && this.isTypeStart(1)) { this.next(); const t = this.typeName(); this.expect(')'); return {k: 'sizeofT', t, line: tk.line}; } return {k: 'sizeofE', e: this.unary(), line: tk.line}; }
+    if (this.is('(') && this.isTypeStart(1)) { this.next(); const t = this.typeName(); this.expect(')'); return {k: 'cast', t, e: this.unary(), line: tk.line}; }
+    return this.postfix();
+  }
+  typeName() { const ts = this.typeSpec(); return this.declarator(ts.t, true).t; }
+  postfix() {
+    let e = this.primary();
+    for (;;) {
+      const tk = this.peek();
+      if (this.eat('[')) { const i = this.expr(); this.expect(']'); e = {k: 'index', a: e, i, line: tk.line}; }
+      else if (this.eat('(')) { const args = []; while (!this.is(')')) { args.push(this.assign()); if (!this.eat(',')) break; } this.expect(')'); e = {k: 'call', f: e, args, line: tk.line}; }
+      else if (this.eat('.')) e = {k: 'member', e, name: this.next().v, arrow: false, line: tk.line};
+      else if (this.eat('->')) e = {k: 'member', e, name: this.next().v, arrow: true, line: tk.line};
+      else if (this.is('++') || this.is('--')) { this.next(); e = {k: 'post', op: tk.v, e, line: tk.line}; }
+      else return e;
+    }
+  }
+  primary() {
+    const tk = this.next(); if (!tk) throw new CError('语法错误: 意外结束', this.peek().line);
+    if (tk.t === 'num') return {k: 'num', ...parseNum(tk.v), line: tk.line};
+    if (tk.t === 'chr') return {k: 'num', v: tk.v, t: T.int, line: tk.line};
+    if (tk.t === 'str') { let s = tk.v; while (this.peek().t === 'str') s += this.next().v; return {k: 'str', v: s, line: tk.line}; }
+    if (tk.t === 'id') return {k: 'id', name: tk.v, line: tk.line};
+    if (tk.t === 'op' && tk.v === '(') { const e = this.expr(); this.expect(')'); return e; }
+    throw new CError(`语法错误: 意外的 '${tk.v.text || tk.v}'`, tk.line);
+  }
+}
+
+/* ---------- 运行时 ---------- */
+class Env { constructor(p) { this.vars = new Map(); this.parent = p; } get(n) { for (let e = this; e; e = e.parent) { const v = e.vars.get(n); if (v) return v; } return null; } }
+const FN_BASE = 0x400000;
+class Machine {
+  constructor(prog) {
+    this.prog = prog; this.buf = new ArrayBuffer(65536); this.dv = new DataView(this.buf); this.u8 = new Uint8Array(this.buf);
+    this.sp = 0x10000; this.heap = 0x8000; this.stat = 0x1000; this.out = ''; this.frames = []; this.steps = 0; this.maxSteps = 200000;
+    this.globals = new Env(null); this.funcs = new Map(); this.fnByAddr = []; this.strCache = new Map(); this.statics = new Map(); this.allocs = new Map();
+    for (const it of prog) if (it.k === 'fn') { this.funcs.set(it.name, it); it.addr = FN_BASE + this.fnByAddr.length * 16; this.fnByAddr.push(it); }
+  }
+  check(a, n) { if (!(a >= 0x100 && a + n <= 0x10000)) throw new CError(`段错误 (Segmentation fault): 访问非法地址 ${hex(a)}`); }
+  read(t, a) {
+    if (t.k === 'arr' || t.k === 'struct' || t.k === 'fn') return a;
+    this.check(a, sizeOf(t)); const d = this.dv;
+    switch (t.k) {
+      case 'char': return t.unsigned ? d.getUint8(a) : d.getInt8(a);
+      case 'short': return t.unsigned ? d.getUint16(a, true) : d.getInt16(a, true);
+      case 'int': return t.unsigned ? d.getUint32(a, true) : d.getInt32(a, true);
+      case 'long': return Number(t.unsigned ? d.getBigUint64(a, true) : d.getBigInt64(a, true));
+      case 'float': return d.getFloat32(a, true);
+      case 'double': return d.getFloat64(a, true);
+      case 'ptr': return Number(d.getBigUint64(a, true));
+    }
+    throw new CError('无法读取类型 ' + typeStr(t));
+  }
+  write(t, a, v) {
+    const d = this.dv;
+    if (t.k === 'struct' || t.k === 'arr') { const n = sizeOf(t); this.check(a, n); this.check(v, n); this.u8.copyWithin(a, v, v + n); return; }
+    this.check(a, sizeOf(t));
+    switch (t.k) {
+      case 'char': d.setInt8(a, v); return;
+      case 'short': d.setInt16(a, v, true); return;
+      case 'int': d.setInt32(a, v | 0, true); return;
+      case 'long': d.setBigInt64(a, BigInt.asIntN(64, BigInt(Math.trunc(v))), true); return;
+      case 'float': d.setFloat32(a, v, true); return;
+      case 'double': d.setFloat64(a, v, true); return;
+      case 'ptr': d.setBigUint64(a, BigInt(Math.trunc(v) >>> 0), true); return;
+    }
+    throw new CError('无法写入类型 ' + typeStr(t));
+  }
+  alloc(t) { const s = Math.max(sizeOf(t), 1), a = alignOf(t); let sp = this.sp - s; sp -= sp % a; if (sp < this.heap + 64) throw new CError('栈溢出 (Stack overflow)'); this.sp = sp; return sp; }
+  allocStatic(s, a) { const p = Math.ceil(this.stat / a) * a; this.stat = p + Math.max(s, 1); if (this.stat > 0x8000) throw new CError('静态区溢出'); return p; }
+  strAddr(s) { if (this.strCache.has(s)) return this.strCache.get(s); const b = enc.encode(s); const a = this.allocStatic(b.length + 1, 1); this.u8.set(b, a); this.u8[a + b.length] = 0; this.strCache.set(s, a); return a; }
+  malloc(n) { n = Math.max(0, n | 0); const p = Math.ceil(this.heap / 16) * 16 + 16; if (p + n > this.sp - 64) throw new CError('内存不足: malloc 失败'); this.heap = p + n; this.allocs.set(p, n); return p; }
+  free(p, line) { if (p === 0) return; if (!this.allocs.has(p)) throw new CError(`free(): 无效指针 ${hex(p)}（不是 malloc 返回的地址，或已被释放 —— double free）`, line); this.allocs.delete(p); }
+  cstr(a) { const b = []; for (let i = 0; i < 4096; i++) { this.check(a + i, 1); const c = this.u8[a + i]; if (!c) break; b.push(c); } return dec.decode(new Uint8Array(b)); }
+  conv(t, val) { let v = val.v; if (t.k === 'struct' || t.k === 'arr') return v; if ((val.t.k === 'float' || val.t.k === 'double') && t.k !== 'float' && t.k !== 'double') v = Math.trunc(v); return coerce(t, v); }
+  load(t, addr) { if (t.k === 'arr') return {t: ptr(t.of), v: addr}; if (t.k === 'fn') return {t, v: addr}; return {t, v: this.read(t, addr)}; }
+  addPtr(val, n) { if (val.t.k === 'ptr') return {t: val.t, v: val.v + n * Math.max(sizeOf(val.t.to), 1)}; const t = promote(val.t); return {t, v: val.v + n}; }
+  tick(line) { if (++this.steps > this.maxSteps) throw new CError('执行步数超过上限，已中断（可能存在死循环）', line); }
+  *at(line, env) { const f = this.frames[this.frames.length - 1]; if (f) { f.cur = line; f.env = env; } yield {line}; }
+
+  *run() {
+    for (const it of this.prog) if (it.k === 'decl') yield* this.declare(it, this.globals, true);
+    const m = this.funcs.get('main'); if (!m) throw new CError('未找到 main 函数', 1);
+    const r = yield* this.call(m, [], m.line); this.exit = r.v;
+  }
+  *declare(d, env, isGlobal) {
+    let t = d.t;
+    if (t.k === 'arr' && t.n === null) {
+      if (d.init && d.init.k === 'list') t = {...t, n: d.init.items.length};
+      else if (d.init && d.init.k === 'str') t = {...t, n: enc.encode(d.init.v).length + 1};
+      else throw new CError(`数组 '${d.name}' 大小未知`, d.line);
+    }
+    let addr;
+    if (isGlobal || d.isStatic) {
+      if (this.statics.has(d)) { env.vars.set(d.name, this.statics.get(d)); return; }
+      addr = this.allocStatic(sizeOf(t), alignOf(t)); this.u8.fill(0, addr, addr + sizeOf(t)); this.statics.set(d, {t, addr, isStatic: d.isStatic});
+    } else addr = this.alloc(t);
+    env.vars.set(d.name, {t, addr, isStatic: d.isStatic});
+    if (d.init) yield* this.init(t, addr, d.init, env);
+  }
+  *init(t, addr, ini, env) {
+    if (ini.k === 'list') {
+      this.u8.fill(0, addr, addr + sizeOf(t));
+      if (t.k === 'arr') { for (let i = 0; i < ini.items.length && i < t.n; i++) yield* this.init(t.of, addr + i * sizeOf(t.of), ini.items[i], env); }
+      else if (t.k === 'struct') { for (let i = 0; i < ini.items.length && i < t.members.length; i++) { const m = t.members[i]; yield* this.init(m.t, addr + m.off, ini.items[i], env); } }
+      else if (ini.items.length) yield* this.init(t, addr, ini.items[0], env);
+      return;
+    }
+    if (t.k === 'arr' && ini.k === 'str' && t.of.k === 'char') { const b = enc.encode(ini.v); this.u8.fill(0, addr, addr + t.n); this.u8.set(b.subarray(0, Math.min(b.length, t.n)), addr); return; }
+    const v = yield* this.rv(ini, env); this.write(t, addr, this.conv(t, v));
+  }
+  *stmt(s, env) {
+    this.tick(s.line);
+    switch (s.k) {
+      case 'block': { const e = new Env(env); for (const st of s.body) { const r = yield* this.stmt(st, e); if (r) return r; } return; }
+      case 'decls': yield* this.at(s.line, env); for (const d of s.decls) yield* this.declare(d, env, false); return;
+      case 'expr': yield* this.at(s.line, env); yield* this.rv(s.e, env); return;
+      case 'if': { yield* this.at(s.line, env); const c = yield* this.rv(s.c, env); if (truthy(c)) return yield* this.stmt(s.a, env); if (s.b) return yield* this.stmt(s.b, env); return; }
+      case 'while': for (;;) { yield* this.at(s.line, env); const c = yield* this.rv(s.c, env); if (!truthy(c)) return; const r = yield* this.stmt(s.body, env); if (r) { if (r.k === 'break') return; if (r.k === 'return') return r; } }
+      case 'do': for (;;) { const r = yield* this.stmt(s.body, env); if (r) { if (r.k === 'break') return; if (r.k === 'return') return r; } yield* this.at(s.line, env); const c = yield* this.rv(s.c, env); if (!truthy(c)) return; }
+      case 'for': {
+        const e = new Env(env); let first = true;
+        if (s.init) { yield* this.at(s.line, e); if (s.init.k === 'decls') { for (const d of s.init.decls) yield* this.declare(d, e, false); } else yield* this.rv(s.init.e, e); }
+        for (;;) {
+          if (s.c) { if (first && s.init) first = false; else yield* this.at(s.line, e); const c = yield* this.rv(s.c, e); if (!truthy(c)) return; }
+          const r = yield* this.stmt(s.body, e); if (r) { if (r.k === 'break') return; if (r.k === 'return') return r; }
+          if (s.step) yield* this.rv(s.step, e);
+          this.tick(s.line);
+        }
+      }
+      case 'return': { yield* this.at(s.line, env); const v = s.e ? yield* this.rv(s.e, env) : {t: T.int, v: 0}; return {k: 'return', v}; }
+      case 'break': case 'continue': yield* this.at(s.line, env); return {k: s.k};
+      case 'empty': return;
+    }
+    throw new CError('不支持的语句', s.line);
+  }
+  *rv(e, env) {
+    switch (e.k) {
+      case 'num': return {t: e.t, v: e.v};
+      case 'str': return {t: ptr(T.char), v: this.strAddr(e.v)};
+      case 'id': { const v = env.get(e.name); if (v) return this.load(v.t, v.addr); const f = this.funcs.get(e.name); if (f) return {t: {k: 'fn', ret: f.ret, params: f.params}, v: f.addr}; throw new CError(`未声明的标识符 '${e.name}'`, e.line); }
+      case 'index': case 'member': { const l = yield* this.lv(e, env); return this.load(l.t, l.addr); }
+      case 'un': return yield* this.unary(e, env);
+      case 'post': { const l = yield* this.lv(e.e, env); const old = this.load(l.t, l.addr); const nv = this.addPtr(old, e.op === '++' ? 1 : -1); this.write(l.t, l.addr, this.conv(l.t, nv)); return old; }
+      case 'sizeofT': return {t: T.ulong, v: sizeOf(e.t)};
+      case 'sizeofE': return {t: T.ulong, v: sizeOf(yield* this.typeOf(e.e, env))};
+      case 'cast': { const v = yield* this.rv(e.e, env); return {t: e.t, v: this.conv(e.t, v)}; }
+      case 'bin': return yield* this.binary(e, env);
+      case 'assign': return yield* this.assign(e, env);
+      case 'cond': { const c = yield* this.rv(e.c, env); return yield* this.rv(truthy(c) ? e.a : e.b, env); }
+      case 'comma': yield* this.rv(e.a, env); return yield* this.rv(e.b, env);
+      case 'call': return yield* this.callExpr(e, env);
+    }
+    throw new CError('不支持的表达式', e.line);
+  }
+  *typeOf(e, env) {
+    if (e.k === 'id') { const v = env.get(e.name); if (v) return v.t; }
+    if (e.k === 'str') return {k: 'arr', of: T.char, n: enc.encode(e.v).length + 1};
+    if (e.k === 'index' || e.k === 'member' || (e.k === 'un' && e.op === '*')) return (yield* this.lv(e, env)).t;
+    return (yield* this.rv(e, env)).t;
+  }
+  *lv(e, env) {
+    switch (e.k) {
+      case 'id': { const v = env.get(e.name); if (!v) throw new CError(`未声明的标识符 '${e.name}'`, e.line); return {t: v.t, addr: v.addr}; }
+      case 'un': if (e.op === '*') { const p = yield* this.rv(e.e, env); if (p.t.k !== 'ptr') throw new CError('对非指针类型解引用', e.line); if (p.v === 0) throw new CError('段错误: 解引用空指针 NULL', e.line); return {t: p.t.to, addr: p.v}; } break;
+      case 'index': { const a = yield* this.rv(e.a, env); const i = yield* this.rv(e.i, env); let p = a, n = i; if (p.t.k !== 'ptr') { p = i; n = a; } if (p.t.k !== 'ptr') throw new CError('下标作用于非数组/指针', e.line); return {t: p.t.to, addr: p.v + n.v * Math.max(sizeOf(p.t.to), 1)}; }
+      case 'member': {
+        let base;
+        if (e.arrow) { const p = yield* this.rv(e.e, env); if (p.t.k !== 'ptr' || p.t.to.k !== 'struct') throw new CError("'->' 左侧不是结构体指针", e.line); if (p.v === 0) throw new CError('段错误: 通过空指针访问成员', e.line); base = {t: p.t.to, addr: p.v}; }
+        else base = yield* this.lv(e.e, env);
+        if (base.t.k !== 'struct') throw new CError("'.' 左侧不是结构体", e.line);
+        const m = base.t.members.find(m => m.name === e.name); if (!m) throw new CError(`结构体没有成员 '${e.name}'`, e.line);
+        return {t: m.t, addr: base.addr + m.off};
+      }
+      case 'call': { const v = yield* this.rv(e, env); if (v.t.k === 'struct') return {t: v.t, addr: v.v}; break; }
+    }
+    throw new CError('表达式不是左值（不能取地址或赋值）', e.line);
+  }
+  *unary(e, env) {
+    const op = e.op;
+    if (op === '&') {
+      if (e.e.k === 'id' && !env.get(e.e.name) && this.funcs.has(e.e.name)) { const f = this.funcs.get(e.e.name); return {t: ptr({k: 'fn', ret: f.ret, params: f.params}), v: f.addr}; }
+      const l = yield* this.lv(e.e, env); return {t: ptr(l.t), v: l.addr};
+    }
+    if (op === '*') {
+      const p = yield* this.rv(e.e, env);
+      if (p.t.k === 'fn') return p; if (p.t.k === 'ptr' && p.t.to.k === 'fn') return {t: p.t.to, v: p.v};
+      if (p.t.k !== 'ptr') throw new CError('对非指针类型解引用', e.line); if (p.v === 0) throw new CError('段错误: 解引用空指针 NULL', e.line);
+      return this.load(p.t.to, p.v);
+    }
+    if (op === '++' || op === '--') { const l = yield* this.lv(e.e, env); const nv = this.addPtr(this.load(l.t, l.addr), op === '++' ? 1 : -1); const c = this.conv(l.t, nv); this.write(l.t, l.addr, c); return {t: l.t, v: c}; }
+    const v = yield* this.rv(e.e, env);
+    if (op === '-') { const t = promote(v.t); return {t, v: coerce(t, -v.v)}; }
+    if (op === '+') return {t: promote(v.t), v: v.v};
+    if (op === '!') return {t: T.int, v: truthy(v) ? 0 : 1};
+    const t = promote(v.t); return {t, v: coerce(t, ~v.v)};
+  }
+  *binary(e, env) {
+    if (e.op === '&&') { const a = yield* this.rv(e.l, env); if (!truthy(a)) return {t: T.int, v: 0}; const b = yield* this.rv(e.r, env); return {t: T.int, v: truthy(b) ? 1 : 0}; }
+    if (e.op === '||') { const a = yield* this.rv(e.l, env); if (truthy(a)) return {t: T.int, v: 1}; const b = yield* this.rv(e.r, env); return {t: T.int, v: truthy(b) ? 1 : 0}; }
+    const a = yield* this.rv(e.l, env), b = yield* this.rv(e.r, env); return this.binop(e.op, a, b, e.line);
+  }
+  binop(op, a, b, line) {
+    const ap = a.t.k === 'ptr', bp = b.t.k === 'ptr';
+    if (op === '+' && (ap || bp)) { if (ap && bp) throw new CError('两个指针不能相加', line); return ap ? this.addPtr(a, b.v) : this.addPtr(b, a.v); }
+    if (op === '-' && ap) { if (bp) return {t: T.long, v: Math.trunc((a.v - b.v) / Math.max(sizeOf(a.t.to), 1))}; return this.addPtr(a, -b.v); }
+    if (['==','!=','<','>','<=','>='].includes(op)) {
+      let x = a.v, y = b.v; if (!ap && !bp) { const t = arith(a.t, b.t); x = coerce(t, x); y = coerce(t, y); }
+      const r = op === '==' ? x === y : op === '!=' ? x !== y : op === '<' ? x < y : op === '>' ? x > y : op === '<=' ? x <= y : x >= y; return {t: T.int, v: r ? 1 : 0};
+    }
+    const t = arith(a.t, b.t); const x = coerce(t, a.v), y = coerce(t, b.v); const fl = t.k === 'float' || t.k === 'double'; let r;
+    switch (op) {
+      case '+': r = x + y; break; case '-': r = x - y; break;
+      case '*': r = (fl || t.k === 'long') ? x * y : Math.imul(x, y); break;
+      case '/': if (!fl && y === 0) throw new CError('浮点异常 (Floating point exception): 整数除以零', line); r = fl ? x / y : Math.trunc(x / y); break;
+      case '%': if (y === 0) throw new CError('浮点异常: 对零取模', line); r = x % y; break;
+      case '<<': r = t.k === 'long' ? x * 2 ** y : x << y; break;
+      case '>>': r = t.k === 'long' ? Math.floor(x / 2 ** y) : (t.unsigned ? x >>> y : x >> y); break;
+      case '&': r = x & y; break; case '|': r = x | y; break; case '^': r = x ^ y; break;
+      default: throw new CError('未知运算符 ' + op, line);
+    }
+    return {t, v: coerce(t, r)};
+  }
+  *assign(e, env) {
+    const l = yield* this.lv(e.l, env); let val;
+    if (e.op === '=') val = yield* this.rv(e.r, env);
+    else { const cur = this.load(l.t, l.addr); const r = yield* this.rv(e.r, env); val = this.binop(e.op.slice(0, -1), cur, r, e.line); }
+    const c = this.conv(l.t, val); this.write(l.t, l.addr, c); return {t: l.t, v: c};
+  }
+  *callExpr(e, env) {
+    const args = []; for (const a of e.args) args.push(yield* this.rv(a, env));
+    if (e.f.k === 'id' && !env.get(e.f.name)) {
+      const name = e.f.name;
+      if (this.funcs.has(name)) return yield* this.call(this.funcs.get(name), args, e.line);
+      if (BUILTINS[name]) return BUILTINS[name](this, args, e.line);
+      throw new CError(`未定义的函数 '${name}'`, e.line);
+    }
+    const f = yield* this.rv(e.f, env);
+    if (f.t.k !== 'fn' && !(f.t.k === 'ptr' && f.t.to.k === 'fn')) throw new CError('调用的对象不是函数', e.line);
+    const fn = this.fnByAddr[(f.v - FN_BASE) / 16]; if (!fn) throw new CError(`段错误: 调用无效函数指针 ${hex(f.v)}`, e.line);
+    return yield* this.call(fn, args, e.line);
+  }
+  *call(fn, args, line) {
+    if (this.frames.length >= 48) throw new CError('栈溢出 (Stack overflow): 递归层数过深', line);
+    const savedSp = this.sp, env = new Env(this.globals), frame = {fn: fn.name, env, cur: fn.line, callLine: line}; this.frames.push(frame);
+    fn.params.forEach((p, i) => { const a = args[i] || {t: T.int, v: 0}; const addr = this.alloc(p.t); this.write(p.t, addr, this.conv(p.t, a)); if (p.name) env.vars.set(p.name, {t: p.t, addr}); });
+    let ret = {t: fn.ret, v: 0};
+    try { const r = yield* this.stmt(fn.body, env); if (r && r.k === 'return' && fn.ret.k !== 'void') ret = {t: fn.ret, v: this.conv(fn.ret, r.v)}; }
+    finally { this.frames.pop(); this.sp = savedSp; }
+    return ret;
+  }
+  /* ---- 供 UI 读取的状态 ---- */
+  fmtVal(t, addr, depth = 0) {
+    try {
+      switch (t.k) {
+        case 'char': { const v = this.read(t, addr); return v >= 32 && v < 127 ? `'${String.fromCharCode(v)}' (${v})` : String(v); }
+        case 'short': case 'int': case 'long': return String(this.read(t, addr));
+        case 'float': case 'double': { const v = this.read(t, addr); return Number.isInteger(v) ? v.toFixed(1) : String(+v.toPrecision(7)); }
+        case 'ptr': {
+          const v = this.read(t, addr); if (v === 0) return 'NULL';
+          if (t.to.k === 'fn') { const f = this.fnByAddr[(v - FN_BASE) / 16]; return f ? '&' + f.name : hex(v); }
+          let s = hex(v);
+          if (v >= 0x100 && v < 0x10000 && depth < 1) { if (t.to.k === 'char') s += ` "${this.cstr(v).slice(0, 24)}"`; else if (t.to.k !== 'void' && t.to.k !== 'arr') s += ' → ' + this.fmtVal(t.to, v, depth + 1); }
+          return s;
+        }
+        case 'arr': {
+          if (t.of.k === 'char') { const b = []; for (let i = 0; i < t.n; i++) { const c = this.u8[addr + i]; if (!c) break; b.push(c); } return `"${dec.decode(new Uint8Array(b))}"`; }
+          const n = Math.min(t.n, 8); const items = []; for (let i = 0; i < n; i++) items.push(this.fmtVal(t.of, addr + i * sizeOf(t.of), depth + 1)); return '{' + items.join(', ') + (t.n > 8 ? ', …' : '') + '}';
+        }
+        case 'struct': return '{' + t.members.map(m => m.name + '=' + this.fmtVal(m.t, addr + m.off, depth + 1)).join(', ') + '}';
+      }
+    } catch (e) { return '?'; }
+    return '?';
+  }
+  snapshot() {
+    const top = this.frames[this.frames.length - 1]; const vars = [];
+    if (top) for (let e = top.env; e && e !== this.globals; e = e.parent) for (const [n, v] of e.vars) if (!vars.some(x => x.name === n)) vars.push({name: n, type: typeStr(v.t), addr: hex(v.addr), val: this.fmtVal(v.t, v.addr), isStatic: !!v.isStatic});
+    const globals = []; for (const [n, v] of this.globals.vars) globals.push({name: n, type: typeStr(v.t), addr: hex(v.addr), val: this.fmtVal(v.t, v.addr)});
+    return {vars, globals, stack: this.frames.map(f => ({fn: f.fn, line: f.cur})), out: this.out, heap: [...this.allocs].map(([p, n]) => ({addr: hex(p), size: n}))};
+  }
+}
+
+/* ---------- 内建函数 ---------- */
+function formatC(m, fmt, args, line) {
+  let out = '', ai = 0;
+  for (let i = 0; i < fmt.length; i++) {
+    const c = fmt[i]; if (c !== '%') { out += c; continue; }
+    let j = i + 1, flags = ''; while ('-+ 0#'.includes(fmt[j])) flags += fmt[j++];
+    let width = ''; while (/[0-9]/.test(fmt[j])) width += fmt[j++];
+    let prec = null; if (fmt[j] === '.') { j++; prec = ''; while (/[0-9]/.test(fmt[j])) prec += fmt[j++]; }
+    while ('hlzjt'.includes(fmt[j])) j++;
+    const conv = fmt[j]; i = j;
+    if (conv === '%') { out += '%'; continue; }
+    const a = args[ai++]; if (!a) throw new CError('printf: 格式串需要的参数比实际提供的多', line); let s;
+    const isLong = a.t.k === 'long' || a.t.k === 'ptr';
+    switch (conv) {
+      case 'd': case 'i': s = String(isLong ? Math.trunc(a.v) : a.v | 0); break;
+      case 'u': s = String(isLong ? coerce(T.ulong, a.v) : a.v >>> 0); break;
+      case 'x': case 'X': s = isLong ? BigInt.asUintN(64, BigInt(Math.trunc(a.v))).toString(16) : (a.v >>> 0).toString(16); if (conv === 'X') s = s.toUpperCase(); if (flags.includes('#')) s = '0x' + s; break;
+      case 'o': s = (a.v >>> 0).toString(8); break;
+      case 'c': s = String.fromCharCode(a.v & 255); break;
+      case 's': s = m.cstr(a.v); if (prec !== null) s = s.slice(0, +prec); break;
+      case 'p': s = a.v === 0 ? '(nil)' : hex(a.v); break;
+      case 'f': case 'F': s = a.v.toFixed(prec === null ? 6 : +prec); break;
+      case 'e': s = a.v.toExponential(prec === null ? 6 : +prec); break;
+      case 'g': s = String(+a.v.toPrecision(prec === null || prec === '' ? 6 : +prec)); break;
+      default: throw new CError(`printf: 不支持的格式 %${conv}`, line);
+    }
+    if (flags.includes('+') && 'dif'.includes(conv) && !s.startsWith('-')) s = '+' + s;
+    const w = +width || 0;
+    if (s.length < w) { if (flags.includes('-')) s = s.padEnd(w); else if (flags.includes('0') && !'sc'.includes(conv)) { const neg = s[0] === '-'; s = (neg ? '-' : '') + s.replace(/^-/, '').padStart(w - (neg ? 1 : 0), '0'); } else s = s.padStart(w); }
+    out += s;
+  }
+  return out;
+}
+const BUILTINS = {
+  printf(m, a, line) { const f = a[0]; if (!f || f.t.k !== 'ptr') throw new CError('printf 第一个参数必须是格式字符串', line); const s = formatC(m, m.cstr(f.v), a.slice(1), line); m.out += s; return {t: T.int, v: s.length}; },
+  puts(m, a) { m.out += m.cstr(a[0].v) + '\n'; return {t: T.int, v: 1}; },
+  putchar(m, a) { m.out += String.fromCharCode(a[0].v & 255); return {t: T.int, v: a[0].v}; },
+  strlen(m, a) { let n = 0; while (m.u8[a[0].v + n]) { m.check(a[0].v + n, 1); n++; } return {t: T.ulong, v: n}; },
+  strcpy(m, a) { let i = 0; for (;; i++) { const c = m.u8[a[1].v + i]; m.check(a[0].v + i, 1); m.u8[a[0].v + i] = c; if (!c) break; } return a[0]; },
+  strcat(m, a) { let d = a[0].v; while (m.u8[d]) d++; BUILTINS.strcpy(m, [{t: a[0].t, v: d}, a[1]]); return a[0]; },
+  strcmp(m, a) { const x = m.cstr(a[0].v), y = m.cstr(a[1].v); return {t: T.int, v: x < y ? -1 : x > y ? 1 : 0}; },
+  memset(m, a) { m.check(a[0].v, a[2].v); m.u8.fill(a[1].v & 255, a[0].v, a[0].v + a[2].v); return a[0]; },
+  memcpy(m, a) { m.check(a[0].v, a[2].v); m.check(a[1].v, a[2].v); m.u8.copyWithin(a[0].v, a[1].v, a[1].v + a[2].v); return a[0]; },
+  malloc(m, a) { return {t: ptr(T.void), v: m.malloc(a[0].v)}; },
+  calloc(m, a) { const n = a[0].v * a[1].v; const p = m.malloc(n); m.u8.fill(0, p, p + n); return {t: ptr(T.void), v: p}; },
+  free(m, a, line) { m.free(a[0].v, line); return {t: T.void, v: 0}; },
+  abs(m, a) { return {t: T.int, v: Math.abs(a[0].v) | 0}; },
+  sqrt(m, a) { return {t: T.double, v: Math.sqrt(a[0].v)}; },
+  pow(m, a) { return {t: T.double, v: Math.pow(a[0].v, a[1].v)}; },
+  exit(m, a, line) { throw new CError(`程序调用 exit(${a[0].v})`, line); },
+};
+
+function compile(src) {
+  const num = (s) => [{t: 'num', v: {text: s, suf: ''}, line: 0}];
+  const macros = new Map([['NULL', {params: null, body: num('0')}], ['true', {params: null, body: num('1')}], ['false', {params: null, body: num('0')}]]);
+  let toks = tokenize(src, macros);
+  for (let i = 0; i < 12; i++) { const r = expand(toks, macros); toks = r.out; if (!r.changed) break; }
+  return new Machine(new Parser(toks).program());
+}
+return {compile, CError};
+})();
+
+</script>
+<script>
+const EXAMPLES = [
+{id:'ptr', tag:'指针', title:'指针与地址', points:[
+ '指针就是存地址的变量；<code>&amp;</code> 取地址，<code>*</code> 解引用。',
+ '64 位平台任何指针都是 8 字节，与指向的类型无关。',
+ '二级指针 <code>int **</code> 存的是"指针的地址"，常用于函数内修改指针本身。'],
+ answer:'答法：指针的大小由平台决定（64 位为 8 字节），类型只决定解引用时读多少字节、+1 跨多远。',
+ code:`#include <stdio.h>
+int main(void) {
+    int a = 10;
+    int *p = &a;        // p 存的是 a 的地址
+    *p = 20;            // 通过 p 修改 a
+    printf("a=%d *p=%d\\n", a, *p);
+    printf("&a=%p p=%p\\n", &a, p);
+    printf("sizeof(p)=%zu\\n", sizeof(p));
+    int **pp = &p;      // 二级指针：指向指针的指针
+    **pp = 30;
+    printf("a=%d\\n", a);
+    return 0;
+}`},
+{id:'arr', tag:'指针', title:'数组名与指针的区别', points:[
+ '数组名在大多数表达式中"退化"为首元素地址，但 <code>sizeof</code> 和 <code>&amp;</code> 例外。',
+ '指针 +1 跨过一个元素的大小，不是 1 字节。',
+ '形参 <code>int arr[]</code> 只是 <code>int *arr</code>，在函数内 sizeof 得到指针大小。'],
+ answer:'答法：数组名不是指针，它是一块内存的名字；退化后才变成指针，所以 sizeof(a)/sizeof(a[0]) 只能在定义作用域内算长度。',
+ code:`#include <stdio.h>
+void show(int arr[]) {                 // 形参退化为 int *
+    printf("函数内 sizeof(arr)=%zu\\n", sizeof(arr));
+}
+int main(void) {
+    int a[5] = {1, 2, 3, 4, 5};
+    int *p = a;                        // 数组名退化为 &a[0]
+    printf("sizeof(a)=%zu 元素数=%zu\\n", sizeof(a), sizeof(a) / sizeof(a[0]));
+    printf("p+1 跨越 %ld 字节\\n", (long)((char *)(p + 1) - (char *)p));
+    printf("*(p+2)=%d a[2]=%d 2[a]=%d\\n", *(p + 2), a[2], 2[a]);
+    show(a);
+    return 0;
+}`},
+{id:'swap', tag:'函数', title:'值传递 vs 地址传递', points:[
+ 'C 只有值传递：形参是实参的一份拷贝，函数内改形参不影响实参。',
+ '想修改外部变量，必须传它的地址，通过指针间接修改。',
+ '经典题：写一个能真正交换两个数的 swap。'],
+ answer:'答法：传指针本质上也是值传递（拷贝的是地址），但通过地址可以修改调用方的内存。',
+ code:`#include <stdio.h>
+void swap_val(int a, int b) {          // 交换的是副本
+    int t = a; a = b; b = t;
+}
+void swap_ptr(int *a, int *b) {        // 通过地址改原变量
+    int t = *a; *a = *b; *b = t;
+}
+int main(void) {
+    int x = 1, y = 2;
+    swap_val(x, y);
+    printf("值传递后: x=%d y=%d\\n", x, y);
+    swap_ptr(&x, &y);
+    printf("址传递后: x=%d y=%d\\n", x, y);
+    return 0;
+}`},
+{id:'str', tag:'字符串', title:'字符串：sizeof 与 strlen', points:[
+ 'C 字符串以 <code>\\0</code> 结尾；<code>strlen</code> 数到 <code>\\0</code> 为止，<code>sizeof</code> 是整块内存大小。',
+ '<code>char s[] = "hi"</code> 在栈上拷贝一份可修改；<code>char *s = "hi"</code> 指向只读常量区，改它是未定义行为。',
+ '<code>strcpy</code> 不检查长度，是缓冲区溢出的常见来源。'],
+ answer:'答法：sizeof 是编译期算出的类型大小，strlen 是运行期数字符个数，数组形式的字符串二者差 1（\\0）。',
+ code:`#include <stdio.h>
+#include <string.h>
+int main(void) {
+    char s1[] = "hello";     // 栈上数组，含 '\\0'，共 6 字节
+    char *s2 = "hello";      // 指针，指向常量区
+    printf("sizeof(s1)=%zu strlen(s1)=%zu\\n", sizeof(s1), strlen(s1));
+    printf("sizeof(s2)=%zu strlen(s2)=%zu\\n", sizeof(s2), strlen(s2));
+    s1[0] = 'H';             // 可以修改
+    char buf[16];
+    strcpy(buf, s1);
+    printf("%s %s 相等=%d\\n", s1, buf, strcmp(buf, "Hello") == 0);
+    return 0;
+}`},
+{id:'const', tag:'关键字', title:'const 与指针', points:[
+ '<code>const int *p</code>：指向常量的指针，不能通过 p 改值，但 p 可以换指向。',
+ '<code>int *const p</code>：常量指针，p 不能换指向，但可以改值。',
+ '记法：只看 const 和 * 的相对位置——const 在 * 左边锁值，在 * 右边锁指针，两边都写就都锁。'],
+ answer:'答法：const 在 * 左边锁"值"，在 * 右边锁"指针"；两边都有就都锁。',
+ code:`#include <stdio.h>
+int main(void) {
+    int a = 1, b = 2;
+    const int *p1 = &a;      // 锁值：*p1 = 5 会编译报错
+    p1 = &b;                 // 可以换指向
+    int *const p2 = &a;      // 锁指针：p2 = &b 会编译报错
+    *p2 = 5;                 // 可以改值
+    const int *const p3 = &b; // 都锁
+    printf("a=%d b=%d *p1=%d *p3=%d\\n", a, b, *p1, *p3);
+    return 0;
+}`},
+{id:'align', tag:'内存', title:'结构体内存对齐', points:[
+ '每个成员的偏移必须是其自身对齐值的整数倍，编译器会在中间填充。',
+ '结构体总大小必须是最大成员对齐值的整数倍，末尾也可能填充。',
+ '把成员按大小从大到小排列可以减少填充。'],
+ answer:'答法：对齐是为了 CPU 按自然边界一次读取；成员顺序不同，大小可能差一倍。',
+ code:`#include <stdio.h>
+struct A { char c; int i; char d; };     // 1+3 +4 +1+3 = 12
+struct B { char c; char d; int i; };     // 1+1+2 +4   = 8
+struct C { char c; double x; short s; }; // 1+7 +8 +2+6 = 24
+int main(void) {
+    printf("A=%zu B=%zu C=%zu\\n",
+           sizeof(struct A), sizeof(struct B), sizeof(struct C));
+    struct A a = {'x', 7, 'y'};
+    printf("&a.c=%p &a.i=%p &a.d=%p\\n", &a.c, &a.i, &a.d);
+    return 0;
+}`},
+{id:'static', tag:'关键字', title:'static 局部变量', points:[
+ 'static 局部变量存在静态区，只初始化一次，函数返回后值仍然保留。',
+ '普通局部变量在栈上，每次调用重新创建。',
+ 'static 修饰全局变量/函数时，含义变为"仅本文件可见"。'],
+ answer:'答法：static 改变的是存储期（生命周期）和链接属性，作用域仍然在函数内。',
+ code:`#include <stdio.h>
+int counter(void) {
+    static int n = 0;    // 只初始化一次，一直活到程序结束
+    int m = 0;           // 每次调用都从 0 开始
+    n++;
+    m++;
+    return n * 100 + m;
+}
+int main(void) {
+    printf("%d\\n", counter());
+    printf("%d\\n", counter());
+    printf("%d\\n", counter());
+    return 0;
+}`},
+{id:'unsigned', tag:'类型', title:'有符号 / 无符号陷阱', points:[
+ 'int 与 unsigned int 混合运算时，int 会被转成 unsigned，-1 变成 4294967295。',
+ 'unsigned char 255 + 1 回绕为 0；char 在多数平台有符号，128 存进去是 -128。',
+ '循环 <code>for (unsigned i = n; i &gt;= 0; i--)</code> 永远不会停。'],
+ answer:'答法：整型提升和"通常算术转换"是隐式的，比较大小前先想清楚两边的类型。',
+ code:`#include <stdio.h>
+int main(void) {
+    int a = -1;
+    unsigned int b = 1;
+    if (a > b) printf("-1 > 1u 成立！a 被转成 %u\\n", a);
+    else       printf("-1 < 1u\\n");
+    unsigned char c = 255;
+    c = c + 1;                      // 回绕
+    printf("255 + 1 = %d\\n", c);
+    char ch = 128;                  // 超出 char 范围
+    printf("char 存 128 得到 %d\\n", ch);
+    printf("sizeof: int=%zu long=%zu\\n", sizeof(int), sizeof(long));
+    return 0;
+}`},
+{id:'bits', tag:'位运算', title:'位运算常考技巧', points:[
+ '<code>n &amp; 1</code> 判奇偶；<code>n &amp; (n-1)</code> 消掉最低位的 1，为 0 说明 n 是 2 的幂。',
+ '<code>n &amp; -n</code> 取最低位的 1；循环 <code>x &amp;= x-1</code> 数 1 的个数。',
+ '异或交换不用临时变量，但两个变量是同一地址时会清零。'],
+ answer:'答法：位运算题先把数写成二进制，再看每一步操作对位的影响。',
+ code:`#include <stdio.h>
+int main(void) {
+    int n = 12;                                // 1100
+    printf("奇偶: %s\\n", (n & 1) ? "奇" : "偶");
+    printf("是 2 的幂: %d\\n", n > 0 && (n & (n - 1)) == 0);
+    printf("最低位的 1: %d\\n", n & -n);
+    int cnt = 0, x = n;
+    while (x) { x &= x - 1; cnt++; }           // 数 1 的个数
+    printf("二进制里 1 的个数: %d\\n", cnt);
+    int a = 5, b = 9;
+    a ^= b; b ^= a; a ^= b;                    // 异或交换
+    printf("a=%d b=%d\\n", a, b);
+    printf("n<<2=%d n>>1=%d ~n=%d\\n", n << 2, n >> 1, ~n);
+    return 0;
+}`},
+{id:'fnptr', tag:'函数', title:'函数指针与回调', points:[
+ '<code>int (*fp)(int, int)</code> 声明一个指向"两个 int 参数、返回 int"函数的指针。',
+ '函数名本身就是地址，<code>fp = add</code> 与 <code>fp = &amp;add</code> 等价；调用时 <code>fp()</code> 与 <code>(*fp)()</code> 等价。',
+ '回调 = 把函数指针当参数传给别人，由别人在合适时机调用（如 qsort 的比较函数）。'],
+ answer:'答法：函数指针让"做什么"在运行时决定，是 C 里实现多态和回调的基本手段。',
+ code:`#include <stdio.h>
+int add(int a, int b) { return a + b; }
+int mul(int a, int b) { return a * b; }
+int apply(int (*op)(int, int), int x, int y) {   // 回调
+    return op(x, y);
+}
+int main(void) {
+    int (*fp)(int, int) = add;
+    printf("fp(2,3)=%d (*fp)(2,3)=%d\\n", fp(2, 3), (*fp)(2, 3));
+    fp = mul;
+    printf("apply(mul,4,5)=%d\\n", apply(fp, 4, 5));
+    int (*table[2])(int, int) = {add, mul};     // 函数指针数组
+    printf("table: %d %d\\n", table[0](1, 2), table[1](3, 4));
+    return 0;
+}`},
+{id:'heap', tag:'内存', title:'malloc / free 与堆', points:[
+ '局部变量在栈上、函数返回即销毁；malloc 的内存在堆上，直到 free 才释放。',
+ 'malloc 可能失败返回 NULL，必须检查；free 后把指针置 NULL 防止悬空指针。',
+ '<code>free(NULL)</code> 是安全的；同一块内存 free 两次（double free）是严重错误。'],
+ answer:'答法：谁申请谁释放、申请必检查、释放必置空；泄漏和野指针是 C 里最常见的两类内存 bug。',
+ code:`#include <stdio.h>
+#include <stdlib.h>
+int main(void) {
+    int n = 4;
+    int *arr = (int *)malloc(n * sizeof(int));   // 堆上分配
+    if (arr == NULL) return 1;                   // 必须检查
+    for (int i = 0; i < n; i++) arr[i] = i * i;
+    for (int i = 0; i < n; i++) printf("%d ", arr[i]);
+    printf("\\n堆地址 %p  栈地址 %p\\n", arr, &n);
+    free(arr);
+    arr = NULL;          // 防悬空；试试删掉这行再 free 一次
+    free(arr);           // free(NULL) 安全
+    return 0;
+}`},
+{id:'recur', tag:'函数', title:'递归与调用栈', points:[
+ '每次调用都会压一个栈帧，保存自己的参数和局部变量；递归太深会栈溢出。',
+ '递归必须有出口（基准条件），否则无限压栈。',
+ '朴素 fib 是指数级重复计算，面试常追问怎么用循环或记忆化优化。'],
+ answer:'答法：先说出口条件，再说递推关系，最后说栈深度和时间复杂度。单步看右侧调用栈的变化。',
+ code:`#include <stdio.h>
+int fact(int n) {
+    if (n <= 1) return 1;        // 递归出口
+    return n * fact(n - 1);      // 每一层在栈上保留自己的 n
+}
+int fib(int n) {
+    return n < 2 ? n : fib(n - 1) + fib(n - 2);
+}
+int main(void) {
+    printf("5! = %d\\n", fact(5));
+    printf("fib(10) = %d\\n", fib(10));
+    return 0;
+}`},
+{id:'macro', tag:'预处理', title:'宏陷阱与 ++i / i++', points:[
+ '宏是纯文本替换，参数和整体都要加括号，否则优先级出错。',
+ '宏参数出现几次就求值几次，传 <code>k++</code> 会自增多次。',
+ '<code>i++</code> 先用旧值再加，<code>++i</code> 先加再用；同一表达式里多次修改同一变量是未定义行为。'],
+ answer:'答法：宏没有类型检查、没有作用域、参数可能重复求值；能用 inline 函数就别用宏。',
+ code:`#include <stdio.h>
+#define SQUARE_BAD(x)  x * x
+#define SQUARE(x)      ((x) * (x))
+#define MAX(a, b)      ((a) > (b) ? (a) : (b))
+int main(void) {
+    int i = 3;
+    printf("坏宏: %d\\n", SQUARE_BAD(i + 1));   // 3 + 1*3 + 1 = 7
+    printf("好宏: %d\\n", SQUARE(i + 1));       // 16
+    int k = 5;
+    printf("MAX(k++,3)=%d ", MAX(k++, 3));     // k++ 被求值两次
+    printf("k=%d\\n", k);
+    int j = i++;         // 先用后加：j=3, i=4
+    int m = ++i;         // 先加后用：m=5, i=5
+    printf("j=%d m=%d i=%d\\n", j, m, i);
+    return 0;
+}`},
+{id:'endian', tag:'内存', title:'大端与小端', points:[
+ '小端：低字节放在低地址（x86 / ARM 默认）；大端：高字节放低地址（网络字节序）。',
+ '判断方法：取 int 的首字节，或用 union 让 int 和 char 共享内存。',
+ '网络传输前要用 htonl / htons 转成大端。'],
+ answer:'答法：先说定义，再给一种代码判断法，最后提网络字节序是大端。',
+ code:`#include <stdio.h>
+int main(void) {
+    int x = 0x12345678;
+    unsigned char *p = (unsigned char *)&x;   // 按字节看
+    printf("内存顺序: %02x %02x %02x %02x\\n", p[0], p[1], p[2], p[3]);
+    if (p[0] == 0x78) printf("小端：低字节在低地址\\n");
+    else              printf("大端：高字节在低地址\\n");
+    union { int i; char c; } u;               // 共享同一块内存
+    u.i = 1;
+    printf("union 判断: %s\\n", u.c == 1 ? "小端" : "大端");
+    return 0;
+}`},
+];
+
+</script>
+<script>
+/* ===== 页面交互：渲染考点、代码、单步 / 断点 / 运行 ===== */
+(function () {
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const KW = /\b(int|char|short|long|float|double|void|unsigned|signed|const|static|struct|union|typedef|if|else|while|do|for|return|break|continue|sizeof|NULL)\b/g;
+  function highlight(line) {
+    let s = esc(line);
+    if (/^\s*#/.test(s)) return `<span class="c-pre">${s}</span>`;
+    const parts = []; let rest = s;
+    // 先切出注释和字符串，避免其中的关键字被染色
+    const re = /(\/\/.*$|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/;
+    while (rest.length) {
+      const m = rest.match(re);
+      if (!m) { parts.push(plain(rest)); break; }
+      parts.push(plain(rest.slice(0, m.index)));
+      parts.push(m[0].startsWith('//') ? `<span class="c-com">${m[0]}</span>` : `<span class="c-str">${m[0]}</span>`);
+      rest = rest.slice(m.index + m[0].length);
+    }
+    return parts.join('');
+    function plain(t) { return t.replace(KW, '<span class="c-kw">$1</span>').replace(/\b(0x[0-9a-fA-F]+|\d+)\b/g, '<span class="c-num">$1</span>'); }
+  }
+
+  class Runner {
+    constructor(ex, root) {
+      this.ex = ex; this.root = root; this.code = ex.code; this.bp = new Set(); this.reset(false);
+      this.build(); this.renderCode(); this.renderState();
+    }
+    q(sel) { return this.root.querySelector(sel); }
+    build() {
+      const id = this.ex.id;
+      this.root.innerHTML = `
+        <div class="pane code-pane">
+          <div class="toolbar" role="toolbar" aria-label="调试控制">
+            <button type="button" class="btn primary" data-act="run" id="run-${id}">▶ 运行</button>
+            <button type="button" class="btn" data-act="step" id="step-${id}">单步</button>
+            <button type="button" class="btn" data-act="reset" id="reset-${id}">重置</button>
+            <button type="button" class="btn ghost" data-act="edit" id="edit-${id}">编辑</button>
+            <span class="status" id="status-${id}">未开始 · 点击行号设断点</span>
+          </div>
+          <div class="code" id="code-${id}"></div>
+          <textarea class="editor" id="editor-${id}" hidden spellcheck="false" aria-label="编辑 C 代码"></textarea>
+        </div>
+        <div class="pane side">
+          <div class="watch">
+            <div class="ph">变量 <span class="stack" id="stack-${id}"></span></div>
+            <table class="vars" id="vars-${id}"><tbody></tbody></table>
+          </div>
+          <div class="term"><div class="ph">输出</div><pre id="out-${id}" class="out"></pre></div>
+        </div>`;
+      this.root.addEventListener('click', e => {
+        const b = e.target.closest('[data-act]'); if (b) { this[b.dataset.act](); return; }
+        const g = e.target.closest('.gut'); if (g) { const n = +g.dataset.line; if (this.bp.has(n)) this.bp.delete(n); else this.bp.add(n); this.renderCode(); }
+      });
+    }
+    reset(render = true) {
+      this.machine = null; this.gen = null; this.done = false; this.err = null; this.cur = null; this.hit = false;
+      if (render) { this.renderCode(); this.renderState(); }
+    }
+    ensure() {
+      if (this.gen || this.err) return;
+      try { this.machine = CInterp.compile(this.code); this.gen = this.machine.run(); }
+      catch (e) { this.err = e; this.done = true; }
+    }
+    advance() {
+      try { const r = this.gen.next(); if (r.done) { this.done = true; this.cur = null; } else this.cur = r.value.line; }
+      catch (e) { this.err = e; this.done = true; if (e.line) this.cur = e.line; }
+    }
+    step() { this.leaveEdit(); this.ensure(); this.hit = false; if (!this.done) this.advance(); this.renderCode(); this.renderState(); }
+    run() {
+      this.leaveEdit(); this.ensure(); this.hit = false;
+      while (!this.done && !this.err) { this.advance(); if (this.cur !== null && this.bp.has(this.cur)) { this.hit = true; break; } }
+      this.renderCode(); this.renderState();
+    }
+    edit() {
+      const ta = this.q('.editor'), code = this.q('.code'), btn = this.q('[data-act=edit]');
+      if (ta.hidden) { ta.value = this.code; ta.hidden = false; code.hidden = true; btn.textContent = '完成'; ta.focus(); }
+      else this.leaveEdit();
+    }
+    leaveEdit() {
+      const ta = this.q('.editor'); if (ta.hidden) return;
+      const changed = ta.value !== this.code; this.code = ta.value; ta.hidden = true; this.q('.code').hidden = false; this.q('[data-act=edit]').textContent = '编辑';
+      if (changed) this.reset(false);
+    }
+    renderCode() {
+      const lines = this.code.split('\n');
+      this.q('.code').innerHTML = lines.map((l, i) => {
+        const n = i + 1; const cls = ['ln']; if (n === this.cur) cls.push(this.err ? 'err' : 'cur'); if (this.bp.has(n)) cls.push('bp');
+        return `<div class="${cls.join(' ')}"><span class="gut" data-line="${n}" title="点击设置/取消断点">${n}</span><span class="src">${highlight(l) || ' '}</span></div>`;
+      }).join('');
+      const c = this.q('.ln.cur, .ln.err'); if (c && c.scrollIntoView) c.scrollIntoView({block: 'nearest'});
+    }
+    renderState() {
+      const st = this.q('.status'), vars = this.q('.vars tbody'), out = this.q('.out'), stack = this.q('.stack');
+      st.className = 'status';
+      if (this.err) { st.textContent = `错误${this.err.line ? `（第 ${this.err.line} 行）` : ''}: ${this.err.message}`; st.classList.add('s-err'); }
+      else if (!this.gen) st.textContent = '未开始 · 点击行号设断点';
+      else if (this.done) { st.textContent = `已结束，main 返回 ${this.machine.exit ?? 0}`; st.classList.add('s-done'); }
+      else { st.textContent = `${this.hit ? '断点命中，' : ''}停在第 ${this.cur} 行，尚未执行该行`; st.classList.add('s-run'); }
+      if (!this.machine) { vars.innerHTML = '<tr><td class="empty" colspan="3">运行后这里显示当前函数的变量与地址</td></tr>'; out.textContent = ''; stack.textContent = ''; return; }
+      const s = this.machine.snapshot();
+      stack.textContent = s.stack.length ? '调用栈: ' + s.stack.map(f => f.fn).join(' → ') : '';
+      const rows = [...s.vars.map(v => ({...v, scope: v.isStatic ? 'static' : ''})), ...s.globals.map(v => ({...v, scope: 'global'}))];
+      vars.innerHTML = rows.length ? rows.map(v => `<tr><td class="vn">${esc(v.name)}${v.scope ? `<small>${v.scope}</small>` : ''}</td><td class="vt">${esc(v.type)}<small>${v.addr}</small></td><td class="vv">${esc(v.val)}</td></tr>`).join('')
+        : '<tr><td class="empty" colspan="3">当前作用域没有变量</td></tr>';
+      out.textContent = s.out; if (this.err && !/^程序调用 exit/.test(this.err.message)) out.textContent += (s.out.endsWith('\n') || !s.out ? '' : '\n') + `[程序异常终止: ${this.err.message}]`;
+    }
+  }
+
+  const nav = document.getElementById('nav'), main = document.getElementById('topics');
+  nav.innerHTML = EXAMPLES.map(e => `<a href="#${e.id}"><span class="nt">${e.tag}</span>${e.title}</a>`).join('');
+  main.innerHTML = EXAMPLES.map(e => `
+    <section class="topic" id="${e.id}">
+      <header><span class="tag">${e.tag}</span><h2>${e.title}</h2></header>
+      <ul class="points">${e.points.map(p => `<li>${p}</li>`).join('')}</ul>
+      <div class="runner" data-ex="${e.id}"></div>
+      <p class="answer"><strong>一句话</strong>${e.answer.replace(/^答法：/, '')}</p>
+    </section>`).join('');
+  const runners = new Map();
+  for (const e of EXAMPLES) runners.set(e.id, new Runner(e, main.querySelector(`.runner[data-ex="${e.id}"]`)));
+
+  // 滚动时高亮导航
+  const links = [...nav.querySelectorAll('a')];
+  const io = new IntersectionObserver(es => { for (const en of es) if (en.isIntersecting) { links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + en.target.id)); } }, {rootMargin: '-30% 0px -60% 0px'});
+  document.querySelectorAll('.topic').forEach(t => io.observe(t));
+
+  // 键盘：焦点在某个 runner 内时，F10 单步、F5 运行
+  document.addEventListener('keydown', e => {
+    const r = e.target.closest && e.target.closest('.runner'); if (!r) return;
+    if (e.key === 'F10') { e.preventDefault(); runners.get(r.dataset.ex).step(); }
+    if (e.key === 'F5') { e.preventDefault(); runners.get(r.dataset.ex).run(); }
+  });
+})();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TVS与齐纳过压保护</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.dio{fill:currentColor;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round}
+.src{fill:var(--panel);stroke:currentColor;stroke-width:2}
+.mk{fill:var(--copper);stroke:var(--panel);stroke-width:2}
+.lim{stroke:var(--danger);stroke-width:1.5;stroke-dasharray:5 4}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#protect">保护电路</a><span class="sp"></span><span>03 / 08</span></nav>
+<header>
+  <span class="eyebrow">保护电路 · 过压钳位</span>
+  <h1>TVS 与齐纳过压保护</h1>
+  <p class="lede">TVS 和稳压管都是反向击穿的二极管，都能把电压钳住。区别在于 TVS 专门用来吸收浪涌，稳压管只适合稳态稳压。下面给电源线打一个浪涌，看被保护的芯片会不会超过耐压。</p>
+</header>
+
+<section id="clamp">
+  <span class="eyebrow">浪涌钳位 · 多余电压落在哪</span>
+  <h2>浪涌来了，TVS 把电压钳住</h2>
+  <p>TVS 并在被保护端和地之间。正常电压低于它的 VRWM，它几乎不导通，只有 µA 级漏电流，对电路没有影响。浪涌一来，电压超过 VBR，TVS 雪崩击穿，内阻骤降到零点几欧，把浪涌电流旁路到地。</p>
+  <p>它为什么能钳住电压？因为浪涌源和线路本身有内阻。TVS 吸走大电流，这个电流在内阻上产生很大的压降，多出来的电压就落在内阻上，被保护端只剩 VC 左右。硅雪崩本身的响应在 ps 级，比浪涌的上升沿快得多。</p>
+  <p class="eq">被保护端 V = VBR + I·Rd　　I = (Vs − V) / Rs　　TVS 功率 P = V·I</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 500 368" role="img" aria-label="浪涌源经 2 Ω 内阻接到被保护芯片，节点对地并联 TVS 或稳压管；下方是被保护端电压随时间的波形和芯片耐压线">
+        <circle class="src" cx="40" cy="96" r="16"/>
+        <text x="40" y="101" text-anchor="middle" class="t">Vs</text>
+        <text x="64" y="92" class="t">浪涌源</text>
+        <text id="s1-srct" x="64" y="110" class="v">12 V + 40 V</text>
+        <path class="w" d="M40,80 V40 H96 M146,40 H380 M40,112 V140 M26,140 H54 M31,145 H49 M36,150 H44"/>
+        <rect class="r" x="96" y="32" width="50" height="16" rx="2"/>
+        <text x="121" y="24" text-anchor="middle" class="v">Rs 2 Ω</text>
+        <text x="121" y="66" text-anchor="middle" class="tm">源内阻</text>
+        <circle id="s1-dot" class="dot" cx="240" cy="40" r="3.5"/>
+        <text id="s1-vn" x="248" y="30" class="v hi">21.8 V</text>
+        <g id="s1-br">
+          <path class="w" d="M240,40 V84 M240,108 V140 M226,140 H254 M231,145 H249 M236,150 H244"/>
+          <polygon class="dio" points="228,108 252,108 240,84"/>
+          <path class="w" style="stroke-width:2.5" d="M224,80 L228,84 H252 L256,88"/>
+          <text id="s1-dn" x="262" y="94" class="t">TVS</text>
+          <text id="s1-dv" x="262" y="111" class="v">SMBJ15A</text>
+        </g>
+        <text id="s1-none" x="248" y="100" class="tm" hidden>未接保护器件</text>
+        <rect class="box" x="380" y="20" width="100" height="40" rx="4"/>
+        <text x="430" y="45" text-anchor="middle" class="t">被保护芯片</text>
+        <path class="w" d="M460,60 V140 M446,140 H474 M451,145 H469 M456,150 H464"/>
+        <text x="418" y="82" text-anchor="middle" class="tm">耐压 30 V</text>
+        <text id="s1-ict" x="418" y="100" text-anchor="middle" class="v">安全</text>
+        <path id="s1-flow" class="flow" d="M40,78 V40 H240 V138"/>
+        <g id="s1-ax"></g>
+        <path class="ax" d="M56,190 V330 H490"/>
+        <text x="60" y="182" class="tm">被保护端电压 / V</text>
+        <text x="56" y="346" text-anchor="middle" class="v">0</text>
+        <text x="200.7" y="346" text-anchor="middle" class="v">1</text>
+        <text x="345.3" y="346" text-anchor="middle" class="v">2</text>
+        <text x="490" y="346" text-anchor="end" class="v">3</text>
+        <text x="490" y="362" text-anchor="end" class="tm">时间 / ms</text>
+        <line id="s1-lim" class="lim" x1="56" y1="225" x2="490" y2="225"/>
+        <text id="s1-liml" x="486" y="219" text-anchor="end" class="tm">芯片耐压 30 V</text>
+        <polyline id="s1-open" class="ideal" points="56,330"/>
+        <polyline id="s1-v" class="real" points="56,330"/>
+        <text id="s1-lo" x="170" y="228" class="tm">开路浪涌</text>
+        <text id="s1-lr" x="287" y="278" text-anchor="middle" class="t hi">被保护端</text>
+      </svg>
+      <figcaption>绿色虚线是浪涌电流路径。灰虚线是不接保护器件时的开路浪涌，橙线是被保护端实际电压，红虚线是芯片耐压。示意：浪涌按 10/1000 µs 波形、源内阻 2 Ω；TVS 按 SMBJ15A（VBR 约 17.6 V，VC 24.4 V @ IPP 24.6 A，600 W）做分段线性近似；稳压管按 15 V、1 W，大电流下动态电阻取 3 Ω，能扛的脉冲功率取约 15 W。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">保护方式</span>
+        <div class="seg" id="s1-m"><button id="s1-m-none" data-v="none" aria-pressed="false">无保护</button><button id="s1-m-z" data-v="z" aria-pressed="false">稳压管 15 V</button><button id="s1-m-tvs" data-v="tvs" aria-pressed="true">TVS</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-a">浪涌幅度（叠加在 12 V 上）</label>
+        <span class="rv" id="s1-av">40 V</span>
+        <input type="range" id="s1-a" min="0" max="6" step="1" value="3"></div>
+      <dl class="read">
+        <dt>开路浪涌峰值</dt><dd id="s1-vo">52 V</dd>
+        <dt>被保护端峰值</dt><dd id="s1-vp">21.8 V</dd>
+        <dt>保护器件峰值电流</dt><dd id="s1-ip">15.1 A</dd>
+        <dt>峰值功率</dt><dd id="s1-pp">329 W</dd>
+        <dt>吸收能量</dt><dd id="s1-e">—</dd>
+        <dt>保护器件</dt><dd><span id="s1-dst" class="chip on">在额定内</span></dd>
+        <dt>被保护芯片</dt><dd><span id="s1-ist" class="chip on">安全</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="param">
+  <span class="eyebrow">四个参数 · 选型窗口</span>
+  <h2>VRWM、VBR、VC、IPP 怎么选</h2>
+  <p>TVS 选型就是在两条线之间找位置。下限是电路的最高工作电压：VRWM 必须不低于它，否则电源偏高时 TVS 开始漏电甚至导通发热。上限是后级器件的耐压：VC 必须低于它，否则钳住了也照样打坏芯片。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>参数</th><th>含义</th><th>选型要求</th></tr></thead>
+    <tbody>
+      <tr><td>VRWM 反向截止电压</td><td>在这个电压下 TVS 保证不导通，漏电流不超过 IR（µA 级）</td><td>≥ 电路最高工作电压，要算上电源偏差</td></tr>
+      <tr><td>VBR 击穿电压</td><td>测试电流 IT（常为 1 mA）下的电压，有 min~max 范围</td><td>比 VRWM 高约 10%~20%，由 VRWM 决定，一般不单独选</td></tr>
+      <tr><td>VC 钳位电压</td><td>流过 IPP 时两端的最大电压</td><td>&lt; 被保护器件耐压，并留余量</td></tr>
+      <tr><td>IPP 峰值脉冲电流</td><td>规定波形（常为 10/1000 µs）下能承受的最大脉冲电流</td><td>≥ 可能出现的浪涌电流</td></tr>
+      <tr><td>PPPM 峰值脉冲功率</td><td>约等于 VC·IPP，SMB 封装常见 600 W</td><td>按浪涌能量选功率等级和封装</td></tr>
+      <tr><td>结电容 Cj</td><td>几 pF 到几 nF，功率越大、电压越低越大</td><td>高速信号线要选低电容型号</td></tr>
+    </tbody>
+  </table></div>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 320" role="img" aria-label="TVS 伏安特性曲线，标出 VRWM、VBR、VC 与 IPP，以及 12 V 电源工作范围和后级耐压线">
+        <rect class="zone-ok" x="275" y="40" width="70.95" height="240"/>
+        <g id="s2-grid"></g>
+        <path class="ax" d="M60,40 V280 H490"/>
+        <line class="ax" x1="275" y1="40" x2="275" y2="280"/>
+        <line class="ax" x1="60" y1="160" x2="490" y2="160"/>
+        <text x="64" y="30" class="tm">电流 / A</text>
+        <text x="490" y="314" text-anchor="end" class="tm">TVS 两端电压 / V（阴极接正为正）</text>
+        <text x="279" y="274" class="tm">12 V ±10%</text>
+        <line class="lim" x1="436.25" y1="40" x2="436.25" y2="280"/>
+        <text x="432" y="274" text-anchor="end" class="tm">耐压 30 V</text>
+        <line id="s2-lrwm" class="ax dash" x1="355.6" y1="152" x2="355.6" y2="170"/>
+        <line id="s2-lvc" class="ax dash" x1="406.2" y1="76" x2="406.2" y2="188"/>
+        <polyline id="s2-c" class="real" points="60,160"/>
+        <circle id="s2-pt" class="mk" cx="406.2" cy="75.7" r="5"/>
+        <text id="s2-trwm" x="352.6" y="182" text-anchor="end" class="tm">VRWM</text>
+        <text id="s2-tbr" x="372.6" y="182" class="tm">VBR</text>
+        <text id="s2-tvc" x="406.2" y="200" text-anchor="middle" class="tm">VC</text>
+        <text id="s2-tipp" x="397" y="80" text-anchor="end" class="tm">IPP</text>
+        <text id="s2-nl" x="70" y="60" class="tm">负向：正向导通，钳在约 −0.7 V</text>
+      </svg>
+      <figcaption>绿色带是 12 V 电源的正常范围（最高 13.2 V），红虚线是后级耐压 30 V。橙线是 TVS 的伏安特性，圆点是 IPP 下的 VC。参数取 SMBJ 系列 600 W 规格书的典型值，以实际数据手册为准。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">TVS 型号</span>
+        <div class="seg" id="s2-t"><button id="s2-t-12" data-v="12" aria-pressed="false">12A</button><button id="s2-t-15" data-v="15" aria-pressed="true">15A</button><button id="s2-t-18" data-v="18" aria-pressed="false">18A</button><button id="s2-t-24" data-v="24" aria-pressed="false">24A</button></div></div>
+      <div class="ctl"><span class="ctl-l">方向</span>
+        <div class="seg" id="s2-d"><button id="s2-d-u" data-v="u" aria-pressed="true">单向</button><button id="s2-d-b" data-v="b" aria-pressed="false">双向</button></div></div>
+      <dl class="read">
+        <dt>型号</dt><dd id="s2-n">SMBJ15A</dd>
+        <dt>VRWM</dt><dd id="s2-rwm">15 V</dd>
+        <dt>VBR（1 mA）</dt><dd id="s2-br">16.7 ~ 18.5 V</dd>
+        <dt>VC @ IPP</dt><dd id="s2-vc">24.4 V @ 24.6 A</dd>
+        <dt>VRWM − 13.2 V</dt><dd id="s2-m1">+1.8 V</dd>
+        <dt>30 V − VC</dt><dd id="s2-m2">+5.6 V</dd>
+        <dt>结论</dt><dd><span id="s2-st" class="chip on">合适</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+  <p>单向 TVS 反过来就是一个普通二极管，负向电压被钳在约 −0.7 V，适合直流电源轨，负向浪涌和电源反接的尖峰都能被它压住。信号本身有正有负的线路，比如 RS-485、CAN、音频、交流，要用双向 TVS，否则信号的负半周会被它削掉。</p>
+</section>
+
+<section id="zener">
+  <span class="eyebrow">齐纳与 TVS · 同一原理，不同用途</span>
+  <h2>稳压管为什么扛不住浪涌</h2>
+  <p>TVS 和稳压管都靠 PN 结反向击穿工作，原理见 <a href="../01-二极管/03-反向击穿齐纳与雪崩.html">反向击穿：齐纳与雪崩</a>。区别在设计目标：稳压管要的是击穿电压准、长期工作在击穿区，结面积小，功率一般 0.5~5 W；TVS 要的是短时间吞下大电流，结面积大，SMB 封装就能扛 600 W 的脉冲。</p>
+  <p>所以稳压管用来吸浪涌有两个问题。一是功率不够，上面的图里十几伏的浪涌就让它超出额定，结温瞬间过高而烧毁。二是它的动态电阻比 TVS 大，电流一大，钳位电压被抬得很高，照样超过芯片耐压。稳压管适合的是稳态场合：小电流稳压、做基准、限制一个缓慢变化的电压。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>对比项</th><th>稳压管（齐纳）</th><th>TVS</th></tr></thead>
+    <tbody>
+      <tr><td>设计用途</td><td>稳态稳压、基准</td><td>吸收瞬态浪涌、ESD</td></tr>
+      <tr><td>平时状态</td><td>长期工作在击穿区，一直有电流</td><td>工作电压低于 VRWM，不导通，只有 µA 级漏电</td></tr>
+      <tr><td>功率能力</td><td>稳态 0.5~5 W，脉冲能力小</td><td>脉冲 400 W 到数 kW（10/1000 µs），稳态功率不大</td></tr>
+      <tr><td>大电流下的钳位</td><td>动态电阻大，电压上升明显</td><td>内阻零点几欧，VC 约为 VBR 的 1.3~1.4 倍</td></tr>
+      <tr><td>响应速度</td><td>快</td><td>芯片本身 ps 级，实际受引线和走线电感限制</td></tr>
+      <tr><td>关注的参数</td><td>Vz、Izt、动态电阻 rz、功耗</td><td>VRWM、VBR、VC、IPP、PPPM、结电容</td></tr>
+    </tbody>
+  </table></div>
+  <p>用 TVS 还要注意两点。第一，要紧贴接口放，接地走线短而粗。ESD 的上升沿不到 1 ns，10 nH 的走线电感在 30 A/ns 下就会多出约 300 V。第二，TVS 过载后通常短路失效，电源会经它对地短路，所以电源入口的 TVS 前面一般串保险丝：TVS 击穿短路后保险丝熔断，把故障隔离，见 <a href="01-保险丝与自恢复保险丝.html">保险丝与自恢复保险丝</a>。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>TVS 的工作原理是什么？</summary>
+      <div class="ans"><p>TVS 是专门做大结面积的雪崩二极管，并在被保护线路和地之间。正常电压低于 VRWM 时它不导通，只有微安级漏电。出现浪涌时电压超过 VBR，它雪崩击穿，阻抗骤降，把浪涌电流旁路到地，多余的电压落在源内阻和线路阻抗上，被保护端电压被钳在 VC 附近。响应在 ps 级。</p></div></details>
+    <details><summary>TVS 怎么选型？</summary>
+      <div class="ans"><p>先定 VRWM，要不低于电路最高工作电压，包括电源偏差。再看 VC，要低于后级器件耐压并留余量。然后按浪涌等级核对 IPP 和峰值脉冲功率，决定封装。直流电源用单向，有正负摆动的信号用双向。高速信号线还要选结电容小的型号。</p></div></details>
+    <details><summary>稳压管能不能代替 TVS 做浪涌保护？</summary>
+      <div class="ans"><p>一般不行。稳压管结面积小，脉冲功率能力只有 TVS 的几十分之一，浪涌一来就可能烧毁；它的动态电阻也大，大电流下钳位电压会升高很多。稳压管适合稳态稳压和做基准，瞬态过压要用 TVS。</p></div></details>
+    <details><summary>单向和双向 TVS 怎么选？</summary>
+      <div class="ans"><p>看线路上的正常信号有没有负电压。直流电源轨用单向，负向浪涌被它正向导通钳在约 −0.7 V，保护效果更好。RS-485、CAN、音频、交流这类有正有负的线路用双向，否则负半周会被削掉。</p></div></details>
+    <details><summary>TVS 损坏后是什么状态？为什么前面常串保险丝？</summary>
+      <div class="ans"><p>TVS 过载后通常短路失效。电源入口的 TVS 一旦短路，电源就直接对地短路。前面串一个保险丝，TVS 击穿短路后大电流让保险丝熔断，把故障隔离开，避免起火或拖垮上级电源。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="02-采样电阻加比较器过流保护.html"><span>上一页</span>采样电阻加比较器过流保护</a><a class="next" href="04-压敏电阻.html"><span>下一页</span>压敏电阻</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 浪涌钳位：10/1000 µs 双指数浪涌，源内阻 2 Ω，保护器件按 V = Vk + I·rd 分段线性 */
+const RS1=2,VL1=12,VM1=30,S1A=[5,10,20,40,60,80,100];
+const S1D={
+  z:{vk:15,rd:3,pmax:15,dn:'Dz',dv:'15 V 1 W'},
+  tvs:{vk:17.6,rd:0.276,ipp:24.6,pmax:600,dn:'TVS',dv:'SMBJ15A'}};
+const s1={m:'tvs'};
+const s1W=(()=>{let m=0;for(let k=1;k<=400;k++){const u=k*1e-4;m=Math.max(m,Math.exp(-u/1.443)-Math.exp(-u/0.004));}
+  return t=>{const u=t-0.2;return u<=0?0:(Math.exp(-u/1.443)-Math.exp(-u/0.004))/m;};})();
+function s1c(vo,d){if(!d||vo<=d.vk)return [vo,0];const v=(vo*d.rd+d.vk*RS1)/(RS1+d.rd);return [v,(vo-v)/RS1];}
+const s1P=p=>p>=100?p.toFixed(0)+' W':p>=1?p.toFixed(1)+' W':fmtP(p);
+function s1u(){
+  const A=S1A[+$('s1-a').value],d=S1D[s1.m]||null,none=!d,vop=VL1+A;
+  const [vp,ip]=s1c(vop,d),pp=vp*ip;
+  const ym=[40,60,80,120,160].find(v=>v>=vop*1.1)||160,X=scale(0,3,56,490),Y=scale(0,ym,330,190);
+  const g=$('s1-ax');g.replaceChildren();
+  for(let j=0;j<=4;j++){const val=ym*j/4,y=Y(val).toFixed(1);
+    if(j>0)g.append(svgEl('line',{class:'gl',x1:56,y1:y,x2:490,y2:y}));
+    g.append(svgEl('text',{x:50,y:(+y+4).toFixed(1),'text-anchor':'end',class:'v'},String(val)));}
+  const vo=t=>VL1+A*s1W(t),vr=t=>s1c(vo(t),d)[0];
+  $('s1-open').setAttribute('points',plot(vo,0,3,X,Y,300));
+  $('s1-v').setAttribute('points',plot(vr,0,3,X,Y,300));
+  const yl=Y(VM1).toFixed(1);$('s1-lim').setAttribute('y1',yl);$('s1-lim').setAttribute('y2',yl);
+  $('s1-liml').setAttribute('y',(yl-6).toFixed(1));
+  const lo=$('s1-lo'),lr=$('s1-lr');
+  lo.setAttribute('x',(X(0.7)+6).toFixed(1));lo.setAttribute('y',(Y(vo(0.7))-8).toFixed(1));
+  lo.textContent=none?'开路浪涌 = 被保护端电压':'开路浪涌';
+  lr.setAttribute('x',X(1.6).toFixed(1));lr.setAttribute('y',(Y(vr(1.6))-8).toFixed(1));show(lr,!none);
+  /* 能量：积分到 8 ms，步长 5 µs */
+  let E=0;if(d)for(let k=0;k<1600;k++){const t=k*0.005,[v,i]=s1c(vo(t),d);E+=v*i*5e-6;}
+  const dOK=none||(s1.m==='tvs'?ip<=d.ipp:pp<=d.pmax),icOK=vp<=VM1;
+  show($('s1-br'),!none);show($('s1-dot'),!none);show($('s1-none'),none);
+  if(d){$('s1-dn').textContent=d.dn;$('s1-dv').textContent=d.dv;}
+  $('s1-srct').textContent='12 V + '+A+' V';
+  $('s1-av').textContent=A+' V';$('s1-a').setAttribute('aria-valuetext',A+' V');
+  const vn=$('s1-vn');vn.textContent=fmtV(vp,1)+' 峰值';vn.style.fill=icOK?'':'var(--danger)';
+  const ict=$('s1-ict');ict.textContent=icOK?'安全':'过压';ict.style.fill=icOK?'var(--flow)':'var(--danger)';
+  show($('s1-flow'),ip>0);$('s1-flow').classList.toggle('bad',!dOK);
+  $('s1-vo').textContent=vop+' V';$('s1-vp').textContent=fmtV(vp,1);
+  $('s1-ip').textContent=none?'—':ip>0?fmtA(ip):'0，未击穿';
+  $('s1-pp').textContent=ip>0?s1P(pp):'—';
+  $('s1-e').textContent=E>0?(E>=1?E.toFixed(2)+' J':(E*1e3).toFixed(E<0.01?1:0)+' mJ'):'—';
+  if(none)chip($('s1-dst'),'未接','off');
+  else if(ip<=0)chip($('s1-dst'),'未导通','off');
+  else if(dOK)chip($('s1-dst'),'在额定内','on');
+  else chip($('s1-dst'),s1.m==='tvs'?'超过 IPP':'超功率，会烧毁','bad');
+  chip($('s1-ist'),icOK?'安全':'超过耐压',icOK?'on':'bad');
+  let n;
+  if(none)n=`没有保护器件，芯片输入端几乎不取电流，Rs 上没有压降，浪涌全部加在芯片上，峰值 ${vop} V`+(icOK?'，还在耐压以内。':'，超过 30 V 耐压，芯片可能被击穿。');
+  else if(ip<=0)n=`浪涌峰值 ${vop} V 还没到击穿电压，保护器件不动作，也不需要动作。`;
+  else if(s1.m==='tvs')n=dOK?`TVS 击穿后把 ${fmtA(ip)} 的浪涌电流旁路到地。Rs 上压降 ${fmtV(vop-vp,1)}，被保护端只剩 ${fmtV(vp,1)}，低于 30 V。峰值功率 ${s1P(pp)}，在 600 W 额定以内。`
+    :`浪涌电流 ${fmtA(ip)} 超过 IPP 24.6 A。被保护端仍被钳在 ${fmtV(vp,1)}，但 TVS 自己超出额定，可能短路失效。要换功率更大的型号（如 1500 W 的 SMCJ 系列），或在前面加压敏电阻、电感分担。`;
+  else n=dOK?`过压很小时稳压管也能钳住，${fmtA(ip)}、${s1P(pp)} 还在它能扛的范围内。这正是它适合的场合：幅度小、变化慢的过压。`
+    :`稳压管把电压钳在 ${fmtV(vp,1)}`+(icOK?'':'，已经超过芯片耐压')+`，峰值功率却有 ${s1P(pp)}，约为它脉冲能力的 ${Math.round(pp/d.pmax)} 倍，结温瞬间过高而烧毁。同样条件切到 TVS 对比一下。`;
+  $('s1-note').textContent=n;
+}
+seg('s1-m',v=>{s1.m=v;s1u();});
+$('s1-a').addEventListener('input',s1u);
+s1u();
+
+/* 2. 伏安特性与选型：12 V 电源最高 13.2 V，后级耐压 30 V */
+const T2={
+  '12':{rwm:12,bmin:13.3,bmax:14.7,vc:19.9,ipp:30.2},
+  '15':{rwm:15,bmin:16.7,bmax:18.5,vc:24.4,ipp:24.6},
+  '18':{rwm:18,bmin:20.0,bmax:22.1,vc:29.2,ipp:20.6},
+  '24':{rwm:24,bmin:26.7,bmax:29.5,vc:38.9,ipp:15.4}};
+const s2={t:'15',bi:false},X2=scale(-40,40,60,490),Y2=scale(-35,35,280,40);
+const neg=v=>v<0?'−'+(-v):String(v);
+[-40,-30,-20,-10,0,10,20,30,40].forEach(v=>{const x=X2(v).toFixed(1);
+  if(v!==0&&v!==-40)$('s2-grid').append(svgEl('line',{class:'gl',x1:x,y1:40,x2:x,y2:280}));
+  $('s2-grid').append(svgEl('text',{x:x,y:298,'text-anchor':'middle',class:'v'},neg(v)));});
+[-30,-15,0,15,30].forEach(a=>{const y=Y2(a).toFixed(1);
+  if(a!==0)$('s2-grid').append(svgEl('line',{class:'gl',x1:60,y1:y,x2:490,y2:y}));
+  $('s2-grid').append(svgEl('text',{x:54,y:(+y+4).toFixed(1),'text-anchor':'end',class:'v'},neg(a)));});
+function s2u(){
+  const p=T2[s2.t],br=(p.bmin+p.bmax)/2,rd=(p.vc-br)/p.ipp,s=0.4;
+  const brk=v=>s*Math.log1p(Math.exp((v-br)/s))/rd;
+  const fn=v=>{const i=v>=0?brk(v):(s2.bi?-brk(-v):-0.1*Math.log1p(Math.exp((-v-0.7)/0.1))/0.06);return Math.abs(i)>35?NaN:i;};
+  $('s2-c').setAttribute('points',plot(fn,-40,40,X2,Y2,480));
+  const xr=X2(p.rwm).toFixed(1),xb=X2(br),xc=X2(p.vc).toFixed(1),yc=Y2(p.ipp).toFixed(1);
+  $('s2-lrwm').setAttribute('x1',xr);$('s2-lrwm').setAttribute('x2',xr);
+  $('s2-trwm').setAttribute('x',(xr-3).toFixed(1));$('s2-tbr').setAttribute('x',(xb+3).toFixed(1));
+  $('s2-lvc').setAttribute('x1',xc);$('s2-lvc').setAttribute('x2',xc);$('s2-lvc').setAttribute('y1',yc);
+  $('s2-pt').setAttribute('cx',xc);$('s2-pt').setAttribute('cy',yc);
+  $('s2-tvc').setAttribute('x',xc);
+  const tp=$('s2-tipp');tp.setAttribute('x',(xc-9).toFixed(1));tp.setAttribute('y',(+yc+4).toFixed(1));tp.textContent='IPP '+p.ipp+' A';
+  $('s2-nl').textContent=s2.bi?'负向：对称击穿，同样钳在 −VC 左右':'负向：正向导通，钳在约 −0.7 V';
+  $('s2-n').textContent='SMBJ'+s2.t+(s2.bi?'CA':'A');
+  $('s2-rwm').textContent=p.rwm+' V';
+  $('s2-br').textContent=p.bmin.toFixed(1)+' ~ '+p.bmax.toFixed(1)+' V';
+  $('s2-vc').textContent=p.vc+' V @ '+p.ipp+' A';
+  const m1=p.rwm-13.2,m2=30-p.vc,sg=x=>(x<0?'−':'+')+Math.abs(x).toFixed(1)+' V';
+  $('s2-m1').textContent=sg(m1);$('s2-m2').textContent=sg(m2);
+  let n;
+  if(m1<0){chip($('s2-st'),'VRWM 偏低','bad');n=`VRWM 只有 ${p.rwm} V，电源升到 13.2 V 时已经超过它，离 VBR 最小值 ${p.bmin} V 也只差一点。漏电流从 µA 级涨到 mA 级，高温下更严重，TVS 平时就在发热，还可能把电源拉低。`;}
+  else if(m2<0){chip($('s2-st'),'VC 超过耐压','bad');n=`VC 是 ${p.vc} V，比后级 30 V 耐压还高。浪涌电流大时 TVS 两端就是这么高，芯片照样被打坏。VRWM 选得太高，窗口放错了位置。`;}
+  else if(m2<2){chip($('s2-st'),'余量太小','warn');n=`VRWM 有余量，VC ${p.vc} V 也低于 30 V，但只差 ${m2.toFixed(1)} V。VBR 和 VC 有离散性，雪崩击穿又是正温度系数，高温下还会上升，能用但不推荐。`;}
+  else{chip($('s2-st'),'合适','on');n=`VRWM ${p.rwm} V 高于 13.2 V，平时不导通；VC ${p.vc} V 低于 30 V，留了 ${m2.toFixed(1)} V 余量。窗口正好卡在两条线之间，这就是选型要找的位置。`;}
+  $('s2-note').textContent=n+(s2.bi?' 双向型号正负两个方向的参数相同。':'');
+}
+seg('s2-t',v=>{s2.t=v;s2u();});
+seg('s2-d',v=>{s2.bi=v==='b';s2u();});
+s2u();
+</script>
+</body>
+</html>

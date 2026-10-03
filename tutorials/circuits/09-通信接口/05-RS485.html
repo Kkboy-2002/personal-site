@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>RS485</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.zone-bad{fill:var(--danger);fill-opacity:.12}
+.lim{stroke:var(--danger);stroke-width:1.2;stroke-dasharray:5 4}
+.ctl .seg button{padding:6px 11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#bus">通信接口</a><span class="sp"></span><span>05 / 05</span></nav>
+<header>
+  <span class="eyebrow">通信接口 · 差分半双工总线</span>
+  <h1>RS485</h1>
+  <p class="lede">RS485 只规定电气层：用 A、B 两根线的电压差表示 0 和 1。干扰同时加到两根线上，差值不变，所以能在工厂里跑一千多米。它常用来承载 UART 帧，一主多从，Modbus RTU 就跑在它上面。</p>
+</header>
+
+<section id="diff">
+  <span class="eyebrow">差分接收 · 共模干扰</span>
+  <h2>干扰让单根线面目全非，差值却不变</h2>
+  <p>接收器只看差压 VA − VB：大于等于 +200 mV 判 1，小于等于 −200 mV 判 0，中间是不确定区。发送器一般输出 ±1.5~±3 V 的差压，门限只要 200 mV，余量很大。</p>
+  <p>长线上的干扰主要是共模的：两地的地电位差、电机和变频器耦合过来的噪声，同时、同样大小地叠加到 A 和 B 上。双绞线让两根线几乎受到相同的干扰，一相减就抵消了。前提是 A、B 对接收器地的电压不能超出共模范围 −7~+12 V。</p>
+  <p class="note">A、B 的叫法：多数收发器芯片按 VA − VB > 0 为 1 标注，本页也按这个；标准原文的定义正好相反，各厂家不统一。接线时 A 接 A、B 接 B，接反了数据整体取反。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 560 388" role="img" aria-label="时序图：发送数据 TXD，叠加共模干扰后的 A、B 单端电压，单端接收结果，差压 VA − VB 与差分接收结果">
+        <g id="s1-grid"></g>
+        <text x="62" y="54" text-anchor="end" class="t">TXD</text>
+        <text x="62" y="130" text-anchor="end" class="t">A、B</text>
+        <text x="62" y="146" text-anchor="end" class="tm">对地 / V</text>
+        <text x="62" y="226" text-anchor="end" class="t">单端收</text>
+        <text x="62" y="272" text-anchor="end" class="t">差压</text>
+        <text x="62" y="288" text-anchor="end" class="tm">VA − VB</text>
+        <text x="62" y="332" text-anchor="end" class="t">差分收</text>
+        <polyline id="s1-tx" class="cv" points=""/>
+        <polyline id="s1-a" class="real" points=""/>
+        <polyline id="s1-b" class="real2" points=""/>
+        <polyline id="s1-se" class="cv" points=""/>
+        <polyline id="s1-d" class="real3" points=""/>
+        <polyline id="s1-rx" class="cv" points=""/>
+        <g id="s1-ax"></g>
+      </svg>
+      <figcaption>橙线是 A，蓝线是 B，绿线是差压 A − B，红色虚线是共模范围。单端收：只拿 A 线对本地地和 2.5 V 比较；差分收：看 A − B 是否超过 ±200 mV。红底是收错的位。发送器按 5 V 收发器、偏置 2.5 V、差压 ±2 V 示意。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">干扰类型</span>
+        <div class="seg" id="s1-n"><button id="s1-n-ac" data-v="ac" aria-pressed="true">耦合噪声</button><button id="s1-n-dc" data-v="dc" aria-pressed="false">两地地电位差</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-am">共模干扰幅度</label>
+        <span class="rv" id="s1-av">3 V</span>
+        <input type="range" id="s1-am" min="0" max="10" step="0.5" value="3"></div>
+      <dl class="read">
+        <dt>A、B 对地范围</dt><dd id="s1-rg">—</dd>
+        <dt>共模范围 −7~+12 V</dt><dd id="s1-cm">—</dd>
+        <dt>差压 A − B</dt><dd id="s1-vd">—</dd>
+        <dt>单端接收</dt><dd id="s1-es">—</dd>
+        <dt>差分接收</dt><dd id="s1-ed">—</dd>
+        <dt>结论</dt><dd><span id="s1-st" class="chip on">差分正确</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="bias">
+  <span class="eyebrow">一主多从 · 终端电阻 · 失效安全偏置</span>
+  <h2>总线空闲时，差压落在哪</h2>
+  <p>RS485 是一主多从的总线：一对双绞线从头拉到尾，节点就近挂上去，支线要短。标准驱动能力按 32 个单位负载算，用 1/8 单位负载的收发器可以挂到 256 个。线的两端各接一个 120 Ω 终端电阻，匹配双绞线的特性阻抗，防止反射。</p>
+  <p>问题出在空闲时：半双工总线上大家都在听，没人驱动，A、B 被 60 Ω 的终端电阻拉到一起，差压约 0 V，正好落在 ±200 mV 的不确定区。接收器输出随噪声乱跳，UART 把毛刺当成起始位，收到一串乱码。解决办法是失效安全偏置：A 上拉到 Vcc，B 下拉到地，让空闲差压稳定在 +200 mV 以上。</p>
+  <p class="eq">空闲差压 = Vcc·Rt / (Rpu + Rpd + Rt)，两端终端时 Rt ≈ 60 Ω</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 540 388" role="img" aria-label="RS485 总线：A、B 两线两端接终端电阻，主机端 A 线经上拉电阻接 Vcc、B 线经下拉电阻接地，三个节点挂在总线上；下方是空闲差压数轴和接收器输出">
+        <text x="44" y="94" text-anchor="end" class="t">A</text>
+        <text x="44" y="154" text-anchor="end" class="t">B</text>
+        <path id="s2-la" class="w" style="stroke-width:3" d="M52,90 H510"/>
+        <path id="s2-lb" class="w" style="stroke-width:3" d="M52,150 H510"/>
+        <g id="s2-rt1"><path class="w" d="M80,90 V100 M80,140 V150"/><rect class="r" x="71" y="100" width="18" height="40" rx="2"/><circle class="dot" cx="80" cy="90" r="3.5"/><circle class="dot" cx="80" cy="150" r="3.5"/><text x="94" y="124" class="v">120 Ω</text></g>
+        <g id="s2-rt2"><path class="w" d="M500,90 V100 M500,140 V150"/><rect class="r" x="491" y="100" width="18" height="40" rx="2"/><circle class="dot" cx="500" cy="90" r="3.5"/><circle class="dot" cx="500" cy="150" r="3.5"/><text x="486" y="124" text-anchor="end" class="v">120 Ω</text></g>
+        <g id="s2-bs">
+          <text x="150" y="16" text-anchor="middle" class="v">Vcc 5 V</text>
+          <path class="w" d="M138,24 H162 M150,24 V32 M150,72 V90 M150,150 V160 M150,200 V212 M136,212 H164 M141,217 H159 M146,222 H154"/>
+          <rect class="r" x="141" y="32" width="18" height="40" rx="2"/>
+          <rect class="r" x="141" y="160" width="18" height="40" rx="2"/>
+          <circle class="dot" cx="150" cy="90" r="3.5"/><circle class="dot" cx="150" cy="150" r="3.5"/>
+          <text x="166" y="50" class="t">Rpu</text><text id="s2-rpu" x="166" y="66" class="v">560 Ω</text>
+          <text x="166" y="178" class="t">Rpd</text><text id="s2-rpd" x="166" y="194" class="v">560 Ω</text>
+        </g>
+        <path class="w" d="M240,90 V200 M260,150 V200 M340,90 V200 M360,150 V200 M430,90 V200 M450,150 V200"/>
+        <circle class="dot" cx="240" cy="90" r="3.5"/><circle class="dot" cx="260" cy="150" r="3.5"/>
+        <circle class="dot" cx="340" cy="90" r="3.5"/><circle class="dot" cx="360" cy="150" r="3.5"/>
+        <circle class="dot" cx="430" cy="90" r="3.5"/><circle class="dot" cx="450" cy="150" r="3.5"/>
+        <rect class="box" x="220" y="200" width="60" height="34" rx="5"/><text x="250" y="222" text-anchor="middle" class="t">主机</text>
+        <rect class="box" x="320" y="200" width="60" height="34" rx="5"/><text x="350" y="222" text-anchor="middle" class="t">从机 1</text>
+        <rect class="box" x="410" y="200" width="60" height="34" rx="5"/><text x="440" y="222" text-anchor="middle" class="t">从机 2</text>
+        <text id="s2-vat" x="330" y="82" text-anchor="middle" class="v hi">VA</text>
+        <text id="s2-vbt" x="300" y="170" text-anchor="middle" class="v lo">VB</text>
+        <text id="s2-vdt" x="300" y="125" text-anchor="middle" class="v">差压</text>
+        <path id="s2-fl" class="flow thin" d=""/>
+        <text x="62" y="292" text-anchor="end" class="t">差压</text>
+        <rect id="s2-zone" class="zone-bad" x="185" y="278" width="230" height="22"/>
+        <path class="ax" d="M70,300 H530"/>
+        <g id="s2-nl"></g>
+        <polygon id="s2-mk" class="ah" points="0,0 0,0 0,0"/>
+        <text id="s2-mkt" x="0" y="262" text-anchor="middle" class="v">0 mV</text>
+        <text x="62" y="352" text-anchor="end" class="t">RXD</text>
+        <polyline id="s2-rx" class="cv" points=""/>
+        <path class="ax" d="M70,364 H530"/>
+        <text x="530" y="380" text-anchor="end" class="tm">时间 →，总线空闲，所有节点 DE = 0</text>
+      </svg>
+      <figcaption>绿色虚线是偏置电流：Vcc → Rpu → A 线 → 终端电阻 → B 线 → Rpd → 地。数轴上红色区是 ±200 mV 不确定区。按 3 个节点、接收器差分输入电阻合计约 8 kΩ 估算（示意）。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">失效安全偏置</span>
+        <div class="seg" id="s2-b"><button id="s2-b-0" data-v="0" aria-pressed="false">不接</button><button id="s2-b-1k" data-v="1000" aria-pressed="false">1 kΩ</button><button id="s2-b-560" data-v="560" aria-pressed="true">560 Ω</button></div></div>
+      <div class="ctl"><span class="ctl-l">终端电阻</span>
+        <div class="seg" id="s2-t"><button id="s2-t-2" data-v="2" aria-pressed="true">两端 120 Ω</button><button id="s2-t-1" data-v="1" aria-pressed="false">只有主机端</button><button id="s2-t-0" data-v="0" aria-pressed="false">不接</button></div></div>
+      <dl class="read">
+        <dt>A、B 间等效电阻</dt><dd id="s2-req">—</dd>
+        <dt>VA / VB</dt><dd id="s2-vab">—</dd>
+        <dt>空闲差压</dt><dd id="s2-vd">—</dd>
+        <dt>偏置电流</dt><dd id="s2-ib">—</dd>
+        <dt>接收器输出</dt><dd><span id="s2-st" class="chip on">稳定为 1</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="de">
+  <span class="eyebrow">半双工 · DE/RE 方向控制</span>
+  <h2>谁说话谁开 DE，说完马上关</h2>
+  <p>485 收发器里是一个发送器加一个接收器，挂在同一对线上。DE 高电平时发送器驱动总线；DE 低电平时发送器变成高阻，只听不说。RE 低电平有效，通常和 DE 接在一起，由 MCU 的一个 IO 控制：发之前拉高，发完拉低切回接收。任何时刻只能有一个节点打开 DE，这就是半双工。</p>
+  <p>最常见的 bug 是切换时机。UART 的"发送寄存器空"TXE 只说明最后一个字节进了移位寄存器，还没发出去；要等"发送完成"TC，也就是停止位发完，才能关 DE。也不能拖太久，从机的应答可能已经开始了。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 560 304" role="img" aria-label="时序图：主机 TXD、主机 DE、从机 DE、从机 TXD 和总线电平，展示主机释放 DE 的时机对总线的影响">
+        <g id="s3-bad"></g>
+        <g id="s3-grid"></g>
+        <text x="70" y="53" text-anchor="end" class="t">主机 TXD</text>
+        <text x="70" y="97" text-anchor="end" class="t">主机 DE</text>
+        <text x="70" y="141" text-anchor="end" class="t">从机 DE</text>
+        <text x="70" y="185" text-anchor="end" class="t">从机 TXD</text>
+        <text x="70" y="237" text-anchor="end" class="t">总线</text>
+        <polyline id="s3-mt" class="real" points=""/>
+        <polyline id="s3-md" class="cv" points=""/>
+        <polyline id="s3-sd" class="cv" points=""/>
+        <polyline id="s3-st2" class="real2" points=""/>
+        <polyline id="s3-bus" class="real3" points=""/>
+        <line id="s3-rel" class="ax dash" x1="0" y1="30" x2="0" y2="252"/>
+        <text id="s3-relt" x="0" y="24" text-anchor="middle" class="tm">主机关 DE</text>
+        <g id="s3-lab"></g>
+        <path class="ax" d="M76,262 H540"/>
+        <g id="s3-ax"></g>
+        <text x="540" y="298" text-anchor="end" class="tm">时间 / 位</text>
+      </svg>
+      <figcaption>主机发完最后一个字节后释放总线，从机隔两位开始应答。总线一行：主机或从机谁的 DE 高就显示谁发的电平；都不驱动时由偏置电阻保持为 1；两边同时驱动且电平不同时是冲突，标红。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">主机什么时候关 DE</span>
+        <div class="seg" id="s3-m"><button id="s3-m-tc" data-v="tc" aria-pressed="true">等 TC，停止位发完</button><button id="s3-m-txe" data-v="txe" aria-pressed="false">TXE 一置位就关</button><button id="s3-m-late" data-v="late" aria-pressed="false">软件延时太长</button></div></div>
+      <dl class="read">
+        <dt>关 DE 的时刻</dt><dd id="s3-t">—</dd>
+        <dt>从机收到的最后字节</dt><dd id="s3-rx">—</dd>
+        <dt>主机收到的应答</dt><dd id="s3-ack">—</dd>
+        <dt>结论</dt><dd><span id="s3-st" class="chip on">正常</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+  <p class="note">不想用软件管方向，可以用带自动方向控制的收发器，或者用 TXD 经三极管驱动 DE 的"自动收发"电路：发 0 时主动驱动，发 1 时靠偏置电阻把总线拉成 1。后者速度受偏置电阻限制，只适合低波特率。</p>
+</section>
+
+<section id="tab">
+  <span class="eyebrow">和 UART、CAN 比</span>
+  <h2>三种总线各用在什么地方</h2>
+  <div class="tbl">
+  <table>
+    <thead><tr><th>项目</th><th>UART 点对点</th><th>RS485 总线</th><th>CAN 总线</th></tr></thead>
+    <tbody>
+      <tr><td>物理层</td><td>单端 TTL/RS232</td><td>差分 A/B</td><td>差分 CAN_H/L</td></tr>
+      <tr><td>节点数</td><td class="n">1 对 1</td><td class="n">1 主多从，32、128 或 256</td><td class="n">多主，几十到上百</td></tr>
+      <tr><td>距离与速率</td><td class="n">十几米，115200 常见</td><td class="n">1200 m 或 100 m 下 10 Mbps 级</td><td class="n">40 m 1 Mbps，可到 5 Mbps</td></tr>
+      <tr><td>仲裁</td><td>无，靠协议轮询</td><td>无，靠协议轮询</td><td>非破坏性位仲裁，ID 决定优先级</td></tr>
+      <tr><td>共模抑制</td><td class="n">无</td><td class="n">−7~+12 V</td><td class="n">−2~+7 V</td></tr>
+      <tr><td>错误处理</td><td>只有校验位</td><td>只有校验位</td><td>CRC、错误帧、自动重发、故障封闭</td></tr>
+      <tr><td>双工</td><td>全双工，两根线各一个方向</td><td>半双工为主，需 DE/RE</td><td>半双工，隐性优先</td></tr>
+      <tr><td>典型场合</td><td>调试打印、两芯片近距离</td><td>Modbus 仪表、PLC、楼宇、光伏板间</td><td>汽车电子、工业控制</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>一句话的区别：RS485 只是把 UART 的电平换成差分，协议还是你自己定的；CAN 把仲裁、校验、重传都做进了硬件，软件省事但控制器复杂。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>RS485 为什么比 RS232 传得远？</summary>
+      <div class="ans"><p>两个原因。一是差分，两根线上的干扰几乎是共模的，相减就抵消掉了，所以能用更低的电压摆幅获得更好的信噪比；二是 RS232 用 ±12 V 单端电平，波特率高时对地线阻抗和线间电容敏感，几十米就要降速。485 的共模范围 −7~+12 V，允许两端地电位相差好几伏。</p></div></details>
+    <details><summary>总线两端为什么都要接 120 Ω？</summary>
+      <div class="ans"><p>传输线上的信号反射来自阻抗不匹配。在总线的两个物理末端各接 120 Ω，匹配双绞线约 120 Ω 的特征阻抗，把反射吸收掉。两个电阻并联后总并联值是 60 Ω，所以总线上看到约 110 Ω 的差分阻抗。中间节点不能接，接在中间会把线切成两段，反而造成新的失配。</p></div></details>
+    <details><summary>不加偏置电阻会怎么样？</summary>
+      <div class="ans"><p>没有节点驱动时，差分电压停在 0 V 附近，而接收器的判决门限大致在 ±200 mV。此时任何一点噪声都可能让接收器随机输出 0 或 1。加上下拉和上拉的一组电阻，可以把空闲状态的差压稳定地拉开 200 mV 以上，这就是失效安全偏置。</p></div></details>
+    <details><summary>DE 切换的时机怎么把握？</summary>
+      <div class="ans"><p>主机要等最后一个字节的停止位真正发完，也就是 TC 标志置位，再关 DE；不能只看 TXE。关得太早，最后一个字节的尾部被从机当成乱码；关得太晚，从机的应答就撞上主机还没释放的总线，两边同时驱动，帧损毁。软件难拿准时，用带自动方向控制的收发器最省事。</p></div></details>
+    <details><summary>RS485 是全双工还是半双工？</summary>
+      <div class="ans"><p>常见的是半双工，一对 AB 线双向复用，靠 DE/RE 切换收发，同一时刻只允许一个节点发送。全双工要用两对差分线和各自的收发器，成本和布线翻倍，只在少数场合用。485 芯片本身不区分，是接线方式决定了全双工还是半双工。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="04-CAN.html"><span>上一页</span>CAN 总线</a><a class="next" href="../index.html#bus"><span>下一页</span>返回目录</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* ============ 图1：差分抗干扰 ============ */
+const s1X=t=>78+t*21.6;
+function s1u(){
+  const dc=$('s1-n-dc').getAttribute('aria-pressed')==='true', amp=+$('s1-am').value;
+  const X=s1X, YA=v=>130-v*22, YD=v=>272-v*22, HI=48, MID=226, LO=332;
+  const bits=[],A=[];
+  for(let k=0;k<=420;k++){
+    const t=k*0.05, d=(Math.floor(t)%2<1)?1:0;
+    const va=2.5+(d?2:-2), vb=2.5+(d?-2:2);      /* VA − VB 为正判 1 */
+    const n=dc?0:amp*(0.6*Math.sin(t*22)+0.3*Math.sin(t*77));
+    const s=dc?amp:0;                             /* 两地地电位差近似直流偏置 */
+    bits.push(d);A.push([va+n+s,vb+n+s]);}
+  const step=(v,Y)=>{const o=[];let last=null;
+    for(let k=0;k<=420;k++){const pt=X(k*0.05).toFixed(1)+','+Y(v[k]).toFixed(1);
+      if(last===null||last[1]!==pt.split(',')[1])o.push(pt);o.push(pt);last=pt;}return o.join(' ');};
+  const dig=(v,y)=>{const o=[];let last=null;
+    for(let k=0;k<=420;k++){const pt=X(k*0.05).toFixed(1)+','+(y-(v[k]?18:0)).toFixed(1);
+      if(last===null||last[1]!==pt.split(',')[1])o.push(pt);o.push(pt);last=pt;}return o.join(' ');};
+  $('s1-tx').setAttribute('points',dig(bits,HI));
+  $('s1-a').setAttribute('points',step(A.map(p=>p[0]),YA));
+  $('s1-b').setAttribute('points',step(A.map(p=>p[1]),YA));
+  $('s1-se').setAttribute('points',dig(A.map(p=>p[0]>2.5?0:1),MID));
+  const D=A.map(p=>p[0]-p[1]);
+  $('s1-d').setAttribute('points',step(D,YD));
+  $('s1-rx').setAttribute('points',dig(D.map(v=>v>0?1:0),LO));
+  /* 网格与标注 */
+  $('s1-grid').textContent='';
+  [[-4,'−4'],[-2,'−2'],[2,'2'],[4,'+4']].forEach(([v,l])=>{
+    const y=YA(v).toFixed(1);
+    $('s1-grid').append(svgEl('line',{class:'gl',x1:78,y1:y,x2:540,y2:y}));
+    $('s1-grid').append(svgEl('text',{x:82,y:(+y+11).toFixed(1),class:'tm'},l+' V'));
+  });
+  const blk=(v,l)=>{
+    const y=YD(v).toFixed(1);
+    $('s1-grid').append(svgEl('line',{class:'gl',x1:78,y1:y,x2:540,y2:y}));
+    $('s1-grid').append(svgEl('rect',{class:'zone-bad',x:78,y:(+y-1.6).toFixed(1),width:462,height:3.2}));
+    if(v)$('s1-grid').append(svgEl('text',{x:82,y:(+y+11).toFixed(1),class:'tm'},l));
+  };
+  blk(-0.4,'−400 mV');blk(0.4,'+400 mV');
+  const mn=Math.min(...A.map(p=>p[0]),...A.map(p=>p[1])),mx=Math.max(...A.map(p=>p[0]),...A.map(p=>p[1])),ok=mn>-9.5&&mx<12;
+  [[12,'+12'],[ -9.5,'-9.5']].forEach(([v,l])=>{const y=YA(v);
+    if(y>26&&y<200){
+      const ln=svgEl('line',{class:'lim',x1:78,y1:y.toFixed(1),x2:540,y2:y.toFixed(1)});
+      const tx=svgEl('text',{x:536,y:(y-4).toFixed(1),'text-anchor':'end',class:'tm'},l+' V');
+      tx.setAttribute('style','fill:var(--danger)');
+      $('s1-grid').append(ln,tx);
+    }
+  });
+  /* 读数 */
+  $('s1-rg').textContent=mn.toFixed(2)+' ~ '+mx.toFixed(2)+' V';
+  $('s1-cm').textContent=ok?'没有超出':'超出，收发器已失效';
+  $('s1-vd').textContent='差分恢复成干净方波';
+  $('s1-es').textContent=A.map(p=>p[0]>2.5?0:1).join('').replace(/(.{4})/g,'$1 ');
+  $('s1-ed').textContent='全部正确';
+  chip($('s1-st'),ok?(dc?'地电位差被抵消':'共模噪声被抵消'):'共模超限',ok?'on':'bad');
+  $('s1-note').textContent=ok
+    ?(dc?'两地地电位差给 A、B 同时抬高相同的电压。单端接收以本地地为基准，判出来的 0/1 完全错；差分相减后差压仍是 2 V，数据一位不差。'
+       :'双绞线上的耦合噪声同时、差不多大小地加到两根线上。单端看 A 对地已被噪声扭得不成样子；相减之后噪声抵消，差压是干净方波。')
+    :'共模电压超出 -7~+12 V，收发器本身已失效。实际工程要保证两端可靠共地，或者改用隔离收发器。';
+}
+seg('s1-n',s1u);$('s1-am').addEventListener('input',s1u);s1u();
+
+/* ============ 图2：失效安全偏置 ============ */
+const s2Y=(v,pw)=>318-(v+0.6)*pw, s2X=t=>70+t*46;
+function s2u(){
+  const nT=+$('s2-t').value, Rpu=+$('s2-b').value;
+  const Rpd=Rpu||null, Rt=nT===2?60:(nT===1?120:0);
+  /* 空闲：驱动器高阻，Rpu 从 A 到 Vcc，Rpd 从 B 到地，差分输入电阻约 8k */
+  const Rin=8000;
+  let req,vd,va,vb,ib;
+  if(Rpu){ ib=5/(Rpu+Rpd+ (Rt?Rt:0));
+    const idx=Rin+ (Rt||0);
+    va=5-ib*Rpu; vb=ib*Rpd;
+    req=(Rpu+Rpd)*(Rt?Rt:0)/((Rpu+Rpd)+(Rt||1e9)); }
+  else { ib=0; va=vb=2.5; req=nT===2?120:(nT===1?240:1e9); }
+  vd=va-vb;
+  show($('s2-bs'),!!Rpu);
+  $('s2-rpu').textContent=Rpu?fmtR(Rpu):'—';
+  $('s2-rpd').textContent=Rpd?fmtR(Rpd):'—';
+  $('s2-vat').textContent=Rpu?va.toFixed(2)+' V':'空闲';
+  $('s2-vbt').textContent=Rpu?vb.toFixed(2)+' V':'空闲';
+  $('s2-vdt').textContent=Rpu?vd.toFixed(0)+' mV':'0 mV';
+  $('s2-req').textContent=req>1e6?'∞（驱动级高阻）':fmtR(req);
+  $('s2-vab').textContent=Rpu?`${va.toFixed(2)} / ${vb.toFixed(2)} V`:'悬空';
+  $('s2-vd').textContent=Rpu?fmtV(vd*1000,0).replace('V','mV'):'0 mV';
+  $('s2-ib').textContent=Rpu?fmtA(ib):'0';
+  const ok=Rpu?Math.abs(vd)>0.2:false;
+  chip($('s2-st'),Rpu?(ok?'稳定为 1':'落在不确定区'):'随机',Rpu?(ok?'on':'bad'):'bad');
+  /* 时间轴波形 */
+  $('s2-nl').textContent='';
+  const shown=[[0,'空闲'],[1,'空闲'],[2,'空闲']];
+  let p=[],last=null;
+  for(let k=0;k<=120;k++){const t=k*0.05, v=Rpu?vd*1000:Math.sin(t*40)*40, pt=s2X(t).toFixed(1)+','+s2Y(v/1000,3000000).toFixed(1);
+    if(last===null||last[1]!==pt.split(',')[1])p.push(pt);p.push(pt);last=pt;}
+  $('s2-rx').setAttribute('points',p.join(' '));
+  $('s2-mkt').setAttribute('x',(s2X(1)+s2X(2))/2);
+  $('s2-zone').setAttribute('x',s2X(0.9));$('s2-zone').setAttribute('width',(s2X(2.1)-s2X(0.9)).toFixed(1));
+  $('s2-fl').setAttribute('d',Rpu?`M150,60 V40 H330 V98`:'');
+  $('s2-note').textContent=Rpu
+    ?(ok?`Rpu、Rpd 把空闲差压拉到 ${Math.abs(vd*1000).toFixed(0)} mV，远离 ±200 mV 不确定区，接收器稳定输出 1。两组电阻一般取 560 Ω 到 1 kΩ，兼顾偏置电流和功耗。`
+       :`空闲差压只有 ${Math.abs(vd*1000).toFixed(0)} mV，落在 ±200 mV 不确定区内。任何噪声都可能让接收器输出 0 或 1，总线上的数据帧被随机打断。`)
+    :'没有偏置电阻时，总线悬空。差分电压停在 0 V 附近，接收器在 0 和 1 之间跳变，串口收到大量乱码。';
+}
+seg('s2-b',s2u);seg('s2-t',s2u);s2u();
+
+/* ============ 图3：DE 切换时机 ============ */
+const s3X=b=>80+b*10;      /* 每字节 10 像素，46 字节到 540 */
+/* 主机连发 3 字节 0x55；第 30 位是第 3 字节停止位发完；从机第 34 位起应答 1 字节 */
+const s3n=3, s3ACK=34, s3HZ=24;
+const s3REL={tc:30,txe:27,late:33};
+function s3u(){
+  const m=$('s3-m-tc').getAttribute('aria-pressed')==='true'?'tc'
+        :$('s3-m-txe').getAttribute('aria-pressed')==='true'?'txe':'late';
+  const rel=s3REL[m];
+  const mtx=t=>{const b=Math.floor(t/10),bit=t-b*10;if(b>=s3n)return 1;
+    const v=(0x55>>bit)&1;return v;};
+  const mde=t=>t<rel?1:0;
+  const sde=t=>(t>=s3ACK&&t<s3ACK+10)?1:0;
+  const stx=t=>{if(t<s3ACK||t>=s3ACK+10)return 1;const bit=t-s3ACK;return (0xF0>>bit)&1;};
+  const bus=t=>{const md=mde(t),sd=sde(t);
+    if(md===1&&sd===1)return null;                    /* 双向冲突 */
+    if(md===1)return mtx(t);if(sd===1)return stx(t);return 1;};
+  const step=(lv,y)=>{const o=[];let last=null;
+    for(let k=0;k<=1000;k++){const t=k*0.05,v=lv(t);
+      if(v===null)continue;
+      const pt=s3X(t).toFixed(1)+','+(y-(v?18:0)).toFixed(1);
+      if(last===null||last[1]!==pt.split(',')[1])o.push(pt);
+      o.push(pt);last=pt;}
+    return o.join(' ');};
+  $('s3-mt').setAttribute('points',step(mtx,53));
+  $('s3-md').setAttribute('points',step(mde,97));
+  $('s3-sd').setAttribute('points',step(sde,141));
+  $('s3-st2').setAttribute('points',step(stx,185));
+  $('s3-bus').setAttribute('points',step(bus,237));
+  /* 关 DE 的竖线和标签 */
+  const xr=s3X(rel);
+  $('s3-rel').setAttribute('x1',xr.toFixed(1));
+  $('s3-rel').setAttribute('x2',xr.toFixed(1));
+  const anch=xr<130?'start':(xr>450?'end':'middle');
+  $('s3-relt').setAttribute('x',(xr+(anch==='start'?6:anch==='end'?-6:0)).toFixed(1));
+  $('s3-relt').setAttribute('text-anchor',anch);
+  /* 总线冲突：双方都驱动且电平相反的一段，画成红色背景 */
+  $('s3-bad').textContent='';
+  const clashT=[];for(let t=0;t<50;t+=0.05){const md=mde(t),sd=sde(t);
+    if(md===1&&sd===1&&mtx(t)!==stx(t))clashT.push(t);}
+  if(clashT.length){
+    const a=s3X(clashT[0]),b=s3X(clashT[clashT.length-1]);
+    $('s3-bad').append(svgEl('rect',{class:'zone-bad',x:a.toFixed(1),y:210,width:(b-a).toFixed(1),height:54}));
+    const cx=(a+b)/2, anch2=cx>440?'end':cx<130?'start':'middle';
+    $('s3-bad').append(svgEl('text',{x:(cx+(anch2==='start'?6:anch2==='end'?-6:0)).toFixed(1),y:228,'text-anchor':anch2,class:'t'},'双向冲突'));
+  }
+  /* 字节分隔 */
+  $('s3-lab').textContent='';
+  [1,2,3].forEach((n,i)=>$('s3-lab').append(svgEl('text',{x:s3X(i*10+4.5).toFixed(1),y:210,'text-anchor':'middle',class:'v'},'字节 '+n)));
+  /* 时间轴 */
+  $('s3-ax').textContent='';
+  [0,5,10,15,20,25,30,35,40,45].forEach(b=>{
+    $('s3-ax').append(svgEl('line',{class:'ax',x1:s3X(b),y1:262,x2:s3X(b),y2:266}));
+    $('s3-ax').append(svgEl('text',{x:s3X(b),y:280,'text-anchor':'middle',class:'v'},b));
+  });
+  /* 读数 */
+  const relTxt=m==='tc'?'第 30 位，第 3 字节的停止位发完之后'
+             :m==='txe'?'第 27 位，第 3 字节的停止位还没抬起来':'第 33 位，比 TC 晚了 3 位';
+  $('s3-t').textContent=relTxt;
+  const rxLast=(()=>{let s='';for(let b=0;b<3;b++){let v=0;
+      for(let bit=0;bit<8;bit++){if(mde(b*10+bit))v|=mtx(b*10+bit)<<bit;}
+      s+=(v<16?'0':'')+v.toString(16).toUpperCase()+' ';}
+    return s.trim();})();
+  $('s3-rx').textContent=rxLast;
+  let ack=0;for(let bit=0;bit<8;bit++){const t=s3ACK+bit;if(!mde(t)&&sde(t))ack|=stx(t)<<bit;}
+  $('s3-ack').textContent=clashT.length?'没有收到，应答被主机撞毁':'收到 0x'+ack.toString(16).toUpperCase().padStart(2,'0');
+  chip($('s3-st'),clashT.length?(m==='txe'?'末字节被截断':'应答撞车'):'正常',clashT.length?'bad':'on');
+  $('s3-note').textContent=clashT.length
+    ?(m==='txe'?'TXE 只表示最后一个字节从发送寄存器搬进了移位寄存器，停止位还没发出去。这时关 DE，末字节尾部被切断，从机收到的是坏帧。'
+      :'DE 关得太晚，从机的应答已经开始，两个发送器同时挂在总线上。电平一致的部分看起来正常，不一致的位置互相打架，两边都收到坏帧。')
+    :'主机停发后总线交给从机，偏置电阻把总线保持为 1，从机的应答完整送到主机。这是软件管方向的正确时机。';
+}
+seg('s3-m',s3u);s3u();
+</script>
+</body>
+</html>

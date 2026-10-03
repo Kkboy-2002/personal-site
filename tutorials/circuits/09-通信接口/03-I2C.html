@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>I2C 总线</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.txt{font:500 15px var(--mono);padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);width:8em;max-width:100%}
+.ctls{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px 22px;align-items:start}
+.smp{fill:var(--flow)}
+.mk{stroke:var(--flow);stroke-width:1.2;stroke-dasharray:3 3}
+.ring{fill:none;stroke:var(--flow);stroke-width:2.2}.ring.ctl{stroke:var(--copper)}.ring.bad{stroke:var(--danger)}
+.ctl .seg button{padding:6px 11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#bus">通信接口</a><span class="sp"></span><span>03 / 05</span></nav>
+<header>
+  <span class="eyebrow">通信接口 · 两线总线</span>
+  <h1>I2C 总线</h1>
+  <p class="lede">I2C 只用 SDA、SCL 两根线就能挂一串器件，靠 7 位地址区分谁是谁，每个字节后面跟一个应答位。它的规矩几乎都来自一个事实：两根线都是开漏输出加上拉电阻。</p>
+</header>
+
+<section id="rule">
+  <span class="eyebrow">开漏上拉 · 起始与停止</span>
+  <h2>SCL 高时 SDA 不许乱动</h2>
+  <p>SDA 是数据线，SCL 是时钟线，都由开漏输出驱动：器件只能把线拉低，松开后靠上拉电阻拉高。所以任何一个器件拉低，整根线就是低，这就是线与，详见<a href="../02-三极管/09-上拉电阻配三极管.html#i2c">上拉电阻配三极管</a>最后的演示。线与让从机能回应答、能拉住时钟，多个主机也能仲裁。</p>
+  <p>时序只有一条铁律：数据在 SCL 低时变化，在 SCL 高时保持稳定，接收方在 SCL 高电平期间采样。反过来，SCL 高时 SDA 发生跳变就不是数据，而是控制信号：SDA 下降是起始条件 S，SDA 上升是停止条件 P。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 214" role="img" aria-label="一小段 I2C 时序：蓝色底色是 SCL 高电平区间，圆圈标出 SDA 跳变的位置">
+        <g id="s1-zone"></g>
+        <text x="70" y="26" class="tm">蓝色底色：SCL 高电平，SDA 应保持不动</text>
+        <text x="58" y="80" text-anchor="end" class="v">SDA</text>
+        <text x="58" y="160" text-anchor="end" class="v">SCL</text>
+        <polyline id="s1-sda" class="real" points="70,56 454,56"/>
+        <polyline id="s1-scl" class="cv" points="70,136 454,136"/>
+        <circle id="s1-ring" class="ring" cx="198" cy="76" r="9"/>
+        <circle id="s1-smp" class="smp" cx="262" cy="56" r="4"/>
+        <text id="s1-lab" x="198" y="120" text-anchor="middle" class="t">起始</text>
+        <path class="ax" d="M70,196 H454"/>
+        <text x="454" y="210" text-anchor="end" class="tm">时间</text>
+      </svg>
+      <figcaption>圆圈是 SDA 跳变的时刻：绿色是合法的数据变化，橙色是控制信号，红色是违规。绿点是数据位的采样点。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">看哪种情况</span>
+        <div class="seg" id="s1-e"><button id="s1-e-s" data-v="s" aria-pressed="true">起始 S</button><button id="s1-e-d1" data-v="d1" aria-pressed="false">数据 1</button><button id="s1-e-d0" data-v="d0" aria-pressed="false">数据 0</button><button id="s1-e-p" data-v="p" aria-pressed="false">停止 P</button><button id="s1-e-sr" data-v="sr" aria-pressed="false">重复起始 Sr</button><button id="s1-e-bad" data-v="bad" aria-pressed="false">SCL 高时改数据</button></div></div>
+      <dl class="read">
+        <dt>跳变时 SCL</dt><dd id="s1-scv">高</dd>
+        <dt>SDA 跳变</dt><dd id="s1-dir">下降</dd>
+        <dt>接收方理解为</dt><dd id="s1-mean">起始条件</dd>
+        <dt>判断</dt><dd><span id="s1-st" class="chip on">控制信号</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="frame">
+  <span class="eyebrow">完整一帧 · 地址、读写位、应答</span>
+  <h2>主机写一个字节，线上发生了什么</h2>
+  <p>一次传输以起始条件开头。主机先发一个字节：高 7 位是从机地址，最低位是读写位，0 写 1 读。和 UART 相反，I2C 高位先发。第 9 个时钟主机松开 SDA，被叫到地址的从机把 SDA 拉低，这就是应答 ACK；没人拉低，SDA 被上拉保持高，就是 NACK。之后每个字节都是 8 位数据加 1 位应答，最后主机发停止条件释放总线。</p>
+  <p>读操作时数据由从机发，应答由主机回：主机收完最后一个字节回 NACK，告诉从机别再发了。从机忙不过来时可以把 SCL 拉低不放，叫时钟拉伸，主机会一直等它松开。</p>
+  <div class="demo wide">
+    <figure>
+      <svg viewBox="0 0 760 250" role="img" aria-label="I2C 完整时序：起始条件、7 位地址、读写位、应答、数据字节、应答、停止条件，逐位标注">
+        <g id="s2-bg"></g>
+        <rect id="s2-hl" class="zone-ok" x="70" y="28" width="30" height="160"/>
+        <text x="58" y="84" text-anchor="end" class="v">SDA</text>
+        <text x="58" y="164" text-anchor="end" class="v">SCL</text>
+        <g id="s2-w"></g>
+        <g id="s2-lab"></g>
+        <path class="ax" d="M70,200 H750"/>
+        <g id="s2-ax"></g>
+        <text x="750" y="244" text-anchor="end" class="tm">时间 µs，从起始条件算起</text>
+      </svg>
+      <figcaption>线的颜色表示谁在驱动：橙色是主机，蓝色是从机，黑色是没人驱动、由上拉电阻拉高。SDA 行的蓝色底色是从机发的位，SCL 行的蓝色底色是从机拉住时钟。绿点是 SCL 高电平中间的采样点。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctls">
+        <div class="ctl"><label class="ctl-l" for="s2-addr">7 位从机地址（十六进制，0x00~0x7F）</label>
+          <input class="txt" type="text" id="s2-addr" value="0x50" maxlength="4" autocomplete="off"></div>
+        <div class="ctl"><label class="ctl-l" for="s2-data">数据字节（十六进制）</label>
+          <input class="txt" type="text" id="s2-data" value="0x3C" maxlength="4" autocomplete="off"></div>
+        <div class="ctl"><span class="ctl-l">读写位</span>
+          <div class="seg" id="s2-rw"><button id="s2-rw-0" data-v="0" aria-pressed="true">写 W = 0</button><button id="s2-rw-1" data-v="1" aria-pressed="false">读 R = 1</button></div></div>
+        <div class="ctl"><span class="ctl-l">地址应答</span>
+          <div class="seg" id="s2-ack"><button id="s2-ack-1" data-v="1" aria-pressed="true">从机在线 ACK</button><button id="s2-ack-0" data-v="0" aria-pressed="false">地址不存在 NACK</button></div></div>
+        <div class="ctl"><span class="ctl-l">时钟拉伸</span>
+          <div class="seg" id="s2-str"><button id="s2-str-0" data-v="0" aria-pressed="true">不拉伸</button><button id="s2-str-1" data-v="1" aria-pressed="false">从机拉伸</button></div></div>
+        <div class="ctl"><span class="ctl-l">速率</span>
+          <div class="seg" id="s2-f"><button id="s2-f-100" data-v="100000" aria-pressed="true">标准 100 kHz</button><button id="s2-f-400" data-v="400000" aria-pressed="false">快速 400 kHz</button></div></div>
+        <div class="ctl"><label class="ctl-l" for="s2-bit">当前位</label>
+          <span class="rv" id="s2-bv">S</span>
+          <input type="range" id="s2-bit" min="0" max="19" step="1" value="0">
+          <div class="seg"><button id="s2-play" aria-pressed="false">▶ 逐位播放</button></div></div>
+        <dl class="read">
+          <dt>地址字节</dt><dd id="s2-ab">0xA0</dd>
+          <dt>SDA 由谁驱动</dt><dd id="s2-drv">主机</dd>
+          <dt>SCL 时钟数</dt><dd id="s2-clk">18</dd>
+          <dt>整帧时长</dt><dd id="s2-tt">—</dd>
+          <dt>结果</dt><dd><span id="s2-st" class="chip on">从机应答</span></dd>
+        </dl>
+      </div>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="rp">
+  <span class="eyebrow">上拉电阻 · 总线电容</span>
+  <h2>上拉电阻取多大</h2>
+  <p>低电平由器件的开漏管拉下来，又快又硬；高电平只能靠上拉电阻给总线电容充电，上升沿是 RC 指数曲线。所以电阻有上下两个限：太大，上升沿太慢，超过规范的上升时间；太小，开漏管导通时要吸的电流超过 3 mA，低电平压不到 0.4 V 以下。</p>
+  <p class="eq">Rp(max) = tr / (0.8473 · Cb)　　Rp(min) = (Vcc − 0.4 V) / 3 mA</p>
+  <p>tr 是规范允许的上升时间，按 30% 到 70% Vcc 计。RC 充电从 30% 到 70% 用时 RC · ln(0.7 / 0.3) ≈ 0.8473 · RC，公式里的 0.8473 就是这么来的。Cb 是总线总电容，包括走线和每个器件引脚，标准和快速模式都不超过 400 pF。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 312" role="img" aria-label="SCL 被释放后按 RC 指数上升的波形，下方是上拉电阻的允许范围条">
+        <line class="gl" x1="60" y1="50" x2="500" y2="50"/>
+        <line class="ax" x1="60" y1="86" x2="500" y2="86" style="stroke-dasharray:2 4"/>
+        <line class="ax" x1="60" y1="134" x2="500" y2="134" style="stroke-dasharray:2 4"/>
+        <line id="s3-vol" class="gl dash" x1="60" y1="156" x2="500" y2="156"/>
+        <text x="496" y="80" text-anchor="end" class="tm">VIH 0.7·Vcc</text>
+        <text x="496" y="128" text-anchor="end" class="tm">VIL 0.3·Vcc</text>
+        <text id="s3-volt" x="54" y="160" text-anchor="end" class="tm">0.4 V</text>
+        <path class="ax" d="M60,40 V170 H500"/>
+        <text id="s3-vcct" x="54" y="54" text-anchor="end" class="v">3.3 V</text>
+        <text x="54" y="178" text-anchor="end" class="v">0</text>
+        <text x="60" y="188" text-anchor="middle" class="v">0</text>
+        <text id="s3-xm" x="280" y="188" text-anchor="middle" class="v">5</text>
+        <text id="s3-xe" x="500" y="188" text-anchor="end" class="v">10</text>
+        <text x="500" y="204" text-anchor="end" class="tm">时间 µs，一个 SCL 周期</text>
+        <polyline id="s3-ideal" class="ideal" points="60,170 280,170 280,50 500,50"/>
+        <polyline id="s3-wave" class="real" points="60,170 500,170"/>
+        <line id="s3-m30" class="mk" x1="300" y1="40" x2="300" y2="170"/>
+        <line id="s3-m70" class="mk" x1="340" y1="40" x2="340" y2="170"/>
+        <text id="s3-trt" x="320" y="34" text-anchor="middle" class="v">tr</text>
+        <text x="500" y="304" text-anchor="end" class="tm">上拉电阻 Rp，对数刻度</text>
+        <rect id="s3-zone" class="zone-ok" x="150" y="238" width="120" height="14"/>
+        <text id="s3-zmin" x="148" y="233" text-anchor="end" class="tm">Rp(min)</text>
+        <text id="s3-zmax" x="272" y="233" class="tm">Rp(max)</text>
+        <path class="ax" d="M60,252 H500"/>
+        <g id="s3-rax"></g>
+        <polygon id="s3-mark" class="hi" points="200,254 194,264 206,264"/>
+      </svg>
+      <figcaption>虚线是理想方波，橙线是实际 SCL。绿色竖线标出越过 0.3·Vcc 和 0.7·Vcc 的时刻，两者之差就是 tr。下方绿条是允许的 Rp 范围，橙色三角是当前选的电阻。示意条件：开漏管按最差情况 3 mA 时压降 0.4 V 估算。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">模式</span>
+        <div class="seg" id="s3-md"><button id="s3-md-s" data-v="s" aria-pressed="true">标准 100k</button><button id="s3-md-f" data-v="f" aria-pressed="false">快速 400k</button><button id="s3-md-p" data-v="p" aria-pressed="false">快速+ 1M</button></div></div>
+      <div class="ctl"><span class="ctl-l">上拉电源</span>
+        <div class="seg" id="s3-v"><button id="s3-v-33" data-v="3.3" aria-pressed="true">3.3 V</button><button id="s3-v-5" data-v="5" aria-pressed="false">5 V</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s3-cb">总线电容 Cb</label>
+        <span class="rv" id="s3-cbv">200 pF</span>
+        <input type="range" id="s3-cb" min="20" max="500" step="10" value="200"></div>
+      <div class="ctl"><label class="ctl-l" for="s3-r">选用的上拉电阻 Rp</label>
+        <span class="rv" id="s3-rv">4.7 kΩ</span>
+        <input type="range" id="s3-r" min="0" max="8" step="1" value="4"></div>
+      <dl class="read">
+        <dt>Rp(min)</dt><dd id="s3-rmin">—</dd>
+        <dt>Rp(max)</dt><dd id="s3-rmax">—</dd>
+        <dt>实际 tr = 0.8473·Rp·Cb</dt><dd id="s3-tr">—</dd>
+        <dt>规范 tr 上限</dt><dd id="s3-trs">—</dd>
+        <dt>拉低时灌电流</dt><dd id="s3-iol">—</dd>
+        <dt>结论</dt><dd><span id="s3-st" class="chip on">合格</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>I2C 为什么要用开漏输出加上拉电阻？</summary>
+      <div class="ans"><p>因为总线上挂着多个器件，谁都可能去拉线。开漏只能拉低不能推高，多个器件同时动作也不会短路，线上电平是所有器件的线与。应答、时钟拉伸、多主机仲裁都靠这一点。顺带的好处是高电平由上拉电源决定，3.3 V 和 5 V 器件混用更方便。</p></div></details>
+    <details><summary>起始条件和停止条件怎么定义？</summary>
+      <div class="ans"><p>SCL 为高时 SDA 从高变低是起始，SCL 为高时 SDA 从低变高是停止。正常数据只允许在 SCL 低时变化，所以这两种跳变不会和数据混淆。不发停止、直接再发一次起始叫重复起始，常用于先写寄存器地址再读数据。</p></div></details>
+    <details><summary>上拉电阻怎么选？</summary>
+      <div class="ans"><p>上限看速度：Rp(max) = tr / (0.8473·Cb)，总线电容越大、速率越高，电阻要越小。下限看灌电流：Rp(min) = (Vcc − 0.4 V) / 3 mA，保证器件能把线拉到 0.4 V 以下。3.3 V、100 kHz、总线电容一两百 pF 时，4.7 kΩ 左右最常见；400 kHz 常用 2.2 kΩ 左右。</p></div></details>
+    <details><summary>从机不回 ACK，可能是什么原因？</summary>
+      <div class="ans"><p>最常见的是地址写错，把 7 位地址 0x50 和含读写位的 0xA0 搞混。其次是器件没上电、没焊好、地址脚接错；上拉电阻漏焊；EEPROM 正在内部写入，这段时间不应答。用逻辑分析仪看第 9 个时钟 SDA 是否被拉低，就能先分清是地址问题还是硬件问题。</p></div></details>
+    <details><summary>什么是时钟拉伸？</summary>
+      <div class="ans"><p>从机来不及处理时，把 SCL 拉低不放。主机松开 SCL 后会回读它，发现还是低就等着，直到从机松开再继续。能这么做正是因为 SCL 也是开漏线与。有的主机，比如部分 MCU 的软件模拟 I2C，不检查 SCL 回读，就不支持时钟拉伸。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="02-SPI.html"><span>上一页</span>SPI</a><a class="next" href="04-CAN.html"><span>下一页</span>CAN</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+function stepPts(lv,xs,yOf){
+  const p=[];
+  lv.forEach((b,i)=>{const x=xs[i].toFixed(1);
+    if(i===0)p.push(x+','+yOf(b));
+    else if(b!==lv[i-1])p.push(x+','+yOf(lv[i-1]),x+','+yOf(b));});
+  p.push(xs[lv.length].toFixed(1)+','+yOf(lv[lv.length-1]));
+  return p.join(' ');
+}
+const hex2=v=>'0x'+v.toString(16).toUpperCase().padStart(2,'0');
+
+/* 1. 起始、停止与数据变化规则 */
+const s1X=q=>70+q*32,s1Q=[...Array(13).keys()].map(s1X);
+const s1E={
+  s:{sda:[1,1,1,1,0,0,0,0,0,0,0,0],scl:[1,1,1,1,1,1,1,0,0,0,0,0]},
+  d1:{sda:[0,0,1,1,1,1,1,1,1,1,1,1],scl:[0,0,0,0,1,1,1,1,0,0,0,0],smp:6},
+  d0:{sda:[1,1,0,0,0,0,0,0,0,0,0,0],scl:[0,0,0,0,1,1,1,1,0,0,0,0],smp:6},
+  p:{sda:[0,0,0,0,0,0,0,1,1,1,1,1],scl:[0,0,0,0,1,1,1,1,1,1,1,1]},
+  sr:{sda:[0,1,1,1,1,1,0,0,0,0,0,0],scl:[0,0,0,1,1,1,1,1,1,0,0,0]},
+  bad:{sda:[0,0,0,0,0,0,1,1,1,1,1,1],scl:[0,0,0,0,1,1,1,1,0,0,0,0],want:'data'}
+};
+const s1N={
+  s:'SCL 保持高，主机把 SDA 拉低。所有从机据此知道一次传输开始了，开始听地址。之后主机拉低 SCL，才开始发第一位。',
+  d1:'SDA 在 SCL 低电平时变成 1，SCL 升高期间保持不动，接收方在 SCL 高电平中间采样，读到 1。数据都这样变化。',
+  d0:'SDA 在 SCL 低电平时变成 0，SCL 高电平期间稳定，接收方读到 0。',
+  p:'SCL 先回到高，主机再把 SDA 放高。SCL 高时 SDA 上升，就是停止条件，总线回到空闲，两根线都被上拉电阻拉高。',
+  sr:'前一次传输不发停止，而是在 SCL 低时先把 SDA 放高，SCL 升高后再把 SDA 拉低，形成重复起始。主机借此从写转成读，中途不释放总线。',
+  bad:'主机本想发数据位 1，却在 SCL 高电平期间把 SDA 抬高了。按规则，这个跳变就是停止条件，从机会以为传输结束了。所以数据只能在 SCL 低时改。'
+};
+let s1k='s';
+function s1u(){
+  const e=s1E[s1k],yS=v=>v?56:96,yC=v=>v?136:176;
+  $('s1-sda').setAttribute('points',stepPts(e.sda,s1Q,yS));
+  $('s1-scl').setAttribute('points',stepPts(e.scl,s1Q,yC));
+  const z=$('s1-zone');z.textContent='';
+  let a=-1;e.scl.concat([0]).forEach((v,q)=>{if(v&&a<0)a=q;if(!v&&a>=0){z.append(svgEl('rect',{class:'zone-cut',x:s1X(a),y:44,width:s1X(q)-s1X(a),height:140}));a=-1;}});
+  let tq=-1;for(let q=11;q>=1;q--)if(e.sda[q]!==e.sda[q-1]){tq=q;break;}
+  const sclH=e.scl[tq]===1&&e.scl[tq-1]===1,up=e.sda[tq]>e.sda[tq-1];
+  const mean=sclH?(up?'停止条件 P':'起始条件 S'):'数据准备，下一位是 '+e.sda[tq];
+  const bad=e.want==='data'&&sclH;
+  $('s1-ring').setAttribute('cx',s1X(tq));
+  $('s1-ring').setAttribute('class','ring'+(bad?' bad':sclH?' ctl':''));
+  $('s1-lab').setAttribute('x',s1X(tq));
+  $('s1-lab').textContent=bad?'被当成停止':sclH?(up?'停止':s1k==='sr'?'重复起始':'起始'):'SCL 低时变化';
+  $('s1-lab').style.fill=bad?'var(--danger)':'';
+  show($('s1-smp'),e.smp!==undefined);
+  if(e.smp!==undefined){$('s1-smp').setAttribute('cx',s1X(e.smp));$('s1-smp').setAttribute('cy',yS(e.sda[e.smp]));}
+  $('s1-scv').textContent=sclH?'高':'低';
+  $('s1-dir').textContent=up?'上升':'下降';
+  $('s1-mean').textContent=s1k==='sr'?'重复起始 Sr':mean;
+  if(bad)chip($('s1-st'),'违规','bad');else if(sclH)chip($('s1-st'),'控制信号','warn');else chip($('s1-st'),'合法的数据变化','on');
+  $('s1-note').textContent=s1N[s1k];
+}
+seg('s1-e',v=>{s1k=v;s1u();});
+s1u();
+
+/* 2. 完整一帧 */
+const s2={addr:0x50,data:0x3C,rw:0,ack:1,str:0,f:100000,bit:0};
+function s2cells(){
+  const c=[],add=o=>c.push(o),ab=(s2.addr<<1)|s2.rw;
+  add({k:'idle',l:'',sda:[1,1],scl:[1,1],ds:'r',dc:'r'});
+  add({k:'S',l:'S',sda:[1,0,0,0],scl:[1,1,1,0],ds:'m',dc:'m'});
+  for(let i=0;i<8;i++){const b=(ab>>(7-i))&1;add({k:i<7?'addr':'rw',l:i<7?'A'+(6-i):(s2.rw?'R':'W'),v:b,sda:[b,b,b,b],scl:[0,1,1,0],ds:'m',dc:'m'});}
+  const a1=s2.ack?0:1;
+  add({k:'ack1',l:a1?'NACK':'ACK',v:a1,sda:[a1,a1,a1,a1],scl:[0,1,1,0],ds:a1?'r':'s',dc:'m'});
+  if(s2.ack){
+    const d7=(s2.data>>7)&1,dd=s2.rw?'s':'m';
+    if(s2.str)add({k:'str',l:'拉伸',sda:Array(8).fill(d7),scl:Array(8).fill(0),ds:dd,dc:'s'});
+    for(let i=0;i<8;i++){const b=(s2.data>>(7-i))&1;add({k:'data',l:'D'+(7-i),v:b,sda:[b,b,b,b],scl:[0,1,1,0],ds:dd,dc:'m'});}
+    const a2=s2.rw?1:0;
+    add({k:'ack2',l:a2?'NACK':'ACK',v:a2,sda:[a2,a2,a2,a2],scl:[0,1,1,0],ds:a2?'r':'s',dc:'m'});
+  }
+  add({k:'P',l:'P',sda:[0,0,1,1],scl:[0,1,1,1],ds:'m',dc:'m'});
+  add({k:'idle',l:'',sda:[1,1],scl:[1,1],ds:'r',dc:'r'});
+  return c;
+}
+const s2cls={m:'real',s:'real2',r:'cv'};
+function s2runs(g,lv,dv,xs,yOf){
+  let a=0;
+  while(a<lv.length){let b=a;while(b<lv.length&&dv[b]===dv[a])b++;
+    let pts=stepPts(lv.slice(a,b),xs.slice(a,b+1),yOf);
+    if(a>0&&lv[a-1]!==lv[a])pts=xs[a].toFixed(1)+','+yOf(lv[a-1])+' '+pts;
+    g.append(svgEl('polyline',{class:s2cls[dv[a]],points:pts}));a=b;}
+}
+function s2u(){
+  const c=s2cells(),sda=[],scl=[],ds=[],dc=[],st=[];
+  c.forEach(x=>{st.push(sda.length);x.sda.forEach((v,i)=>{sda.push(v);scl.push(x.scl[i]);ds.push(x.ds);dc.push(x.dc);});});
+  st.push(sda.length);
+  const nq=sda.length,dx=680/nq,xs=[];for(let q=0;q<=nq;q++)xs.push(70+q*dx);
+  const yS=v=>v?60:100,yC=v=>v?140:180;
+  const g=$('s2-w'),bg=$('s2-bg'),lab=$('s2-lab'),ax=$('s2-ax');[g,bg,lab,ax].forEach(e=>e.textContent='');
+  c.forEach((x,i)=>{const x0=xs[st[i]],x1=xs[st[i+1]],cx=((x0+x1)/2).toFixed(1);
+    if(x.ds==='s')bg.append(svgEl('rect',{class:'zone-cut',x:x0.toFixed(1),y:52,width:(x1-x0).toFixed(1),height:56}));
+    if(x.dc==='s')bg.append(svgEl('rect',{class:'zone-cut',x:x0.toFixed(1),y:132,width:(x1-x0).toFixed(1),height:56}));
+    if(x.l)lab.append(svgEl('text',{x:cx,y:42,'text-anchor':'middle',class:x.k==='S'||x.k==='P'?'t':'tm'},x.l));
+    if(x.v!==undefined){lab.append(svgEl('text',{x:cx,y:124,'text-anchor':'middle',class:'v'},x.v));
+      lab.append(svgEl('circle',{class:'smp',cx:xs[st[i]+2].toFixed(1),cy:yS(x.v),r:3}));}
+  });
+  s2runs(g,sda,ds,xs,yS);s2runs(g,scl,dc,xs,yC);
+  const T=1/s2.f,q0=st[1];
+  for(let q=q0,m=0;q<=nq;q+=16,m++){const x=xs[q].toFixed(1);
+    ax.append(svgEl('line',{class:'ax',x1:x,y1:200,x2:x,y2:205}));
+    ax.append(svgEl('text',{x,y:220,'text-anchor':'middle',class:'v'},Math.round(m*4*T*1e6)));}
+  const idx=[];c.forEach((x,i)=>{if(x.k!=='idle')idx.push(i);});
+  const rg=$('s2-bit');rg.max=idx.length-1;if(s2.bit>idx.length-1)s2.bit=idx.length-1;rg.value=s2.bit;
+  const ci=idx[s2.bit],cur=c[ci];
+  $('s2-hl').setAttribute('x',xs[st[ci]].toFixed(1));$('s2-hl').setAttribute('width',(xs[st[ci+1]]-xs[st[ci]]).toFixed(1));
+  $('s2-bv').textContent=cur.l+(cur.v!==undefined?' = '+cur.v:'');rg.setAttribute('aria-valuetext',cur.l);
+  const ab=(s2.addr<<1)|s2.rw;
+  $('s2-ab').textContent=hex2(s2.addr)+' 左移 1 位 + '+s2.rw+' = '+hex2(ab)+(s2.rw?'，读':'，写');
+  $('s2-drv').textContent={m:'主机',s:'从机',r:'没人驱动，上拉电阻拉高'}[cur.ds]+(cur.dc==='s'?'；SCL 被从机拉住':'');
+  const nclk=s2.ack?18:9;
+  $('s2-clk').textContent=nclk+' 个，'+(nclk/9)+' 个字节 × 9';
+  $('s2-tt').textContent=fmtT((nq-4)/4*T);
+  if(s2.ack)chip($('s2-st'),s2.rw?'读到 1 个字节':'写入 1 个字节','on');else chip($('s2-st'),'地址无应答','bad');
+  const who=s2.rw?'从机':'主机';
+  const N={
+    S:'起始条件：SCL 为高时主机把 SDA 拉低。所有从机开始接收地址。',
+    addr:'地址位 '+cur.l+' = '+cur.v+'。7 位地址高位先发，主机在 SCL 低时改 SDA，SCL 高时从机采样。',
+    rw:'读写位 = '+s2.rw+'，'+(s2.rw?'读':'写')+'。7 位地址 '+hex2(s2.addr)+' 加上这一位凑成 '+hex2(ab)+'，手册里常把它写成“'+(s2.rw?'读':'写')+'地址 '+hex2(ab)+'”。',
+    ack1:s2.ack?'第 9 个时钟：主机松开 SDA，地址匹配的从机把它拉低，这就是 ACK。':'第 9 个时钟 SDA 没人拉低，被上拉保持高，是 NACK。没有器件认这个地址，主机随即发停止条件，不再发数据。',
+    str:'时钟拉伸：从机还没准备好，把 SCL 拉低不放。主机松开 SCL 后回读发现还是低，就一直等，直到从机松开。',
+    data:'数据位 '+cur.l+' = '+cur.v+'，由'+who+'发送，'+(s2.rw?'主机':'从机')+'在 SCL 高电平时采样。',
+    ack2:s2.rw?'读的最后一个字节，主机回 NACK：不拉低 SDA，告诉从机不用再发了，然后发停止条件。':'从机把 SDA 拉低回 ACK，表示这个字节收到了。主机可以继续写下一个字节，也可以发停止。',
+    P:'停止条件：SCL 为高时 SDA 从低变高。总线回到空闲，两根线都由上拉电阻拉高。'
+  };
+  $('s2-note').textContent=N[cur.k];
+}
+function s2hex(id,max,key){$(id).addEventListener('input',()=>{const s=$(id).value.trim().replace(/^0x/i,'');
+  if(/^[0-9a-f]{1,2}$/i.test(s)){const v=parseInt(s,16);if(v<=max){s2[key]=v;s2u();}}});}
+s2hex('s2-addr',0x7F,'addr');s2hex('s2-data',0xFF,'data');
+seg('s2-rw',v=>{s2.rw=+v;s2u();});
+seg('s2-ack',v=>{s2.ack=+v;s2u();});
+seg('s2-str',v=>{s2.str=+v;s2u();});
+seg('s2-f',v=>{s2.f=+v;s2u();});
+$('s2-bit').addEventListener('input',()=>{s2.bit=+$('s2-bit').value;s2u();});
+let s2tm=null;
+$('s2-play').addEventListener('click',()=>{const b=$('s2-play');
+  if(s2tm){clearInterval(s2tm);s2tm=null;b.textContent='▶ 逐位播放';b.setAttribute('aria-pressed','false');return;}
+  b.textContent='⏸ 暂停';b.setAttribute('aria-pressed','true');
+  s2tm=setInterval(()=>{s2.bit=(s2.bit+1)%(+$('s2-bit').max+1);s2u();},700);});
+s2u();
+
+/* 3. 上拉电阻取值 */
+const s3M={s:{f:100e3,tr:1000e-9,iol:3e-3,cmax:400,n:'标准模式'},f:{f:400e3,tr:300e-9,iol:3e-3,cmax:400,n:'快速模式'},p:{f:1e6,tr:120e-9,iol:20e-3,cmax:550,n:'快速+ 模式'}};
+const s3R=[1e3,1.5e3,2.2e3,3.3e3,4.7e3,6.8e3,10e3,15e3,22e3];
+const s3={md:'s',vcc:3.3};
+const s3LX=r=>60+(Math.log10(r)-Math.log10(300))/(Math.log10(50e3)-Math.log10(300))*440;
+(function(){const g=$('s3-rax');[1e3,2.2e3,4.7e3,10e3,22e3].forEach(r=>{const x=s3LX(r).toFixed(1);
+  g.append(svgEl('line',{class:'ax',x1:x,y1:252,x2:x,y2:257}));g.append(svgEl('text',{x,y:282,'text-anchor':'middle',class:'v'},fmtR(r)));});})();
+function s3u(){
+  const m=s3M[s3.md],V=s3.vcc,cb=+$('s3-cb').value*1e-12,rp=s3R[+$('s3-r').value];
+  const rmin=(V-0.4)/m.iol,rmax=m.tr/(0.8473*cb),ron=0.4/m.iol,vol=V*ron/(rp+ron),rc=rp*cb,tr=0.8473*rc,T=1/m.f;
+  const X=scale(0,T,60,500),Y=v=>170-v/V*120;
+  const p=[];for(let k=0;k<=240;k++){const t=T*k/240;const v=t<T/2?vol:V-(V-vol)*Math.exp(-(t-T/2)/rc);p.push(X(t).toFixed(1)+','+Y(v).toFixed(1));}
+  $('s3-wave').setAttribute('points',p.join(' '));
+  $('s3-ideal').setAttribute('points','60,170 280,170 280,50 500,50');
+  $('s3-vol').setAttribute('y1',Y(0.4).toFixed(1));$('s3-vol').setAttribute('y2',Y(0.4).toFixed(1));$('s3-volt').setAttribute('y',(Y(0.4)+4).toFixed(1));
+  const t30=T/2+rc*Math.log((V-vol)/(V-0.3*V)),t70=T/2+rc*Math.log((V-vol)/(V-0.7*V));
+  const ok30=t30<T,ok70=t70<T;
+  show($('s3-m30'),ok30);show($('s3-m70'),ok70);
+  if(ok30){$('s3-m30').setAttribute('x1',X(t30).toFixed(1));$('s3-m30').setAttribute('x2',X(t30).toFixed(1));}
+  if(ok70){$('s3-m70').setAttribute('x1',X(t70).toFixed(1));$('s3-m70').setAttribute('x2',X(t70).toFixed(1));}
+  const tt=$('s3-trt');tt.setAttribute('x',Math.min(ok70?(X(t30)+X(t70))/2:420,440).toFixed(1));tt.textContent=ok70?'tr':'半个周期内没到 VIH';
+  $('s3-vcct').textContent=V+' V';
+  const fu=T*1e6;$('s3-xm').textContent=+(fu/2).toFixed(2);$('s3-xe').textContent=+fu.toFixed(2);
+  const zr=$('s3-zone'),has=rmax>rmin;
+  show(zr,has);show($('s3-zmin'),has);show($('s3-zmax'),has);
+  if(has){const a=Math.max(60,s3LX(rmin)),b=Math.min(500,s3LX(rmax));
+    zr.setAttribute('x',a.toFixed(1));zr.setAttribute('width',Math.max(0,b-a).toFixed(1));
+    $('s3-zmin').setAttribute('x',Math.max(a-3,150).toFixed(1));$('s3-zmax').setAttribute('x',Math.min(b+3,410).toFixed(1));}
+  const mx=s3LX(rp);$('s3-mark').setAttribute('points',`${mx.toFixed(1)},254 ${(mx-6).toFixed(1)},264 ${(mx+6).toFixed(1)},264`);
+  $('s3-cbv').textContent=Math.round(cb*1e12)+' pF';$('s3-cb').setAttribute('aria-valuetext',Math.round(cb*1e12)+' pF');
+  $('s3-rv').textContent=fmtR(rp);$('s3-r').setAttribute('aria-valuetext',fmtR(rp));
+  $('s3-rmin').textContent=fmtR(rmin)+'，(Vcc − 0.4) / '+(m.iol*1e3)+' mA';
+  $('s3-rmax').textContent=fmtR(rmax);
+  $('s3-tr').textContent=fmtT(tr);$('s3-trs').textContent=fmtT(m.tr)+'，'+m.n;
+  $('s3-iol').textContent=fmtA((V-vol)/rp)+'，低电平 '+vol.toFixed(2)+' V';
+  let note;
+  if(!has){chip($('s3-st'),'没有可用阻值','bad');note='总线电容太大，Rp(max) 已经小于 Rp(min)：电阻小到能满足上升时间，开漏管就吸不动那么大电流了。只能减少挂载器件、缩短走线、降速，或者加 I2C 缓冲器、用有源上拉。';}
+  else if(rp<rmin){chip($('s3-st'),'电阻太小','bad');note='上升沿很快，但开漏管导通时要吸 '+fmtA((V-vol)/rp)+'，超过 '+(m.iol*1e3)+' mA 的驱动能力，低电平被抬到 '+vol.toFixed(2)+' V，超过 0.4 V，噪声容限不够了。';}
+  else if(tr>m.tr){chip($('s3-st'),'上升太慢','bad');note='RC 太大，上升时间 '+fmtT(tr)+' 超过规范的 '+fmtT(m.tr)+'。接收端认出高电平的时刻被推迟，高电平时间被吃掉，速率一高就出错。换小一点的电阻，绿条范围内都行。';}
+  else{chip($('s3-st'),'合格','on');note='电阻落在绿条范围内：上升时间 '+fmtT(tr)+' 在规范以内，灌电流也不超标。拖大总线电容，看绿条的右端怎么往左缩。';}
+  if(cb*1e12>m.cmax)note+=' 另外，'+m.n+'规定总线电容不超过 '+m.cmax+' pF，现在已经超了。';
+  $('s3-note').textContent=note;
+}
+seg('s3-md',v=>{s3.md=v;s3u();});
+seg('s3-v',v=>{s3.vcc=+v;s3u();});
+$('s3-cb').addEventListener('input',s3u);
+$('s3-r').addEventListener('input',s3u);
+s3u();
+</script>
+</body>
+</html>

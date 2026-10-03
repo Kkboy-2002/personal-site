@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>热设计</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.b0{fill:var(--grid)}
+.b1{fill:var(--low);fill-opacity:.3}
+.b2{fill:var(--copper);fill-opacity:.3}
+.b3{fill:var(--copper);fill-opacity:.65}
+.die{fill:var(--grid);stroke:var(--line);stroke-width:1}
+.cu{fill:var(--copper)}
+.cuo{fill:var(--copper);fill-opacity:.25;stroke:var(--copper);stroke-width:1;stroke-dasharray:4 3}
+.via{fill:var(--panel);stroke:var(--copper);stroke-width:2.5}
+.silk{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:3 2}
+.mk{stroke:var(--danger);stroke-width:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#pcb">PCB与调试</a><span class="sp"></span><span>06 / 08</span></nav>
+<header>
+  <span class="eyebrow">PCB与调试 · 散热</span>
+  <h1>热设计</h1>
+  <p class="lede">器件发的热要一路经过芯片、外壳、散热片传到空气里，每一段都有热阻。热阻串起来乘以功耗，就是结温比环境高出的度数。热设计就是把这条路上的热阻一段段压下去。</p>
+</header>
+
+<section id="chain">
+  <span class="eyebrow">热阻链 · 等效电路</span>
+  <h2>结温怎么估算</h2>
+  <p>热阻 θ 的单位是 °C/W，意思是每散掉 1 W 热量，两端温差多少度。热路和电路一一对应：功耗 P 相当于电流，温度相当于电压，热阻相当于电阻，环境温度相当于参考地。所以串联的热阻直接相加，温升就是"电流乘电阻"。</p>
+  <p class="eq">Tj = Ta + P·(θjc + θcs + θsa)</p>
+  <p>θjc 是结到外壳，由封装决定；θcs 是外壳到散热片的接触热阻，看导热硅脂或绝缘垫；θsa 是散热片到空气，看散热片大小和风量。不加散热片时，数据手册直接给一个结到环境的 θja：</p>
+  <p class="eq">Tj = Ta + P·θja</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 212" role="img" aria-label="热阻等效电路：功耗 P 相当于电流源，热量从结温节点经 θjc、θcs、θsa 串联流到环境温度">
+        <path class="w" d="M50,112 V60 H410 V180 H50 V148"/>
+        <circle class="r" cx="50" cy="130" r="18"/>
+        <path class="w" d="M50,142 V124"/>
+        <polygon class="ah" points="50,116 45,125 55,125"/>
+        <text x="76" y="126" class="t">功耗 P</text>
+        <text id="s1-pt" x="76" y="143" class="v">5 W</text>
+        <circle class="dot" cx="80" cy="60" r="3.5"/>
+        <text x="80" y="24" text-anchor="middle" class="t">结</text>
+        <text id="s1-tjt" x="80" y="42" text-anchor="middle" class="v">108 °C</text>
+        <g id="s1-ghs">
+          <rect class="r" x="110" y="52" width="50" height="16" rx="2"/>
+          <rect class="r" x="210" y="52" width="50" height="16" rx="2"/>
+          <rect class="r" x="310" y="52" width="50" height="16" rx="2"/>
+          <circle class="dot" cx="185" cy="60" r="3.5"/>
+          <circle class="dot" cx="285" cy="60" r="3.5"/>
+          <text x="185" y="24" text-anchor="middle" class="t">外壳</text>
+          <text id="s1-tct" x="185" y="42" text-anchor="middle" class="v">—</text>
+          <text x="285" y="24" text-anchor="middle" class="t">散热片</text>
+          <text id="s1-tst" x="285" y="42" text-anchor="middle" class="v">—</text>
+          <text x="135" y="88" text-anchor="middle" class="t">θjc</text>
+          <text x="135" y="104" text-anchor="middle" class="v">1.2</text>
+          <text x="235" y="88" text-anchor="middle" class="t">θcs 硅脂</text>
+          <text x="235" y="104" text-anchor="middle" class="v">0.5</text>
+          <text x="335" y="88" text-anchor="middle" class="t">θsa</text>
+          <text id="s1-sat" x="335" y="104" text-anchor="middle" class="v">12</text>
+        </g>
+        <g id="s1-gna" hidden>
+          <rect class="r" x="210" y="52" width="50" height="16" rx="2"/>
+          <text x="235" y="88" text-anchor="middle" class="t">θja</text>
+          <text x="235" y="104" text-anchor="middle" class="v">62</text>
+        </g>
+        <text x="420" y="124" class="tm">°C/W</text>
+        <text id="s1-tat" x="230" y="200" text-anchor="middle" class="t">环境 Ta = 40 °C</text>
+        <path id="s1-flow" class="flow" d="M50,112 V62 H408 V178"/>
+      </svg>
+      <svg viewBox="0 0 460 92" role="img" aria-label="温度阶梯：从环境温度开始，每经过一段热阻温度升高 P 乘以热阻，最右端是结温，与 125 °C 设计上限和 150 °C 最高结温对比">
+        <rect class="b0" id="s1-b0" x="40" y="26" width="80" height="24"/>
+        <rect class="b1" id="s1-b1" x="120" y="26" width="0" height="24"/>
+        <rect class="b2" id="s1-b2" x="120" y="26" width="0" height="24"/>
+        <rect class="b3" id="s1-b3" x="120" y="26" width="0" height="24"/>
+        <text id="s1-l0" x="80" y="43" text-anchor="middle" class="tm">Ta</text>
+        <text id="s1-l1" x="160" y="43" text-anchor="middle" class="tm">θsa</text>
+        <text id="s1-l3" x="200" y="43" text-anchor="middle" class="tm">θjc</text>
+        <line class="ax dash" x1="290" y1="16" x2="290" y2="56"/>
+        <line class="mk" x1="340" y1="16" x2="340" y2="56"/>
+        <text x="286" y="14" text-anchor="end" class="tm">设计上限 125</text>
+        <text x="344" y="14" class="tm" style="fill:var(--danger)">Tjmax 150</text>
+        <path class="ax" d="M40,56 H440"/>
+        <text x="40" y="72" text-anchor="middle" class="v">0</text>
+        <text x="140" y="72" text-anchor="middle" class="v">50</text>
+        <text x="240" y="72" text-anchor="middle" class="v">100</text>
+        <text x="340" y="72" text-anchor="middle" class="v">150</text>
+        <text x="440" y="72" text-anchor="end" class="v">200</text>
+        <text x="440" y="88" text-anchor="end" class="tm">温度 °C</text>
+      </svg>
+      <figcaption>上：热路等效电路，绿色虚线是热流，相当于电流。下：温度阶梯，每经过一段热阻升高 P·θ。示意参数取 TO-220 功率管常见值：θjc 1.2 °C/W，涂硅脂 θcs 0.5 °C/W，裸管 θja 62 °C/W，Tjmax 150 °C，以数据手册为准。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">散热方式</span>
+        <div class="seg" id="s1-m"><button id="s1-m-na" data-v="na" aria-pressed="false">不加散热片</button><button id="s1-m-s" data-v="s" aria-pressed="true">小散热片</button><button id="s1-m-l" data-v="l" aria-pressed="false">大散热片</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-p">功耗 P</label>
+        <span class="rv" id="s1-pv">5 W</span>
+        <input type="range" id="s1-p" min="0.5" max="20" step="0.5" value="5"></div>
+      <div class="ctl"><label class="ctl-l" for="s1-ta">环境温度 Ta</label>
+        <span class="rv" id="s1-tav">40 °C</span>
+        <input type="range" id="s1-ta" min="25" max="85" step="5" value="40"></div>
+      <dl class="read">
+        <dt>总热阻</dt><dd id="s1-rt">—</dd>
+        <dt>温升 P·θ</dt><dd id="s1-dt">—</dd>
+        <dt>壳温 Tc</dt><dd id="s1-tc">—</dd>
+        <dt>结温 Tj</dt><dd id="s1-tj">—</dd>
+        <dt>压到 125 °C 要求 θsa</dt><dd id="s1-need">—</dd>
+        <dt>结温</dt><dd><span id="s1-st" class="chip on">有余量</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="pcb">
+  <span class="eyebrow">PCB 散热 · 过孔阵列 · 铺铜</span>
+  <h2>贴片器件靠 PCB 散热</h2>
+  <p>贴片功率器件（DPAK、QFN、带散热焊盘的 SO-8）一般不装散热片，PCB 本身就是散热片。热量从芯片底部的裸露焊盘进入顶层铜皮，再经焊盘下的散热过孔传到底层或内层的大块铜皮，靠铜皮面积散到空气里。</p>
+  <p>FR4 的导热系数只有约 0.3 W/(m·K)，铜是 385 W/(m·K)，差一千多倍。所以焊盘下不打孔，底层铜皮再大也接不住热；打了孔，还要底层有足够的铜皮把热摊开。</p>
+  <p class="eq">单个过孔 R = L / (k·A) ≈ 160 °C/W（0.3 mm 孔、25 µm 孔壁、1.6 mm 板厚，估算）；n 个并联 ≈ 160 / n</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 204" role="img" aria-label="左边是散热焊盘俯视图，焊盘上的过孔阵列随过孔数量变化；右边是剖面图，热量从器件经过孔传到底层铺铜">
+        <text x="20" y="20" class="tm">焊盘俯视</text>
+        <rect class="silk" x="24" y="40" width="120" height="120" rx="3"/>
+        <rect class="cu" x="44" y="60" width="80" height="80"/>
+        <g id="s2-vg"></g>
+        <text x="84" y="178" text-anchor="middle" class="tm">6 × 6 mm 散热焊盘</text>
+        <text id="s2-vt" x="84" y="196" text-anchor="middle" class="v">过孔 0 个</text>
+        <text x="180" y="20" class="tm">剖面（不按比例）</text>
+        <text id="s2-tjt" x="315" y="32" text-anchor="middle" class="v">Tj —</text>
+        <rect class="box" x="265" y="40" width="100" height="36" rx="3"/>
+        <rect id="s2-hot" x="265" y="40" width="100" height="36" rx="3" style="fill:var(--danger)" fill-opacity="0"/>
+        <text x="315" y="63" text-anchor="middle" class="t">功率器件</text>
+        <rect class="die" x="180" y="86" width="270" height="64"/>
+        <text x="188" y="122" class="tm">FR4 1.6 mm</text>
+        <rect class="cu" x="245" y="81" width="140" height="5"/>
+        <rect class="cu" x="280" y="76" width="70" height="5"/>
+        <text x="392" y="84" class="tm">顶层铜</text>
+        <g id="s2-vx"></g>
+        <rect id="s2-bc" class="cu" x="248" y="150" width="134" height="6"/>
+        <text id="s2-bct" x="315" y="176" text-anchor="middle" class="t">底层铺铜 10 cm²</text>
+        <path class="flow thin" d="M300,83 H250 M330,83 H380"/>
+        <path id="s2-fd" class="flow" d="M315,88 V148"/>
+        <path id="s2-fb" class="flow thin" d="M315,153 H254 M315,153 H376"/>
+      </svg>
+      <figcaption>绿色虚线是热流，铜色是铜皮和过孔孔壁，器件上的红色越深表示结温越高。示意模型：θjc 1.5 °C/W；顶层铜约 2 cm²，和器件本体、引脚一起约 110 °C/W；焊盘下 FR4 约 150 °C/W；铜皮按每面 12 W/(m²·K) 对流加辐射估算，并计入 1 oz 铜的扩散效率。环境 40 °C，Tjmax 150 °C。只看趋势，实际以热仿真或实测为准。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-p">功耗 P</label>
+        <span class="rv" id="s2-pv">1.2 W</span>
+        <input type="range" id="s2-p" min="0.2" max="3" step="0.1" value="1.2"></div>
+      <div class="ctl"><label class="ctl-l" for="s2-a">底层铺铜面积</label>
+        <span class="rv" id="s2-av">10 cm²</span>
+        <input type="range" id="s2-a" min="1" max="40" step="1" value="10"></div>
+      <div class="ctl"><label class="ctl-l" for="s2-n">焊盘下过孔数量</label>
+        <span class="rv" id="s2-nv">0 个</span>
+        <input type="range" id="s2-n" min="0" max="5" step="1" value="0"></div>
+      <dl class="read">
+        <dt>过孔阵列（含 FR4）</dt><dd id="s2-rv">—</dd>
+        <dt>底层铜皮到空气</dt><dd id="s2-rb">—</dd>
+        <dt>顶层和器件本体</dt><dd id="s2-rt">—</dd>
+        <dt>估算 θja</dt><dd id="s2-rja">—</dd>
+        <dt>结温 Tj</dt><dd id="s2-tj">—</dd>
+        <dt>结温</dt><dd><span id="s2-st" class="chip warn">余量不足</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+  <p>过孔的常见做法：0.3 mm 左右的孔，按 1.0~1.2 mm 间距在焊盘里排成阵列（典型值）。孔在焊盘里会把焊锡吸走，造成空洞，要么塞孔盖油、电镀填平，要么按器件手册推荐的孔径和开窗来做。</p>
+</section>
+
+<section id="tips">
+  <span class="eyebrow">散热手段 · 实测</span>
+  <h2>还能怎么降结温</h2>
+  <p>每种手段都只压热阻链里的某一段。先算出哪一段占的温升最多，再对症下手。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>措施</th><th>压的是哪一段</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>焊盘下打散热过孔</td><td>焊盘到底层</td><td>把 FR4 这段"绝热层"短路掉；过孔够多以后瓶颈转到铜皮面积</td></tr>
+      <tr><td>加大铺铜，连到内层地平面</td><td>PCB 到空气</td><td>1 oz 铜横向导热有限，离热源太远的铜皮作用变小；2 oz 铜更好</td></tr>
+      <tr><td>加散热片</td><td>θsa</td><td>按 θsa ≤ (Tj目标 − Ta) / P − θjc − θcs 选型，再留余量</td></tr>
+      <tr><td>导热硅脂、导热垫</td><td>θcs</td><td>填掉接触面的空气缝隙；需要绝缘时用绝缘垫，热阻比硅脂大</td></tr>
+      <tr><td>风扇强制风冷</td><td>θsa</td><td>同一块散热片，有风时热阻可降到自然对流的几分之一（典型值）</td></tr>
+      <tr><td>选 θjc 小的封装，降低功耗</td><td>整条链</td><td>功耗是源头：LDO 压差大时换开关电源，MOS 选更小的 Rdson</td></tr>
+    </tbody>
+  </table></div>
+  <p>数据手册上的 θja 是按 JEDEC 标准（JESD51）在规定尺寸的测试板上测的。你的板子铜皮多就更低，铜皮少就更高，所以 θja 只适合比较不同封装。调试时常用热电偶或热像仪测器件顶部温度 Tt，再用手册给的 ψjt 推结温：</p>
+  <p class="eq">Tj ≈ Tt + P·ψjt</p>
+  <p>ψjt 通常只有零点几到几 °C/W（典型值）。它不是真正的热阻，因为大部分热量并不从器件顶部走，只是一个用来换算的表征参数。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>给你功耗和热阻，结温怎么算？</summary>
+      <div class="ans"><p>热阻串联相加，乘以功耗就是温升：Tj = Ta + P·(θjc + θcs + θsa)，不加散热片时用 Tj = Ta + P·θja。例如 5 W、θjc 1.2、θcs 0.5、θsa 12 °C/W、环境 40 °C，结温 = 40 + 5 × 13.7 ≈ 109 °C，低于 150 °C 的 Tjmax，也在 125 °C 的设计上限以内。</p></div></details>
+    <details><summary>数据手册上的 θja 能直接拿来用吗？</summary>
+      <div class="ans"><p>只能粗估。θja 是在 JEDEC 标准测试板上测的，和实际板子的铜皮、层数、风况都不同，同一个封装差一两倍很常见。它主要用来比较封装。实际设计要结合自己的铺铜估算或做热仿真，调试时测器件顶部温度，用 ψjt 推结温。</p></div></details>
+    <details><summary>散热过孔怎么打？为什么要打在焊盘下？</summary>
+      <div class="ans"><p>因为 FR4 几乎不导热，热量要靠过孔的铜壁穿过板子。做法是在裸露焊盘里按 1.0~1.2 mm 间距打一排 0.3 mm 左右的孔，连到底层和内层的大块铜皮。孔要塞孔或填平，防止焊锡被吸走形成空洞。孔数多到一定程度后收益变小，瓶颈会转到铜皮面积上。</p></div></details>
+    <details><summary>散热片怎么选？</summary>
+      <div class="ans"><p>先定结温目标，一般比 Tjmax 低 20~30 °C。然后反算散热片允许的热阻：θsa ≤ (Tj目标 − Ta) / P − θjc − θcs。按这个值查散热片手册，注意手册给的 θsa 对应的是自然对流还是某个风速，再留一点余量。</p></div></details>
+    <details><summary>为什么结温一定要留余量？</summary>
+      <div class="ans"><p>一是温度升高会让损耗变大：MOS 的 Rdson 在 125 °C 时大约是 25 °C 的 1.5~2 倍（典型值），损耗变大又让温度更高，形成正反馈。二是可靠性：经验上温度每升高 10 °C，寿命大约减半，电解电容尤其明显。三是很多芯片到了 150 °C 左右会触发过热关断。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="05-串扰.html"><span>上一页</span>串扰</a><a class="next" href="07-示波器带宽与采样率.html"><span>下一页</span>示波器带宽与采样率</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 热阻链 */
+const s1={m:'s'},s1Jc=1.2,s1Cs=0.5,s1Ja=62,s1Sa={s:12,l:3};
+const s1X=t=>40+Math.min(200,Math.max(0,t))*2;
+const s1F=t=>t.toFixed(t>=100?0:1)+' °C';
+function s1Bar(id,t0,t1,lab,txt){
+  const x0=s1X(t0),x1=s1X(t1);
+  $(id).setAttribute('x',x0.toFixed(1));$(id).setAttribute('width',Math.max(0,x1-x0).toFixed(1));
+  if(lab){$(lab).setAttribute('x',((x0+x1)/2).toFixed(1));$(lab).textContent=txt;show($(lab),x1-x0>30);}
+}
+function s1u(){
+  const P=+$('s1-p').value,Ta=+$('s1-ta').value,na=s1.m==='na',sa=na?0:s1Sa[s1.m];
+  const Rt=na?s1Ja:s1Jc+s1Cs+sa,dT=P*Rt,Tj=Ta+dT,Ts=Ta+P*sa,Tc=na?Tj-P*s1Jc:Ts+P*s1Cs;
+  const need=(125-Ta)/P-s1Jc-s1Cs;
+  show($('s1-ghs'),!na);show($('s1-gna'),na);
+  $('s1-pv').textContent=P+' W';$('s1-p').setAttribute('aria-valuetext',P+' W');
+  $('s1-tav').textContent=Ta+' °C';$('s1-ta').setAttribute('aria-valuetext',Ta+' °C');
+  $('s1-pt').textContent=P+' W';$('s1-tat').textContent='环境 Ta = '+Ta+' °C';
+  $('s1-tjt').textContent=s1F(Tj);$('s1-tct').textContent=s1F(Tc);$('s1-tst').textContent=s1F(Ts);
+  $('s1-tjt').style.fill=Tj>150?'var(--danger)':Tj>125?'var(--warn)':'';
+  $('s1-sat').textContent=sa;
+  s1Bar('s1-b0',0,Ta,'s1-l0','Ta');
+  if(na){s1Bar('s1-b1',Ta,Tj,'s1-l1','θja');s1Bar('s1-b2',Tj,Tj);s1Bar('s1-b3',Tj,Tj,'s1-l3','');}
+  else{s1Bar('s1-b1',Ta,Ts,'s1-l1','θsa');s1Bar('s1-b2',Ts,Tc);s1Bar('s1-b3',Tc,Tj,'s1-l3','θjc');}
+  $('s1-rt').textContent=Rt.toFixed(1)+' °C/W';
+  $('s1-dt').textContent=dT.toFixed(1)+' °C';
+  $('s1-tc').textContent=s1F(Tc)+(na?'，= Tj − P·θjc':'');
+  $('s1-tj').textContent=s1F(Tj)+(Tj>200?'，超出坐标':'');
+  $('s1-need').textContent=need>0?'≤ '+need.toFixed(1)+' °C/W'+(na?'':(sa<=need?'，当前 '+sa+' 满足':'，当前 '+sa+' 不够')):'做不到，要降功耗';
+  if(Tj>150)chip($('s1-st'),'超过 Tjmax','bad');else if(Tj>125)chip($('s1-st'),'余量不足','warn');else chip($('s1-st'),'有余量','on');
+  let n;
+  if(na)n='不加散热片，热量只能从管子本身散到空气，θja = 62 °C/W，每瓦就升 62 °C。'+P+' W 时温升 '+dT.toFixed(0)+' °C。TO-220 裸管在常温下一般只能散 1~2 W。';
+  else{n='三段热阻里 θsa 占 '+Math.round(sa/Rt*100)+'%，温升主要落在散热片到空气这一段。';
+    n+=s1.m==='l'?'换大散热片后 θsa 降下来，θjc 和 θcs 的占比上来了：硅脂要涂薄涂匀、压紧，换成绝缘垫时要把它的热阻算进去。':'散热片越大、风越大，θsa 越小。';}
+  if(Tj>125)n+=need>0?' 结温超过 125 °C 的设计上限，要把 θsa 做到 '+need.toFixed(1)+' °C/W 以下。':' 结温超过设计上限，而且光 θjc + θcs 就不够用了，只能降功耗或换 θjc 更小的封装。';
+  else n+=' 结温在设计上限以内。';
+  $('s1-note').textContent=n;
+}
+seg('s1-m',v=>{s1.m=v;s1u();});
+$('s1-p').addEventListener('input',s1u);
+$('s1-ta').addEventListener('input',s1u);
+s1u();
+/* 2. PCB 散热 */
+const s2N=[0,1,4,9,16,25],s2Ta=40,s2Jc=1.5,s2Via=160,s2Fr=148,s2Top=1/(1/150+1/444);
+const s2Cu=A=>1/(12*(A/(1+A/30))*1e-4);
+const s2R=(n,A)=>s2Jc+1/(1/s2Top+1/(1/(n/s2Via+1/s2Fr)+s2Cu(A)));
+const s2Pc=g=>(g*100).toFixed(0)+'%';
+function s2u(){
+  const P=+$('s2-p').value,A=+$('s2-a').value,ni=+$('s2-n').value,n=s2N[ni],k=Math.round(Math.sqrt(n));
+  const rv=1/(n/s2Via+1/s2Fr),rb=s2Cu(A),rja=s2R(n,A),Tj=s2Ta+P*rja;
+  const vg=$('s2-vg'),vx=$('s2-vx');vg.replaceChildren();vx.replaceChildren();
+  let fd='';
+  for(let i=0;i<k;i++){
+    const x=280+(i+.5)*70/k;
+    vx.append(svgEl('rect',{class:'cu',x:(x-3).toFixed(1),y:81,width:6,height:75}));
+    fd+='M'+x.toFixed(1)+',86 V150 ';
+    for(let j=0;j<k;j++)vg.append(svgEl('circle',{class:'via',cx:(44+(i+.5)*80/k).toFixed(1),cy:(60+(j+.5)*80/k).toFixed(1),r:k>4?3.5:4}));
+  }
+  $('s2-fd').setAttribute('d',n?fd.trim():'M315,88 V148');
+  $('s2-fd').classList.toggle('thin',!n);
+  const w=270*Math.sqrt(A/40),xl=315-w/2,xr=315+w/2;
+  $('s2-bc').setAttribute('x',xl.toFixed(1));$('s2-bc').setAttribute('width',w.toFixed(1));
+  $('s2-fb').setAttribute('d','M315,153 H'+(xl+6).toFixed(1)+' M315,153 H'+(xr-6).toFixed(1));
+  $('s2-bct').textContent='底层铺铜 '+A+' cm²';
+  $('s2-vt').textContent='过孔 '+n+' 个';
+  $('s2-hot').setAttribute('fill-opacity',Math.max(0,Math.min(.6,(Tj-s2Ta)/(150-s2Ta)*.6)).toFixed(2));
+  $('s2-tjt').textContent='Tj '+Tj.toFixed(0)+' °C';
+  $('s2-tjt').style.fill=Tj>150?'var(--danger)':Tj>125?'var(--warn)':'';
+  $('s2-pv').textContent=P.toFixed(1)+' W';$('s2-p').setAttribute('aria-valuetext',P.toFixed(1)+' W');
+  $('s2-av').textContent=A+' cm²';$('s2-a').setAttribute('aria-valuetext',A+' cm²');
+  $('s2-nv').textContent=n+' 个';$('s2-n').setAttribute('aria-valuetext',n+' 个');
+  $('s2-rv').textContent=n?rv.toFixed(1)+' °C/W，'+n+' 个过孔并联':rv.toFixed(0)+' °C/W，只能靠 FR4';
+  $('s2-rb').textContent=rb.toFixed(0)+' °C/W';
+  $('s2-rt').textContent=s2Top.toFixed(0)+' °C/W';
+  $('s2-rja').textContent=rja.toFixed(1)+' °C/W';
+  $('s2-tj').textContent=Tj.toFixed(0)+' °C，温升 '+(P*rja).toFixed(0)+' °C';
+  if(Tj>150)chip($('s2-st'),'超过 Tjmax','bad');else if(Tj>125)chip($('s2-st'),'余量不足','warn');else chip($('s2-st'),'有余量','on');
+  const gA=(rja-s2R(n,A+10))/rja,gV=ni<5?(rja-s2R(s2N[ni+1],A))/rja:0;
+  let nt;
+  if(!n)nt='焊盘下没有过孔，热量要穿过 1.6 mm 的 FR4 才能到底层，光这一段就约 150 °C/W。这时底层铺铜再加 10 cm²，θja 只降 '+s2Pc(gA)+'；而打 9 个过孔能降 '+s2Pc((rja-s2R(9,A))/rja)+'。先打过孔。';
+  else if(gV>0.04)nt='过孔还不够：阵列热阻 '+rv.toFixed(0)+' °C/W，再加一档到 '+s2N[ni+1]+' 个，θja 还能降 '+s2Pc(gV)+'。底层铜皮越大，越值得多打孔。';
+  else nt='过孔已经够用：阵列只剩 '+rv.toFixed(1)+' °C/W'+(ni<5?'，再加一档 θja 只降 '+s2Pc(gV):'')+'。瓶颈转到底层铜皮散到空气这一段（'+rb.toFixed(0)+' °C/W），再加 10 cm² 铺铜能降 '+s2Pc(gA)+'，也可以连上内层地平面或加风。';
+  nt+=Tj>150?' 结温已超过 Tjmax，必须改。':Tj>125?' 结温在 125~150 °C 之间，没有余量。':' 结温在设计上限以内。';
+  $('s2-note').textContent=nt;
+}
+['s2-p','s2-a','s2-n'].forEach(id=>$(id).addEventListener('input',s2u));
+s2u();
+</script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>缓启动</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.plate{stroke:currentColor;stroke-width:3;stroke-linecap:round}
+figure svg+svg{margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#protect">保护电路</a><span class="sp"></span><span>08 / 08</span></nav>
+<header>
+  <span class="eyebrow">保护电路 · 浪涌电流</span>
+  <h1>缓启动</h1>
+  <p class="lede">上电瞬间，输入端的大电容像短路一样猛吸电流。缓启动就是让输出电压沿斜坡慢慢上升，把浪涌电流压下来。下面拖动斜坡时间和负载电容，看电流峰值怎么变，再看 MOS 加 RC 和 NTC 两种做法。</p>
+</header>
+
+<section id="inrush">
+  <span class="eyebrow">浪涌电流 · I = C·dV/dt</span>
+  <h2>电容电压不能突变，硬要突变就是大电流</h2>
+  <p>电源输入端通常有几百到几千 µF 的电容。上电瞬间电容电压是 0，输入电压一下子加上去，dV/dt 极大。充电电流 I = C·dV/dt 只受线缆、接插件和电容 ESR 这点电阻限制，能到几十上百安。</p>
+  <p>浪涌电流有四个危害：把前级电源拉到欠压或进入限流，系统反复重启；热插拔时在连接器触点上打火，烧蚀触点；让保险丝误熔断；电容和开关管也要挨一次电流冲击。</p>
+  <p>解决思路就是降低 dV/dt：让输出电压沿斜坡慢慢上升，斜坡时间越长，电流越小。</p>
+  <p class="eq">I = C·dV/dt　　斜坡上电：I ≈ C·Vin / t　　例：1000 µF、12 V、10 ms → 1.2 A</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 300" role="img" aria-label="上电时输出电压和浪涌电流随时间变化，上图是电压，下图是电流">
+        <line class="gl" x1="56" y1="34" x2="500" y2="34"/>
+        <line class="gl" x1="56" y1="79" x2="500" y2="79"/>
+        <path class="ax" d="M56,26 V124 H500"/>
+        <text x="50" y="38" text-anchor="end" class="v">12</text>
+        <text x="50" y="83" text-anchor="end" class="v">6</text>
+        <text x="50" y="128" text-anchor="end" class="v">0</text>
+        <text x="60" y="20" class="tm">输出电压 / V</text>
+        <polyline id="s1-v" class="real" points=""/>
+        <line class="gl" x1="56" y1="160" x2="500" y2="160"/>
+        <line class="gl" x1="56" y1="205" x2="500" y2="205"/>
+        <path class="ax" d="M56,152 V250 H500"/>
+        <text id="s1-i2" x="50" y="164" text-anchor="end" class="v">2</text>
+        <text id="s1-i1" x="50" y="209" text-anchor="end" class="v">1</text>
+        <text x="50" y="254" text-anchor="end" class="v">0</text>
+        <text x="60" y="146" class="tm">浪涌电流 / A</text>
+        <line id="s1-lim" class="ax" x1="56" y1="0" x2="500" y2="0" style="stroke:var(--danger);stroke-dasharray:5 4"/>
+        <text id="s1-liml" x="496" y="0" text-anchor="end" class="tm">电源额定 3 A</text>
+        <polyline id="s1-i" class="real2" points=""/>
+        <text x="56" y="268" text-anchor="middle" class="v">0</text>
+        <text id="s1-x1" x="167" y="268" text-anchor="middle" class="v"></text>
+        <text id="s1-x2" x="278" y="268" text-anchor="middle" class="v"></text>
+        <text id="s1-x3" x="389" y="268" text-anchor="middle" class="v"></text>
+        <text id="s1-x4" x="500" y="268" text-anchor="end" class="v"></text>
+        <text id="s1-xu" x="500" y="288" text-anchor="end" class="tm">时间 / ms</text>
+      </svg>
+      <figcaption>示意模型：12 V、3 A 电源经 0.1 Ω 线路电阻（含 ESR）和 1 µH 线缆电感给负载电容充电，只算电容充电电流。缓启动时把加到电容上的电压看成一条斜坡。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s1-t">缓启动时间（输出斜坡时间）</label>
+        <span class="rv" id="s1-tv">10 ms</span>
+        <input type="range" id="s1-t" min="0" max="6" step="1" value="5"></div>
+      <div class="ctl"><label class="ctl-l" for="s1-c">负载电容</label>
+        <span class="rv" id="s1-cv">1000 µF</span>
+        <input type="range" id="s1-c" min="0" max="6" step="1" value="4"></div>
+      <dl class="read">
+        <dt>峰值浪涌电流</dt><dd id="s1-ip">1.20 A</dd>
+        <dt>按 C·Vin / t 估算</dt><dd id="s1-est">1.20 A</dd>
+        <dt>输出电压斜率</dt><dd id="s1-sl">1.2 V/ms</dd>
+        <dt>电容储能 ½·C·V²</dt><dd id="s1-e">72 mJ</dd>
+        <dt>12 V 3 A 电源</dt><dd><span id="s1-st" class="chip on">扛得住</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="mos">
+  <span class="eyebrow">MOS + RC · 电压斜坡</span>
+  <h2>用栅极电容让 MOS 慢慢打开</h2>
+  <p>最常用的做法是在电源正极串一颗 PMOS 当开关。这里是普通高边开关的接法：S 接输入，D 接输出，体二极管从输出指向输入，上电时反偏，不会绕过 MOS 直接给电容充电。</p>
+  <p>R1 把栅极上拉到源极，保证默认关断。EN 打开后，R2 把栅极往下拉。关键是栅漏之间的 C1：栅源电压一到平台电压 Vp（阈值附近，示意取 3 V），MOS 开始导通，输出上升，C1 送进栅极的电流 C1·dVout/dt 正好抵掉 R2 拉走的电流，栅极电压就停住了，这就是米勒平台。平台期间输出是一条直线，斜率只由 R、C 决定。</p>
+  <p>电容也可以接在栅源之间，同样能慢慢打开，但斜坡不线性，还受阈值电压离散的影响。接在栅漏之间，等于把米勒效应放大来用。</p>
+  <p class="eq">dVout/dt = [(Vin − Vp) / R2 − Vp / R1] / C1　　浪涌电流 = C负载·dVout/dt　　MOS 吸收能量 = ½·C负载·Vin²</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 270" role="img" aria-label="PMOS 高边缓启动电路：源极接 12 V 输入，漏极接输出和负载电容；R1 接在栅源之间，C1 接在栅漏之间，R2 经 EN 开关把栅极拉到地">
+        <text x="40" y="48" class="v hi">Vin 12 V</text>
+        <path class="w" d="M40,60 H200 M218,82 V60 H410 M182,82 V60"/>
+        <circle class="dot" cx="182" cy="60" r="3.5"/>
+        <line class="bar" x1="176" y1="82" x2="188" y2="82"/>
+        <line class="bar" x1="194" y1="82" x2="206" y2="82"/>
+        <line class="bar" x1="212" y1="82" x2="224" y2="82"/>
+        <line class="bar" x1="180" y1="94" x2="220" y2="94"/>
+        <path class="w" d="M200,82 V60 M200,94 V130"/>
+        <polygon class="ah" points="200,63 195,72 205,72"/>
+        <text x="174" y="80" text-anchor="end" class="t">S</text>
+        <text x="228" y="80" class="t">D</text>
+        <text x="208" y="118" class="t">G</text>
+        <text x="236" y="104" class="t">Q1</text>
+        <text x="236" y="120" class="tm">PMOS</text>
+        <path class="w" d="M168,60 V36 H194 M207,36 H232 V60 M194,29 V43"/>
+        <polygon class="ah" points="207,29 207,43 194,36"/>
+        <circle class="dot" cx="168" cy="60" r="3.5"/>
+        <circle class="dot" cx="232" cy="60" r="3.5"/>
+        <text x="200" y="22" text-anchor="middle" class="tm">体二极管 D → S，上电时反偏</text>
+        <circle class="dot" cx="120" cy="60" r="3.5"/>
+        <path class="w" d="M120,60 V80 M120,120 V130 H290 M290,60 V92 M290,100 V130"/>
+        <rect class="r" x="111" y="80" width="18" height="40" rx="2"/>
+        <text x="104" y="98" text-anchor="end" class="t">R1</text>
+        <text x="104" y="114" text-anchor="end" class="v">100 kΩ</text>
+        <line class="plate" x1="276" y1="92" x2="304" y2="92"/>
+        <line class="plate" x1="276" y1="100" x2="304" y2="100"/>
+        <circle class="dot" cx="290" cy="60" r="3.5"/>
+        <circle class="dot" cx="200" cy="130" r="3.5"/>
+        <text x="310" y="94" class="t">C1</text>
+        <text id="s2-c1l" x="310" y="110" class="v">100 nF</text>
+        <path class="w" d="M200,130 V150 M200,190 V206 M200,234 V244 M186,244 H214 M191,249 H209 M196,254 H204"/>
+        <rect class="r" x="191" y="150" width="18" height="40" rx="2"/>
+        <text x="184" y="168" text-anchor="end" class="t">R2</text>
+        <text x="184" y="184" text-anchor="end" class="v">47 kΩ</text>
+        <rect class="box" x="172" y="206" width="56" height="28" rx="4"/>
+        <text x="200" y="225" text-anchor="middle" class="tm">EN 开关</text>
+        <circle class="dot" cx="370" cy="60" r="3.5"/>
+        <path class="w" d="M370,60 V120 M370,128 V244 M356,244 H384 M361,249 H379 M366,254 H374"/>
+        <line class="plate" x1="356" y1="120" x2="384" y2="120"/>
+        <line class="plate" x1="356" y1="128" x2="384" y2="128"/>
+        <text x="390" y="120" class="t">C负载</text>
+        <text id="s2-cll" x="390" y="136" class="v">1000 µF</text>
+        <text x="414" y="64" class="t">Vout</text>
+        <path class="flow" d="M42,60 H182 V78 H218 V60 H370 V118 M370,130 V242"/>
+      </svg>
+      <svg viewBox="0 0 460 190" role="img" aria-label="EN 打开后栅源电压和输出电压随时间变化，中间一段栅源电压停在平台，输出电压线性上升">
+        <rect id="s2-zone" class="zone-sat" x="0" y="26" width="0" height="124"/>
+        <line class="gl" x1="56" y1="26" x2="440" y2="26"/>
+        <line class="gl" x1="56" y1="88" x2="440" y2="88"/>
+        <path class="ax" d="M56,20 V150 H440"/>
+        <text x="50" y="30" text-anchor="end" class="v">12</text>
+        <text x="50" y="92" text-anchor="end" class="v">6</text>
+        <text x="50" y="154" text-anchor="end" class="v">0</text>
+        <text x="60" y="14" class="tm">电压 / V</text>
+        <polyline id="s2-vs" class="real2" points=""/>
+        <polyline id="s2-vo" class="real" points=""/>
+        <text id="s2-lvo" x="436" y="42" text-anchor="end" class="t" style="fill:var(--copper)">Vout</text>
+        <text id="s2-lvs" x="436" y="60" text-anchor="end" class="t" style="fill:var(--low)">Vsg</text>
+        <text id="s2-zl" x="0" y="136" text-anchor="middle" class="tm">米勒平台</text>
+        <text x="56" y="166" text-anchor="middle" class="v">0</text>
+        <text id="s2-x1" x="152" y="166" text-anchor="middle" class="v"></text>
+        <text id="s2-x2" x="248" y="166" text-anchor="middle" class="v"></text>
+        <text id="s2-x3" x="344" y="166" text-anchor="middle" class="v"></text>
+        <text id="s2-x4" x="440" y="166" text-anchor="end" class="v"></text>
+        <text id="s2-xu" x="440" y="184" text-anchor="end" class="tm">EN 打开后的时间 / ms</text>
+      </svg>
+      <figcaption>上：PMOS 缓启动电路，绿色虚线是给负载电容充电的电流。下：橙线是输出电压，蓝线是栅源电压 Vsg，橙色底是米勒平台，输出在这段时间线性上升。示意参数：Vp 取 3 V，MOS 输入电容取 2 nF。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-rng">栅漏电容 C1</label>
+        <span class="rv" id="s2-cv">100 nF</span>
+        <input type="range" id="s2-rng" min="0" max="5" step="1" value="3"></div>
+      <div class="ctl"><span class="ctl-l">负载电容</span>
+        <div class="seg" id="s2-cl"><button id="s2-cl-1" data-v="220e-6" aria-pressed="false">220 µF</button><button id="s2-cl-2" data-v="1000e-6" aria-pressed="true">1000 µF</button><button id="s2-cl-3" data-v="4700e-6" aria-pressed="false">4700 µF</button></div></div>
+      <dl class="read">
+        <dt>输出开始上升前的延时</dt><dd id="s2-t1">1.49 ms</dd>
+        <dt>输出斜率 dVout/dt</dt><dd id="s2-sl">1.61 V/ms</dd>
+        <dt>斜坡时间</dt><dd id="s2-tr">7.43 ms</dd>
+        <dt>浪涌电流</dt><dd id="s2-ii">1.61 A</dd>
+        <dt>MOS 吸收能量 / 平均功耗</dt><dd id="s2-e">72 mJ / 9.7 W</dd>
+        <dt>12 V 3 A 电源</dt><dd><span id="s2-st" class="chip on">扛得住</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="ntc">
+  <span class="eyebrow">NTC 热敏电阻 · 热态重启</span>
+  <h2>NTC 最简单，但怕热态重启</h2>
+  <p>开关电源的交流输入端常串一个 NTC 热敏电阻。220 V 整流后峰值约 311 V，直接给几百 µF 的电解电容充电，浪涌能到几百安。NTC 冷态电阻有几欧，能把浪涌限到几十安。</p>
+  <p>工作电流流过时，NTC 自己发热到一百多摄氏度，电阻降到零点几欧，正常工作的损耗就小了。这是它巧妙的地方，也是它的软肋：断电后要几十秒到几分钟才能冷下来。如果刚断电马上又上电，NTC 还是热的，电阻还很低，浪涌几乎没被限住。</p>
+  <p>另外 NTC 工作时一直有 I²·R 损耗。常见改进是启动完成后用继电器把 NTC 短路：NTC 平时不通电、始终是冷的，热态重启和损耗两个问题一起解决。</p>
+  <p class="eq">R(T) = R25·exp[B·(1/T − 1/T25)]　　浪涌峰值 ≈ 311 V / (R_NTC + R线路)</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 112" role="img" aria-label="220 V 交流经 NTC 接整流桥，整流后给大电解电容充电，NTC 可并联继电器旁路">
+        <circle class="r" cx="40" cy="60" r="16"/>
+        <path class="w" d="M30,60 q5,-9 10,0 t10,0"/>
+        <text x="40" y="100" text-anchor="middle" class="tm">220 V AC</text>
+        <path class="w" d="M40,44 V30 H90 M140,30 H200 M40,76 V90 H200"/>
+        <rect class="r" x="90" y="22" width="50" height="16" rx="2"/>
+        <path class="w" d="M84,48 H92 L146,12"/>
+        <text x="150" y="14" class="tm">−t°</text>
+        <text x="115" y="52" text-anchor="middle" class="t">NTC</text>
+        <g id="s3-relay" hidden>
+          <path class="w" d="M76,30 V70 H98 M130,70 H154 V30 M98,70 L128,64"/>
+          <circle class="dot" cx="76" cy="30" r="3.5"/>
+          <circle class="dot" cx="154" cy="30" r="3.5"/>
+          <text x="114" y="86" text-anchor="middle" class="tm">继电器</text>
+        </g>
+        <rect class="box" x="200" y="20" width="60" height="80" rx="4"/>
+        <text x="230" y="64" text-anchor="middle" class="t">整流桥</text>
+        <path class="w" d="M260,36 H392 M260,90 H392 M330,36 V56 M330,64 V90"/>
+        <line class="plate" x1="316" y1="56" x2="344" y2="56"/>
+        <line class="plate" x1="316" y1="64" x2="344" y2="64"/>
+        <circle class="dot" cx="330" cy="36" r="3.5"/>
+        <circle class="dot" cx="330" cy="90" r="3.5"/>
+        <text x="306" y="54" text-anchor="end" class="tm">+</text>
+        <text x="350" y="64" class="v">220 µF</text>
+        <rect class="box" x="392" y="26" width="56" height="74" rx="4"/>
+        <text x="420" y="67" text-anchor="middle" class="t">后级</text>
+        <path class="flow" d="M40,42 V30 H198 M262,36 H330 V54"/>
+      </svg>
+      <svg viewBox="0 0 460 220" role="img" aria-label="再次上电时的浪涌峰值随断电时间变化：只用 NTC 时断电越短浪涌越大，加继电器旁路后始终是冷态值">
+        <line class="gl" x1="56" y1="30" x2="440" y2="30"/>
+        <line class="gl" x1="56" y1="80" x2="440" y2="80"/>
+        <line class="gl" x1="56" y1="130" x2="440" y2="130"/>
+        <path class="ax" d="M56,24 V180 H440"/>
+        <text x="50" y="34" text-anchor="end" class="v">300</text>
+        <text x="50" y="84" text-anchor="end" class="v">200</text>
+        <text x="50" y="134" text-anchor="end" class="v">100</text>
+        <text x="50" y="184" text-anchor="end" class="v">0</text>
+        <text x="60" y="16" class="tm">再上电的浪涌峰值 / A</text>
+        <line class="ax" x1="56" y1="105" x2="440" y2="105" style="stroke:var(--danger);stroke-dasharray:5 4"/>
+        <text x="436" y="99" text-anchor="end" class="tm">整流桥浪涌额定 150 A（示意）</text>
+        <polyline id="s3-c0" class="real" points=""/>
+        <polyline id="s3-c1" class="real3" points=""/>
+        <text id="s3-l0" x="0" y="0" class="t" style="fill:var(--copper)">只用 NTC</text>
+        <text x="62" y="170" class="t" style="fill:var(--flow)">NTC + 继电器旁路</text>
+        <line id="s3-cur" class="ax" x1="0" y1="24" x2="0" y2="180" style="stroke-dasharray:4 3"/>
+        <circle id="s3-pt" class="dot" cx="0" cy="0" r="5.5" style="fill:var(--danger)"/>
+        <text x="56" y="196" text-anchor="middle" class="v">0</text>
+        <text x="132.8" y="196" text-anchor="middle" class="v">60</text>
+        <text x="209.6" y="196" text-anchor="middle" class="v">120</text>
+        <text x="286.4" y="196" text-anchor="middle" class="v">180</text>
+        <text x="363.2" y="196" text-anchor="middle" class="v">240</text>
+        <text x="440" y="196" text-anchor="end" class="v">300</text>
+        <text x="440" y="214" text-anchor="end" class="tm">断电到再上电的间隔 / s</text>
+      </svg>
+      <figcaption>上：AC 输入端的 NTC 限流，绿色虚线是上电瞬间的充电电流。下：再上电时的浪涌峰值，红点是当前工作点。示意参数：NTC 为 R25 = 5 Ω、B = 3000 K，工作时自热到 150 °C，冷却时间常数 60 s；线路、整流桥与 ESR 合计 1 Ω；在电压峰值 311 V 时合闸。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">方案</span>
+        <div class="seg" id="s3-m"><button id="s3-m-0" data-v="0" aria-pressed="true">只用 NTC</button><button id="s3-m-1" data-v="1" aria-pressed="false">NTC + 继电器旁路</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s3-rng">断电到再上电的间隔</label>
+        <span class="rv" id="s3-tv">300 s</span>
+        <input type="range" id="s3-rng" min="0" max="300" step="5" value="300"></div>
+      <dl class="read">
+        <dt>再上电时 NTC 温度</dt><dd id="s3-tc">25.8 °C</dd>
+        <dt>NTC 电阻</dt><dd id="s3-r">4.86 Ω</dd>
+        <dt>浪涌峰值</dt><dd id="s3-i">53.1 A</dd>
+        <dt>正常工作时 NTC 损耗</dt><dd id="s3-p">0.58 W</dd>
+        <dt>整流桥</dt><dd><span id="s3-st" class="chip on">限住了</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>方案</th><th>原理</th><th>优点</th><th>缺点</th><th>典型场合</th></tr></thead>
+    <tbody>
+      <tr><td>NTC 热敏电阻</td><td>冷态电阻大，限住浪涌；工作后自热，电阻变小</td><td>最简单、最便宜</td><td>热态重启失效；一直有损耗；低温时电阻更大，可能启动困难</td><td>小功率 AC-DC 电源输入</td></tr>
+      <tr><td>NTC 或电阻 + 继电器旁路</td><td>启动时串电阻限流，充好电后继电器短路</td><td>正常工作无损耗，重启也有效</td><td>多一个继电器和控制时序</td><td>大功率电源、变频器、电池包预充</td></tr>
+      <tr><td>MOS + RC 斜坡</td><td>栅极 RC 让 MOS 慢慢导通，输出走斜坡</td><td>浪涌电流可按 C·dV/dt 设计，导通后只有 I²·Rds(on)</td><td>本身不带过流保护；斜坡期间 MOS 在线性区发热，要查 SOA</td><td>板级直流输入、负载开关</td></tr>
+      <tr><td>热插拔控制器</td><td>专用芯片采样电流，闭环控制 MOS 栅极</td><td>限流、过流断路、功率限制、电源好信号都有，能保护 MOS 的 SOA</td><td>成本高，要外接 MOS 和采样电阻</td><td>服务器背板、通信板卡带电插拔</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>浪涌电流是怎么产生的？为什么要缓启动？</summary>
+      <div class="ans"><p>电容电压不能突变，I = C·dV/dt。上电瞬间电容相当于短路，电流只受线路电阻和 ESR 限制，能到几十上百安。它会拉垮前级电源、让保险丝误熔断、热插拔时触点打火，电容和开关管也要挨一次冲击。缓启动就是让输出沿斜坡上升，把 dV/dt 降下来，I ≈ C·Vin / t。</p></div></details>
+    <details><summary>用 MOS 管怎么做缓启动？</summary>
+      <div class="ans"><p>电源正极串一颗 PMOS，S 接输入、D 接输出。栅源之间接电阻保证默认关断，栅极经电阻下拉，栅漏之间加电容。打开后栅源电压到达米勒平台就停住，输出线性上升，斜率约等于栅极电流除以 C1，浪涌电流 = C负载·dV/dt。放在地线上可以用 NMOS，思路一样。</p></div></details>
+    <details><summary>缓启动时 MOS 管的发热怎么算？</summary>
+      <div class="ans"><p>给纯电容负载充电时，电源送出 C·V² 的能量，一半存进电容，一半消耗在 MOS 上，也就是 ½·C·V²，和斜坡快慢无关。斜坡越短平均功耗越高。如果负载同时吸电流，斜坡越长这部分发热反而越多。所以要拿斜坡时间内的功率去核对规格书的 SOA 曲线。</p></div></details>
+    <details><summary>NTC 抑制浪涌有什么缺点？</summary>
+      <div class="ans"><p>最大的问题是热态重启失效。NTC 工作时自热、电阻很低，断电后要几十秒到几分钟才能冷却，这期间再上电浪涌限不住。另外它正常工作一直有 I²·R 损耗，低温时电阻更大可能启动困难。改进办法是启动完成后用继电器把它短路。</p></div></details>
+    <details><summary>热插拔控制器比 MOS + RC 好在哪？</summary>
+      <div class="ans"><p>MOS + RC 是开环的，只管斜坡，不管短路。热插拔控制器用采样电阻实时测电流、闭环控制栅极，能直接限流；有过流断路和故障定时，短路时迅速关断；很多还带功率限制，让 MOS 始终在 SOA 内；还会给后级一个电源好信号。代价是成本高。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="07-ESD防护.html"><span>上一页</span>ESD防护</a><a class="next" href="../index.html#protect"><span>下一页</span>返回目录</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 浪涌电流：Vin 经线路电阻 RP、线缆电感 LP 给负载电容充电，后向欧拉积分（任意步长都稳定） */
+const s1T=[0,0.1e-3,0.3e-3,1e-3,3e-3,10e-3,30e-3],s1C=[47e-6,100e-6,220e-6,470e-6,1000e-6,2200e-6,4700e-6];
+const VIN=12,RP=0.1,LP=1e-6,ILIM=3,s1IM=[0.5,1,2,3,4,5,6,8,10,15,20,30,40,50,60,80,100,120,150];
+const tLab=s=>s>=1e-3?+(s*1e3).toPrecision(3)+' ms':+(s*1e6).toPrecision(3)+' µs';
+function s1u(){
+  const tss=s1T[+$('s1-t').value],C=s1C[+$('s1-c').value];
+  const T=Math.max(1.4*tss,8*RP*C,8*Math.sqrt(LP*C)),N=3000,dt=T/N,X=scale(0,T,56,500),Yv=scale(0,12,124,34);
+  let i=0,v=0,ip=0;const pv=['56,124'],raw=[[0,0]];
+  for(let k=1;k<=N;k++){const t=k*dt,vs=tss>0?VIN*Math.min(1,t/tss):VIN;
+    i=(i+dt/LP*(vs-v))/(1+dt*RP/LP+dt*dt/(LP*C));v+=dt/C*i;ip=Math.max(ip,i);
+    if(k%10===0){pv.push(X(t).toFixed(1)+','+Yv(v).toFixed(1));raw.push([t,i]);}}
+  const im=s1IM.find(x=>x>=ip*1.08)||150,Yi=scale(0,im,250,160);
+  $('s1-v').setAttribute('points',pv.join(' '));
+  $('s1-i').setAttribute('points',raw.map(p=>X(p[0]).toFixed(1)+','+Yi(p[1]).toFixed(1)).join(' '));
+  $('s1-i2').textContent=im;$('s1-i1').textContent=+(im/2).toFixed(2);
+  const ly=Yi(ILIM).toFixed(1);show($('s1-lim'),im>ILIM);show($('s1-liml'),im>ILIM);
+  $('s1-lim').setAttribute('y1',ly);$('s1-lim').setAttribute('y2',ly);$('s1-liml').setAttribute('y',(+ly-5).toFixed(1));
+  const u=T<1e-3?1e6:1e3;
+  ['s1-x1','s1-x2','s1-x3','s1-x4'].forEach((id,k)=>$(id).textContent=+(T*u*(k+1)/4).toPrecision(3));
+  $('s1-xu').textContent='时间 / '+(u===1e6?'µs':'ms');
+  $('s1-tv').textContent=tss?tLab(tss):'0，直接上电';$('s1-t').setAttribute('aria-valuetext',$('s1-tv').textContent);
+  $('s1-cv').textContent=Math.round(C*1e6)+' µF';$('s1-c').setAttribute('aria-valuetext',$('s1-cv').textContent);
+  const est=tss?C*VIN/tss:0,E=0.5*C*VIN*VIN;
+  $('s1-ip').textContent=fmtA(ip);
+  $('s1-est').textContent=tss?fmtA(est):'只受线路电阻限制，V / R = '+fmtA(VIN/RP);
+  $('s1-sl').textContent=tss?+(VIN/tss/1e3).toPrecision(3)+' V/ms':'接近阶跃';
+  $('s1-e').textContent=(E*1e3).toFixed(E<0.1?1:0)+' mJ';
+  const cls=ip<=ILIM*1.1?'on':ip<=10?'warn':'bad';
+  chip($('s1-st'),cls==='on'?'扛得住':cls==='warn'?'可能进入限流':'被拉垮，触点打火',cls);
+  let n;
+  if(!tss)n='直接上电，电容电压要从 0 一下跳到 12 V，电流只受 0.1 Ω 线路电阻和 1 µH 线缆电感限制，峰值 '+fmtA(ip)+'。3 A 的电源会被拉到欠压或打嗝重启，热插拔时连接器触点上会打火。';
+  else if(ip<0.8*est)n='斜坡太快，线路电阻已经供不上 C·dV/dt 要的 '+fmtA(est)+'，电流被线路限在 '+fmtA(ip)+'，和直接上电差不多。斜坡要慢到 C·Vin / t 远小于这个值才有意义。';
+  else n='输出电压用 '+tLab(tss)+' 爬到 12 V，斜率 '+$('s1-sl').textContent+'，充电电流 I = C·dV/dt ≈ '+fmtA(est)+'，和仿真峰值一致。'+(cls==='on'?'在电源额定电流以内，平稳上电。电容越大，需要的斜坡时间越长。':cls==='warn'?'超过电源的 3 A 额定，电源可能进入限流，把斜坡再放慢一点。':'还是太大，要么把斜坡放慢，要么减小电容。');
+  $('s1-note').textContent=n;
+}
+$('s1-t').addEventListener('input',s1u);
+$('s1-c').addEventListener('input',s1u);
+s1u();
+/* 2. PMOS + 栅漏电容的米勒斜坡。R1 = 100 kΩ（G-S），R2 = 47 kΩ（G 到地），Vp = 3 V，Ciss = 2 nF，均为示意 */
+const s2={cl:1000e-6},s2C1=[10e-9,22e-9,47e-9,100e-9,220e-9,470e-9];
+const R1=100e3,R2=47e3,VP=3,CISS=2e-9,VF=VIN*R2/(R1+R2),REQ=R1*R2/(R1+R2);
+function s2u(){
+  const C1=s2C1[+$('s2-rng').value],tau=REQ*(C1+CISS),t1=tau*Math.log((VIN-VF)/(VIN-VP-VF));
+  const sl=((VIN-VP)/R2-VP/R1)/C1,tr=VIN/sl,t2=t1+tr,T=t2+2.5*tau;
+  const vsg=t=>t<t1?(VIN-VF)*(1-Math.exp(-t/tau)):t<t2?VP:VIN-(VF+(VIN-VP-VF)*Math.exp(-(t-t2)/tau));
+  const vo=t=>t<t1?0:t<t2?sl*(t-t1):VIN;
+  const X=scale(0,T,56,440),Y=scale(0,12,150,26);
+  $('s2-vs').setAttribute('points',plot(vsg,0,T,X,Y,300));
+  $('s2-vo').setAttribute('points',plot(vo,0,T,X,Y,300));
+  $('s2-lvs').setAttribute('y',(Y(vsg(T))-6).toFixed(1));
+  const zx=X(t1),zw=X(t2)-zx;
+  $('s2-zone').setAttribute('x',zx.toFixed(1));$('s2-zone').setAttribute('width',zw.toFixed(1));
+  $('s2-zl').setAttribute('x',(zx+zw/2).toFixed(1));
+  const u=T<1e-3?1e6:1e3;
+  ['s2-x1','s2-x2','s2-x3','s2-x4'].forEach((id,k)=>$(id).textContent=+(T*u*(k+1)/4).toPrecision(3));
+  $('s2-xu').textContent='EN 打开后的时间 / '+(u===1e6?'µs':'ms');
+  const cl=s2.cl,I=cl*sl,E=0.5*cl*VIN*VIN,nf=Math.round(C1*1e9)+' nF';
+  $('s2-cv').textContent=nf;$('s2-rng').setAttribute('aria-valuetext',nf);$('s2-c1l').textContent=nf;
+  $('s2-cll').textContent=Math.round(cl*1e6)+' µF';
+  $('s2-t1').textContent=tLab(t1);$('s2-sl').textContent=+(sl/1e3).toPrecision(3)+' V/ms';$('s2-tr').textContent=tLab(tr);
+  $('s2-ii').textContent=fmtA(I);
+  $('s2-e').textContent=(E*1e3).toFixed(E<0.1?1:0)+' mJ / '+fmtP(E/tr);
+  const cls=I<=ILIM*1.1?'on':I<=10?'warn':'bad';
+  chip($('s2-st'),cls==='on'?'扛得住':cls==='warn'?'可能进入限流':'被拉垮',cls);
+  $('s2-note').textContent='EN 打开后，栅极电压朝 R1、R2 的分压值慢慢下降，先用 '+tLab(t1)+' 让 Vsg 爬到平台电压 3 V，这段时间输出还是 0。随后进入米勒平台，输出以 '+$('s2-sl').textContent+' 线性上升，浪涌电流 = '+Math.round(cl*1e6)+' µF × 斜率 = '+fmtA(I)+'。'
+    +(cls==='on'?'C1 越大斜坡越慢、电流越小。':'电流超过电源能力，要加大 C1 或 R2，把斜坡放慢。')
+    +'不管斜坡多慢，MOS 都要吸收 ½·C·V² = '+(E*1e3).toFixed(0)+' mJ；斜坡越快平均功耗越高，要按规格书的 SOA 曲线核对。';
+}
+seg('s2-cl',v=>{s2.cl=+v;s2u();});
+$('s2-rng').addEventListener('input',s2u);
+s2u();
+/* 3. NTC：R(T) = R25·exp[B·(1/T − 1/T25)]，断电后按一阶指数冷却，均为示意参数 */
+const s3={relay:false},R25=5,BN=3000,THOT=150,TAUC=60,RLINE=1,VPK=311,IRMS=1.5;
+const rNtc=T=>R25*Math.exp(BN*(1/(T+273.15)-1/298.15));
+const tNtc=(toff,relay)=>relay?25:25+(THOT-25)*Math.exp(-toff/TAUC);
+const ipkN=(toff,relay)=>VPK/(rNtc(tNtc(toff,relay))+RLINE);
+const s3X=scale(0,300,56,440),s3Y=scale(0,300,180,30);
+$('s3-c0').setAttribute('points',plot(t=>ipkN(t,false),0,300,s3X,s3Y,150));
+$('s3-c1').setAttribute('points',plot(t=>ipkN(t,true),0,300,s3X,s3Y,10));
+$('s3-l0').setAttribute('x',(s3X(100)+6).toFixed(1));$('s3-l0').setAttribute('y',(s3Y(ipkN(100,false))-8).toFixed(1));
+function s3u(){
+  const toff=+$('s3-rng').value,relay=s3.relay,T=tNtc(toff,relay),R=rNtc(T),I=ipkN(toff,relay),x=s3X(toff).toFixed(1);
+  $('s3-cur').setAttribute('x1',x);$('s3-cur').setAttribute('x2',x);
+  $('s3-pt').setAttribute('cx',x);$('s3-pt').setAttribute('cy',s3Y(I).toFixed(1));
+  show($('s3-relay'),relay);
+  $('s3-tv').textContent=toff+' s'+(toff===0?'，断电立刻重启':toff>=240?'，已基本冷却':'');
+  $('s3-rng').setAttribute('aria-valuetext',$('s3-tv').textContent);
+  $('s3-tc').textContent=T.toFixed(1)+' °C';$('s3-r').textContent=fmtR(R);$('s3-i').textContent=fmtA(I);
+  const pHot=IRMS*IRMS*rNtc(THOT);
+  $('s3-p').textContent=relay?'0，被继电器短路':fmtP(pHot);
+  const cls=I<=100?'on':I<=150?'warn':'bad';
+  chip($('s3-st'),cls==='on'?'限住了':cls==='warn'?'接近浪涌额定':'超过浪涌额定',cls);
+  $('s3-note').textContent=relay
+    ?'继电器在启动时断开，电容充好电后才闭合，把 NTC 短路。NTC 平时不通电，一直是室温，所以不管断电多久再上电，浪涌都是冷态的 '+fmtA(I)+'，正常工作时也没有 NTC 损耗。'
+    :toff>=240?'冷态上电，NTC 约 '+fmtR(R)+'，浪涌被限到 '+fmtA(I)+'。不加 NTC 时只剩 1 Ω 线路电阻，峰值约 311 A。工作后 NTC 自热到 150 °C 左右，电阻降到约 '+fmtR(rNtc(THOT))+'，1.5 A 输入电流下损耗约 '+fmtP(pHot)+'。'
+    :'断电 '+toff+' s 后 NTC 还有 '+T.toFixed(0)+' °C，电阻只有 '+fmtR(R)+'，浪涌升到 '+fmtA(I)+'。'+(cls==='bad'?'已经超过整流桥的浪涌额定，保险丝也可能熔断。这就是 NTC 的热态重启问题，电网闪断或用户快速开关机时最容易出事。':'NTC 的冷却时间常数有几十秒，断电越短越危险。');
+}
+seg('s3-m',v=>{s3.relay=v==='1';s3u();});
+$('s3-rng').addEventListener('input',s3u);
+s3u();
+</script>
+</body>
+</html>

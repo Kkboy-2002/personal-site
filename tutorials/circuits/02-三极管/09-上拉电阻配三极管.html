@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>上拉电阻配三极管</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.devs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:460px){.devs{grid-template-columns:minmax(0,1fr)}}
+.devs .ctl .seg button{padding:6px 8px;font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#bjt">三极管</a><span class="sp"></span><span>09 / 09</span></nav>
+<header>
+  <span class="eyebrow">模电基础 · 开关电路</span>
+  <h1>上拉电阻配三极管</h1>
+  <p class="lede">集电极上的上拉电阻配 NPN，基极上的上拉电阻配 PNP。下面每张图都能点，切换输入，看管子处在什么状态、电流从哪里走。</p>
+</header>
+
+<section id="oc">
+  <span class="eyebrow">集电极上拉 · 配 NPN</span>
+  <h2>NPN 加上拉电阻：集电极开路输出</h2>
+  <p>NPN 导通时只能把输出拉到地，输出要变高只能靠上拉电阻。输出和输入反相；输出高电平等于上拉电源，和 MCU 电压无关，所以它也是最常用的电平转换电路。换成 NMOS 就叫漏极开路。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 360 290" role="img" aria-label="MCU 经 Rb 驱动 NPN 基极，集电极经上拉电阻接 Vcc，输出取自集电极">
+        <text id="s1-vcc" x="200" y="18" text-anchor="middle" class="v">Vcc 5 V</text>
+        <path class="w" d="M188,26 H212 M200,26 V62"/>
+        <rect class="r" x="191" y="62" width="18" height="46" rx="2"/>
+        <text x="220" y="82" class="t">上拉 R</text>
+        <text x="220" y="99" class="v">4.7 kΩ</text>
+        <path class="w" d="M200,108 V168"/>
+        <path id="s1-ow" class="w s-lo" style="stroke-width:3" d="M200,140 H292"/>
+        <circle class="dot" cx="200" cy="140" r="3.5"/>
+        <text x="298" y="145" class="t">输出</text>
+        <text id="s1-out" x="290" y="130" text-anchor="end" class="v lo">0.2 V</text>
+        <line class="bar" x1="178" y1="172" x2="178" y2="208"/>
+        <path class="w" d="M178,182 L200,168 M178,198 L200,212 V246"/>
+        <polygon class="ah" points="197,210 188,209 192,202"/>
+        <text x="208" y="176" class="tm">C</text>
+        <text x="208" y="214" class="tm">E</text>
+        <text x="236" y="196" class="t">NPN</text>
+        <path class="w" d="M186,246 H214 M191,251 H209 M196,256 H204"/>
+        <path class="w" d="M150,190 H178"/>
+        <rect class="r" x="100" y="182" width="50" height="16" rx="2"/>
+        <text x="125" y="174" text-anchor="middle" class="v">Rb 10 kΩ</text>
+        <path class="w" d="M66,190 H100"/>
+        <rect class="box" x="14" y="170" width="52" height="40" rx="4"/>
+        <text x="40" y="195" text-anchor="middle" class="t">MCU</text>
+        <text id="s1-mcu" x="83" y="214" text-anchor="middle" class="v hi">3.3 V</text>
+        <path id="s1-flow" class="flow" d="M200,30 V168 L182,180 V200 L200,212 V244"/>
+        <path id="s1-bflow" class="flow thin" d="M68,190 H176"/>
+      </svg>
+      <figcaption>绿色虚线是电流路径。NPN 饱和时电流从 Vcc 经上拉电阻、集电极、发射极流到地。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">MCU 输出</span>
+        <div class="seg" id="s1-in"><button id="s1-in-1" data-v="1" aria-pressed="true">高 3.3 V</button><button id="s1-in-0" data-v="0" aria-pressed="false">低 0 V</button></div></div>
+      <div class="ctl"><span class="ctl-l">上拉电源 Vcc</span>
+        <div class="seg" id="s1-v"><button id="s1-v-33" data-v="3.3" aria-pressed="false">3.3 V</button><button id="s1-v-5" data-v="5" aria-pressed="true">5 V</button><button id="s1-v-12" data-v="12" aria-pressed="false">12 V</button></div></div>
+      <dl class="read">
+        <dt>NPN 状态</dt><dd><span id="s1-state" class="chip on">饱和</span></dd>
+        <dt>基极电流 Ib</dt><dd id="s1-ib">0.26 mA</dd>
+        <dt>β·Ib，β 取 100</dt><dd id="s1-bib">26 mA</dd>
+        <dt>集电极电流 Ic</dt><dd id="s1-ic">1.02 mA</dd>
+        <dt>输出电压</dt><dd id="s1-o">0.2 V，低电平</dd>
+      </dl>
+      <p class="note" id="s1-note">β·Ib 远大于外电路允许的 Ic(sat) = (Vcc − 0.2) / R，管子深度饱和，输出被拉到接近地。</p>
+    </div>
+  </div>
+</section>
+
+<section id="rule">
+  <span class="eyebrow">判断规律</span>
+  <h2>看发射极接在哪</h2>
+  <p>三极管导通时，集电极只会被拉向发射极那一侧。NPN 发射极接地，只能往下拉，高电平交给上拉电阻；PNP 发射极接电源，只能往上拉，低电平交给下拉电阻。分立元件搭的简易 H 桥也是这个规律：下管用 NPN 或 NMOS，上管用 PNP 或 PMOS。</p>
+  <figure style="max-width:680px">
+    <svg viewBox="0 0 540 272" role="img" aria-label="左边 NPN 发射极接地，配上拉电阻，只能把输出往下拉；右边 PNP 发射极接电源，配下拉电阻，只能把输出往上拉">
+      <text x="152" y="18" text-anchor="middle" class="v">Vcc</text>
+      <path class="w" d="M140,26 H164 M152,26 V50"/>
+      <rect class="r" x="143" y="50" width="18" height="44" rx="2"/>
+      <text x="170" y="77" class="t">上拉 R</text>
+      <path class="w" d="M152,94 V150 M152,122 H236"/>
+      <circle class="dot" cx="152" cy="122" r="3.5"/>
+      <text x="206" y="114" class="tm">输出</text>
+      <line class="bar" x1="130" y1="154" x2="130" y2="190"/>
+      <path class="w" d="M130,164 L152,150 M130,180 L152,194 V230 M100,172 H130"/>
+      <polygon class="ah" points="149,192 140,191 144,184"/>
+      <text x="96" y="176" text-anchor="end" class="tm">驱动</text>
+      <path class="w" d="M138,230 H166 M143,235 H161 M148,240 H156"/>
+      <path class="w s-lo" style="stroke-width:2.5" d="M196,138 V204"/>
+      <polygon class="lo" points="196,213 190,202 202,202"/>
+      <text x="206" y="182" class="t lo">只能往下拉</text>
+      <text x="152" y="264" text-anchor="middle" class="t">NPN：发射极接地</text>
+
+      <text x="402" y="18" text-anchor="middle" class="v">Vcc</text>
+      <path class="w" d="M390,26 H414 M402,26 V66 L380,80"/>
+      <polygon class="ah" points="385,77 394,76 390,69"/>
+      <line class="bar" x1="380" y1="70" x2="380" y2="106"/>
+      <path class="w" d="M380,96 L402,110 V160 M350,88 H380 M402,138 H486"/>
+      <circle class="dot" cx="402" cy="138" r="3.5"/>
+      <text x="456" y="130" class="tm">输出</text>
+      <text x="346" y="92" text-anchor="end" class="tm">驱动</text>
+      <rect class="r" x="393" y="160" width="18" height="44" rx="2"/>
+      <text x="420" y="178" class="t">下拉 R</text>
+      <path class="w" d="M402,204 V230 M388,230 H416 M393,235 H411 M398,240 H406"/>
+      <path class="w s-hi" style="stroke-width:2.5" d="M446,250 V200"/>
+      <polygon class="hi" points="446,191 440,202 452,202"/>
+      <text x="456" y="232" class="t hi">只能往上拉</text>
+      <text x="402" y="264" text-anchor="middle" class="t">PNP：发射极接电源</text>
+    </svg>
+    <figcaption>左：NPN 导通把输出拉到地，截止时由上拉电阻拉高。右：PNP 导通把输出拉到 Vcc，截止时由下拉电阻拉低。</figcaption>
+  </figure>
+</section>
+
+<section id="hs">
+  <span class="eyebrow">基极上拉 · 配 PNP</span>
+  <h2>高边开关：MCU 为什么要先经过一个 NPN</h2>
+  <p>三极管基极和发射极之间通常并一个电阻，保证驱动悬空时可靠截止。它跨接在基极和发射极之间，所以在 NPN 上是基极下拉，在 PNP 上就是基极上拉。3.3 V 的 MCU 控制 12 V 负载时，直接驱动 PNP 是关不掉的，标准解法正好把集电极上拉和基极上拉两种用法串在一起。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 312" role="img" aria-label="12 V 高边 PNP 开关。MCU 经 R1 驱动 NPN，NPN 经 R3 拉低 PNP 基极，R2 把 PNP 基极上拉到 12 V">
+        <text x="144" y="35" text-anchor="end" class="v">12 V</text>
+        <path class="w" d="M150,30 H330"/>
+        <path class="w" d="M314,30 V78 L292,92"/>
+        <polygon class="ah" points="297,89 306,88 302,81"/>
+        <line class="bar" x1="292" y1="82" x2="292" y2="118"/>
+        <path class="w" d="M292,108 L314,122 V168 M314,218 V292 M300,292 H328 M305,297 H323 M310,302 H318"/>
+        <text x="320" y="66" class="tm">E</text>
+        <text x="320" y="140" class="tm">C</text>
+        <text x="336" y="104" class="t">PNP</text>
+        <rect id="s3-load" class="box" x="296" y="168" width="36" height="50" rx="4"/>
+        <text x="314" y="198" text-anchor="middle" class="t">负载</text>
+        <path class="w" d="M240,100 H292"/>
+        <circle class="dot" cx="240" cy="100" r="3.5"/>
+        <rect class="box" x="20" y="202" width="60" height="40" rx="4"/>
+        <text x="50" y="227" text-anchor="middle" class="t">MCU</text>
+        <text id="s3-mcu" x="104" y="252" text-anchor="middle" class="v hi">3.3 V</text>
+        <path class="w" d="M80,222 H130"/>
+        <rect class="r" x="130" y="214" width="50" height="16" rx="2"/>
+        <text x="155" y="207" text-anchor="middle" class="v">R1</text>
+        <g id="s3-g-npn">
+          <path class="w" d="M240,30 V46 M240,86 V116 M240,156 V198 L218,212 M218,232 L240,246 V292 M226,292 H254 M231,297 H249 M236,302 H244 M180,222 H218"/>
+          <rect class="r" x="231" y="46" width="18" height="40" rx="2"/>
+          <rect class="r" x="231" y="116" width="18" height="40" rx="2"/>
+          <text x="224" y="71" text-anchor="end" class="t">R2 上拉</text>
+          <text x="224" y="141" text-anchor="end" class="t">R3 限流</text>
+          <line class="bar" x1="218" y1="204" x2="218" y2="240"/>
+          <polygon class="ah" points="237,242 228,241 232,234"/>
+          <text x="250" y="226" class="t">NPN</text>
+        </g>
+        <g id="s3-g-dir" hidden>
+          <path class="w" d="M180,222 H200 V100 H240"/>
+          <text x="208" y="160" class="tm">直连</text>
+        </g>
+        <path id="s3-f-load" class="flow" d="M314,34 V76 L296,88 V112 L314,124 V166 M314,220 V290"/>
+        <path id="s3-f-npnb" class="flow thin" d="M240,102 V196 L222,210 V234 L240,246 V290"/>
+        <path id="s3-f-mcub" class="flow thin" d="M82,222 H216"/>
+        <path id="s3-f-dirb" class="flow thin bad" d="M238,100 H200 V222 H82" hidden/>
+      </svg>
+      <figcaption>绿色是正常电流路径，红色是灌进 MCU 引脚的电流。R2 把 PNP 基极拉到发射极电位，R3 限制 PNP 的基极电流。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">驱动方式</span>
+        <div class="seg" id="s3-m"><button id="s3-m-npn" data-v="npn" aria-pressed="true">加一级 NPN</button><button id="s3-m-dir" data-v="dir" aria-pressed="false">MCU 直接驱动</button></div></div>
+      <div class="ctl"><span class="ctl-l">MCU 输出</span>
+        <div class="seg" id="s3-in"><button id="s3-in-1" data-v="1" aria-pressed="true">高 3.3 V</button><button id="s3-in-0" data-v="0" aria-pressed="false">低 0 V</button></div></div>
+      <dl class="read">
+        <dt>NPN</dt><dd id="s3-npn">饱和</dd>
+        <dt>PNP 基极电位</dt><dd id="s3-vb">≈ 11.3 V</dd>
+        <dt>发射结 Ueb</dt><dd id="s3-veb">0.7 V，正偏</dd>
+        <dt>PNP 状态</dt><dd><span id="s3-state" class="chip on">导通</span></dd>
+        <dt>负载</dt><dd id="s3-ld">通电</dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="rv">
+  <span class="eyebrow">上拉阻值 · 折中</span>
+  <h2>上拉电阻取多大</h2>
+  <p>低电平由 NPN 主动拉下来，又快又硬；高电平只能靠上拉电阻给负载电容充电，是软的。阻值越大越省电，上升沿越慢；阻值越小上升沿越快，NPN 导通时白白流过的电流也越大。常用 4.7 kΩ 到 10 kΩ。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 236" role="img" aria-label="集电极开路输出的波形：低电平边沿陡峭，高电平按 RC 指数上升，电阻越大上升越慢">
+        <rect class="zone-cut" x="46" y="40" width="113.5" height="156"/>
+        <rect class="zone-cut" x="273" y="40" width="113.5" height="156"/>
+        <text x="102.75" y="32" text-anchor="middle" class="tm">NPN 导通</text>
+        <text x="216.25" y="32" text-anchor="middle" class="tm">NPN 截止</text>
+        <text x="329.75" y="32" text-anchor="middle" class="tm">NPN 导通</text>
+        <text x="443.25" y="32" text-anchor="middle" class="tm">NPN 截止</text>
+        <line class="gl" x1="46" y1="46" x2="500" y2="46"/>
+        <line class="ax" x1="46" y1="91" x2="500" y2="91" style="stroke-dasharray:2 4"/>
+        <text x="496" y="85" text-anchor="end" class="tm">VIH 3.5 V</text>
+        <path class="ax" d="M46,40 V196 H500"/>
+        <text x="40" y="50" text-anchor="end" class="v">5 V</text>
+        <text x="40" y="200" text-anchor="end" class="v">0</text>
+        <text x="46" y="214" text-anchor="middle" class="v">0</text>
+        <text x="159.5" y="214" text-anchor="middle" class="v">5</text>
+        <text x="273" y="214" text-anchor="middle" class="v">10</text>
+        <text x="386.5" y="214" text-anchor="middle" class="v">15</text>
+        <text x="500" y="214" text-anchor="end" class="v">20</text>
+        <text x="500" y="231" text-anchor="end" class="tm">时间 µs</text>
+        <path class="ideal" d="M46,190 H159.5 V46 H273 V190 H386.5 V46 H500"/>
+        <polyline id="s4-wave" class="real" points="46,190 500,190"/>
+      </svg>
+      <figcaption>示例条件：5 V 上拉，负载电容 100 pF，NPN 按 100 kHz 开关。虚线是理想方波，橙线是实际输出，要越过 VIH 才会被接收端认成高电平。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s4-rng">上拉电阻 R</label>
+        <span class="rv" id="s4-r">4.7 kΩ</span>
+        <input type="range" id="s4-rng" min="0" max="6" step="1" value="2"></div>
+      <dl class="read">
+        <dt>时间常数 τ = R·C</dt><dd id="s4-tau">470 ns</dd>
+        <dt>上升时间 ≈ 2.2·R·C</dt><dd id="s4-tr">1.03 µs</dd>
+        <dt>NPN 导通时电流</dt><dd id="s4-i">1.02 mA</dd>
+        <dt>导通时功耗</dt><dd id="s4-p">5.1 mW</dd>
+        <dt>结论</dt><dd><span id="s4-v" class="chip on">够快</span></dd>
+      </dl>
+      <p class="note" id="s4-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="i2c">
+  <span class="eyebrow">面试常问 · I2C</span>
+  <h2>I2C 为什么非要上拉电阻</h2>
+  <p>I2C 器件驱动 SDA 和 SCL 的输出级都是漏极开路，每根线上所有器件共用一个上拉电阻。任何一个器件拉低，整根线就是低电平；只有所有器件都松开，线才被拉高，这叫线与。推挽输出相当于把上拉电阻换成一个上管，高电平驱动更强，但两个器件一高一低就会短路。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 196" role="img" aria-label="SDA 总线经一个上拉电阻接 Vcc，三个漏极开路器件挂在总线上，任一器件拉低则总线为低">
+        <g id="s5-pu">
+          <text x="60" y="16" text-anchor="middle" class="v">Vcc</text>
+          <path class="w" d="M48,24 H72 M60,24 V36 M60,76 V96"/>
+          <rect class="r" x="51" y="36" width="18" height="40" rx="2"/>
+          <text x="76" y="61" class="t">上拉 R</text>
+        </g>
+        <path id="s5-bus" class="w s-lo" style="stroke-width:4" d="M60,96 H500"/>
+        <text x="150" y="88" class="tm">SDA 总线</text>
+        <text id="s5-lvt" x="500" y="86" text-anchor="end" class="v lo">低电平</text>
+        <path id="s5-d0" class="w" d="M170,96 V130"/>
+        <path id="s5-d1" class="w" d="M300,96 V130"/>
+        <path id="s5-d2" class="w" d="M430,96 V130"/>
+        <rect class="box" x="125" y="130" width="90" height="54" rx="6"/>
+        <rect class="box" x="255" y="130" width="90" height="54" rx="6"/>
+        <rect class="box" x="385" y="130" width="90" height="54" rx="6"/>
+        <text x="170" y="152" text-anchor="middle" class="t">器件 A</text>
+        <text x="300" y="152" text-anchor="middle" class="t">器件 B</text>
+        <text x="430" y="152" text-anchor="middle" class="t">器件 C</text>
+        <text id="s5-st0" x="170" y="172" text-anchor="middle" class="tm">松开</text>
+        <text id="s5-st1" x="300" y="172" text-anchor="middle" class="tm">拉低</text>
+        <text id="s5-st2" x="430" y="172" text-anchor="middle" class="tm">松开</text>
+        <path id="s5-flow" class="flow thin" d="M60,28 V96 H300 V128"/>
+      </svg>
+      <figcaption>开漏模式下，拉低的器件只是把总线接到地，电流由上拉电阻限住；推挽模式下没有这个电阻兜底。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">输出结构</span>
+        <div class="seg" id="s5-m"><button id="s5-m-od" data-v="od" aria-pressed="true">开漏 + 上拉</button><button id="s5-m-pp" data-v="pp" aria-pressed="false">推挽</button></div></div>
+      <div class="devs">
+        <div class="ctl"><span class="ctl-l">器件 A</span><div class="seg" id="s5-a"><button id="s5-a-1" data-v="1" aria-pressed="true">松开</button><button id="s5-a-0" data-v="0" aria-pressed="false">拉低</button></div></div>
+        <div class="ctl"><span class="ctl-l">器件 B</span><div class="seg" id="s5-b"><button id="s5-b-1" data-v="1" aria-pressed="false">松开</button><button id="s5-b-0" data-v="0" aria-pressed="true">拉低</button></div></div>
+        <div class="ctl"><span class="ctl-l">器件 C</span><div class="seg" id="s5-c"><button id="s5-c-1" data-v="1" aria-pressed="true">松开</button><button id="s5-c-0" data-v="0" aria-pressed="false">拉低</button></div></div>
+      </div>
+      <dl class="read">
+        <dt>总线电平</dt><dd><span id="s5-chip" class="chip on">低电平</span></dd>
+      </dl>
+      <p class="note" id="s5-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="leak">
+  <span class="eyebrow">截止区 · 漏电流</span>
+  <h2>截止时 Ic 为什么不是零</h2>
+  <p>输出特性曲线上截止区的那点电流，就是漏电流，两者是同一个东西。Ib = 0 那条线并不贴着横轴，它抬起来的高度是穿透电流 ICEO。常温下硅管只有 nA 级，画在 mA 级的坐标上根本看不见，教材是放大了画的。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 296" role="img" aria-label="NPN 输出特性曲线：Ib 为 20 到 80 微安的曲线，以及 Ib 为 0 的漏电流曲线和它下方的截止区">
+        <rect class="zone-sat" x="56" y="36" width="15" height="220"/>
+        <polygon id="s6-cut" class="zone-cut" points="56,256 496,256"/>
+        <line class="gl" x1="56" y1="36" x2="496" y2="36"/>
+        <line class="gl" x1="56" y1="146" x2="496" y2="146"/>
+        <path class="ax" d="M56,36 V256 H496"/>
+        <text x="50" y="40" text-anchor="end" class="v">10</text>
+        <text x="50" y="150" text-anchor="end" class="v">5</text>
+        <text x="50" y="260" text-anchor="end" class="v">0</text>
+        <text x="60" y="26" class="tm">Ic / mA</text>
+        <text x="496" y="26" text-anchor="end" class="tm">漏电流已放大示意</text>
+        <text x="56" y="274" text-anchor="middle" class="v">0</text>
+        <text x="166" y="274" text-anchor="middle" class="v">3</text>
+        <text x="276" y="274" text-anchor="middle" class="v">6</text>
+        <text x="386" y="274" text-anchor="middle" class="v">9</text>
+        <text x="496" y="274" text-anchor="end" class="v">12</text>
+        <text x="496" y="291" text-anchor="end" class="tm">Uce / V</text>
+        <g id="s6-curves"></g>
+        <polyline id="s6-leak" class="leak" points="56,256 496,256"/>
+        <text id="s6-lt" x="492" y="230" text-anchor="end" class="t" style="fill:var(--danger)">Ib = 0，Ic = ICEO</text>
+        <text x="76" y="62" class="tm">饱和区</text>
+        <text x="300" y="134" text-anchor="middle" class="tm">放大区</text>
+        <text x="110" y="229" class="t" style="fill:var(--low)">截止区</text>
+      </svg>
+      <figcaption>红线是 Ib = 0 时的集电极电流，它下方的蓝色带就是截止区。左侧窄条是饱和区。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">基极接法</span>
+        <div class="seg" id="s6-m"><button id="s6-m-open" data-v="open" aria-pressed="true">基极开路</button><button id="s6-m-res" data-v="res" aria-pressed="false">B-E 并电阻</button><button id="s6-m-rev" data-v="rev" aria-pressed="false">发射结反偏</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s6-t">结温</label>
+        <span class="rv" id="s6-tv">25 °C</span>
+        <input type="range" id="s6-t" min="25" max="125" step="5" value="25"></div>
+      <dl class="read">
+        <dt>集电结反向电流 ICBO</dt><dd id="s6-icbo">2.0 nA</dd>
+        <dt>截止时 Ic</dt><dd id="s6-ic">202 nA</dd>
+      </dl>
+      <p class="note" id="s6-note"></p>
+      <p class="note">示意值：硅小信号管，β 取 100，常温 ICBO 取 2 nA，按结温每升高 10 °C 翻一倍估算。高温下漏电流能涨三个数量级，功率管和高温场合必须留意。</p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>上拉电阻一般配 NPN 还是 PNP？</summary>
+      <div class="ans"><p>集电极上拉配 NPN，这就是集电极开路输出。NPN 发射极接地，只能把输出往下拉，高电平只能交给上拉电阻。PNP 配的是基极上拉，用来保证它可靠截止。</p></div></details>
+    <details><summary>集电极开路输出有什么好处？</summary>
+      <div class="ans"><p>两个好处。一是电平转换：输出高电平等于上拉电源，和驱动端电压无关。二是可以线与：多个输出并在一根线上不会打架，I2C 就是靠这一点。</p></div></details>
+    <details><summary>3.3 V 单片机为什么不能直接驱动 12 V 的 PNP 高边开关？</summary>
+      <div class="ans"><p>PNP 截止要求基极接近发射极的 12 V。单片机高电平只有 3.3 V，发射结始终正偏，管子关不掉，还会有电流反灌进 IO 口。标准做法是先用一个 NPN 去拉 PNP 的基极，再用上拉电阻把 PNP 基极拉回 12 V。</p></div></details>
+    <details><summary>截止状态下三极管真的没有电流吗？</summary>
+      <div class="ans"><p>不是。截止区里仍有漏电流，基极开路时是 ICEO = (1 + β)·ICBO。在 B-E 之间并一个电阻，可以让 ICBO 从电阻流走，不再被放大。结温每升高约 10 °C，漏电流大约翻倍。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="08-饱和失真与截止失真.html"><span>上一页</span>饱和失真与截止失真</a><a class="next" href="../index.html#bjt"><span>下一页</span>返回目录</a></nav>
+</div>
+
+<script src="../_assets/kit.js"></script>
+<script>
+
+/* 1. OC 输出 */
+const s1={on:true,v:5};
+function s1u(){
+  const on=s1.on,v=s1.v,ib=(3.3-0.7)/10e3,ics=(v-0.2)/4.7e3,out=on?0.2:v;
+  chip($('s1-state'),on?'饱和':'截止',on?'on':'off');
+  $('s1-ib').textContent=on?fmtA(ib):'0';
+  $('s1-bib').textContent=on?fmtA(100*ib)+'，远大于 Ic(sat)':'0';
+  $('s1-ic').textContent=on?fmtA(ics):'≈ 0，只剩 nA 级漏电流';
+  $('s1-o').textContent=out+' V，'+(on?'低电平':'高电平');
+  $('s1-out').textContent=out+' V';$('s1-vcc').textContent='Vcc '+v+' V';
+  $('s1-mcu').textContent=on?'3.3 V':'0 V';setLv($('s1-mcu'),null,on);
+  setLv($('s1-out'),$('s1-ow'),!on);
+  show($('s1-flow'),on);show($('s1-bflow'),on);
+  $('s1-note').textContent=on?'β·Ib 远大于外电路允许的 Ic(sat) = (Vcc − 0.2) / R，管子深度饱和，输出被拉到接近地。'
+    :'NPN 截止，上拉电阻上几乎没有电流，也就没有压降，输出被拉到 Vcc。切换上拉电源试试：输出高电平跟着变，MCU 电压始终是 3.3 V。';
+}
+seg('s1-in',v=>{s1.on=v==='1';s1u();});
+seg('s1-v',v=>{s1.v=parseFloat(v);s1u();});
+s1u();
+/* 3. 高边开关 */
+const s3={dir:false,on:true};
+const s3n={
+  npn1:'MCU 高电平让 NPN 饱和，NPN 经 R3 把 PNP 基极往下拉，发射结正偏，PNP 导通，负载通电。整体是同相的：MCU 高，负载开。',
+  npn0:'NPN 截止，R2 把 PNP 基极拉到和发射极一样的 12 V，Ueb = 0，PNP 截止，负载断电。这个 R2 就是 PNP 的基极上拉电阻。',
+  dir1:'要让 PNP 截止，基极必须接近 12 V。MCU 最高只能给 3.3 V，发射结一直正偏，负载关不掉。R1 上还压着约 8 V，电流反灌进 MCU 引脚。',
+  dir0:'MCU 输出低时 PNP 导通，这一步正常，基极电流经 R1 流进 MCU 引脚。问题出在高电平，切过去看看。'
+};
+function s3u(){
+  const dir=s3.dir,on=s3.on,pnp=dir||on;
+  show($('s3-g-npn'),!dir);show($('s3-g-dir'),dir);
+  $('s3-npn').textContent=dir?'没有这一级':(on?'饱和':'截止');
+  $('s3-vb').textContent=pnp?'≈ 11.3 V':'12 V';
+  $('s3-veb').textContent=pnp?'0.7 V，正偏':'0 V';
+  if(dir&&on)chip($('s3-state'),'关不掉','bad');else chip($('s3-state'),pnp?'导通':'截止',pnp?'on':'off');
+  $('s3-ld').textContent=pnp?'通电':'断电';
+  $('s3-load').classList.toggle('lit',pnp);
+  $('s3-mcu').textContent=on?'3.3 V':'0 V';setLv($('s3-mcu'),null,on);
+  show($('s3-f-load'),pnp);show($('s3-f-npnb'),!dir&&on);show($('s3-f-mcub'),!dir&&on);
+  show($('s3-f-dirb'),dir);$('s3-f-dirb').classList.toggle('bad',on);
+  $('s3-note').textContent=s3n[(dir?'dir':'npn')+(on?1:0)];
+}
+seg('s3-m',v=>{s3.dir=v==='dir';s3u();});
+seg('s3-in',v=>{s3.on=v==='1';s3u();});
+s3u();
+/* 4. 上拉阻值 */
+const s4R=[1e3,2.2e3,4.7e3,10e3,22e3,47e3,100e3],s4L=['1 kΩ','2.2 kΩ','4.7 kΩ','10 kΩ','22 kΩ','47 kΩ','100 kΩ'];
+const fmtUs=us=>us<1?(us*1000).toFixed(0)+' ns':us.toFixed(us<10?2:1)+' µs';
+function s4u(){
+  const i=+$('s4-rng').value,R=s4R[i],tau=R*100e-12*1e6,I=4.8/R;
+  let v=0.2;const pts=[];
+  for(let k=0;k<=400;k++){const t=k*0.05,off=(t%10)>=5;
+    if(k>0)v=off?5-(5-v)*Math.exp(-0.05/tau):0.2+(v-0.2)*Math.exp(-0.05/0.04);
+    pts.push((46+t*22.7).toFixed(1)+','+(196-v*30).toFixed(1));}
+  $('s4-wave').setAttribute('points',pts.join(' '));
+  $('s4-r').textContent=s4L[i];$('s4-rng').setAttribute('aria-valuetext',s4L[i]);
+  $('s4-tau').textContent=fmtUs(tau);$('s4-tr').textContent=fmtUs(2.2*tau);
+  $('s4-i').textContent=fmtA(I);$('s4-p').textContent=(5*I*1e3).toFixed(1)+' mW';
+  const tvih=tau*Math.log(3.2);let note;
+  if(tvih>5){chip($('s4-v'),'来不及拉高','bad');note='半个周期内输出都没爬过 3.5 V，接收端认不出高电平。要么减小电阻，要么降低频率。';}
+  else if(2.2*tau>2){chip($('s4-v'),'偏慢','off');note='省电，但高电平靠电阻慢慢充上去，边沿变软。频率再高一点就开始吃紧。';}
+  else if(I>3e-3){chip($('s4-v'),'够快，但费电','on');note='边沿很陡，代价是 NPN 导通时一直吸着几毫安电流。基极驱动不够还会退出饱和，低电平被抬高。';}
+  else{chip($('s4-v'),'够快','on');note='边沿和功耗比较均衡，这就是 4.7 kΩ 左右最常用的原因。';}
+  $('s4-note').textContent=note;
+}
+$('s4-rng').addEventListener('input',s4u);
+s4u();
+/* 5. I2C 线与 */
+const s5={pp:false,d:[1,0,1]},s5x=[170,300,430];
+function s5u(){
+  const pp=s5.pp,d=s5.d,lo=d.includes(0),hi=d.includes(1),bad=pp&&lo&&hi,lv=bad?'x':(lo?0:1);
+  $('s5-pu').style.opacity=pp?.25:1;
+  ['a','b','c'].forEach((k,i)=>{
+    $('s5-'+k+'-1').textContent=pp?'输出高':'松开';$('s5-'+k+'-0').textContent=pp?'输出低':'拉低';
+    $('s5-st'+i).textContent=d[i]?(pp?'推高':'松开'):'拉低';
+    const ln=$('s5-d'+i);ln.classList.toggle('s-lo',!d[i]);ln.classList.toggle('s-hi',pp&&d[i]===1);});
+  const bus=$('s5-bus'),t=$('s5-lvt');
+  bus.classList.toggle('s-lo',lv===0);bus.classList.toggle('s-hi',lv===1);bus.classList.toggle('s-bad',lv==='x');
+  t.textContent=lv==='x'?'短路':(lv?'高电平':'低电平');
+  t.classList.toggle('hi',lv===1);t.classList.toggle('lo',lv===0);t.style.fill=lv==='x'?'var(--danger)':'';
+  chip($('s5-chip'),t.textContent,bad?'bad':'on');
+  const f=$('s5-flow');
+  if(bad){const h=s5x[d.indexOf(1)],l=s5x[d.indexOf(0)];f.setAttribute('d',`M${h},128 V96 H${l} V128`);f.classList.add('bad');show(f,true);}
+  else if(!pp&&lo){f.setAttribute('d',`M60,28 V96 H${s5x[d.indexOf(0)]} V128`);f.classList.remove('bad');show(f,true);}
+  else show(f,false);
+  $('s5-note').textContent=bad?'有的器件输出高、有的输出低，电流从一个器件的上管经总线直通另一个器件的下管到地，等于电源短路。所以 I2C 必须用开漏加上拉。'
+    :pp?'所有器件输出一致时相安无事，可总线上随时可能有两个器件同时说话，这种一致没法保证。'
+    :lo?'只要有一个器件拉低，整根线就是低电平，其余器件松开也拉不高。总线 = A 与 B 与 C，这就是线与。电流由上拉电阻限住，器件之间不会打架。'
+    :'三个器件都松开，没有谁接地，上拉电阻把总线拉到高电平。';
+}
+seg('s5-m',v=>{s5.pp=v==='pp';s5u();});
+['a','b','c'].forEach((k,i)=>seg('s5-'+k,v=>{s5.d[i]=+v;s5u();}));
+s5u();
+/* 6. 截止区漏电流 */
+const X=u=>56+u*36.667,Y=ma=>256-ma*22;
+function pts(fn){const p=[];for(let k=0;k<=120;k++){const u=k*0.1;p.push(X(u).toFixed(1)+','+Y(fn(u)).toFixed(1));}return p;}
+[20,40,60,80].forEach(ib=>{const a=ib/10,fn=u=>a*(1+u/80)*(1-Math.exp(-u/0.15));
+  const pl=document.createElementNS(NS,'polyline');pl.setAttribute('class','cv');pl.setAttribute('points',pts(fn).join(' '));
+  const tx=document.createElementNS(NS,'text');tx.setAttribute('x','492');tx.setAttribute('y',(Y(fn(12))-6).toFixed(1));
+  tx.setAttribute('text-anchor','end');tx.setAttribute('class','v');tx.textContent='Ib = '+ib+' µA';
+  $('s6-curves').append(pl,tx);});
+const s6={m:'open'},s6L={open:.9,res:.4,rev:.1},s6T={open:'Ib = 0，Ic = ICEO',res:'B-E 并电阻，Ic = ICER',rev:'发射结反偏，Ic ≈ ICBO'};
+const s6N={
+  open:'基极开路时，集电结漏过来的 ICBO 无路可走，只能当作基极电流流进发射结，被放大 β 倍：ICEO = (1 + β)·ICBO。Ib = 0 那条线抬离横轴的高度就是它。',
+  res:'B-E 之间并一个电阻，ICBO 大部分从电阻流走，不再被放大，漏电流明显下降。这就是基极下拉电阻让管子可靠截止的真正原因。',
+  rev:'发射结反偏时发射区不再注入电子，只剩集电结自己的反向饱和电流 ICBO，和二极管反偏漏电是同一回事。这才是严格意义上的截止。'
+};
+function s6u(){
+  const L=s6L[s6.m],p=pts(u=>L*(1-Math.exp(-u/0.3)));
+  $('s6-leak').setAttribute('points',p.join(' '));
+  $('s6-cut').setAttribute('points',p.join(' ')+' 496,256 56,256');
+  $('s6-lt').setAttribute('y',(Y(L)-7).toFixed(1));$('s6-lt').textContent=s6T[s6.m];
+  const T=+$('s6-t').value,icbo=2e-9*Math.pow(2,(T-25)/10);
+  $('s6-tv').textContent=T+' °C';$('s6-t').setAttribute('aria-valuetext',T+' °C');
+  $('s6-icbo').textContent=fmtA(icbo);
+  $('s6-ic').textContent=s6.m==='open'?fmtA(101*icbo)+'，即 ICEO':s6.m==='res'?fmtA(icbo)+' ~ '+fmtA(101*icbo)+'，电阻越小越接近 ICBO':'≈ '+fmtA(icbo);
+  $('s6-note').textContent=s6N[s6.m];
+}
+seg('s6-m',v=>{s6.m=v;s6u();});
+$('s6-t').addEventListener('input',s6u);
+s6u();
+</script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UART 工作流程 · 动态图解</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>UART <span>异步串口</span>工作流程</h1>
+  <p>Universal Asynchronous Receiver/Transmitter —— 一切串口通信的基础</p>
+</header>
+
+<nav>
+  <a href="index.html" class="home">🏠 协议总览</a>
+  <a href="#s1">① 连接方式</a>
+  <a href="#s2">② 帧格式</a>
+  <a href="#s3">③ 波特率与采样</a>
+  <a href="#s4">④ 完整流程</a>
+  <a href="#s5">⑤ 参数速查</a>
+</nav>
+
+<main>
+
+<!-- ① 连接 -->
+<section id="s1">
+  <h2><span class="num">1</span>连接方式:TX、RX 交叉相连,没有时钟线</h2>
+  <p class="desc">
+    UART 是<b>点对点、全双工、异步</b>串行通信:双方只需 3 根线——我的 TX 接你的 RX,你的 TX 接我的 RX,再共地。
+    没有时钟线,收发双方靠<b>事先约定相同的波特率</b>来对齐每一位的时间。点击播放看数据双向传输。
+  </p>
+  <div class="stage">
+    <svg id="svgLink" viewBox="0 0 900 260" width="900" height="260">
+      <!-- 设备A -->
+      <rect x="60" y="40" width="180" height="180" rx="14" fill="#1b2440" stroke="#2a3654" stroke-width="2"/>
+      <text x="150" y="75" fill="#e8edf7" font-size="17" text-anchor="middle" font-weight="bold">MCU A</text>
+      <text x="215" y="115" fill="#4cc9f0" font-size="13" text-anchor="end">TX</text>
+      <text x="215" y="165" fill="#4ade80" font-size="13" text-anchor="end">RX</text>
+      <text x="215" y="210" fill="#8fa0c0" font-size="13" text-anchor="end">GND</text>
+      <!-- 设备B -->
+      <rect x="660" y="40" width="180" height="180" rx="14" fill="#1b2440" stroke="#2a3654" stroke-width="2"/>
+      <text x="750" y="75" fill="#e8edf7" font-size="17" text-anchor="middle" font-weight="bold">MCU B</text>
+      <text x="685" y="115" fill="#4ade80" font-size="13">RX</text>
+      <text x="685" y="165" fill="#4cc9f0" font-size="13">TX</text>
+      <text x="685" y="210" fill="#8fa0c0" font-size="13">GND</text>
+      <!-- 连线: A.TX(110) -> B.RX(110); B.TX(160) -> A.RX(160); GND(205) -->
+      <line x1="240" y1="110" x2="660" y2="110" stroke="#4cc9f0" stroke-width="3"/>
+      <line x1="240" y1="160" x2="660" y2="160" stroke="#4ade80" stroke-width="3"/>
+      <line x1="240" y1="205" x2="660" y2="205" stroke="#5b6b8c" stroke-width="3"/>
+      <text x="450" y="100" fill="#4cc9f0" font-size="12" text-anchor="middle">A→B 数据</text>
+      <text x="450" y="152" fill="#4ade80" font-size="12" text-anchor="middle">B→A 数据</text>
+      <text x="450" y="228" fill="#8fa0c0" font-size="12" text-anchor="middle">共地</text>
+      <g id="ballAB" opacity="0">
+        <rect x="-26" y="-11" width="52" height="22" rx="6" fill="#fbbf24"/>
+        <text y="5" fill="#0d1220" font-size="12" text-anchor="middle" font-weight="bold">0x41</text>
+      </g>
+      <g id="ballBA" opacity="0">
+        <rect x="-26" y="-11" width="52" height="22" rx="6" fill="#a78bfa"/>
+        <text y="5" fill="#0d1220" font-size="12" text-anchor="middle" font-weight="bold">0x55</text>
+      </g>
+    </svg>
+  </div>
+  <div class="controls"><button id="btnLink">▶ 播放:全双工同时收发</button></div>
+  <div class="status" id="stLink">全双工 = 两根独立数据线,收与发可以同时进行、互不干扰。</div>
+  <div class="cards">
+    <div class="card"><b>异步</b><br>没有时钟线,靠起始位「对表」、靠约定波特率保持节拍一致。</div>
+    <div class="card"><b>点对点</b><br>一对一通信,不能像 CAN/485 那样挂很多设备。</div>
+    <div class="card"><b>电平即 TTL</b><br>UART 本身只是逻辑时序;接上不同电平芯片就变成 RS-232、RS-485。</div>
+  </div>
+</section>
+
+<!-- ② 帧格式 -->
+<section id="s2">
+  <h2><span class="num">2</span>帧格式:起始位 + 数据位 + 校验位 + 停止位</h2>
+  <p class="desc">
+    总线空闲时保持<b>高电平</b>。发送一个字节:先拉低 1 位作<b>起始位</b>(告诉对方「开始了」),
+    然后<b>低位在前(LSB First)</b>发 8 个数据位,可选 1 位奇偶校验,最后回到高电平作<b>停止位</b>。
+    下面演示发送字符 <code>'A' = 0x41 = 0b01000001</code>(8N1 格式)。
+  </p>
+  <div class="stage">
+    <svg id="svgFrame" viewBox="0 0 940 260" width="940" height="260">
+      <g stroke="#2a3654" stroke-width="1">
+        <line x1="50" y1="80" x2="920" y2="80"/>
+        <line x1="50" y1="160" x2="920" y2="160"/>
+      </g>
+      <text x="14" y="85" fill="#8fa0c0" font-size="12">高(1)</text>
+      <text x="14" y="165" fill="#8fa0c0" font-size="12">低(0)</text>
+      <g id="frGrid"></g>
+      <path id="frWave" fill="none" stroke="#4cc9f0" stroke-width="3"/>
+      <line id="frScan" x1="0" y1="55" x2="0" y2="185" stroke="#fbbf24" stroke-width="2" opacity="0"/>
+      <text id="frCur" x="470" y="245" fill="#fbbf24" font-size="18" text-anchor="middle" font-weight="bold"></text>
+    </svg>
+  </div>
+  <div class="controls"><button id="btnFr">▶ 播放:发送字节 0x41 ('A')</button></div>
+  <div class="status" id="stFr">注意:数据位是低位先行,0x41 的 8 位按 D0→D7 顺序发出是 1,0,0,0,0,0,1,0。</div>
+</section>
+
+<!-- ③ 采样 -->
+<section id="s3">
+  <h2><span class="num">3</span>接收方如何读:检测起始沿 + 位中间采样</h2>
+  <p class="desc">
+    接收方一直盯着线上电平:发现<b>高→低跳变</b>就认定是起始位,从这一刻起按约定波特率计时,
+    在<b>每一位的正中间</b>采样一次(实际芯片用 16 倍过采样找中点)。在中间采样最抗抖动——
+    即使双方时钟有 ±2~3% 偏差,一帧 10 位内也不会采错位。
+  </p>
+  <div class="stage">
+    <svg id="svgSamp" viewBox="0 0 940 280" width="940" height="280">
+      <g stroke="#2a3654" stroke-width="1">
+        <line x1="50" y1="80" x2="920" y2="80"/>
+        <line x1="50" y1="160" x2="920" y2="160"/>
+      </g>
+      <g id="spGrid"></g>
+      <path id="spWave" fill="none" stroke="#4cc9f0" stroke-width="3"/>
+      <g id="spDots"></g>
+      <text id="spCur" x="470" y="235" fill="#fbbf24" font-size="17" text-anchor="middle" font-weight="bold"></text>
+      <text id="spByte" x="470" y="264" fill="#4ade80" font-size="15" text-anchor="middle"></text>
+    </svg>
+  </div>
+  <div class="controls"><button id="btnSp">▶ 播放:接收方采样还原字节</button></div>
+  <div class="status" id="stSp">红点 = 采样时刻。看接收方如何一位一位把 0x41 还原出来。</div>
+</section>
+
+<!-- ④ 流程 -->
+<section id="s4">
+  <h2><span class="num">4</span>一次完整收发的流程串讲</h2>
+  <p class="desc">从应用程序写入一个字节,到对方应用程序读到它:</p>
+  <div class="stage">
+    <svg id="svgFlow" viewBox="0 0 940 430" width="940" height="430"><g id="flowSteps"></g></svg>
+  </div>
+  <div class="controls"><button id="btnFlow">▶ 播放完整流程</button></div>
+  <div class="status" id="stFlow">点击播放,高亮框会依次走完 6 个步骤。</div>
+</section>
+
+<!-- ⑤ 参数 -->
+<section id="s5">
+  <h2><span class="num">5</span>参数速查与优缺点</h2>
+  <p class="desc">串口助手里常见的「115200-8-N-1」就是这四个参数:</p>
+  <table class="cmp">
+    <tr><th>参数</th><th>常见取值</th><th>含义</th></tr>
+    <tr><td>波特率</td><td>9600 / 115200 / 921600</td><td>每秒传输的位数,双方必须一致</td></tr>
+    <tr><td>数据位</td><td>8(也有 5~9)</td><td>一帧里的有效数据位数</td></tr>
+    <tr><td>校验位</td><td>N 无 / E 偶 / O 奇</td><td>简单的 1 位差错检测</td></tr>
+    <tr><td>停止位</td><td>1 / 1.5 / 2</td><td>帧尾高电平的持续时间</td></tr>
+  </table>
+  <div class="cards">
+    <div class="card"><b>优点</b><br>极简单、全双工、几乎所有芯片都有;调试打印首选。</div>
+    <div class="card"><b>缺点</b><br>点对点、无地址、无应答重发机制;波特率不一致直接乱码。</div>
+    <div class="card"><b>效率账</b><br>8N1 每 10 位只有 8 位有效,效率 80%;115200bps ≈ 11.5KB/s。</div>
+  </div>
+  <div class="status" style="margin-top:16px">
+    一句话总结:UART = 约定波特率 + 起始位对表 + LSB 先行 + 位中间采样。它是 RS-232 / RS-485 的「逻辑内核」。
+  </div>
+</section>
+
+</main>
+<footer>UART 工作流程动态图解 · <a href="index.html" style="color:var(--accent)">返回协议总览</a></footer>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const SVGNS="http://www.w3.org/2000/svg";
+function el(t,a,p){const e=document.createElementNS(SVGNS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ① 全双工动画 */
+let linkBusy=false;
+$("btnLink").onclick=async()=>{
+  if(linkBusy)return;linkBusy=true;
+  const st=$("stLink"),ab=$("ballAB"),ba=$("ballBA");
+  st.textContent="A 的 TX 正在发 0x41,同一时刻 B 的 TX 也在发 0x55 —— 两条线互不干扰。";
+  ab.setAttribute("opacity",1);ba.setAttribute("opacity",1);
+  const t0=performance.now(),dur=2600;
+  await new Promise(res=>{(function step(now){
+    const p=Math.min((now-t0)/dur,1);
+    ab.setAttribute("transform",`translate(${270+(630-270)*p},110)`);
+    ba.setAttribute("transform",`translate(${630-(630-270)*p},160)`);
+    p<1?requestAnimationFrame(step):res();
+  })(t0);});
+  ab.setAttribute("opacity",0);ba.setAttribute("opacity",0);
+  st.textContent="完成:A→B 与 B→A 同时到达。这就是「全双工」——收发各占一根线,无需轮流。";
+  linkBusy=false;
+};
+
+/* ② 帧格式波形 */
+const frBits=[
+  {v:1,l:"空闲",c:"#8fa0c0"},{v:0,l:"起始",c:"#ff6b6b"},
+  {v:1,l:"D0",c:"#4ade80"},{v:0,l:"D1",c:"#4ade80"},{v:0,l:"D2",c:"#4ade80"},{v:0,l:"D3",c:"#4ade80"},
+  {v:0,l:"D4",c:"#4ade80"},{v:0,l:"D5",c:"#4ade80"},{v:1,l:"D6",c:"#4ade80"},{v:0,l:"D7",c:"#4ade80"},
+  {v:1,l:"停止",c:"#a78bfa"},{v:1,l:"空闲",c:"#8fa0c0"},
+];
+function buildGrid(gid,bits,x0,x1){
+  const g=$(gid),bw=(x1-x0)/bits.length;
+  bits.forEach((b,i)=>{
+    el("line",{x1:x0+i*bw,y1:55,x2:x0+i*bw,y2:185,stroke:"#2a3654","stroke-dasharray":"4 4"},g);
+    const t=el("text",{x:x0+i*bw+bw/2,y:205,"font-size":13,"text-anchor":"middle",fill:b.c,"font-weight":"bold"},g);
+    t.textContent=b.l;
+    const t2=el("text",{x:x0+i*bw+bw/2,y:48,"font-size":12,"text-anchor":"middle",fill:"#5b6b8c"},g);
+    t2.textContent=b.v;
+  });
+  return bw;
+}
+const FRX0=50,FRX1=920;
+const frBW=buildGrid("frGrid",frBits,FRX0,FRX1);
+const yOf=v=>v?80:160;
+let frBusy=false;
+$("btnFr").onclick=async()=>{
+  if(frBusy)return;frBusy=true;
+  const w=$("frWave"),scan=$("frScan"),cur=$("frCur"),st=$("stFr");
+  w.setAttribute("d","");scan.setAttribute("opacity",1);
+  let d=`M ${FRX0} ${yOf(frBits[0].v)}`;
+  const msg={"空闲":"空闲:线路保持高电平","起始":"起始位:拉低 1 位,接收方以此「对表」同步",
+    "停止":"停止位:回到高电平,一帧结束"};
+  for(let i=0;i<frBits.length;i++){
+    const b=frBits[i];
+    cur.textContent=msg[b.l]||`数据位 ${b.l} = ${b.v}(低位先行)`;
+    cur.setAttribute("fill",b.c);
+    if(i>0)d+=` L ${FRX0+i*frBW} ${yOf(b.v)}`;
+    const t0=performance.now(),dur=520;
+    await new Promise(res=>{(function step(now){
+      const p=Math.min((now-t0)/dur,1),x=FRX0+i*frBW+frBW*p;
+      w.setAttribute("d",d+` L ${x} ${yOf(b.v)}`);
+      scan.setAttribute("x1",x);scan.setAttribute("x2",x);
+      p<1?requestAnimationFrame(step):res();
+    })(t0);});
+    d+=` L ${FRX0+(i+1)*frBW} ${yOf(b.v)}`;
+  }
+  scan.setAttribute("opacity",0);
+  cur.textContent="一帧发完:起始1位 + 数据8位 + 停止1位 = 10 位";
+  cur.setAttribute("fill","#fbbf24");
+  st.textContent="D0→D7 依次为 1,0,0,0,0,0,1,0,倒过来读就是 0b01000001 = 0x41 = 'A'。";
+  frBusy=false;
+};
+
+/* ③ 采样动画 */
+const spBW=buildGrid("spGrid",frBits,FRX0,FRX1);
+(function drawStaticWave(){
+  let d=`M ${FRX0} ${yOf(frBits[0].v)}`;
+  frBits.forEach((b,i)=>{
+    if(i>0)d+=` L ${FRX0+i*spBW} ${yOf(b.v)}`;
+    d+=` L ${FRX0+(i+1)*spBW} ${yOf(b.v)}`;
+  });
+  $("spWave").setAttribute("d",d);
+})();
+let spBusy=false;
+$("btnSp").onclick=async()=>{
+  if(spBusy)return;spBusy=true;
+  const dots=$("spDots"),cur=$("spCur"),byteT=$("spByte"),st=$("stSp");
+  dots.innerHTML="";byteT.textContent="";
+  cur.textContent="监听中……发现高→低跳变!确认起始位,开始按波特率计时";
+  cur.setAttribute("fill","#ff6b6b");
+  el("circle",{cx:FRX0+spBW,cy:160,r:0,fill:"#ff6b6b"},dots)
+    .appendChild(el("animate",{attributeName:"r",from:0,to:7,dur:"0.3s",fill:"freeze"}));
+  await sleep(1300);
+  let bitsGot=[];
+  for(let i=2;i<=9;i++){
+    const b=frBits[i];
+    const dot=el("circle",{cx:FRX0+i*spBW+spBW/2,cy:yOf(b.v),r:0,fill:"#fbbf24"},dots);
+    dot.appendChild(el("animate",{attributeName:"r",from:0,to:7,dur:"0.25s",fill:"freeze"}));
+    bitsGot.push(b.v);
+    cur.textContent=`在 ${b.l} 位的正中间采样 → 读到 ${b.v}`;
+    cur.setAttribute("fill","#fbbf24");
+    byteT.textContent="已收:"+bitsGot.join(" ")+"(D0→D"+(bitsGot.length-1)+")";
+    await sleep(750);
+  }
+  cur.textContent="停止位为高 ✔ 一帧接收有效";
+  cur.setAttribute("fill","#a78bfa");
+  byteT.textContent="重排 D7→D0:01000001 = 0x41 = 'A' ✔";
+  st.textContent="采样点全部落在位中间,即使时钟有小偏差也稳稳读对。这就是异步通信能工作的原因。";
+  spBusy=false;
+};
+
+/* ④ 流程 */
+const flowSteps=[
+  {t:"① 应用写入",d:"CPU 把字节写入发送寄存器 TDR,硬件自动搬进发送移位寄存器。"},
+  {t:"② 组帧发送",d:"硬件自动加上起始位/校验位/停止位,按波特率逐位移出到 TX 引脚。"},
+  {t:"③ 线上传输",d:"电平沿导线传到对方 RX;线上只有电平变化,没有时钟。"},
+  {t:"④ 检测起始位",d:"接收方检测到下降沿,16 倍过采样确认不是毛刺,启动位定时器。"},
+  {t:"⑤ 采样组装",d:"每位中间采样,移位寄存器凑满一字节,校验通过后放入 RDR。"},
+  {t:"⑥ 通知应用",d:"置位接收标志/触发中断或 DMA,应用程序读走字节,完成一次传输。"},
+];
+(function buildFlow(){
+  const g=$("flowSteps");
+  const cols=3,cw=290,ch=150,gapx=18,gapy=44,x0=30,y0=30;
+  flowSteps.forEach((s,i)=>{
+    const r=Math.floor(i/cols),c=i%cols;
+    const x=x0+c*(cw+gapx),y=y0+r*(ch+gapy);
+    s.box=el("rect",{x,y,width:cw,height:ch,rx:12,fill:"#1b2440",stroke:"#2a3654","stroke-width":2},g);
+    const t1=el("text",{x:x+16,y:y+34,"font-size":17,fill:"#4cc9f0","font-weight":"bold"},g);
+    t1.textContent=s.t;
+    const lineLen=17;
+    for(let l=0;l*lineLen<s.d.length&&l<5;l++){
+      const t2=el("text",{x:x+16,y:y+62+l*22,"font-size":13,fill:"#8fa0c0"},g);
+      t2.textContent=s.d.slice(l*lineLen,(l+1)*lineLen);
+    }
+    if(i<flowSteps.length-1){
+      if(c<cols-1)
+        el("path",{d:`M ${x+cw+2} ${y+ch/2} l 12 0 m 0 0 l -6 -5 m 6 5 l -6 5`,stroke:"#5b6b8c","stroke-width":2,fill:"none"},g);
+      else
+        el("path",{d:`M ${x+cw/2} ${y+ch+4} l 0 34 L ${x0+cw/2} ${y+ch+38} l 0 -34 m 0 34 l -5 -8 m 5 8 l 5 -8`,stroke:"#5b6b8c","stroke-width":2,fill:"none"},g);
+    }
+  });
+})();
+let flowBusy=false;
+$("btnFlow").onclick=async()=>{
+  if(flowBusy)return;flowBusy=true;
+  const st=$("stFlow");
+  flowSteps.forEach(s=>{s.box.setAttribute("stroke","#2a3654");s.box.setAttribute("fill","#1b2440");});
+  for(const s of flowSteps){
+    s.box.setAttribute("stroke","#fbbf24");s.box.setAttribute("fill","#26304f");
+    st.textContent=s.t+" —— "+s.d;
+    await sleep(2400);
+    s.box.setAttribute("stroke","#4ade80");
+  }
+  st.textContent="流程走完!整个组帧/采样过程由 UART 外设硬件自动完成,CPU 只管读写寄存器。";
+  flowBusy=false;
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>逻辑分析仪触发</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.smp{fill:var(--low)}
+.mk{stroke:var(--danger);stroke-width:1.5}
+.dead{fill:var(--panel);fill-opacity:.78}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#pcb">PCB与调试</a><span class="sp"></span><span>08 / 08</span></nav>
+<header>
+  <span class="eyebrow">PCB与调试 · 测量仪器</span>
+  <h1>逻辑分析仪触发</h1>
+  <p class="lede">逻辑分析仪只关心每根线是高还是低，但能同时看很多根线，还能把波形翻译成协议。用好它的关键是触发：告诉它从哪一刻开始记，以及要不要把触发之前发生的事也留下来。</p>
+</header>
+
+<section id="vs">
+  <span class="eyebrow">逻辑分析仪 · 示波器 · 采样率</span>
+  <h2>它和示波器各看什么</h2>
+  <p>逻辑分析仪把每个采样点和一个阈值电压比较，高于阈值记 1，低于记 0。所以它看不到幅度、振铃和边沿形状，换来的是通道多、记录长、能直接解码协议。</p>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>示波器</th><th>逻辑分析仪</th></tr></thead>
+    <tbody>
+      <tr><td>通道数</td><td>2~4 个</td><td>8 到几十个，常见 16 个</td></tr>
+      <tr><td>看到什么</td><td>真实的模拟电压</td><td>只有 0 和 1</td></tr>
+      <tr><td>擅长</td><td>信号质量：过冲、振铃、上升时间、纹波</td><td>多路时序关系、协议解码（I2C、SPI、UART）、长时间记录</td></tr>
+      <tr><td>看不到</td><td>通道少，多路时序很难一次看全</td><td>电平不够、振铃、慢边沿：只要越过阈值就当成干净的 0/1</td></tr>
+    </tbody>
+  </table></div>
+  <p>边沿只能落在采样点上，所以时间误差最多一个采样间隔，比一个采样间隔还窄的毛刺可能整个漏掉。一般要求采样率至少是信号最高频率的 4 倍，想看清时序关系取 10 倍左右（经验值）。</p>
+  <p class="eq">时间分辨率 = 1 / 采样率；边沿误差 ≤ 1 个采样间隔</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 200" role="img" aria-label="上排是真实的 1 MHz 时钟和一个 150 ns 毛刺，蓝点是采样时刻；下排是逻辑分析仪按采样点记录下来的 0/1 波形">
+        <text x="56" y="28" class="tm">真实信号</text>
+        <text x="317" y="28" text-anchor="middle" class="tm">150 ns 毛刺</text>
+        <text x="56" y="104" class="tm">分析仪记录</text>
+        <polyline id="s1-sig" class="cv" points="56,76 446,76"/>
+        <g id="s1-dots"></g>
+        <polyline id="s1-cap" class="real" points="56,152 446,152"/>
+        <path class="ax" d="M56,162 H446"/>
+        <text x="56" y="178" text-anchor="middle" class="v">0</text>
+        <text x="153.5" y="178" text-anchor="middle" class="v">1</text>
+        <text x="251" y="178" text-anchor="middle" class="v">2</text>
+        <text x="348.5" y="178" text-anchor="middle" class="v">3</text>
+        <text x="446" y="178" text-anchor="end" class="v">4</text>
+        <text x="446" y="195" text-anchor="end" class="tm">时间 µs</text>
+      </svg>
+      <figcaption>示意：1 MHz 时钟，2.0 µs 处有一个 150 ns 的毛刺。蓝点是采样时刻，橙线是分析仪按采样点重建出来的 0/1 波形：每个点的值一直保持到下一个点。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">采样率</span>
+        <div class="seg" id="s1-fs"><button id="s1-fs-2" data-v="2" aria-pressed="false">2 MS/s</button><button id="s1-fs-4" data-v="4" aria-pressed="true">4 MS/s</button><button id="s1-fs-10" data-v="10" aria-pressed="false">10 MS/s</button><button id="s1-fs-50" data-v="50" aria-pressed="false">50 MS/s</button></div></div>
+      <dl class="read">
+        <dt>采样间隔 1/fs</dt><dd id="s1-ts">—</dd>
+        <dt>每个周期采样点</dt><dd id="s1-n">—</dd>
+        <dt>边沿误差上限</dt><dd id="s1-e">—</dd>
+        <dt>150 ns 毛刺</dt><dd id="s1-g">—</dd>
+        <dt>结论</dt><dd><span id="s1-st" class="chip warn">毛刺漏掉</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="trig">
+  <span class="eyebrow">触发方式 · 预触发</span>
+  <h2>触发：从哪一刻开始记</h2>
+  <p>分析仪的存储深度有限，只能记一段时间窗。触发条件决定这段窗口对准哪里，常用三种：</p>
+  <ul>
+    <li><b>边沿触发</b>：某个通道出现上升沿或下降沿就触发，比如中断线 INT 拉低。</li>
+    <li><b>电平 / 码型触发</b>：几个通道同时满足一个高低组合就触发，比如 SCL = 1 且 SDA = 0。</li>
+    <li><b>协议触发</b>：分析仪实时解码总线，出现指定内容才触发，比如 I2C 访问地址 0x50。</li>
+  </ul>
+  <p>触发点不一定在窗口最左边。分析仪一直在循环写缓冲区，触发后再记够设定的长度才停，所以触发之前的一段数据也留着，这叫预触发。排查故障时，"起因"往往发生在触发之前。</p>
+  <p class="eq">记录窗口 = 预触发 + 后触发 = 存储深度 / 采样率</p>
+  <p>下面的场景：MCU 先给 0x3C 写一个字节，然后传感器拉低 INT 请求读数，MCU 再从 0x50 读一个字节。目标是把"INT 拉低到读完数据"的全过程录下来。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 222" role="img" aria-label="I2C 的 SCL、SDA 和中断线 INT 三通道时序图，红线是触发点，蓝色底是预触发部分，绿色底是后触发部分，灰掉的部分没有被记录">
+        <rect id="s2-zpre" class="zone-cut" x="56" y="26" width="0" height="130"/>
+        <rect id="s2-zpost" class="zone-ok" x="56" y="26" width="0" height="130"/>
+        <text x="48" y="64" text-anchor="end" class="t">SCL</text>
+        <text x="48" y="104" text-anchor="end" class="t">SDA</text>
+        <text x="48" y="144" text-anchor="end" class="t">INT</text>
+        <text x="72" y="42" text-anchor="middle" class="v">S</text>
+        <text x="109" y="42" text-anchor="middle" class="v">3C 写</text>
+        <text x="182" y="42" text-anchor="middle" class="v">40</text>
+        <text x="228" y="42" text-anchor="middle" class="v">P</text>
+        <text x="275" y="42" text-anchor="middle" class="v">S</text>
+        <text x="312" y="42" text-anchor="middle" class="v">50 读</text>
+        <text x="385" y="42" text-anchor="middle" class="v">A5</text>
+        <text x="431" y="42" text-anchor="middle" class="v">P</text>
+        <polyline id="s2-scl" class="cv" points="56,52 446,52"/>
+        <polyline id="s2-sda" class="cv" points="56,92 446,92"/>
+        <polyline id="s2-int" class="cv" points="56,132 446,132"/>
+        <rect id="s2-dl" class="dead" x="56" y="26" width="0" height="130"/>
+        <rect id="s2-dr" class="dead" x="446" y="26" width="0" height="130"/>
+        <line id="s2-tm" class="mk" x1="300" y1="22" x2="300" y2="158"/>
+        <text id="s2-tt" x="300" y="18" text-anchor="middle" class="t" style="fill:var(--danger)">触发</text>
+        <text id="s2-lpre" x="200" y="172" text-anchor="middle" class="tm">触发前</text>
+        <text id="s2-lpost" x="360" y="172" text-anchor="middle" class="tm">触发后</text>
+        <path class="ax" d="M56,180 H446"/>
+        <text x="56" y="196" text-anchor="middle" class="v">0</text>
+        <text x="121" y="196" text-anchor="middle" class="v">80</text>
+        <text x="186" y="196" text-anchor="middle" class="v">160</text>
+        <text x="251" y="196" text-anchor="middle" class="v">240</text>
+        <text x="316" y="196" text-anchor="middle" class="v">320</text>
+        <text x="381" y="196" text-anchor="middle" class="v">400</text>
+        <text x="446" y="196" text-anchor="end" class="v">480</text>
+        <text x="446" y="214" text-anchor="end" class="tm">时间 µs</text>
+      </svg>
+      <figcaption>I2C 100 kHz，示意。第一行是分析仪的协议解码：S 起始、P 停止，字节以十六进制显示。存储深度按 10 MS/s × 240 µs = 2400 点，窗口外灰掉的部分没有被记录。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">触发条件</span>
+        <div class="seg" id="s2-t"><button id="s2-t-edge" data-v="edge" aria-pressed="false">边沿：INT ↓</button><button id="s2-t-pat" data-v="pat" aria-pressed="false">码型：SCL=1 且 SDA=0</button><button id="s2-t-pro" data-v="pro" aria-pressed="true">协议：地址 0x50</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s2-pre">预触发比例</label>
+        <span class="rv" id="s2-prev">50%</span>
+        <input type="range" id="s2-pre" min="0" max="90" step="10" value="50"></div>
+      <dl class="read">
+        <dt>触发时刻</dt><dd id="s2-rt">—</dd>
+        <dt>记录窗口</dt><dd id="s2-rw">—</dd>
+        <dt>触发前 / 触发后</dt><dd id="s2-rpp">—</dd>
+        <dt>INT 拉低（起因）</dt><dd id="s2-ri">—</dd>
+        <dt>0x50 读操作</dt><dd id="s2-rb">—</dd>
+        <dt>全过程</dt><dd><span id="s2-st" class="chip on">都录到了</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>逻辑分析仪和示波器有什么区别？什么时候用哪个？</summary>
+      <div class="ans"><p>示波器看真实的模拟电压，通道少，适合看信号质量：过冲、振铃、边沿、纹波。逻辑分析仪只记 0 和 1，但通道多、记录长、能解码协议，适合看多路时序关系和通信内容。一般先用逻辑分析仪确认"逻辑对不对"，怀疑电平或边沿有问题时再上示波器。</p></div></details>
+    <details><summary>逻辑分析仪的采样率怎么选？</summary>
+      <div class="ans"><p>至少是信号最高频率的 4 倍，想看清时序关系取 10 倍左右。因为边沿只能落在采样点上，误差最多一个采样间隔；要抓毛刺，采样间隔还得比毛刺窄。采样率越高，同样的存储深度能录的时间越短，要两头权衡。</p></div></details>
+    <details><summary>常用的触发方式有哪些？</summary>
+      <div class="ans"><p>边沿触发：某通道出现上升或下降沿。电平或码型触发：几个通道同时满足一个高低组合。协议触发：解码后出现指定内容，比如 I2C 某个地址、UART 某个字节、SPI 某个命令。很多分析仪还支持脉宽触发和多级顺序触发。</p></div></details>
+    <details><summary>预触发有什么用？</summary>
+      <div class="ans"><p>保留触发之前的数据。分析仪一直在循环写缓冲区，触发后再记够设定长度才停。排查故障时，常用"出错"作为触发条件，比如收到 NACK 或错误标志拉高，而真正的起因在它之前，这时要把预触发比例调大往回看。</p></div></details>
+    <details><summary>怎么抓一个偶发的 I2C 通信错误？</summary>
+      <div class="ans"><p>用协议触发，条件设成 NACK 或者目标地址，单次触发模式，预触发调到一半左右，存储深度尽量大。也可以在固件里检测到错误时翻转一个空闲 GPIO，用这个 GPIO 的边沿触发，前后都能看到。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="07-示波器带宽与采样率.html"><span>上一页</span>示波器带宽与采样率</a><a class="next" href="../index.html#pcb"><span>下一页</span>返回目录</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 采样率 */
+const s1={fs:4},s1X=scale(0,4,56,446),s1Ph=0.17,s1G=[2.0,2.15];/* 时间单位 µs，fs 单位 MS/s */
+const s1Ev=[[0.3,1],[0.8,0],[1.3,1],[1.8,0],[2.0,1],[2.15,0],[2.3,1],[2.8,0],[3.3,1],[3.8,0]];
+const s1Sig=t=>{const p=((t-0.3)%1+1)%1;return p<0.5||(t>=s1G[0]&&t<s1G[1])?1:0;};
+function s1Step(ev,t0,v0,yh,yl){
+  let v=v0;const p=[s1X(t0).toFixed(1)+','+(v?yh:yl)];
+  ev.forEach(([t,nv])=>{if(nv!==v){const x=s1X(t).toFixed(1);p.push(x+','+(v?yh:yl),x+','+(nv?yh:yl));v=nv;}});
+  p.push(s1X(4).toFixed(1)+','+(v?yh:yl));return p.join(' ');
+}
+$('s1-sig').setAttribute('points',s1Step(s1Ev,0,0,40,76));
+function s1u(){
+  const fs=s1.fs,Ts=1/fs,sm=[];
+  for(let k=0;;k++){const t=s1Ph+k*Ts;if(t>4)break;sm.push([t,s1Sig(t)]);}
+  const g=$('s1-dots');g.replaceChildren();
+  sm.forEach(([t,v])=>g.append(svgEl('circle',{class:'smp',cx:s1X(t).toFixed(1),cy:v?40:76,r:fs>20?2:3})));
+  $('s1-cap').setAttribute('points',s1Step(sm,sm[0][0],sm[0][1],116,152));
+  const gn=sm.filter(([t])=>t>=s1G[0]&&t<s1G[1]).length,ns=Ts*1000;
+  $('s1-ts').textContent=ns.toFixed(0)+' ns';
+  $('s1-n').textContent=fs+' 个';
+  $('s1-e').textContent='≤ '+ns.toFixed(0)+' ns，占周期 '+(100/fs).toFixed(0)+'%';
+  $('s1-g').textContent=gn?'抓到，记录宽 '+(gn*ns).toFixed(0)+' ns':'漏掉';
+  if(fs<4)chip($('s1-st'),'采样率不足','bad');else if(!gn)chip($('s1-st'),'毛刺漏掉','warn');else chip($('s1-st'),'够用','on');
+  let n='每个周期 '+fs+' 个采样点，边沿位置误差最多 '+ns.toFixed(0)+' ns，占周期的 '+(100/fs).toFixed(0)+'%。';
+  if(fs<4)n+='低于 4 倍，时序关系已经不可信。它看起来仍是一个"正常"的方波，只是整体错开了，这种错最难发现。';
+  n+=gn?' 毛刺被抓到了，记录宽度 '+(gn*ns).toFixed(0)+' ns（真实 150 ns），误差也是一个采样间隔的量级。':' 150 ns 的毛刺落在两个采样点之间，完全没被记录。';
+  if(fs>=50)n+=' 代价是同样的存储深度只能录更短的时间。';
+  $('s1-note').textContent=n;
+}
+seg('s1-fs',v=>{s1.fs=+v;s1u();});
+s1u();
+/* 2. 触发条件与预触发 */
+const s2X=t=>56+t*0.8125,s2W=240,s2={t:'pro'},s2T={edge:250,pat:20,pro:350};/* 时间单位 µs */
+const s2Ev={scl:[],sda:[],int:[[250,0],[445,1]]};
+function s2Bits(v,ack){const b=[];for(let i=7;i>=0;i--)b.push(v>>i&1);b.push(ack);return b;}
+/* 一笔 I2C：起始、若干字节（含应答位）、停止；每位 10 µs，SCL 前半低后半高 */
+function s2I2c(ts,bytes){
+  s2Ev.sda.push([ts,0]);let s=ts+5;s2Ev.scl.push([s,0]);
+  bytes.forEach(b=>b.forEach(bit=>{s2Ev.sda.push([s+1,bit]);s2Ev.scl.push([s+5,1]);s2Ev.scl.push([s+10,0]);s+=10;}));
+  s2Ev.sda.push([s+1,0]);s2Ev.scl.push([s+5,1]);s2Ev.sda.push([s+7,1]);
+}
+s2I2c(20,[s2Bits(0x3C<<1,0),s2Bits(0x40,0)]);
+s2I2c(270,[s2Bits(0x50<<1|1,0),s2Bits(0xA5,1)]);
+function s2Line(ev,yh,yl){let v=1;const p=[s2X(0)+','+yh];
+  ev.forEach(([t,nv])=>{if(nv!==v){const x=s2X(t).toFixed(1);p.push(x+','+(v?yh:yl),x+','+(nv?yh:yl));v=nv;}});
+  p.push(s2X(480)+','+(v?yh:yl));return p.join(' ');}
+$('s2-scl').setAttribute('points',s2Line(s2Ev.scl,52,68));
+$('s2-sda').setAttribute('points',s2Line(s2Ev.sda,92,108));
+$('s2-int').setAttribute('points',s2Line(s2Ev.int,132,148));
+const s2N={
+  edge:'边沿触发：INT 一拉低就触发，触发点就是起因本身。适合"某根线一变化就开始看"的场合。',
+  pat:'码型触发：SCL = 1 且 SDA = 0 这个组合第一次出现就触发，也就是 0x3C 那笔传输的起始条件。数据位里这个组合还会反复出现，所以它只能抓"第一次"。',
+  pro:'协议触发：分析仪实时解码 I2C，看到地址 0x50、读方向才触发，前面那笔 0x3C 的写操作被跳过了。触发点在地址字节的最后一位，INT 拉低发生在它之前 100 µs。'
+};
+function s2u(){
+  const pre=+$('s2-pre').value/100,t=s2T[s2.t],a=t-pre*s2W,b=t+(1-pre)*s2W,a0=Math.max(0,a);
+  const intOK=250>=a0&&250<=b,bOK=a0<=270&&b>=462;
+  const xa=s2X(a0),xt=s2X(t),xb=s2X(Math.min(480,b));
+  $('s2-zpre').setAttribute('x',xa.toFixed(1));$('s2-zpre').setAttribute('width',(xt-xa).toFixed(1));
+  $('s2-zpost').setAttribute('x',xt.toFixed(1));$('s2-zpost').setAttribute('width',(xb-xt).toFixed(1));
+  $('s2-dl').setAttribute('width',(xa-56).toFixed(1));
+  $('s2-dr').setAttribute('x',xb.toFixed(1));$('s2-dr').setAttribute('width',(446-xb).toFixed(1));
+  $('s2-tm').setAttribute('x1',xt.toFixed(1));$('s2-tm').setAttribute('x2',xt.toFixed(1));
+  $('s2-tt').setAttribute('x',Math.max(70,Math.min(430,xt)).toFixed(1));
+  $('s2-lpre').setAttribute('x',((xa+xt)/2).toFixed(1));show($('s2-lpre'),xt-xa>44);
+  $('s2-lpost').setAttribute('x',((xt+xb)/2).toFixed(1));show($('s2-lpost'),xb-xt>44);
+  $('s2-prev').textContent=(pre*100).toFixed(0)+'%';$('s2-pre').setAttribute('aria-valuetext',(pre*100).toFixed(0)+'%');
+  $('s2-rt').textContent=t+' µs';
+  $('s2-rw').textContent=a0.toFixed(0)+' ~ '+b.toFixed(0)+' µs';
+  $('s2-rpp').textContent=(t-a0).toFixed(0)+' µs / '+(b-t).toFixed(0)+' µs';
+  $('s2-ri').textContent=s2.t==='edge'?'就是触发点':intOK?'录到了，在触发前 '+(t-250)+' µs':'没录到';
+  $('s2-rb').textContent=bOK?'完整':'不完整';
+  if(intOK&&bOK)chip($('s2-st'),'都录到了','on');else if(bOK)chip($('s2-st'),'缺了起因','warn');else if(intOK)chip($('s2-st'),'后半段没录到','warn');else chip($('s2-st'),'没对准','bad');
+  let n=s2N[s2.t];
+  if(a<0)n+=' 触发发生在开始采集后 '+t+' µs，预触发缓冲还没填满。';
+  if(b<250||(s2.t==='pat'&&!bOK))n+=' 触发点对准的是第一笔传输，窗口够不到后面的读操作，调预触发也没用，要换触发条件。';
+  else{
+    if(!intOK)n+=' 预触发太少，INT 拉低发生在窗口之前，看不到起因。把预触发比例调大。';
+    if(!bOK)n+=b<462?' 后触发太短，读操作没录完。把预触发比例调小。':' 读操作的开头不在窗口里。';
+    if(intOK&&bOK)n+=' 当前窗口正好覆盖从 INT 拉低到读完数据的全过程。';
+  }
+  $('s2-note').textContent=n;
+}
+seg('s2-t',v=>{s2.t=v;s2u();});
+$('s2-pre').addEventListener('input',s2u);
+s2u();
+</script>
+</body>
+</html>

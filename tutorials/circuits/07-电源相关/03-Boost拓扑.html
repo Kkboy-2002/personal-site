@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Boost拓扑</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#power">电源相关</a><span class="sp"></span><span>03 / 08</span></nav>
+<header>
+  <span class="eyebrow">电源相关 · 升压变换器</span>
+  <h1>Boost 拓扑</h1>
+  <p class="lede">Boost 把 Buck 的元件换了位置：电感放在输入端，开关管接地，二极管串到输出。开关导通时电感从输入储能，关断时电感电压叠加在 Vin 上一起推向输出，所以输出比输入高。</p>
+</header>
+
+<section id="ckt">
+  <span class="eyebrow">电路 · 两个状态</span>
+  <h2>导通储能，关断释放</h2>
+  <p>白板画法：Vin → 电感 L → SW 节点 → 二极管（阳极接 SW，阴极接输出）→ Vout。SW 节点往下接开关管 Q 到地。Vout 往下画输出电容和负载。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 270" role="img" aria-label="Boost 电路：Vin 经电感 L 到 SW 节点，SW 经开关管 Q 接地，SW 经二极管 D 接到输出，输出接电容 Cout 和负载">
+        <circle class="r" cx="60" cy="150" r="14"/>
+        <text x="60" y="147" text-anchor="middle" class="tm">+</text>
+        <text x="60" y="160" text-anchor="middle" class="tm">−</text>
+        <text x="40" y="146" text-anchor="end" class="t">Vin</text>
+        <text x="40" y="162" text-anchor="end" class="v">5 V</text>
+        <path class="w" d="M60,136 V70 H110 M60,164 V230 H420"/>
+        <path class="w" d="M120,230 V240 M106,240 H134 M111,245 H129 M116,250 H124"/>
+        <circle class="dot" cx="120" cy="230" r="3.5"/>
+        <path class="w" d="M110,70 a7,7 0 0 1 14,0 a7,7 0 0 1 14,0 a7,7 0 0 1 14,0 a7,7 0 0 1 14,0"/>
+        <text x="138" y="36" text-anchor="middle" class="t">L 10 µH</text>
+        <text id="b3-vl" x="138" y="54" text-anchor="middle" class="v">VL +5 V</text>
+        <text id="b3-lp" x="114" y="92" text-anchor="middle" class="t hi">+</text>
+        <text id="b3-lm" x="162" y="92" text-anchor="middle" class="t lo">−</text>
+        <path id="b3-sww" class="w s-lo" style="stroke-width:3" d="M166,70 H232 M200,70 V110"/>
+        <circle class="dot" cx="200" cy="70" r="3.5"/>
+        <text x="192" y="96" text-anchor="end" class="t">SW</text>
+        <text id="b3-sw" x="192" y="112" text-anchor="end" class="v lo">0.05 V</text>
+        <!-- 开关管 Q -->
+        <path class="w" d="M200,190 V230"/>
+        <g transform="translate(180,150)">
+          <path class="w" d="M0,-14 H20 V-40 M0,14 H20 V40 M0,0 H20 V14 M-8,-16 V16 M-30,0 H-8"/>
+          <line class="bar" x1="0" y1="-18" x2="0" y2="-10"/>
+          <line class="bar" x1="0" y1="-4" x2="0" y2="4"/>
+          <line class="bar" x1="0" y1="10" x2="0" y2="18"/>
+          <polygon class="ah" points="3,0 11,-4 11,4"/>
+        </g>
+        <text x="146" y="154" text-anchor="end" class="tm">PWM</text>
+        <text x="210" y="150" class="t">Q 开关管</text>
+        <text id="b3-qs" x="210" y="166" class="v hi">开</text>
+        <circle class="dot" cx="200" cy="230" r="3.5"/>
+        <!-- 二极管 -->
+        <polygon class="r" points="232,60 232,80 248,70"/>
+        <path class="w" d="M248,60 V80 M244,60 H248 M248,80 H252"/>
+        <path class="w" d="M248,70 H420 V124 M420,176 V230"/>
+        <text x="240" y="50" text-anchor="middle" class="t">D 肖特基</text>
+        <text id="b3-ds" x="240" y="98" text-anchor="middle" class="tm">反偏截止</text>
+        <!-- 输出 -->
+        <circle class="dot" cx="320" cy="70" r="3.5"/>
+        <circle class="dot" cx="320" cy="230" r="3.5"/>
+        <path class="w" d="M320,70 V146 M320,154 V230"/>
+        <path class="w" style="stroke-width:3" d="M306,146 H334 M306,154 H334"/>
+        <text x="334" y="138" class="t">Cout</text>
+        <text x="370" y="58" text-anchor="middle" class="v hi">Vout 12 V</text>
+        <rect class="box lit" x="411" y="124" width="18" height="52" rx="2"/>
+        <text x="436" y="146" class="t">负载</text>
+        <text x="436" y="162" class="v">0.5 A</text>
+        <path id="b3-fon" class="flow" d="M60,134 V70 H200 V136 H182 V164 H200 V228 H62 V166"/>
+        <path id="b3-fcap" class="flow thin" d="M320,142 V72 H420 V228 H320 V158"/>
+        <path id="b3-foff" class="flow" d="M60,134 V70 H420 V228 H62 V166" hidden/>
+      </svg>
+      <figcaption>粗虚线是电感电流，细虚线是 Q 导通期间输出电容独自给负载供电的电流。示例条件：Vin 5 V，Vout 12 V，负载 0.5 A，D ≈ 0.58。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">开关管 Q</span>
+        <div class="seg" id="b3-s"><button id="b3-s-on" data-v="on" aria-pressed="true">导通</button><button id="b3-s-off" data-v="off" aria-pressed="false">关断</button></div></div>
+      <dl class="read">
+        <dt>SW 节点电压</dt><dd id="b3-rsw">≈ 0 V</dd>
+        <dt>电感电压 VL</dt><dd id="b3-rvl">+5 V</dd>
+        <dt>电感电流斜率</dt><dd id="b3-rdi">+0.50 A/µs</dd>
+        <dt>二极管</dt><dd id="b3-rd">反偏截止</dd>
+        <dt>负载由谁供电</dt><dd id="b3-rld">输出电容</dd>
+        <dt>电感</dt><dd><span id="b3-st" class="chip on">储能，电流上升</span></dd>
+      </dl>
+      <p class="note" id="b3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="gain">
+  <span class="eyebrow">输出电压 · 寄生电阻</span>
+  <h2>Vout = Vin / (1 − D)，但 D 接近 1 时升不上去</h2>
+  <p>伏秒平衡：导通时电感两端是 Vin，关断时是 Vin − Vout（负的）。Vin·D·T = (Vout − Vin)·(1 − D)·T，解出 Vout = Vin / (1 − D)。</p>
+  <p>理想公式里 D → 1 时输出趋于无穷，实际做不到。因为能量守恒，电感平均电流 = Iout / (1 − D)，D 越大电感电流越大，电感 DCR、开关管 Rds(on) 上的 I²R 损耗急剧增加。把电感 DCR 记作 RL，负载电阻记作 R：</p>
+  <p class="eq">Vout = Vin / (1 − D) · 1 / (1 + RL / ((1 − D)²·R))</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 356" role="img" aria-label="上图为 Boost 输出电压随占空比变化的理想与实际曲线，下图为当前占空比下的电感电流三角波">
+        <line class="gl" x1="56" y1="30" x2="500" y2="30"/><line class="gl" x1="56" y1="70" x2="500" y2="70"/><line class="gl" x1="56" y1="110" x2="500" y2="110"/>
+        <line class="gl" x1="167" y1="30" x2="167" y2="150"/><line class="gl" x1="278" y1="30" x2="278" y2="150"/><line class="gl" x1="389" y1="30" x2="389" y2="150"/>
+        <path class="ax" d="M56,30 V150 H500"/>
+        <text x="60" y="22" class="tm">Vout / V</text>
+        <text x="50" y="34" text-anchor="end" class="v">60</text>
+        <text x="50" y="74" text-anchor="end" class="v">40</text>
+        <text x="50" y="114" text-anchor="end" class="v">20</text>
+        <text x="50" y="154" text-anchor="end" class="v">0</text>
+        <text x="56" y="166" text-anchor="middle" class="v">0</text>
+        <text x="167" y="166" text-anchor="middle" class="v">0.25</text>
+        <text x="278" y="166" text-anchor="middle" class="v">0.5</text>
+        <text x="389" y="166" text-anchor="middle" class="v">0.75</text>
+        <text x="500" y="166" text-anchor="end" class="v">1</text>
+        <text x="500" y="182" text-anchor="end" class="tm">占空比 D</text>
+        <polyline id="b3-ci" class="ideal" points="56,140 400,40"/>
+        <polyline id="b3-cr" class="real" points="56,140 400,60"/>
+        <text id="b3-cit" x="448" y="42" text-anchor="end" class="tm">理想 Vin/(1−D)</text>
+        <text id="b3-crt" x="470" y="100" text-anchor="end" class="t" style="fill:var(--copper)">含电感 DCR</text>
+        <circle id="b3-mi" class="dot" cx="278" cy="120" r="4" style="fill:var(--muted)"/>
+        <circle id="b3-mr" class="dot" cx="278" cy="122" r="4.5" style="fill:var(--copper)"/>
+        <line class="gl" x1="56" y1="240" x2="500" y2="240"/><line class="gl" x1="278" y1="210" x2="278" y2="320"/>
+        <path class="ax" d="M56,210 V320 H500"/>
+        <text x="60" y="202" class="tm">电感电流 iL / A</text>
+        <text id="b3-y1" x="50" y="214" text-anchor="end" class="v">4</text>
+        <text id="b3-y2" x="50" y="269" text-anchor="end" class="v">2</text>
+        <text x="50" y="324" text-anchor="end" class="v">0</text>
+        <line class="gl" x1="56" y1="265" x2="500" y2="265"/>
+        <text x="56" y="336" text-anchor="middle" class="v">0</text>
+        <text x="278" y="336" text-anchor="middle" class="v">2</text>
+        <text x="500" y="336" text-anchor="end" class="v">4</text>
+        <text x="500" y="352" text-anchor="end" class="tm">时间 / µs</text>
+        <line id="b3-iavg" class="ideal" x1="56" y1="270" x2="500" y2="270"/>
+        <text id="b3-iavgt" x="496" y="264" text-anchor="end" class="tm">平均 = Iout / (1 − D)</text>
+        <polyline id="b3-il" class="real2" points="56,270 500,270"/>
+      </svg>
+      <figcaption>条件：Vin 5 V，负载电阻 10 Ω，L 10 µH，f 500 kHz。只计入电感 DCR，实际电路里开关管 Rds(on) 和二极管压降会让曲线更低。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="b3-d">占空比 D</label>
+        <span class="rv" id="b3-dv">0.50</span>
+        <input type="range" id="b3-d" min="0" max="0.95" step="0.01" value="0.5"></div>
+      <div class="ctl"><span class="ctl-l">电感 DCR（寄生电阻 RL）</span>
+        <div class="seg" id="b3-r"><button id="b3-r-1" data-v="0.05" aria-pressed="false">50 mΩ</button><button id="b3-r-2" data-v="0.1" aria-pressed="true">100 mΩ</button><button id="b3-r-3" data-v="0.3" aria-pressed="false">300 mΩ</button></div></div>
+      <dl class="read">
+        <dt>理想 Vout</dt><dd id="b3-vi">10.0 V</dd>
+        <dt>实际 Vout</dt><dd id="b3-vr">9.62 V</dd>
+        <dt>电感平均电流</dt><dd id="b3-ia">1.92 A</dd>
+        <dt>纹波 ΔIL = Vin·D/(L·f)</dt><dd id="b3-di">0.50 A</dd>
+        <dt>DCR 损耗 IL²·RL</dt><dd id="b3-pl">0.37 W</dd>
+        <dt>效率（仅计 DCR）</dt><dd id="b3-eta">96%</dd>
+        <dt>状态</dt><dd><span id="b3-st2" class="chip on">正常升压</span></dd>
+      </dl>
+      <p class="note" id="b3-note2"></p>
+    </div>
+  </div>
+</section>
+
+<section id="cmp">
+  <span class="eyebrow">对照 · Buck-Boost</span>
+  <h2>Boost 和 Buck 放在一起看</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>对比项</th><th>Buck 降压</th><th>Boost 升压</th></tr></thead>
+    <tbody>
+      <tr><td>电感位置</td><td>输出侧，SW 与 Vout 之间</td><td>输入侧，Vin 与 SW 之间</td></tr>
+      <tr><td>开关管</td><td>上管，串在 Vin 与 SW 之间</td><td>下管，SW 到地，驱动简单</td></tr>
+      <tr><td>二极管</td><td>SW 到地，阴极朝 SW</td><td>SW 到输出，阳极朝 SW</td></tr>
+      <tr><td>电压关系</td><td>Vout = D·Vin</td><td>Vout = Vin / (1 − D)</td></tr>
+      <tr><td>电流连续性</td><td>输入电流断续，输出电流连续</td><td>输入电流连续，输出电流断续（二极管电流是脉冲）</td></tr>
+      <tr><td>纹波压力</td><td>输入电容</td><td>输出电容</td></tr>
+      <tr><td>关断后</td><td>上管一关，输出和输入断开</td><td>Vin 经 L、D 直通输出，关不断，输出短路时没有保护</td></tr>
+    </tbody>
+  </table></div>
+  <p>其实是同一个电路反着用：把 Buck 的输入输出对调，上管变成二极管、二极管变成下管，就是 Boost。同步 Boost 把二极管换成上管 MOS。</p>
+  <p>两个都要时用 Buck-Boost。经典反相 Buck-Boost 只用一个开关、一个电感、一个二极管，电感接地，输出为负：</p>
+  <p class="eq">Vout = −Vin·D / (1 − D)</p>
+  <p>D 小于 0.5 降压，大于 0.5 升压。要正输出就用四开关 Buck-Boost（一个 Buck 半桥加一个 Boost 半桥共用电感），锂电池 3~4.2 V 转 3.3 V 就是典型场合；也可以用 SEPIC。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>画一下 Boost，讲讲为什么能升压？</summary>
+      <div class="ans"><p>开关管导通时，电感直接跨在 Vin 上，电流上升储能，二极管反偏，负载靠输出电容供电。开关管关断时，电感电流不能突变，电感电压反向，和 Vin 串联叠加，把 SW 顶到比 Vout 高一个二极管压降，经二极管给电容和负载供电。伏秒平衡得 Vout = Vin / (1 − D)。</p></div></details>
+    <details><summary>理论上 D 趋近 1 输出趋于无穷，实际为什么不行？</summary>
+      <div class="ans"><p>电感平均电流等于 Iout / (1 − D)，D 越接近 1 电流越大，电感 DCR、MOS 导通电阻、二极管上的损耗按电流平方上升。输出电压会先升到一个峰值再往下掉，效率也越来越差。另外关断时间太短，二极管也来不及把能量送出去。实际 Boost 一般做到 3~5 倍左右（典型值），再高就用变压器类拓扑。</p></div></details>
+    <details><summary>Boost 芯片关断了，输出为什么还有电压？</summary>
+      <div class="ans"><p>因为 Vin 经电感和二极管是直通到输出的，输出约为 Vin − VF。要真正断开需要加负载开关，或者选带"真关断"功能的同步 Boost。同样原因，Boost 输出短路时电流不受开关管控制，需要额外的保护。</p></div></details>
+    <details><summary>Boost 和 Buck 哪个输出纹波更大？</summary>
+      <div class="ans"><p>同等条件下 Boost 更大。Boost 的输出电流来自二极管，是断续的脉冲，导通期间负载全靠输出电容撑着，电容上的电流接近方波，ESR 压降也大。Buck 的输出电流经过电感，是连续的三角波。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="02-Buck拓扑.html"><span>上一页</span>Buck 拓扑</a><a class="next" href="04-开关频率与效率.html"><span>下一页</span>开关频率与效率</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 两个状态 */
+const b3={on:true};
+function b3u(){
+  const on=b3.on,vin=5,vo=12,vf=0.4,L=10;
+  const sw=on?0.05:vo+vf,vl=vin-sw,di=vl/L;
+  show($('b3-fon'),on);show($('b3-fcap'),on);show($('b3-foff'),!on);
+  $('b3-qs').textContent=on?'开':'关';setLv($('b3-qs'),null,on);
+  $('b3-sw').textContent=fmtV(sw);setLv($('b3-sw'),$('b3-sww'),!on);
+  $('b3-lp').textContent=on?'+':'−';$('b3-lm').textContent=on?'−':'+';
+  setLv($('b3-lp'),null,on);setLv($('b3-lm'),null,!on);
+  $('b3-vl').textContent='VL '+(vl>0?'+':'')+fmtV(vl,1);
+  $('b3-ds').textContent=on?'反偏截止':'正偏导通';
+  $('b3-rsw').textContent=on?'≈ 0 V，被 Q 接地':fmtV(sw)+'，= Vout + VF';
+  $('b3-rvl').textContent=on?'Vin = +5.0 V':'Vin − SW = '+fmtV(vl);
+  $('b3-rdi').textContent=(di>0?'+':'−')+Math.abs(di).toFixed(2)+' A/µs';
+  $('b3-rd').textContent=on?'反偏：阳极 ≈ 0 V，阴极 12 V':'导通，电感电流全部流向输出';
+  $('b3-rld').textContent=on?'只有输出电容，电容电压缓慢下降':'电感，同时给电容补充电荷';
+  chip($('b3-st'),on?'储能，电流上升':'放能，电流下降',on?'on':'warn');
+  $('b3-note').textContent=on
+    ?'Q 导通，SW 接地，电感两端就是 Vin，左正右负，电流线性上升，能量存进电感。二极管阴极是 12 V、阳极接近 0 V，反偏截止，输出电容独自撑着负载。'
+    :'Q 关断。电感电流不能突变，电感电压反向成左负右正，和 Vin 串联叠加，把 SW 顶到 Vout + VF = 12.4 V，二极管导通。电流路径：Vin → L → D → 输出电容和负载 → 地。电感两端是 Vin − Vout，为负，电流下降。';
+}
+seg('b3-s',v=>{b3.on=v==='on';b3u();});
+b3u();
+
+/* 2. 输出电压与寄生电阻 */
+const b3p={RL:0.1,R:10,vin:5,L:10e-6,f:500e3};
+const b3Xd=scale(0,1,56,500),b3Yv=scale(0,60,150,30),b3Xt=scale(0,2,56,500);
+const b3Nice=v=>{const e=Math.pow(10,Math.floor(Math.log10(v)));for(const m of [1,2,2.5,5,10])if(m*e>=v)return m*e;return 10*e;};
+function b3M(D,RL){return 1/(1-D)/(1+RL/((1-D)*(1-D)*b3p.R));}
+function b3u2(){
+  const D=+$('b3-d').value,RL=b3p.RL,vin=b3p.vin;
+  const vi=vin/(1-D),vr=vin*b3M(D,RL),ia=vr/b3p.R/(1-D),di=vin*D/(b3p.L*b3p.f),pl=ia*ia*RL,eta=1/(1+RL/((1-D)*(1-D)*b3p.R));
+  const cap=v=>v<=60?v:NaN;
+  $('b3-ci').setAttribute('points',plot(x=>cap(vin/(1-x)),0,0.95,b3Xd,b3Yv,190));
+  $('b3-cr').setAttribute('points',plot(x=>cap(vin*b3M(x,RL)),0,0.95,b3Xd,b3Yv,190));
+  const dm=1-Math.sqrt(RL/b3p.R),vmax=vin*b3M(dm,RL);
+  $('b3-crt').setAttribute('x',Math.min(b3Xd(dm)+60,496).toFixed(1));$('b3-crt').setAttribute('y',(b3Yv(vmax)-8).toFixed(1));
+  $('b3-mi').setAttribute('cx',b3Xd(D).toFixed(1));$('b3-mi').setAttribute('cy',b3Yv(Math.min(vi,60)).toFixed(1));
+  $('b3-mr').setAttribute('cx',b3Xd(D).toFixed(1));$('b3-mr').setAttribute('cy',b3Yv(vr).toFixed(1));
+  const ipk=ia+di/2,iv=Math.max(ia-di/2,0),ym=b3Nice(ipk*1.1),Yi=scale(0,ym,320,210);
+  $('b3-y1').textContent=+ym.toFixed(2);$('b3-y2').textContent=+(ym/2).toFixed(2);
+  const pts=[];for(let k=0;k<2;k++){pts.push(b3Xt(k).toFixed(1)+','+Yi(iv).toFixed(1));pts.push(b3Xt(k+D).toFixed(1)+','+Yi(ipk).toFixed(1));}
+  pts.push(b3Xt(2).toFixed(1)+','+Yi(iv).toFixed(1));
+  $('b3-il').setAttribute('points',pts.join(' '));
+  ['y1','y2'].forEach(a=>$('b3-iavg').setAttribute(a,Yi(ia).toFixed(1)));
+  $('b3-iavgt').setAttribute('y',(Yi(ia)-6).toFixed(1));
+  $('b3-dv').textContent=D.toFixed(2);$('b3-d').setAttribute('aria-valuetext',D.toFixed(2));
+  $('b3-vi').textContent=vi>999?'> 999 V':fmtV(vi);$('b3-vr').textContent=fmtV(vr);
+  $('b3-ia').textContent=fmtA(ia)+'，是 Iout 的 '+(1/(1-D)).toFixed(1)+' 倍';
+  $('b3-di').textContent=fmtA(di);$('b3-pl').textContent=fmtP(pl);$('b3-eta').textContent=(eta*100).toFixed(0)+'%';
+  let n;
+  if(D>dm){chip($('b3-st2'),'越过峰值','bad');n='D 已经超过 '+dm.toFixed(2)+'，这是这条曲线的顶点。再加大占空比，电感电流继续变大，DCR 上的压降涨得比升压还快，输出反而下降。闭环控制器会越调越错，这是 Boost 的一个经典失控点。';}
+  else if(eta<0.85){chip($('b3-st2'),'效率明显下降','warn');n='输出还在涨，但电感电流已是 Iout 的 '+(1/(1-D)).toFixed(1)+' 倍，DCR 损耗 '+fmtP(pl)+'，实际输出比理想值低了 '+((1-vr/vi)*100).toFixed(0)+'%。';}
+  else if(D===0){chip($('b3-st2'),'不开关','off');n='D = 0 时 Q 一直关断，Vin 经电感和二极管直通输出，Vout ≈ Vin（图中忽略二极管压降）。这就是 Boost 关不断的原因。';}
+  else{chip($('b3-st2'),'正常升压','on');n='实际曲线和理想曲线贴得很近。往右拖 D，看两条线从哪里开始分开；再把 DCR 换成 300 mΩ，峰值会明显提前。';}
+  $('b3-note2').textContent=n;
+}
+seg('b3-r',v=>{b3p.RL=parseFloat(v);b3u2();});
+$('b3-d').addEventListener('input',b3u2);
+b3u2();
+</script>
+</body>
+</html>

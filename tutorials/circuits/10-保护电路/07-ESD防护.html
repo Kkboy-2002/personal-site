@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ESD防护</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.plate{stroke:currentColor;stroke-width:3;stroke-linecap:round}
+figure svg+svg{margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#protect">保护电路</a><span class="sp"></span><span>07 / 08</span></nav>
+<header>
+  <span class="eyebrow">保护电路 · 静电防护</span>
+  <h1>ESD 防护</h1>
+  <p class="lede">静电放电电压几千伏、上升沿只有 1 ns 左右，芯片自带的防护扛不住整机接口上的静电。下面先看放电波形有多猛，再看 ESD 器件放在哪、怎么接地，最后看高速线为什么要选低电容器件。</p>
+</header>
+
+<section id="model">
+  <span class="eyebrow">静电放电 · 模型与波形</span>
+  <h2>几千伏、几十安、一纳秒</h2>
+  <p>人在干燥环境里走过地毯、脱毛衣，身上能带几千伏甚至上万伏静电。人能感觉到的放电大约在 3 kV 以上（典型值），更低的放电根本察觉不到，芯片却可能已经被打坏了。</p>
+  <p>ESD 的能量很小，只有毫焦级，危险在于电压高、速度快。MOS 管的栅氧只能承受几伏到几十伏，几千伏一来直接击穿；大电流挤在很小的结面积上，会把硅或金属局部熔化。上升沿只有 1 ns 左右，走线上 1 nH 的电感就能感应出几十伏。</p>
+  <p>ESD 用等效放电网络来描述：电容先充到 V，再经电阻对被测引脚放电。器件级用人体模型 HBM，100 pF + 1.5 kΩ，模拟带电的人用手指碰芯片引脚。整机接口要过 IEC 61000-4-2，150 pF + 330 Ω，模拟人手握金属工具碰接口，电阻小，电流大得多，上升沿也更快。</p>
+  <p class="eq">HBM 峰值 Ip ≈ V / 1.5 kΩ　　IEC 首峰 ≈ 3.75 A/kV　　感应电压 = L·di/dt　　能量 E = ½·C·V²</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 140" role="img" aria-label="ESD 等效放电网络：电容先充到高压，开关闭合后经电阻对被测引脚放电">
+        <text id="s1-cv" x="60" y="26" text-anchor="middle" class="v hi">充到 2 kV</text>
+        <path class="w" d="M60,62 V40 H130 M162,40 H200 M250,40 H330 V62 M330,98 V110 M60,72 V110"/>
+        <line class="plate" x1="46" y1="62" x2="74" y2="62"/>
+        <line class="plate" x1="46" y1="72" x2="74" y2="72"/>
+        <text x="84" y="64" class="t">C</text>
+        <text id="s1-cl" x="84" y="80" class="v">100 pF</text>
+        <circle class="dot" cx="130" cy="40" r="3.5"/>
+        <circle class="dot" cx="162" cy="40" r="3.5"/>
+        <path class="w" d="M130,40 L160,34"/>
+        <text x="146" y="60" text-anchor="middle" class="tm">S 闭合</text>
+        <rect class="r" x="200" y="32" width="50" height="16" rx="2"/>
+        <text x="225" y="24" text-anchor="middle" class="t">R</text>
+        <text id="s1-rl" x="225" y="66" text-anchor="middle" class="v">1.5 kΩ</text>
+        <rect class="box" x="296" y="62" width="68" height="36" rx="4"/>
+        <text x="330" y="85" text-anchor="middle" class="t">被测引脚</text>
+        <path class="w" d="M46,110 H74 M51,115 H69 M56,120 H64 M316,110 H344 M321,115 H339 M326,120 H334"/>
+        <path class="flow" d="M60,58 V40 H330 V60 M330,100 V108"/>
+        <text id="s1-cap" x="196" y="134" text-anchor="middle" class="tm">HBM 等效：人体电容 100 pF 经身体电阻 1.5 kΩ 放电</text>
+      </svg>
+      <svg viewBox="0 0 460 200" role="img" aria-label="放电电流随时间变化的波形，可切换 HBM 与 IEC 61000-4-2 模型">
+        <line class="gl" x1="56" y1="26" x2="440" y2="26"/>
+        <line class="gl" x1="56" y1="96" x2="440" y2="96"/>
+        <path class="ax" d="M56,20 V166 H440"/>
+        <text id="s1-y2" x="50" y="30" text-anchor="end" class="v">1.4</text>
+        <text id="s1-y1" x="50" y="100" text-anchor="end" class="v">0.7</text>
+        <text x="50" y="170" text-anchor="end" class="v">0</text>
+        <text x="60" y="14" class="tm">放电电流 / A</text>
+        <text x="56" y="182" text-anchor="middle" class="v">0</text>
+        <text id="s1-x1" x="152" y="182" text-anchor="middle" class="v">100</text>
+        <text id="s1-x2" x="248" y="182" text-anchor="middle" class="v">200</text>
+        <text id="s1-x3" x="344" y="182" text-anchor="middle" class="v">300</text>
+        <text id="s1-x4" x="440" y="182" text-anchor="end" class="v">400</text>
+        <text x="440" y="197" text-anchor="end" class="tm">时间 / ns</text>
+        <polyline id="s1-w" class="real" points=""/>
+        <circle id="s1-pd" class="dot" cx="0" cy="0" r="4.5" style="fill:var(--danger)"/>
+        <text id="s1-pl" x="0" y="0" class="t" style="fill:var(--danger)"></text>
+      </svg>
+      <figcaption>上：等效放电网络，绿色虚线是放电电流。下：放电电流波形，红点是峰值。IEC 波形按标准附录给出的解析式计算，HBM 按双指数近似，均为示意。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">放电模型</span>
+        <div class="seg" id="s1-m"><button id="s1-m-hbm" data-v="hbm" aria-pressed="true">HBM 人体模型</button><button id="s1-m-iec" data-v="iec" aria-pressed="false">IEC 61000-4-2 接触</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-rng">静电电压</label>
+        <span class="rv" id="s1-kv">2 kV</span>
+        <input type="range" id="s1-rng" min="1" max="8" step="1" value="2"></div>
+      <div class="ctl"><span class="ctl-l">时间轴</span>
+        <div class="seg" id="s1-z"><button id="s1-z-a" data-v="a" aria-pressed="true">全程</button><button id="s1-z-b" data-v="b" aria-pressed="false">只看前 10 ns</button></div></div>
+      <dl class="read">
+        <dt>放电网络</dt><dd id="s1-net">100 pF + 1.5 kΩ</dd>
+        <dt>峰值电流</dt><dd id="s1-ip">1.33 A</dd>
+        <dt>上升时间 10%~90%</dt><dd id="s1-tr">3.8 ns</dd>
+        <dt>最大 di/dt</dt><dd id="s1-di">0.3 A/ns</dd>
+        <dt>1 nH 走线上感应</dt><dd id="s1-vl">0.3 V</dd>
+        <dt>能量 ½·C·V²</dt><dd id="s1-e">0.2 mJ</dd>
+        <dt>对比芯片 2 kV HBM</dt><dd><span id="s1-st" class="chip on">芯片自带结构能扛</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>模型</th><th>模拟什么</th><th>等效网络</th><th>常见等级（典型值）</th><th>上升时间</th><th>峰值电流</th></tr></thead>
+    <tbody>
+      <tr><td>HBM 人体模型</td><td>带电的人用手指碰芯片引脚</td><td class="n">100 pF + 1.5 kΩ</td><td>芯片 ±2 kV</td><td class="n">2~10 ns</td><td>2 kV 时约 1.33 A</td></tr>
+      <tr><td>CDM 带电器件模型</td><td>芯片自己在搬运中带电，引脚碰到导体放电</td><td>芯片自身几 pF，回路电阻很小</td><td>芯片 ±250~±1000 V</td><td class="n">&lt; 0.5 ns</td><td>几安到十几安，整个脉冲约 1 ns</td></tr>
+      <tr><td>IEC 61000-4-2</td><td>人手握金属工具碰整机接口</td><td class="n">150 pF + 330 Ω</td><td>4 级：接触 ±8 kV，空气 ±15 kV</td><td class="n">约 0.8 ns</td><td>8 kV 时首峰约 30 A</td></tr>
+    </tbody>
+  </table></div>
+  <p>HBM 和 CDM 是器件级指标，保证芯片在生产、焊接、搬运时不被静电打坏，那时有防静电手环和地垫。IEC 61000-4-2 是整机级指标，产品到了用户手里，接口直接暴露在外，没有任何防静电措施。两者峰值电流差二十倍以上，所以数据手册写了 2 kV HBM，接口仍然要另加 ESD 器件。</p>
+</section>
+
+<section id="layout">
+  <span class="eyebrow">布局 · 放在哪、怎么接地</span>
+  <h2>ESD 器件要贴着连接器，地线要短</h2>
+  <p>接口上的 ESD 器件（ESD 二极管或 TVS 阵列）平时不导通。静电一来它先击穿，把电压钳住，把电流导到地。它能不能护住芯片，一半看器件本身，一半看布局。</p>
+  <p>第一，放在连接器最近处，让静电一进板子就先碰到它。连接器到 ESD 器件这段走线带着全部几十安的电流，越短越好，否则会耦合到旁边的走线上。第二，地脚就近打过孔到完整的地平面。di/dt 有几十 A/ns，每 1 nH 接地电感就多出几十伏，全叠加在钳位电压上。第三，ESD 器件到芯片之间的走线电感和串联小电阻是帮手，它们让通往芯片那一路更难走，电流就更愿意走 ESD 器件。</p>
+  <p>最忌讳走线先经过芯片再到 ESD 器件。静电先打到芯片，保护器件形同虚设。</p>
+  <p class="eq">钳位点电压 ≈ Vbr + Rdyn·I + L地·di/dt　　走线电感按约 1 nH/mm 估算</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 250" role="img" aria-label="信号从接口经走线到芯片引脚，TVS 挂在走线上某处对地，可调位置、接地方式和串联电阻">
+        <text x="40" y="18" text-anchor="middle" class="t" style="fill:var(--danger)">8 kV 静电</text>
+        <path class="w s-bad" d="M40,26 L32,46 H48 L40,72"/>
+        <polygon points="40,84 34,72 46,72" style="fill:var(--danger)"/>
+        <rect class="box" x="14" y="86" width="52" height="48" rx="4"/>
+        <text x="40" y="115" text-anchor="middle" class="t">接口</text>
+        <path class="w" style="stroke-width:3" d="M66,110 H320"/>
+        <path id="s2-hot" class="w s-bad" style="stroke-width:3" d="M66,110 H91"/>
+        <path id="s2-tail" class="w" style="stroke-width:3" d="M320,110 H369" hidden/>
+        <rect class="box" x="296" y="36" width="88" height="44" rx="4"/>
+        <text x="340" y="63" text-anchor="middle" class="t">芯片</text>
+        <text id="s2-vpt" x="340" y="28" text-anchor="middle" class="v">引脚峰值 11.9 V</text>
+        <path class="w" d="M320,80 V110"/>
+        <circle class="dot" cx="320" cy="110" r="3.5"/>
+        <text x="326" y="100" class="tm">50 mm</text>
+        <g id="s2-rs" hidden>
+          <rect class="r" x="282" y="103" width="30" height="14" rx="2"/>
+          <text x="297" y="134" text-anchor="middle" class="v">Rs 22 Ω</text>
+        </g>
+        <g id="s2-tvs" transform="translate(91,0)">
+          <path class="w" d="M0,110 V140 M0,153 V168 M-10,136 L-7,140 H7 L10,144"/>
+          <polygon class="ah" points="-7,153 7,153 0,140"/>
+          <circle class="dot" cx="0" cy="110" r="3.5"/>
+          <text x="12" y="152" class="t">TVS</text>
+          <g id="s2-gs">
+            <path class="w" d="M0,168 V176 M-14,176 H14 M-9,181 H9 M-4,186 H4"/>
+            <text x="18" y="182" class="tm">就近过孔</text>
+          </g>
+          <g id="s2-gl" hidden>
+            <path class="w" d="M0,168 V200 H60 V214 M46,214 H74 M51,219 H69 M56,224 H64"/>
+            <text x="6" y="194" class="tm">细长地线</text>
+          </g>
+        </g>
+        <path id="s2-f" class="flow" d="M66,110 H91 V174"/>
+        <path id="s2-fc" class="flow thin bad" d="M93,110 H318 V82"/>
+        <path id="s2-dim" class="ax" d="M66,232 H91 M66,227 V237 M91,227 V237"/>
+        <text id="s2-dt" x="78" y="248" class="tm">d = 5 mm</text>
+      </svg>
+      <svg viewBox="0 0 460 190" role="img" aria-label="芯片引脚电压随时间变化的波形">
+        <line class="gl" x1="56" y1="20" x2="440" y2="20"/>
+        <line class="gl" x1="56" y1="52.5" x2="440" y2="52.5"/>
+        <line class="gl" x1="56" y1="85" x2="440" y2="85"/>
+        <line class="gl" x1="56" y1="117.5" x2="440" y2="117.5"/>
+        <line class="ax" x1="56" y1="133.75" x2="440" y2="133.75" style="stroke-dasharray:4 4"/>
+        <text x="436" y="146" text-anchor="end" class="tm">芯片内部钳位约 10 V 开始导通（示意）</text>
+        <path class="ax" d="M56,14 V150 H440"/>
+        <text x="50" y="24" text-anchor="end" class="v">80</text>
+        <text x="50" y="56.5" text-anchor="end" class="v">60</text>
+        <text x="50" y="89" text-anchor="end" class="v">40</text>
+        <text x="50" y="121.5" text-anchor="end" class="v">20</text>
+        <text x="50" y="154" text-anchor="end" class="v">0</text>
+        <text x="62" y="16" class="tm">芯片引脚电压 / V</text>
+        <text x="56" y="166" text-anchor="middle" class="v">0</text>
+        <text x="152" y="166" text-anchor="middle" class="v">5</text>
+        <text x="248" y="166" text-anchor="middle" class="v">10</text>
+        <text x="344" y="166" text-anchor="middle" class="v">15</text>
+        <text x="440" y="166" text-anchor="end" class="v">20</text>
+        <text x="440" y="182" text-anchor="end" class="tm">时间 / ns</text>
+        <polyline id="s2-w" class="real" points=""/>
+        <circle id="s2-pd" class="dot" cx="0" cy="0" r="4.5" style="fill:var(--danger)"/>
+        <text id="s2-pl" x="0" y="0" class="t" style="fill:var(--danger)"></text>
+      </svg>
+      <figcaption>上：芯片在距连接器 50 mm 处。红色走线段带着全部静电电流，绿色虚线是泄放到地的电流，红色细虚线是流进芯片的电流。下：芯片引脚电压。示意模型：IEC 接触放电 8 kV，走线电感按 1 nH/mm，TVS 击穿 6.5 V、动态电阻 0.4 Ω，芯片内部钳位 10 V、2 Ω。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">外部保护</span>
+        <div class="seg" id="s2-t"><button id="s2-t-0" data-v="0" aria-pressed="false">无</button><button id="s2-t-1" data-v="1" aria-pressed="true">加 TVS</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s2-rng">TVS 距连接器</label>
+        <span class="rv" id="s2-dv">5 mm</span>
+        <input type="range" id="s2-rng" min="0" max="6" step="1" value="1"></div>
+      <div class="ctl"><span class="ctl-l">TVS 接地</span>
+        <div class="seg" id="s2-g"><button id="s2-g-0" data-v="0.5" aria-pressed="true">就近过孔 0.5 nH</button><button id="s2-g-1" data-v="5" aria-pressed="false">细长地线 5 nH</button></div></div>
+      <div class="ctl"><span class="ctl-l">芯片前串电阻</span>
+        <div class="seg" id="s2-r"><button id="s2-r-0" data-v="0" aria-pressed="true">不串</button><button id="s2-r-1" data-v="22" aria-pressed="false">串 22 Ω</button></div></div>
+      <dl class="read">
+        <dt>芯片引脚电压峰值</dt><dd id="s2-vpk">11.9 V</dd>
+        <dt>流进芯片的电流峰值</dt><dd id="s2-ipk">0.95 A</dd>
+        <dt>TVS 分走</dt><dd id="s2-share">97%</dd>
+        <dt>带全部电流的走线</dt><dd id="s2-unp">5 mm</dd>
+        <dt>芯片</dt><dd><span id="s2-st" class="chip on">安全</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="cap">
+  <span class="eyebrow">高速信号 · 结电容</span>
+  <h2>高速线要选低电容 ESD 器件</h2>
+  <p>ESD 器件本质是反偏的 PN 结，平时相当于一个并在信号线上的电容，叫结电容。芯片面积越大，通流越大、钳位越低，结电容也越大。</p>
+  <p>这个电容挂在传输线上，信号边沿要先给它充电。匹配的传输线上，电容两边各看到一个 Z0，相当于经 Z0/2 充电，边沿被拖慢；它还会造成一个阻抗凹陷，产生反射。GPIO、按键、I2C 这类低速线用几十 pF 的 TVS 完全没问题；几百 Mbps 以上的高速线一般要 1 pF 以下，USB 3.x、HDMI 这类几 Gbps 的信号常选 0.5 pF 以下（典型值）。</p>
+  <p class="eq">τ = (Z0 / 2)·C　　附加上升时间 ≈ 2.2·τ = 1.1·Z0·C　　一个比特宽度 UI = 1 / 数据率</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 112" role="img" aria-label="发送端经 50 欧传输线到接收端，中间并联 ESD 器件的结电容到地">
+        <polygon class="box" points="20,40 20,80 52,60"/>
+        <text x="34" y="100" text-anchor="middle" class="tm">发送</text>
+        <path class="w" style="stroke-width:3" d="M52,60 H420"/>
+        <text x="140" y="50" text-anchor="middle" class="tm">传输线 Z0 = 50 Ω</text>
+        <circle class="dot" cx="236" cy="60" r="3.5"/>
+        <path class="w" d="M236,60 V74 M236,82 V94 M222,94 H250 M227,99 H245 M232,104 H240"/>
+        <line class="plate" x1="222" y1="74" x2="250" y2="74"/>
+        <line class="plate" x1="222" y1="82" x2="250" y2="82"/>
+        <text x="258" y="74" class="tm">ESD 结电容</text>
+        <text id="s3-cl" x="258" y="92" class="v">C = 1 pF</text>
+        <rect class="box" x="420" y="44" width="32" height="32" rx="4"/>
+        <text x="436" y="100" text-anchor="middle" class="tm">接收</text>
+      </svg>
+      <svg viewBox="0 0 460 190" role="img" aria-label="一串比特经过 ESD 电容后的波形，与理想方波对比">
+        <line class="gl" x1="56" y1="40" x2="440" y2="40"/>
+        <line class="ax" x1="56" y1="95" x2="440" y2="95" style="stroke-dasharray:4 4"/>
+        <path class="ax" d="M56,30 V150 H440"/>
+        <text x="50" y="44" text-anchor="end" class="v">高</text>
+        <text x="50" y="99" text-anchor="end" class="tm">50%</text>
+        <text x="50" y="154" text-anchor="end" class="v">低</text>
+        <g id="s3-bits"></g>
+        <path id="s3-ideal" class="ideal" d=""/>
+        <polyline id="s3-w" class="real" points=""/>
+        <text x="56" y="166" text-anchor="middle" class="v">0</text>
+        <text x="152" y="166" text-anchor="middle" class="v">2.5</text>
+        <text x="248" y="166" text-anchor="middle" class="v">5</text>
+        <text x="344" y="166" text-anchor="middle" class="v">7.5</text>
+        <text x="440" y="166" text-anchor="end" class="v">10</text>
+        <text x="440" y="182" text-anchor="end" class="tm">时间 / UI</text>
+      </svg>
+      <figcaption>上：ESD 器件的结电容并在 50 Ω 传输线中间。下：比特序列 0101100101，虚线是理想方波，橙线是经过电容后的波形，按一阶 RC 计算。判断标准为经验值：附加上升时间小于 UI 的 15% 算合适，超过 30% 眼图明显变窄。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">信号速率</span>
+        <div class="seg" id="s3-r"><button id="s3-r-12" data-v="12e6" aria-pressed="false">12 Mbps</button><button id="s3-r-480" data-v="480e6" aria-pressed="false">480 Mbps</button><button id="s3-r-5g" data-v="5e9" aria-pressed="true">5 Gbps</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s3-rng">ESD 器件结电容</label>
+        <span class="rv" id="s3-cv">0.5 pF</span>
+        <input type="range" id="s3-rng" min="0" max="8" step="1" value="2"></div>
+      <dl class="read">
+        <dt>τ = (Z0 / 2)·C</dt><dd id="s3-tau">12.5 ps</dd>
+        <dt>附加上升时间 2.2·τ</dt><dd id="s3-tr">27.5 ps</dd>
+        <dt>一个比特 UI</dt><dd id="s3-ui">200 ps</dd>
+        <dt>上升时间占 UI</dt><dd id="s3-pct">13.8%</dd>
+        <dt>结论</dt><dd><span id="s3-st" class="chip on">合适</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>信号类型</th><th>典型速率</th><th>ESD 器件电容（典型值）</th><th>选型要点</th></tr></thead>
+    <tbody>
+      <tr><td>按键、GPIO、LED</td><td>低速</td><td>几十到几百 pF 都行</td><td>优先看钳位电压和通流能力</td></tr>
+      <tr><td>I2C、UART、CAN、RS485</td><td>kbps 到几 Mbps</td><td>几 pF 到几十 pF</td><td>电容计入总线电容预算；CAN、RS485 选耐压够的双向器件</td></tr>
+      <tr><td>USB 2.0 高速</td><td>480 Mbps</td><td>1~3 pF 以下</td><td>连接器、过孔、芯片引脚的电容要一起算</td></tr>
+      <tr><td>USB 3.x、HDMI、DP</td><td>几 Gbps 以上</td><td>0.5 pF 以下，有的要 0.3 pF</td><td>选能让走线直通焊盘的封装，不留分叉</td></tr>
+      <tr><td>电源输入口</td><td>直流</td><td>不看电容</td><td>主要防浪涌，选大功率 TVS</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>ESD 是什么？为什么会损坏芯片？</summary>
+      <div class="ans"><p>ESD 就是静电放电。人体或物体带上几千伏静电，碰到芯片引脚的瞬间放电，上升时间约 1 ns，峰值电流几安到几十安。能量只有毫焦级，但电压远超栅氧耐压，会击穿栅氧；大电流挤在很小的结面积上，会局部熔化。还可能留下潜在损伤，当时能用，过一段时间才失效。</p></div></details>
+    <details><summary>HBM 和 IEC 61000-4-2 有什么区别？</summary>
+      <div class="ans"><p>HBM 是器件级，100 pF + 1.5 kΩ，模拟人手指碰芯片，芯片常标 2 kV，峰值约 1.33 A，保证生产和搬运时不坏。IEC 61000-4-2 是整机级，150 pF + 330 Ω，模拟手握金属工具碰接口，接触 8 kV 时首峰约 30 A，上升约 0.8 ns。两者差二十倍以上，所以接口还要加外部 ESD 器件。</p></div></details>
+    <details><summary>ESD 器件在 PCB 上应该怎么布局？</summary>
+      <div class="ans"><p>四条：一是放在连接器最近处，静电一进板子先碰到它；二是信号先经过 ESD 器件再到芯片，不能先经过芯片；三是地脚就近打过孔到完整地平面，接地电感越小，叠加在钳位电压上的 L·di/dt 越小；四是 ESD 器件和芯片之间保留一段走线或串小电阻，让电流优先走 ESD 器件。</p></div></details>
+    <details><summary>高速信号线为什么要用低电容 ESD 器件？</summary>
+      <div class="ans"><p>ESD 器件的结电容并在信号线上，匹配线上相当于经 Z0/2 充电，附加上升时间约 1.1·Z0·C，还会造成阻抗凹陷和反射。50 Ω 线上 1 pF 约 55 ps，对 5 Gbps（一个比特 200 ps）已经不可忽略。所以高速线一般要 1 pF 以下，USB 3.x、HDMI 常选 0.5 pF 以下。低速线反而可以用大电容 TVS，通流大、钳位低。</p></div></details>
+    <details><summary>ESD 防护里串联电阻起什么作用？</summary>
+      <div class="ans"><p>串在 ESD 器件和芯片之间，和走线电感一起增大通往芯片那一路的阻抗，让更多静电电流走 ESD 器件，同时限制流进芯片的电流。它必须放在 ESD 器件之后；放在主通路上挡不住静电，因为静电源内阻很大，近似电流源。代价是和线上电容构成 RC，所以低速线常串几十欧，高速线一般不串或只用很小的阻值。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="06-PMOS防反接.html"><span>上一页</span>PMOS防反接</a><a class="next" href="08-缓启动.html"><span>下一页</span>缓启动</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 共用：IEC 61000-4-2 附录 B 的电流解析式（4 kV 参数按电压线性缩放，首峰归一到 3.75 A/kV）；HBM 用双指数近似，峰值归一到 V / 1.5 kΩ */
+const hd=(t,a,b)=>{const x=Math.pow(t/a,1.8);return x/(1+x)*Math.exp(-t/b);};
+const iecK1=Math.exp(-(1.1/2)*Math.pow(1.8*2/1.1,1/1.8)),iecK2=Math.exp(-(12/37)*Math.pow(1.8*37/12,1/1.8));
+const iecRaw=t=>16.6/iecK1*hd(t,1.1,2)+9.3/iecK2*hd(t,12,37);
+const hbmRaw=t=>(1-Math.exp(-t/2))*Math.exp(-t/150);
+const peakOf=(f,T)=>{let m=0;for(let t=0;t<T;t+=0.001)m=Math.max(m,f(t));return m;};
+const iecN=peakOf(iecRaw,10),hbmN=peakOf(hbmRaw,30);
+const iIec=(t,kv)=>t<=0?0:iecRaw(t)/iecN*3.75*kv;
+const iHbm=(t,kv)=>t<=0?0:hbmRaw(t)/hbmN*kv*1e3/1500;
+function waveInfo(f,T,dt){let m=0,tp=0;for(let t=dt;t<T;t+=dt){const v=f(t);if(v>m){m=v;tp=t;}}
+  let a=0,b=0,d=0,p=0;for(let t=dt;t<=tp;t+=dt){const v=f(t);if(!a&&v>=0.1*m)a=t;if(!b&&v>=0.9*m)b=t;d=Math.max(d,(v-p)/dt);p=v;}
+  return {tp:tp,tr:b-a,di:d};}
+
+/* 1. 放电模型与波形 */
+const s1={m:'hbm',z:'a'};
+const s1W={
+  hbm:Object.assign({f:iHbm,C:100e-12,R:1500,T:400,net:'100 pF + 1.5 kΩ',cl:'100 pF',rl:'1.5 kΩ',cap:'HBM 等效：人体电容 100 pF 经身体电阻 1.5 kΩ 放电'},waveInfo(t=>iHbm(t,1),40,0.002)),
+  iec:Object.assign({f:iIec,C:150e-12,R:330,T:100,net:'150 pF + 330 Ω',cl:'150 pF',rl:'330 Ω',cap:'IEC 等效：150 pF 经 330 Ω 放电，模拟手握金属工具'},waveInfo(t=>iIec(t,1),10,0.001))
+};
+const s1YM=[0.5,1,1.5,2,3,4,5,6,8,10,12,15,20,25,30,35,40];
+function s1u(){
+  const w=s1W[s1.m],kv=+$('s1-rng').value,iec=s1.m==='iec',T=s1.z==='b'?10:w.T;
+  const ip=w.f(w.tp,kv),ym=s1YM.find(v=>v>=ip*1.08)||40,X=scale(0,T,56,440),Y=scale(0,ym,166,26);
+  $('s1-w').setAttribute('points',plot(t=>w.f(t,kv),0,T,X,Y,400));
+  ['s1-x1','s1-x2','s1-x3','s1-x4'].forEach((id,i)=>$(id).textContent=+(T*(i+1)/4).toFixed(1));
+  $('s1-y2').textContent=ym;$('s1-y1').textContent=+(ym/2).toFixed(2);
+  const px=X(w.tp),py=Y(ip),rt=px>330;
+  $('s1-pd').setAttribute('cx',px.toFixed(1));$('s1-pd').setAttribute('cy',py.toFixed(1));
+  $('s1-pl').setAttribute('x',(px+(rt?-10:8)).toFixed(1));$('s1-pl').setAttribute('y',(py+(rt?18:5)).toFixed(1));
+  $('s1-pl').setAttribute('text-anchor',rt?'end':'start');
+  $('s1-pl').textContent='峰值 '+fmtA(ip);
+  $('s1-kv').textContent=kv+' kV';$('s1-rng').setAttribute('aria-valuetext',kv+' kV');
+  $('s1-cv').textContent='充到 '+kv+' kV';$('s1-cl').textContent=w.cl;$('s1-rl').textContent=w.rl;$('s1-cap').textContent=w.cap;
+  const di=w.di*kv,E=0.5*w.C*Math.pow(kv*1e3,2),ratio=ip/(2e3/1500);
+  $('s1-net').textContent=w.net;$('s1-ip').textContent=fmtA(ip);
+  $('s1-tr').textContent=w.tr.toFixed(2)+' ns';
+  $('s1-di').textContent=di.toFixed(di<1?2:1)+' A/ns';
+  $('s1-vl').textContent=fmtV(di,di<10?1:0);
+  $('s1-e').textContent=(E*1e3).toFixed(E<1e-3?2:1)+' mJ';
+  if(iec)chip($('s1-st'),'是它的 '+ratio.toFixed(1)+' 倍','bad');
+  else if(kv>2)chip($('s1-st'),'超过常见的 2 kV 等级','warn');
+  else chip($('s1-st'),'芯片自带结构能扛','on');
+  $('s1-note').textContent=iec
+    ?'整机测试的放电电阻只有 330 Ω，'+kv+' kV 时首峰达 '+fmtA(ip)+'，是芯片 2 kV HBM 电流的 '+ratio.toFixed(1)+' 倍。开头那个窄尖峰来自手握金属工具靠近时一小部分电荷的极快放电，上升只有约 0.8 ns；后面的宽峰才是 150 pF 经 330 Ω 放电。最大 di/dt 约 '+di.toFixed(0)+' A/ns，1 nH 的走线电感上就会感应出 '+fmtV(di,0)+'，这就是 ESD 器件接地线要短的原因。'
+    :'HBM 的放电电阻 1.5 kΩ 远大于芯片引脚的阻抗，电流基本由它决定：Ip ≈ V / 1.5 kΩ = '+fmtA(ip)+'。时间常数 τ = R·C = 150 ns，电流要拖几百 ns。能量只有 '+(E*1e3).toFixed(2)+' mJ，但几千伏的电压足以击穿栅氧。'+(kv>2?'超过 2 kV，普通芯片自带的 ESD 结构就不一定扛得住了。':'芯片出厂常标 HBM 2 kV，就是为了扛住生产和搬运中的静电。');
+}
+seg('s1-m',v=>{s1.m=v;s1u();});
+seg('s1-z',v=>{s1.z=v;s1u();});
+$('s1-rng').addEventListener('input',s1u);
+s1u();
+/* 2. 放在哪、怎么接地。示意模型：静电看作电流源，TVS 支路与芯片支路按电感分流 */
+const s2={t:true,lg:0.5,rs:0},s2D=[0,5,10,20,30,40,60],CHIP=50,s2x=d=>74+d*4.92;
+const s2X=scale(0,20,56,440),s2Y=scale(0,80,150,20);
+function s2sim(d,tvs,Lg,rs){
+  const dt=0.002,pts=['56,150'];let ic=0,it=0,Ip=0,vpk=0,ipk=0,tpk=0;
+  for(let k=1;k<=10000;k++){const t=k*dt,I=iIec(t,8),dI=(I-Ip)/dt;Ip=I;let vp;
+    if(!tvs){ic=I;vp=10+2*ic;}
+    else if(d<=CHIP){const L=(CHIP-d)+1+Lg;
+      ic=Math.max(0,ic+(6.5-10+0.4*I+Lg*dI-(2.4+rs)*ic)/L*dt);
+      vp=ic>0?10+2*ic:Math.max(-0.7,Math.min(10,6.5+0.4*I+Lg*dI));}
+    else{const L=(d-CHIP)+Lg;
+      it=Math.min(I,Math.max(0,it+(3.5+2*I-2.4*it)/L*dt));ic=I-it;vp=10+2*ic;}
+    if(vp>vpk){vpk=vp;tpk=t;}ipk=Math.max(ipk,ic);
+    if(k%20===0)pts.push(s2X(t).toFixed(1)+','+s2Y(Math.min(vp,80)).toFixed(1));}
+  return {pts:pts.join(' '),vpk:vpk,ipk:ipk,tpk:tpk};
+}
+function s2u(){
+  const d=s2D[+$('s2-rng').value],tvs=s2.t,x=s2x(d),xs=x.toFixed(1),behind=d>CHIP,r=s2sim(d,tvs,s2.lg,s2.rs);
+  $('s2-w').setAttribute('points',r.pts);
+  const px=s2X(r.tpk),py=s2Y(Math.min(r.vpk,80)),rt=px>330;
+  $('s2-pd').setAttribute('cx',px.toFixed(1));$('s2-pd').setAttribute('cy',py.toFixed(1));
+  $('s2-pl').setAttribute('x',(px+(rt?-10:8)).toFixed(1));$('s2-pl').setAttribute('y',(py+(py<40?16:-6)).toFixed(1));
+  $('s2-pl').setAttribute('text-anchor',rt?'end':'start');$('s2-pl').textContent='峰值 '+fmtV(r.vpk,1);
+  show($('s2-tvs'),tvs);$('s2-tvs').setAttribute('transform','translate('+xs+',0)');
+  show($('s2-gs'),s2.lg<1);show($('s2-gl'),s2.lg>=1);
+  show($('s2-rs'),s2.rs>0);show($('s2-tail'),tvs&&behind);
+  $('s2-hot').setAttribute('d','M66,110 H'+(tvs&&!behind?xs:'320'));
+  const f=$('s2-f'),fc=$('s2-fc');show(f,tvs);
+  if(tvs)f.setAttribute('d','M66,110 H'+xs+(s2.lg<1?' V174':' V200 H'+(x+60).toFixed(1)+' V212'));
+  show(fc,r.ipk>1);fc.classList.toggle('thin',tvs&&!behind);
+  fc.setAttribute('d','M'+(tvs&&!behind?(x+4).toFixed(1):'66')+',110 H318 V82');
+  show($('s2-dim'),tvs);show($('s2-dt'),tvs);
+  $('s2-dim').setAttribute('d','M66,232 H'+xs+' M66,227 V237 M'+xs+',227 V237');
+  $('s2-dt').setAttribute('x',(66+(x-66)/2).toFixed(1));$('s2-dt').setAttribute('text-anchor',d?'middle':'start');
+  $('s2-dt').textContent='d = '+d+' mm';
+  const I0=iIec(s1W.iec.tp,8),share=Math.max(0,1-r.ipk/I0);
+  $('s2-dv').textContent=behind?'60 mm，在芯片后面':d+' mm';$('s2-rng').setAttribute('aria-valuetext',$('s2-dv').textContent);
+  $('s2-vpt').textContent='引脚峰值 '+fmtV(r.vpk,1);
+  $('s2-vpk').textContent=fmtV(r.vpk,1);$('s2-ipk').textContent=fmtA(r.ipk);
+  $('s2-share').textContent=tvs?(share*100).toFixed(0)+'%':'0，没有 TVS';
+  $('s2-unp').textContent=!tvs?'整段 50 mm':behind?'50 mm，静电先到芯片':d+' mm';
+  if(r.ipk<=1)chip($('s2-st'),'安全','on');else if(r.ipk<=1.33)chip($('s2-st'),'余量很小','warn');else chip($('s2-st'),'超出芯片能力','bad');
+  let n;
+  if(!tvs)n='没有外部保护，约 30 A 的静电电流全部灌进芯片引脚。芯片内部的 ESD 结构按 2 kV HBM（约 1.33 A）设计，引脚电压冲到 '+fmtV(r.vpk,0)+'，芯片基本必坏。';
+  else if(behind)n='走线先经过芯片引脚，再走 10 mm 才到 TVS。静电先到芯片，芯片内部结构在 10 V 左右就导通了；TVS 隔着一段走线电感，电流转不过去，芯片吃掉 '+fmtA(r.ipk)+'。这时串电阻也没用，它在主通路上，挡不住近似电流源的静电。';
+  else{n='TVS 在距连接器 '+d+' mm 处，前面这段红色走线带着全部 30 A，越短越好。TVS 到芯片还有 '+(CHIP-d)+' mm 走线，约 '+(CHIP-d+1)+' nH（含引脚），它挡住了最快的尖峰，芯片只分到 '+fmtA(r.ipk)+'。';
+    if(s2.lg>=1)n+='但 TVS 的地走了一段细长线，5 nH × 几十 A/ns 就是一两百伏，钳位点电压被抬高，更多电流挤进芯片。地脚要就近打过孔到地平面。';
+    else if(d>=30)n+='TVS 离芯片越近，中间的电感越小，快速尖峰越容易绕过 TVS 进芯片。应该把 TVS 往连接器挪。';
+    if(s2.rs>0)n+='串 22 Ω 后通往芯片的路更难走，芯片电流降了下来。低速线常这样做，高速线不能串大电阻。';}
+  $('s2-note').textContent=n;
+}
+seg('s2-t',v=>{s2.t=v==='1';s2u();});
+seg('s2-g',v=>{s2.lg=+v;s2u();});
+seg('s2-r',v=>{s2.rs=+v;s2u();});
+$('s2-rng').addEventListener('input',s2u);
+s2u();
+/* 3. 结电容拖慢边沿，按一阶 RC 计算，Z0 = 50 Ω */
+const s3={br:5e9},s3C=[0.2,0.3,0.5,1,2,5,10,30,100],s3B=[0,1,0,1,1,0,0,1,0,1];
+const s3X=scale(0,10,56,440),s3Y=scale(0,1,150,40);
+const s3t=s=>s<1e-9?(s*1e12).toFixed(s<1e-11?1:0)+' ps':s<1e-6?(s*1e9).toFixed(s<1e-8?2:1)+' ns':fmtT(s);
+let s3d='M56,150';
+s3B.forEach((b,i)=>{s3d+=' V'+s3Y(b).toFixed(1)+' H'+s3X(i+1).toFixed(1);
+  $('s3-bits').append(svgEl('text',{x:s3X(i+0.5).toFixed(1),y:24,'text-anchor':'middle',class:'tm'},String(b)));});
+$('s3-ideal').setAttribute('d',s3d);
+function s3u(){
+  const cs=s3C[+$('s3-rng').value],C=cs*1e-12,ui=1/s3.br,tau=25*C,tr=2.2*tau,r=tr/ui;
+  const pts=[],N=600,dt=10*ui/N,a=1-Math.exp(-dt/tau);let v=0;
+  for(let k=0;k<=N;k++){if(k>0){const b=s3B[Math.min(9,Math.floor((k-0.5)*dt/ui))];v+=(b-v)*a;}
+    pts.push(s3X(k*dt/ui).toFixed(1)+','+s3Y(v).toFixed(1));}
+  $('s3-w').setAttribute('points',pts.join(' '));
+  $('s3-cv').textContent=cs+' pF';$('s3-rng').setAttribute('aria-valuetext',cs+' pF');$('s3-cl').textContent='C = '+cs+' pF';
+  $('s3-tau').textContent=s3t(tau);$('s3-tr').textContent=s3t(tr);$('s3-ui').textContent=s3t(ui);
+  $('s3-pct').textContent=(r*100).toFixed(r<0.01?2:1)+'%';
+  const cls=r<=0.15?'on':r<=0.3?'warn':'bad',g=s3.br>=1e9,u2=s3.br===480e6;
+  chip($('s3-st'),cls==='on'?'合适':cls==='warn'?'眼图变窄':'眼图闭合',cls);
+  $('s3-note').textContent=cls==='bad'
+    ?'附加上升时间 '+s3t(tr)+'，占了一个比特的 '+(r*100).toFixed(0)+'%。连续的 0101 还没爬到位就要翻转，眼图张不开，接收端会误判。要换电容更小的 ESD 器件。'
+    :cls==='warn'?'边沿明显变圆，上升时间占 UI 的 '+(r*100).toFixed(0)+'%。单看这一个电容还能凑合，但连接器、过孔和芯片引脚也各有零点几到一两 pF，加起来就超标了。'+(g?'几 Gbps 的信号一般选 0.5 pF 以下。':'')
+    :r<0.02?'这点电容在当前速率下几乎看不出影响。'+(cs>=10?'低速线可以放心用大电容 TVS，它通流大、钳位低，防护效果反而更好。':'')
+    :'边沿只是稍微变圆，占 UI 的 '+(r*100).toFixed(1)+'%，信号质量基本不受影响。'+(g?'但几 Gbps 的线还要考虑电容引起的阻抗凹陷和反射，越小越好。':'')+(u2&&cs>3?'不过 USB 2.0 实际一般选 3 pF 以下，因为连接器、过孔、芯片引脚的电容也要算进总预算。':'');
+}
+seg('s3-r',v=>{s3.br=+v;s3u();});
+$('s3-rng').addEventListener('input',s3u);
+s3u();
+</script>
+</body>
+</html>

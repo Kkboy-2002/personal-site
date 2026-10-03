@@ -1,0 +1,284 @@
+<title>RTOS 考点实验台</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#EEF1F3; --surface:#FFFFFF; --surface2:#F6F8F9; --line:#D5DBE0; --ink:#1B2430; --muted:#5D6B7A;
+  --accent:#1F7A5C; --accent-ink:#FFFFFF; --pc:#F3D27A; --pc-ink:#3A2E00;
+  --run:#1F7A5C; --ready:#2F6FBF; --blocked:#C9861B; --susp:#8A94A0; --del:#B23A3A; --isr:#7B3FA0;
+  --code-bg:#F9FAFB; --gutter:#EDF0F2; --changed:#FFF1C9; --bp:#C0392B;
+  --t0:#1F7A5C; --t1:#2F6FBF; --t2:#C9861B; --t3:#7B3FA0; --t4:#B23A3A; --t5:#0E7C86; --tidle:#B8C0C8;
+  --radius:6px; --mono:"JetBrains Mono",Consolas,"SF Mono",monospace; --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif; --serif:"Noto Serif SC","Songti SC","SimSun",serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#141A21; --surface:#1C242E; --surface2:#222C38; --line:#334150; --ink:#E6EBF0; --muted:#93A1B0;
+    --accent:#4FC08D; --accent-ink:#0E1A14; --pc:#6B5A1A; --pc-ink:#FFE9A8;
+    --run:#4FC08D; --ready:#6FA3E8; --blocked:#E0A73A; --susp:#7C8794; --del:#E06666; --isr:#B48AE0;
+    --code-bg:#161D26; --gutter:#1A222C; --changed:#4A3E14; --bp:#E06666;
+    --t0:#4FC08D; --t1:#6FA3E8; --t2:#E0A73A; --t3:#B48AE0; --t4:#E06666; --t5:#4FB8C2; --tidle:#3A4654;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141A21; --surface:#1C242E; --surface2:#222C38; --line:#334150; --ink:#E6EBF0; --muted:#93A1B0;
+  --accent:#4FC08D; --accent-ink:#0E1A14; --pc:#6B5A1A; --pc-ink:#FFE9A8;
+  --run:#4FC08D; --ready:#6FA3E8; --blocked:#E0A73A; --susp:#7C8794; --del:#E06666; --isr:#B48AE0;
+  --code-bg:#161D26; --gutter:#1A222C; --changed:#4A3E14; --bp:#E06666;
+  --t0:#4FC08D; --t1:#6FA3E8; --t2:#E0A73A; --t3:#B48AE0; --t4:#E06666; --t5:#4FB8C2; --tidle:#3A4654;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.6}
+button{font-family:inherit;font-size:13px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:var(--radius);padding:5px 11px}
+button:hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button:disabled{opacity:.45;cursor:default}
+select{font-family:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:var(--radius);padding:4px 6px}
+code,pre,.mono{font-family:var(--mono)}
+.app{display:grid;grid-template-columns:230px minmax(0,1fr) 380px;min-height:100vh}
+header.top{grid-column:1/-1;display:flex;align-items:baseline;gap:16px;padding:14px 20px 10px;border-bottom:1px solid var(--line);background:var(--surface)}
+header.top h1{font-family:var(--serif);font-size:22px;margin:0;font-weight:700;letter-spacing:.02em}
+header.top .sub{color:var(--muted);font-size:13px}
+header.top .kbd{margin-left:auto;color:var(--muted);font-size:12px}
+nav.side{border-right:1px solid var(--line);background:var(--surface);padding:12px 8px 24px;overflow-y:auto;max-height:calc(100vh - 54px);position:sticky;top:54px}
+nav.side .grp{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:14px 10px 4px}
+nav.side .grp:first-child{margin-top:0}
+nav.side a{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:var(--radius);color:var(--ink);text-decoration:none;font-size:13px;line-height:1.35}
+nav.side a:hover{background:var(--surface2)}
+nav.side a.active{background:var(--accent);color:var(--accent-ink)}
+nav.side a .n{font-family:var(--mono);font-size:11px;color:var(--muted);width:20px;flex:none}
+nav.side a.active .n{color:var(--accent-ink);opacity:.8}
+nav.side a .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none;margin-left:auto}
+nav.side a.active .dot{background:var(--accent-ink)}
+main{padding:18px 22px 40px;min-width:0}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+main h2{font-family:var(--serif);font-size:24px;margin:2px 0 12px;text-wrap:balance;line-height:1.3}
+.one,.analogy{max-width:72ch;padding:10px 14px;border-radius:var(--radius);margin:0 0 10px;font-size:14.5px;line-height:1.65}
+.one{background:var(--accent);color:var(--accent-ink);font-weight:500}
+.analogy{background:var(--surface2);border:1px dashed var(--line);color:var(--ink)}
+.one span,.analogy span{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.75;margin-bottom:3px}
+.qa-h{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.qa{display:grid;gap:10px;margin-bottom:18px;max-width:72ch}
+.qa .item{border-left:3px solid var(--accent);padding:2px 0 2px 12px}
+.qa .q{font-weight:700}
+.qa .a{color:var(--ink);white-space:pre-line}
+.qa .a code{font-size:12.5px;background:var(--surface2);padding:0 4px;border-radius:3px}
+.note{font-size:12.5px;color:var(--muted);margin:0 0 10px;max-width:72ch}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--surface2);border-radius:var(--radius) var(--radius) 0 0}
+.toolbar .st{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+.toolbar .st b{color:var(--ink);font-weight:600}
+.codewrap{overflow-x:auto;background:var(--code-bg);border-radius:0 0 var(--radius) var(--radius)}
+table.code{border-collapse:collapse;font-family:var(--mono);font-size:12.5px;line-height:1.55;width:100%}
+table.code td{padding:0 10px 0 0;white-space:pre;vertical-align:top}
+table.code td.g{width:34px;text-align:right;color:var(--muted);background:var(--gutter);padding:0 8px 0 6px;user-select:none;cursor:pointer;position:relative}
+table.code td.g:hover{color:var(--ink)}
+table.code tr.bp td.g::before{content:"";position:absolute;left:2px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--bp)}
+table.code td.m{width:14px;padding:0;text-align:center;font-size:10px}
+table.code tr.pc td.c{background:var(--pc);color:var(--pc-ink)}
+table.code tr.pc td.g{font-weight:600;color:var(--ink)}
+table.code td.c{padding-left:8px}
+table.code tr.other td.c{box-shadow:inset 3px 0 0 var(--mk)}
+.halt{margin:8px 0 0;padding:8px 10px;border-radius:var(--radius);background:var(--changed);color:var(--ink);font-size:13px}
+.halt:empty{display:none}
+aside.dbg{border-left:1px solid var(--line);background:var(--surface);padding:12px 12px 30px;overflow-y:auto;max-height:calc(100vh - 54px);position:sticky;top:54px;display:grid;gap:12px;align-content:start}
+aside h3{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;display:flex;align-items:center;gap:8px}
+aside h3 .hint{font-weight:400;letter-spacing:0;text-transform:none;font-size:11px;margin-left:auto}
+table.d{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+table.d th{text-align:left;font-weight:500;color:var(--muted);padding:2px 6px;border-bottom:1px solid var(--line);font-size:11px}
+table.d td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+table.d tr:last-child td{border-bottom:0}
+table.d td.mono{font-family:var(--mono);font-size:11.5px}
+table.d td.chg{background:var(--changed)}
+.pill{display:inline-block;padding:0 7px;border-radius:10px;font-size:11px;line-height:18px;color:#fff;white-space:nowrap}
+.pill.RUNNING{background:var(--run)} .pill.READY{background:var(--ready)} .pill.BLOCKED{background:var(--blocked)} .pill.SUSPENDED{background:var(--susp)} .pill.DELETED{background:var(--del)} .pill.ISR{background:var(--isr)}
+.sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.stack{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:3px;border:1px solid var(--line)}
+.stack i{display:block;height:100%;background:var(--accent)}
+.stack i.warn{background:var(--blocked)} .stack i.over{background:var(--del)}
+.console{font-family:var(--mono);font-size:11.5px;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:6px 8px;height:150px;overflow-y:auto;white-space:pre-wrap;line-height:1.5}
+.console .t{color:var(--muted)} .console .k{color:var(--muted);font-style:italic} .console .e{color:var(--del)}
+.tl{display:flex;flex-wrap:nowrap;gap:1px;overflow-x:auto;padding-bottom:2px}
+.tl i{flex:none;width:7px;height:18px;border-radius:1px;background:var(--tidle)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 12px;font-size:11px;color:var(--muted);margin-top:4px}
+.obj{font-family:var(--mono);font-size:11.5px;padding:4px 6px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:auto 1fr;gap:2px 10px}
+.obj:last-child{border-bottom:0}
+.obj .k{color:var(--muted)}
+.empty{color:var(--muted);font-size:12px;padding:6px}
+.tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:0 5px;margin-left:6px}
+.static{padding:12px;color:var(--muted);font-size:12.5px}
+@media (max-width:1100px){
+  .app{grid-template-columns:200px minmax(0,1fr)}
+  aside.dbg{grid-column:1/-1;position:static;max-height:none;border-left:0;border-top:1px solid var(--line)}
+}
+@media (max-width:720px){
+  .app{grid-template-columns:1fr}
+  nav.side{position:static;max-height:220px;border-right:0;border-bottom:1px solid var(--line)}
+  main{padding:14px 16px 24px}
+  header.top{padding:12px 16px 8px;flex-wrap:wrap}
+  header.top .kbd{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <h1>RTOS 考点实验台</h1>
+    <span class="sub">32 个考点，每个先给一句话和一个比方，再看最短的代码。绿点的考点可以一步步跑给你看。</span>
+    <span class="kbd">F10 步进 · F5 运行 · 点行号打断点</span>
+  </header>
+  <nav class="side" id="nav"></nav>
+  <main id="main"></main>
+  <aside class="dbg" id="dbg"></aside>
+</div>
+
+<script src="engine.js"></script>
+<script src="topics.js"></script>
+<script src="topics2.js"></script>
+<script>
+(function(){
+  const TOPICS = window.RTOS_TOPICS;
+  const nav = document.getElementById('nav'), main = document.getElementById('main'), dbg = document.getElementById('dbg');
+  let cur = null, sim = null, timer = null, bps = new Set();
+  const TCOL = ['var(--t0)','var(--t1)','var(--t2)','var(--t3)','var(--t4)','var(--t5)'];
+
+  function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+  function hex(n){return '0x'+n.toString(16).toUpperCase().padStart(8,'0');}
+
+  // ---------- nav ----------
+  (function buildNav(){
+    let g=''; let html='';
+    TOPICS.forEach((t,i)=>{
+      if(t.group!==g){g=t.group;html+=`<div class="grp">${esc(g)}</div>`;}
+      html+=`<a href="#${t.id}" data-i="${i}"><span class="n">${String(i+1).padStart(2,'0')}</span><span>${esc(t.title)}</span>${t.sim?'<span class="dot" title="可运行"></span>':''}</a>`;
+    });
+    nav.innerHTML=html;
+    nav.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;e.preventDefault();open(+a.dataset.i);history.replaceState(null,'','#'+TOPICS[+a.dataset.i].id);});
+  })();
+
+  function taskColor(t){ if(!t) return 'var(--tidle)'; if(t.isISR) return 'var(--isr)'; if(t.name==='IDLE') return 'var(--tidle)'; return TCOL[t.colorIdx%TCOL.length]; }
+
+  // 为可运行例子自动补一段 main()：把"优先级在哪里定"显示出来
+  function genMain(t){
+    const s=t.sim; if(!s || /int main\s*\(/.test(t.code)) return '';
+    const fns=[...t.code.matchAll(/void\s+(\w+)\s*\(\s*void\s*\*\s*\w*\s*\)/g)].map(m=>m[1]);
+    const norm=n=>n.replace(/^v/,'').replace(/Task$/,'').toLowerCase();
+    const findFn=name=>{ const n=name.toLowerCase(), alt=n.replace(/^t(\d)$/,'task$1'); return fns.find(f=>norm(f)===n||norm(f)===alt||f.toLowerCase()===n) || (fns.length===1?fns[0]:null); };
+    const vars=(s.vars||[]).map(v=>v[0]);
+    const out=['','int main(void)','{'];
+    (s.objs||[]).forEach(o=>{ let c=''; switch(o.kind){
+      case 'queue': c=`xQueueCreate(${o.len}, sizeof(int))`; break;
+      case 'sem': c='xSemaphoreCreateBinary()'+(o.init?';  xSemaphoreGive('+o.name+')':''); break;
+      case 'csem': c=`xSemaphoreCreateCounting(${o.max}, ${o.init||0})`; break;
+      case 'mutex': c='xSemaphoreCreateMutex()'; break;
+      case 'rmutex': c='xSemaphoreCreateRecursiveMutex()'; break;
+      case 'eg': c='xEventGroupCreate()'; break;
+      case 'timer': { const cb=(t.code.match(/void\s+(\w+)\s*\(\s*TimerHandle_t/)||[])[1]||'cb'; c=`xTimerCreate("t", ${o.period}, ${o.auto!==false?'pdTRUE':'pdFALSE'}, NULL, ${cb})`; } }
+      if(c) out.push(`    ${o.name} = ${c};`); });
+    if(s.objs&&s.objs.length) out.push('');
+    s.tasks.forEach(tk=>{ const fn=findFn(tk.name)||'vTask'; const h=vars.find(v=>v.toLowerCase()===(tk.name+'handle').toLowerCase()||v.toLowerCase()==='h'+tk.name.toLowerCase());
+      out.push(`    xTaskCreate(${fn}, "${tk.name}", 128, NULL, ${tk.prio}, ${h?'&'+h:'NULL'});`); });
+    out.push('    /*          函数名     任务名  栈   参数  ↑优先级  句柄 */');
+    out.push('    vTaskStartScheduler();            /* 老板开始排班 */','}');
+    return out.join('\n');
+  }
+
+  // ---------- open topic ----------
+  function open(i){
+    stopRun();
+    cur = TOPICS[i]; bps = new Set(cur.bps||[]);
+    nav.querySelectorAll('a').forEach(a=>a.classList.toggle('active',+a.dataset.i===i));
+    sim = cur.sim ? RTOS.createSim(cur) : null;
+    const lines = (cur.code.replace(/\n$/,'')+genMain(cur)).split('\n');
+    let html = `<div class="eyebrow">${esc(cur.group)} · 考点 ${String(i+1).padStart(2,'0')}</div><h2>${esc(cur.title)}</h2>`;
+    if(cur.one) html += `<div class="one"><span>一句话</span>${esc(cur.one)}</div>`;
+    if(cur.analogy) html += `<div class="analogy"><span>打个比方</span>${esc(cur.analogy)}</div>`;
+    html += `<div class="qa"><div class="qa-h">面试怎么答</div>${cur.qa.map(x=>`<div class="item"><div class="q">${esc(x.q)}</div><div class="a">${x.a}</div></div>`).join('')}</div>`;
+    if(cur.note) html += `<p class="note"><b>动手看：</b>${cur.note}</p>`;
+    html += `<div class="panel"><div class="toolbar" id="tb">`;
+    if(sim){
+      html += `<button class="primary" id="bStep">步进 ⏵</button><button id="bRun">运行 ▶▶</button><button id="bReset">重置</button>`;
+      if(cur.sim.isr) html += `<button id="bIsr">触发中断 ⚡ ${esc(cur.sim.isr.name)}</button>`;
+      html += `<select id="speed" title="运行速度"><option value="400">慢速</option><option value="150" selected>中速</option><option value="40">快速</option></select>`;
+      html += `<span class="st"><span>tick <b id="stTick">0</b></span><span>运行中 <b id="stRun">—</b></span><span id="stCrit"></span></span>`;
+    } else {
+      html += `<span class="static">此考点为概念题，代码仅供阅读，不需要运行。</span>`;
+    }
+    html += `</div><div class="codewrap"><table class="code" id="code">`;
+    lines.forEach((l,n)=>{ html += `<tr data-l="${n+1}"><td class="g">${n+1}</td><td class="m"></td><td class="c">${esc(l)||' '}</td></tr>`; });
+    html += `</table></div></div><div class="halt" id="halt"></div>`;
+    main.innerHTML = html; main.scrollTop=0; window.scrollTo(0,0);
+    document.getElementById('code').addEventListener('click',e=>{const g=e.target.closest('td.g');if(!g)return;const l=+g.parentNode.dataset.l;bps.has(l)?bps.delete(l):bps.add(l);paintCode();});
+    if(sim){
+      document.getElementById('bStep').onclick=()=>{stopRun();doStep();};
+      document.getElementById('bRun').onclick=toggleRun;
+      document.getElementById('bReset').onclick=()=>{stopRun();sim=RTOS.createSim(cur);render();};
+      const bi=document.getElementById('bIsr'); if(bi) bi.onclick=()=>{sim.triggerISR();render();};
+    }
+    render();
+  }
+
+  function doStep(){ if(!sim||sim.halted) return; sim.step(); render(); }
+  function toggleRun(){ if(timer) stopRun(); else startRun(); }
+  function startRun(){
+    if(!sim||sim.halted) return;
+    const ms=+document.getElementById('speed').value;
+    document.getElementById('bRun').textContent='暂停 ❚❚';
+    timer=setInterval(()=>{ sim.step(); render(); const r=sim.running; if(sim.halted || (r && bps.has(r.pc&&r.pc.line))) stopRun(); },ms);
+  }
+  function stopRun(){ if(timer){clearInterval(timer);timer=null;} const b=document.getElementById('bRun'); if(b) b.textContent='运行 ▶▶'; }
+  document.addEventListener('keydown',e=>{ if(e.key==='F10'){e.preventDefault();stopRun();doStep();} if(e.key==='F5'){e.preventDefault();toggleRun();} });
+
+  // ---------- render ----------
+  function paintCode(){
+    const rows=document.querySelectorAll('#code tr');
+    rows.forEach(r=>{ r.classList.toggle('bp',bps.has(+r.dataset.l)); r.classList.remove('pc','other'); r.style.removeProperty('--mk'); r.querySelector('td.m').textContent=''; });
+    if(!sim) return;
+    sim.tasks.forEach(t=>{
+      if(!t.pc||!t.pc.line||t.state==='DELETED') return;
+      const r=document.querySelector(`#code tr[data-l="${t.pc.line}"]`); if(!r) return;
+      const m=r.querySelector('td.m');
+      if(t===sim.running){ r.classList.add('pc'); m.textContent='▶'; m.style.color=taskColor(t); }
+      else { r.classList.add('other'); r.style.setProperty('--mk',taskColor(t)); if(!m.textContent){ m.textContent=t.state==='BLOCKED'?'◌':'○'; m.style.color=taskColor(t);} }
+    });
+  }
+
+  function render(){
+    paintCode();
+    if(!sim){ dbg.innerHTML='<div class="empty">当前考点没有模拟程序。选择左侧带绿点的考点即可运行。</div>'; return; }
+    const st=document.getElementById('stTick'); if(st){ st.textContent=sim.tick; document.getElementById('stRun').textContent=sim.running?sim.running.name:'—';
+      const c=document.getElementById('stCrit'); c.textContent=(sim.critical>0?`临界区×${sim.critical} `:'')+(sim.schedSuspended>0?`调度器挂起×${sim.schedSuspended} `:'')+(sim.isrMasked?'中断已屏蔽(BASEPRI) ':''); }
+    document.getElementById('halt').textContent=sim.halted||'';
+    let h='';
+    // tasks
+    h+=`<section><h3>任务 <span class="hint">TCB / 优先级 / 状态 / 栈</span></h3><table class="d"><tr><th>任务</th><th>优先</th><th>状态</th><th>行</th><th>栈使用 / 高水位</th></tr>`;
+    sim.tasks.forEach(t=>{
+      if(t.pseudo && t.state==='DELETED') return;
+      const pct=Math.min(100,Math.round(t.stackUsed/t.stackSize*100));
+      const cls=t.stackUsed>t.stackSize?'over':(pct>80?'warn':'');
+      const prio = t.prio!==t.basePrio ? `${t.prio}<span class="tag" title="优先级继承">继承自${t.basePrio}</span>` : (t.isISR?'IRQ':t.prio);
+      h+=`<tr><td><span class="sw" style="background:${taskColor(t)}"></span>${esc(t.name)}${t.pseudo?'':`<div class="mono" style="color:var(--muted);font-size:10.5px">TCB ${hex(t.tcbAddr)}</div>`}</td><td class="mono">${prio}</td><td><span class="pill ${t.isISR?'ISR':t.state}">${t.isISR?'中断':RTOS.STATE_CN[t.state]}</span>${t.waitDesc?`<div style="font-size:10.5px;color:var(--muted)">${esc(t.waitDesc)}</div>`:''}</td><td class="mono">${t.pc&&t.pc.line||''}</td>`;
+      h+= t.pseudo ? '<td></td>' : `<td class="mono">${t.stackUsed}/${t.stackSize} B<br>HWM ${Math.max(0,t.stackSize-t.stackMax)} B<div class="stack"><i class="${cls}" style="width:${pct}%"></i></div></td>`;
+      h+='</tr>';
+    });
+    h+='</table></section>';
+    // kernel objects
+    h+=`<section><h3>内核对象 <span class="hint">堆上分配</span></h3><div class="panel">`;
+    if(!sim.objs.length) h+='<div class="empty">无</div>';
+    sim.objs.forEach(o=>{ h+=`<div class="obj"><span class="k">${esc(o.kindCN)}</span><span><b>${esc(o.name)}</b> @ ${hex(o.addr)}</span>${o.describe().map(([k,v])=>`<span class="k">${esc(k)}</span><span>${esc(v)}</span>`).join('')}</div>`; });
+    h+='</div></section>';
+    // memory
+    h+=`<section><h3>变量 / 内存 <span class="hint">RAM 从 0x20000000 起</span></h3><table class="d"><tr><th>地址</th><th>变量</th><th>值</th></tr>`;
+    sim.mem.forEach(c=>{ h+=`<tr><td class="mono">${hex(c.addr)}</td><td class="mono">${esc(c.type)} ${esc(c.name)}</td><td class="mono ${c.changedAt===sim.stepNo?'chg':''}">${esc(sim.fmt(c))}</td></tr>`; });
+    h+=`<tr><td class="mono">堆</td><td class="mono">ucHeap[]</td><td class="mono">已用 ${sim.heapUsed} / ${sim.heapSize} B，空闲 ${sim.heapSize-sim.heapUsed} B</td></tr></table></section>`;
+    // timeline
+    h+=`<section><h3>CPU 时间线 <span class="hint">每格 1 tick</span></h3><div class="tl">${sim.timeline.slice(-140).map(n=>`<i style="background:${taskColor(sim.byName(n)||(n.startsWith('TmrSvc')?{isISR:true}:null))}" title="${esc(n)}"></i>`).join('')}</div><div class="legend">${sim.tasks.filter(t=>!(t.pseudo&&!t.isISR)).map(t=>`<span><span class="sw" style="background:${taskColor(t)}"></span>${esc(t.name)}</span>`).join('')}</div></section>`;
+    // console
+    h+=`<section><h3>串口输出 / 内核日志</h3><div class="console" id="con">${sim.log.slice(-200).map(l=>`<div><span class="t">[${String(l.tick).padStart(4,' ')}]</span> ${l.kind==='k'?`<span class="k">${esc(l.text)}</span>`:l.kind==='e'?`<span class="e">${esc(l.text)}</span>`:esc(l.text)}</div>`).join('')}</div></section>`;
+    dbg.innerHTML=h;
+    const con=document.getElementById('con'); con.scrollTop=con.scrollHeight;
+  }
+
+  const start = TOPICS.findIndex(t=>'#'+t.id===location.hash);
+  open(start>=0?start:0);
+})();
+</script>

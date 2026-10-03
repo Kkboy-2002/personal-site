@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>负反馈四种组态</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.fb{fill:none;stroke:var(--copper);stroke-width:8;stroke-opacity:.22;stroke-linecap:round;stroke-linejoin:round}
+.ring{fill:none;stroke:var(--copper);stroke-width:1.8;stroke-dasharray:3 3}
+.tbl tr.cur td{background:var(--shade2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#basic">基本电路</a><span class="sp"></span><span>06 / 07</span></nav>
+<header>
+  <span class="eyebrow">基本电路 · 负反馈</span>
+  <h1>负反馈的四种组态</h1>
+  <p class="lede">电压串联、电压并联、电流串联、电流并联。名字前半截看输出端取什么，后半截看输入端怎么比。弄清这两点，输入输出阻抗怎么变也就跟着出来了。</p>
+</header>
+
+<section id="four">
+  <span class="eyebrow">取样 × 比较 · 四种组合</span>
+  <h2>切换四种组态，看取样点和比较点</h2>
+  <p>负反馈就是把输出的一部分送回输入端，和输入信号相减。分类只看两件事：输出端取的是电压还是电流（取样），送回输入端后和输入电压相减还是和输入电流相减（比较）。</p>
+  <p>取样看输出端：反馈网络直接接在输出电压上，是电压反馈，它稳定输出电压；反馈量正比于输出电流，通常取自串在负载回路里的电阻，是电流反馈，它稳定输出电流。比较看输入端：反馈信号和输入信号接在运放的不同输入端，以电压形式相减，是串联反馈；接在同一个节点上，以电流形式相减，是并联反馈。</p>
+  <p class="eq">串联：净输入电压 Vid = Vin − Vf　　并联：净输入电流 Iid = Iin − If</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 240" role="img" aria-label="用运放搭的四种负反馈组态，可切换；橙色粗线是反馈网络，虚线圈标出输出端取样位置和输入端比较位置">
+        <path class="r" d="M200,70 L290,120 L200,170 Z"/>
+        <text x="207" y="100" class="t">−</text>
+        <text x="207" y="150" class="t">+</text>
+        <g id="f-g-vs">
+          <path class="fb" d="M330,120 V40 H140 V95 M140,95 V196"/>
+          <path class="w" d="M140,95 H200 M140,95 V40 H230 M280,40 H330 V120 M140,95 V118 M140,158 V196 M126,196 H154 M131,201 H149 M136,206 H144 M290,120 H410 M380,120 V140 M380,180 V196 M366,196 H394 M371,201 H389 M376,206 H384 M175,174 V145 H200 M175,206 V214 M161,214 H189 M166,219 H184 M171,224 H179"/>
+          <rect class="r" x="230" y="32" width="50" height="16" rx="2"/>
+          <rect class="r" x="131" y="118" width="18" height="40" rx="2"/>
+          <rect class="r" x="371" y="140" width="18" height="40" rx="2"/>
+          <circle class="r" cx="175" cy="190" r="16"/>
+          <text x="175" y="195" text-anchor="middle" class="t">~</text>
+          <circle class="dot" cx="140" cy="95" r="3.5"/><circle class="dot" cx="330" cy="120" r="3.5"/><circle class="dot" cx="380" cy="120" r="3.5"/>
+          <text x="255" y="26" text-anchor="middle" class="v">Rf 90 kΩ</text>
+          <text x="124" y="134" text-anchor="end" class="t">R1</text><text x="124" y="150" text-anchor="end" class="v">10 kΩ</text>
+          <text x="396" y="164" class="t">RL</text>
+          <text x="198" y="196" class="t">Vin</text>
+          <text x="414" y="125" class="t">Vo</text>
+          <circle class="ring" cx="330" cy="120" r="10"/>
+          <text x="336" y="104" class="t hi">取样 Vo</text>
+          <rect class="ring" x="186" y="84" width="26" height="72" rx="6"/>
+          <text x="148" y="66" class="t hi">比较 Vin − Vf</text>
+          <path class="flow thin" d="M328,118 V42 H142 V194"/>
+        </g>
+        <g id="f-g-vp" hidden>
+          <path class="fb" d="M330,120 V40 H150 V95"/>
+          <path class="w" d="M40,134 V95 H70 M120,95 H200 M150,95 V40 H230 M280,40 H330 V120 M200,145 H170 V175 M156,175 H184 M161,180 H179 M166,185 H174 M40,166 V175 M26,175 H54 M31,180 H49 M36,185 H44 M290,120 H410 M380,120 V140 M380,180 V196 M366,196 H394 M371,201 H389 M376,206 H384"/>
+          <rect class="r" x="70" y="87" width="50" height="16" rx="2"/>
+          <rect class="r" x="230" y="32" width="50" height="16" rx="2"/>
+          <rect class="r" x="371" y="140" width="18" height="40" rx="2"/>
+          <circle class="r" cx="40" cy="150" r="16"/>
+          <text x="40" y="155" text-anchor="middle" class="t">~</text>
+          <circle class="dot" cx="150" cy="95" r="3.5"/><circle class="dot" cx="330" cy="120" r="3.5"/><circle class="dot" cx="380" cy="120" r="3.5"/>
+          <text x="95" y="80" text-anchor="middle" class="v">Rin 10 kΩ</text>
+          <text x="255" y="26" text-anchor="middle" class="v">Rf 100 kΩ</text>
+          <text x="62" y="155" class="t">Vin</text>
+          <text x="396" y="164" class="t">RL</text>
+          <text x="414" y="125" class="t">Vo</text>
+          <circle class="ring" cx="330" cy="120" r="10"/>
+          <text x="336" y="104" class="t hi">取样 Vo</text>
+          <circle class="ring" cx="150" cy="95" r="10"/>
+          <text x="158" y="66" class="t hi">比较 Iin − If</text>
+          <path class="flow thin" d="M40,132 V95 H150 V42 H328 V118"/>
+        </g>
+        <g id="f-g-cs" hidden>
+          <path class="fb" d="M340,170 H400 V40 H140 V95"/>
+          <path class="w" d="M140,95 H200 M140,95 V40 H400 V170 H340 M290,120 H340 V126 M340,160 V178 M340,212 V222 M326,222 H354 M331,227 H349 M336,232 H344 M175,174 V145 H200 M175,206 V214 M161,214 H189 M166,219 H184 M171,224 H179"/>
+          <rect class="r" x="331" y="126" width="18" height="34" rx="2"/>
+          <rect class="r" x="331" y="178" width="18" height="34" rx="2"/>
+          <circle class="r" cx="175" cy="190" r="16"/>
+          <text x="175" y="195" text-anchor="middle" class="t">~</text>
+          <circle class="dot" cx="340" cy="170" r="3.5"/>
+          <text x="356" y="140" class="t">RL</text><text x="356" y="156" class="tm">负载</text>
+          <text x="356" y="194" class="t">Rs</text><text x="356" y="210" class="v">100 Ω</text>
+          <text x="198" y="196" class="t">Vin</text>
+          <text x="312" y="112" class="t">Io</text>
+          <text x="270" y="32" text-anchor="middle" class="v">Vf = Io·Rs</text>
+          <rect class="ring" x="324" y="172" width="32" height="46" rx="6"/>
+          <text x="316" y="200" text-anchor="end" class="t hi">取样 Io</text>
+          <rect class="ring" x="186" y="84" width="26" height="72" rx="6"/>
+          <text x="148" y="66" class="t hi">比较 Vin − Vf</text>
+          <path class="flow thin" d="M292,120 H340 V220"/>
+        </g>
+        <g id="f-g-cp" hidden>
+          <path class="fb" d="M340,170 H400 V40 H150 V95"/>
+          <path class="w" d="M40,134 V95 H70 M120,95 H200 M150,95 V40 H230 M280,40 H400 V170 H340 M200,145 H170 V175 M156,175 H184 M161,180 H179 M166,185 H174 M40,166 V175 M26,175 H54 M31,180 H49 M36,185 H44 M290,120 H340 V126 M340,160 V178 M340,212 V222 M326,222 H354 M331,227 H349 M336,232 H344"/>
+          <rect class="r" x="70" y="87" width="50" height="16" rx="2"/>
+          <rect class="r" x="230" y="32" width="50" height="16" rx="2"/>
+          <rect class="r" x="331" y="126" width="18" height="34" rx="2"/>
+          <rect class="r" x="331" y="178" width="18" height="34" rx="2"/>
+          <circle class="r" cx="40" cy="150" r="16"/>
+          <text x="40" y="155" text-anchor="middle" class="t">~</text>
+          <circle class="dot" cx="150" cy="95" r="3.5"/><circle class="dot" cx="340" cy="170" r="3.5"/>
+          <text x="95" y="80" text-anchor="middle" class="v">Rin 10 kΩ</text>
+          <text x="255" y="26" text-anchor="middle" class="v">Rf 9 kΩ</text>
+          <text x="62" y="155" class="t">Vin</text>
+          <text x="356" y="140" class="t">RL</text><text x="356" y="156" class="tm">负载</text>
+          <text x="356" y="194" class="t">R2</text><text x="356" y="210" class="v">1 kΩ</text>
+          <text x="312" y="112" class="t">Io</text>
+          <rect class="ring" x="324" y="162" width="32" height="56" rx="6"/>
+          <text x="316" y="200" text-anchor="end" class="t hi">取样 Io</text>
+          <circle class="ring" cx="150" cy="95" r="10"/>
+          <text x="158" y="66" class="t hi">比较 Iin − If</text>
+          <path class="flow thin" d="M40,132 V95 H150 V42 H398 V168 H342"/>
+          <path class="flow thin" d="M340,220 V122 H292"/>
+        </g>
+      </svg>
+      <figcaption>橙色粗线是反馈网络，虚线圈是取样点和比较点。绿色虚线是 Vin 正半周时的电流路径；串联组态里反馈只送回电压，反馈线上没有电流。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">组态</span>
+        <div class="seg" id="f-m"><button id="f-m-vs" data-v="vs" aria-pressed="true">电压串联</button><button id="f-m-vp" data-v="vp" aria-pressed="false">电压并联</button><button id="f-m-cs" data-v="cs" aria-pressed="false">电流串联</button><button id="f-m-cp" data-v="cp" aria-pressed="false">电流并联</button></div></div>
+      <dl class="read">
+        <dt>输出端</dt><dd id="f-o">取样 Vo，电压反馈</dd>
+        <dt>输入端</dt><dd id="f-i">比较 Vin − Vf，串联</dd>
+        <dt>输入阻抗</dt><dd id="f-zi">比无反馈时大 (1 + AF) 倍</dd>
+        <dt>输出阻抗</dt><dd id="f-zo">比无反馈时小 (1 + AF) 倍</dd>
+        <dt>稳定的是</dt><dd id="f-s">输出电压</dd>
+        <dt>闭环增益</dt><dd id="f-af">Avf = 1 + Rf/R1 = 10</dd>
+      </dl>
+      <p class="note" id="f-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="imp">
+  <span class="eyebrow">输入输出阻抗 · 两条规律</span>
+  <h2>串联管输入，并联管输入；电压降输出，电流升输出</h2>
+  <p>阻抗变化只有两条规律，和增益无关：输入端看比较方式，输出端看取样方式。</p>
+  <div class="tbl">
+  <table>
+    <thead><tr><th>组态</th><th>输入端</th><th class="n">输入阻抗</th><th>输出端</th><th class="n">输出阻抗</th><th>典型用途</th></tr></thead>
+    <tbody>
+      <tr><td>电压串联</td><td>串联</td><td class="n">增大 (1+AF)</td><td>电压</td><td class="n">减小 (1+AF)</td><td>电压放大器，运放缓冲</td></tr>
+      <tr><td>电压并联</td><td>并联</td><td class="n">减小 /(1+AF)</td><td>电压</td><td class="n">减小 (1+AF)</td><td>电流转电压，光电二极管放大</td></tr>
+      <tr><td>电流串联</td><td>串联</td><td class="n">增大 (1+AF)</td><td>电流</td><td class="n">增大 (1+AF)</td><td>跨导放大器</td></tr>
+      <tr><td>电流并联</td><td>并联</td><td class="n">减小 /(1+AF)</td><td>电流</td><td class="n">增大 (1+AF)</td><td>电流放大器</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>运放的同相放大器就是电压串联，所以输入阻抗很高而输出阻抗很低，接近理想的放大级。反相放大器是电压并联，输入阻抗约等于 Rin，所以输入电阻大时噪声也大。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>怎么判断一个电路是电压反馈还是电流反馈？</summary>
+      <div class="ans"><p>把输出电压假想为零，也就是把负载短路。如果短路后反馈信号跟着消失，说明反馈取自电压，是电压反馈；如果反馈还在，说明它取自电流，是电流反馈。这个方法比看接线更可靠。</p></div></details>
+    <details><summary>串联反馈和并联反馈怎么判断？</summary>
+      <div class="ans"><p>看反馈信号和输入信号接在运放的哪个端子。接在不同端子上，以电压形式相减，是串联反馈；接在同一个节点上，以电流形式相减，是并联反馈。也可以看反馈电阻和输入电阻的位置，二者并接在同一点就是并联。</p></div></details>
+    <details><summary>为什么串联反馈让输入阻抗变大？</summary>
+      <div class="ans"><p>串联比较时，输入信号和反馈信号串在输入回路里。闭环后同样的 Vin 换来更小的净输入 Vid，输入电流随之变小，从输入端看就像阻抗变大了，大致是原来的 (1 + AF) 倍。并联反馈相反，输入电流被反馈分流，从源端看阻抗变小约 (1 + AF) 倍。</p></div></details>
+    <details><summary>瞬时极性法怎么用？</summary>
+      <div class="ans"><p>先给输入信号假设一个瞬时极性，比如正，再顺着信号流推出各点极性。反馈信号回到输入端后，如果让净输入变小，是负反馈；让净输入变大，是正反馈。运放构成的同相放大器，输出极性和输入相同，反馈到反相端会把正负端差值压小，所以是负反馈。</p></div></details>
+    <details><summary>电流反馈提高输出阻抗，为什么还要用它？</summary>
+      <div class="ans"><p>因为它的目的是稳定输出电流。让负载变化时流过负载的电流几乎不变，这类电路用于驱动 LED、恒流源、跨导放大器。如果你要的是稳定电压，就该用电压反馈。两种目的不同，没有绝对优劣。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="05-分压偏置.html"><span>上一页</span>分压偏置</a><a class="next" href="07-负反馈的作用.html"><span>下一页</span>负反馈的作用</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 组态切换 */
+const F={
+ vs:{o:'取样 Vo，电压反馈',i:'比较 Vin − Vf，串联',zi:'比无反馈时大 (1 + AF) 倍',zo:'比无反馈时小 (1 + AF) 倍',s:'输出电压',af:'Avf = 1 + Rf/R1 = 10',
+     n:'同相放大器。反馈网络跨接在输出和反相端上，直接对 Vo 取样；输入信号和反馈信号分别进两个端子，按电压相减。运放缓冲器是它 Rf/R1 = 0 的特例，输入阻抗极高、输出阻抗极低，用来隔离前后级。'},
+ vp:{o:'取样 Vo，电压反馈',i:'比较 Iin − If，并联',zi:'比无反馈时小约 /(1 + AF) 倍',zo:'比无反馈时小 (1 + AF) 倍',s:'输出电压',af:'Avf = −Rf/Rin = −10',
+     n:'反相放大器。反馈取样方式仍是电压，但 Vin 和反馈都汇到反相端这一个节点，按电流相减，净输入电流 Iid = Iin − If。输入阻抗约等于 Rin，所以 Rin 取大时电阻噪声和失调的影响都跟着上升。'},
+ cs:{o:'取样 Io，电流反馈',i:'比较 Vin − Vf，串联',zi:'比无反馈时大 (1 + AF) 倍',zo:'比无反馈时大 (1 + AF) 倍',s:'输出电流',af:'Avf = Vo/Vin ≈ RL/Rs（近似）',
+     n:'反馈量取自串在负载回路里的 Rs，Vf = Io·Rs，所以负载变化时输出电流几乎不变，代价是输出阻抗被抬高。常用于恒流源和跨导放大器。'},
+ cp:{o:'取样 Io，电流反馈',i:'比较 Iin − If，并联',zi:'比无反馈时小约 /(1 + AF) 倍',zo:'比无反馈时大 (1 + AF) 倍',s:'输出电流',af:'Aif ≈ 1 + Rf/R2',
+     n:'电流并联，四种里最少见。反馈取样和比较方式都让电流在起作用，闭环后稳定的是输出电流。分立元件电路里偶见，运放电路基本不用。'}};
+function fU(v){
+  const d=F[v];
+  ['vs','vp','cs','cp'].forEach(k=>show($('f-g-'+k),k===v));
+  $('f-o').textContent=d.o;$('f-i').textContent=d.i;$('f-zi').textContent=d.zi;$('f-zo').textContent=d.zo;$('f-s').textContent=d.s;$('f-af').textContent=d.af;
+  $('f-note').textContent=d.n;
+}
+seg('f-m',fU);fU('vs');
+</script>
+</body>
+</html>

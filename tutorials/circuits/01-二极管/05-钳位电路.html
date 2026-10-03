@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>钳位电路</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.dio{fill:currentColor;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round}
+.src{fill:var(--panel);stroke:currentColor;stroke-width:2}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#diode">二极管</a><span class="sp"></span><span>05 / 08</span></nav>
+<header>
+  <span class="eyebrow">二极管 · 限幅与钳位</span>
+  <h1>钳位电路</h1>
+  <p class="lede">利用二极管导通后压降基本不变的特点，可以把信号削在某个电平以内（限幅），可以保护 ADC 和 IO 口，也可以配合电容把整个波形上下平移（直流钳位）。</p>
+</header>
+
+<section id="limit">
+  <span class="eyebrow">限幅 · Vref + 0.7 V</span>
+  <h2>二极管限幅：超过的部分削掉</h2>
+  <p>信号经电阻 R 送到输出，输出再经二极管接到参考电压 Vref。输出低于 Vref + 0.7 V 时二极管截止，输出等于输入；一旦超过，二极管导通，输出被钉在 Vref + 0.7 V，多出来的电压全部落在 R 上。再加一个反向的二极管接 −Vref，就能双向限幅。</p>
+  <p class="eq">Vout = min(Vin, Vref + 0.7 V)</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 345" role="img" aria-label="二极管限幅电路和输入输出波形：输入正弦波超过 Vref 加 0.7 伏的部分被削平">
+        <circle class="src" cx="40" cy="70" r="14"/>
+        <text x="40" y="75" text-anchor="middle" class="t">~</text>
+        <text x="18" y="100" text-anchor="end" class="tm">Vin</text>
+        <path class="w" d="M40,56 V40 H90 M140,40 H330 M40,84 V112 M28,112 H52 M33,117 H47 M38,122 H42"/>
+        <rect class="r" x="90" y="32" width="50" height="16" rx="2"/>
+        <text x="115" y="24" text-anchor="middle" class="v">R 1 kΩ</text>
+        <circle class="dot" cx="200" cy="40" r="3.5"/>
+        <path class="w" d="M200,40 V60 M200,80 V94 M200,100 V112 M188,112 H212 M193,117 H207 M198,122 H202"/>
+        <polygon class="dio" points="188,60 212,60 200,80"/>
+        <path class="w" style="stroke-width:2.5" d="M188,80 H212"/>
+        <path class="w" d="M190,94 H210"/>
+        <path class="w" style="stroke-width:4" d="M195,100 H205"/>
+        <text x="182" y="74" text-anchor="end" class="t">D1</text>
+        <text id="s1-vr1" x="216" y="102" class="v">+2 V</text>
+        <g id="s1-d2">
+          <circle class="dot" cx="270" cy="40" r="3.5"/>
+          <path class="w" d="M270,40 V60 M270,80 V94 M270,100 V112 M258,112 H282 M263,117 H277 M268,122 H272"/>
+          <polygon class="dio" points="258,80 282,80 270,60"/>
+          <path class="w" style="stroke-width:2.5" d="M258,60 H282"/>
+          <path class="w" style="stroke-width:4" d="M265,94 H275"/>
+          <path class="w" d="M260,100 H280"/>
+          <text x="288" y="74" class="t">D2</text>
+          <text id="s1-vr2" x="288" y="102" class="v">−2 V</text>
+        </g>
+        <text x="336" y="44" class="t">Vout</text>
+        <path id="s1-f1" class="flow thin" d="M40,56 V40 H200 V110"/>
+        <path id="s1-f2" class="flow thin" d="M270,110 V40 H42 V56"/>
+        <line class="gl" x1="50" y1="170" x2="470" y2="170"/>
+        <line class="gl" x1="50" y1="205" x2="470" y2="205"/>
+        <line class="gl" x1="50" y1="275" x2="470" y2="275"/>
+        <line class="gl" x1="50" y1="310" x2="470" y2="310"/>
+        <path class="ax" d="M50,156 V324 M50,240 H470"/>
+        <text x="44" y="174" text-anchor="end" class="v">10</text>
+        <text x="44" y="209" text-anchor="end" class="v">5</text>
+        <text x="44" y="244" text-anchor="end" class="v">0</text>
+        <text x="44" y="279" text-anchor="end" class="v">−5</text>
+        <text x="44" y="314" text-anchor="end" class="v">−10</text>
+        <text x="56" y="152" class="tm">电压 / V</text>
+        <text x="260" y="338" text-anchor="middle" class="v">T</text>
+        <text x="470" y="338" text-anchor="end" class="v">2T</text>
+        <line id="s1-hl" class="ax dash" x1="50" y1="220" x2="470" y2="220"/>
+        <line id="s1-ll" class="ax dash" x1="50" y1="260" x2="470" y2="260"/>
+        <text id="s1-hlt" x="466" y="214" text-anchor="end" class="tm">+2.7 V</text>
+        <text id="s1-llt" x="466" y="274" text-anchor="end" class="tm">−2.7 V</text>
+        <polyline id="s1-in" class="ideal" points="50,240"/>
+        <polyline id="s1-out" class="real" points="50,240"/>
+      </svg>
+      <figcaption>上面是电路，下面是波形：灰虚线是输入 Vin，橙线是输出 Vout，水平虚线是限幅电平。绿色虚线是削波时二极管导通的电流路径。按恒压降模型，二极管导通压降取 0.7 V。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">限幅方式</span>
+        <div class="seg" id="s1-m"><button id="s1-m-1" data-v="1" aria-pressed="true">单向（只削正峰）</button><button id="s1-m-2" data-v="2" aria-pressed="false">双向</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-a">输入幅度</label>
+        <span class="rv" id="s1-av">6 V</span>
+        <input type="range" id="s1-a" min="1" max="10" step="0.5" value="6"></div>
+      <div class="ctl"><label class="ctl-l" for="s1-vr">参考电压 Vref</label>
+        <span class="rv" id="s1-vrv">2 V</span>
+        <input type="range" id="s1-vr" min="0" max="5" step="0.5" value="2"></div>
+      <dl class="read">
+        <dt>正向限幅电平</dt><dd id="s1-hi">+2.7 V</dd>
+        <dt>负向限幅电平</dt><dd id="s1-lo">不限</dd>
+        <dt>输出范围</dt><dd id="s1-rg">−6.0 ~ +2.7 V</dd>
+        <dt>削波时间占比</dt><dd id="s1-fr">35 %</dd>
+        <dt>状态</dt><dd><span id="s1-state" class="chip on">正峰被削</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="io">
+  <span class="eyebrow">端口保护 · 钳到电源和地</span>
+  <h2>ADC、IO 口的钳位保护</h2>
+  <p>两只二极管把引脚夹在电源和地之间：引脚电压超过 VDD + VF，上管导通，多余电流泄放到 VDD；低于 −VF，下管导通，从地抽电流。串联电阻 R 负责限流，没有它二极管等于把信号源直接短到电源上。</p>
+  <p>MCU 引脚内部本来就有这样一对 ESD 二极管，但它们只为静电脉冲设计，允许长期流过的注入电流很小，很多 MCU 规定单个引脚约 ±5 mA。所以外部常再加一对导通电压更低的肖特基（如 BAT54S），让外部管先导通。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 215" role="img" aria-label="信号源经限流电阻接 MCU 引脚，引脚经两只二极管分别钳位到 VDD 和地">
+        <rect class="box" x="14" y="100" width="60" height="40" rx="4"/>
+        <text x="44" y="125" text-anchor="middle" class="t">信号源</text>
+        <text id="s2-vt" x="44" y="160" text-anchor="middle" class="v hi">5.0 V</text>
+        <path id="s2-w1" class="w" d="M74,120 H110"/>
+        <rect class="r" x="110" y="112" width="50" height="16" rx="2"/>
+        <text id="s2-rl" x="135" y="104" text-anchor="middle" class="v">R 1 kΩ</text>
+        <path id="s2-w2" class="w" d="M160,120 H300"/>
+        <circle class="dot" cx="240" cy="120" r="3.5"/>
+        <rect class="box" x="300" y="90" width="100" height="60" rx="4"/>
+        <text x="350" y="118" text-anchor="middle" class="t">MCU</text>
+        <text x="350" y="136" text-anchor="middle" class="tm">ADC 引脚</text>
+        <path class="w" d="M240,120 V96 M240,76 V56 M226,56 H254"/>
+        <polygon class="dio" points="228,96 252,96 240,76"/>
+        <path class="w" style="stroke-width:2.5" d="M228,76 H252"/>
+        <text x="240" y="44" text-anchor="middle" class="v">VDD 3.3 V</text>
+        <path class="w" d="M240,120 V144 M240,164 V190 M226,190 H254 M231,195 H249 M236,200 H244"/>
+        <polygon class="dio" points="228,164 252,164 240,144"/>
+        <path class="w" style="stroke-width:2.5" d="M228,144 H252"/>
+        <text x="220" y="90" text-anchor="end" class="t">D1</text>
+        <text x="220" y="160" text-anchor="end" class="t">D2</text>
+        <text id="s2-pt" x="250" y="138" class="v hi">3.60 V</text>
+        <path id="s2-fu" class="flow" d="M76,120 H240 V58"/>
+        <path id="s2-fd" class="flow" d="M240,188 V120 H76"/>
+      </svg>
+      <figcaption>绿色虚线是钳位电流。上管导通时电流灌进 VDD；如果 VDD 上负载很轻，这个电流会把电源电压抬高，叫电流倒灌。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-v">输入电压</label>
+        <span class="rv" id="s2-vv">5.0 V</span>
+        <input type="range" id="s2-v" min="-5" max="12" step="0.1" value="5"></div>
+      <div class="ctl"><span class="ctl-l">限流电阻 R</span>
+        <div class="seg" id="s2-r"><button id="s2-r-100" data-v="100" aria-pressed="false">100 Ω</button><button id="s2-r-1k" data-v="1000" aria-pressed="true">1 kΩ</button><button id="s2-r-10k" data-v="10000" aria-pressed="false">10 kΩ</button></div></div>
+      <div class="ctl"><span class="ctl-l">钳位二极管</span>
+        <div class="seg" id="s2-d"><button id="s2-d-s" data-v="0.3" aria-pressed="true">外加肖特基 0.3 V</button><button id="s2-d-i" data-v="0.6" aria-pressed="false">只靠内部 ESD 0.6 V</button></div></div>
+      <dl class="read">
+        <dt>引脚电压</dt><dd id="s2-pin">3.60 V</dd>
+        <dt>导通的二极管</dt><dd id="s2-on">D1，到 VDD</dd>
+        <dt>钳位电流</dt><dd id="s2-i">1.40 mA</dd>
+        <dt>结论</dt><dd><span id="s2-state" class="chip warn">钳位中</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+      <p class="note">示意：二极管按恒压降处理，注入电流限值 ±5 mA 以常见 MCU 为例，以具体数据手册为准。</p>
+    </div>
+  </div>
+</section>
+
+<section id="dc">
+  <span class="eyebrow">直流钳位 · 电容加二极管</span>
+  <h2>直流钳位：波形不变，整体平移</h2>
+  <p>电容串在信号通路里，二极管从输出接到参考电压。以"抬高"接法为例：输入负半周时二极管导通，电容被充到约 A − 0.7 V + Vref，右正左负。之后二极管不再导通，电容像一节电池串在信号上，输出 = 输入 + 电容电压，整个波形被往上抬，最低点钉在 Vref − 0.7 V。二极管反过来接就是往下压。</p>
+  <p>条件是 RC 远大于信号周期，电容在一个周期里几乎不放电。电视信号恢复直流电平、倍压整流的第一级都是这个电路。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 360" role="img" aria-label="电容串联、二极管接参考电压的直流钳位电路，以及输入和输出波形，输出被整体上移或下移">
+        <circle class="src" cx="40" cy="70" r="14"/>
+        <text x="40" y="75" text-anchor="middle" class="t">~</text>
+        <text x="18" y="100" text-anchor="end" class="tm">Vin</text>
+        <path class="w" d="M40,56 V40 H104 M114,40 H330 M40,84 V112 M28,112 H52 M33,117 H47 M38,122 H42"/>
+        <path class="w" style="stroke-width:2.5" d="M104,28 V52 M114,28 V52"/>
+        <text x="109" y="20" text-anchor="middle" class="t">C</text>
+        <text id="s3-vcl" x="109" y="70" text-anchor="middle" class="v">7.3 V</text>
+        <circle class="dot" cx="200" cy="40" r="3.5"/>
+        <path class="w" d="M200,40 V64 M200,84 V94 M200,100 V112 M188,112 H212 M193,117 H207 M198,122 H202 M190,94 H210"/>
+        <path class="w" style="stroke-width:4" d="M195,100 H205"/>
+        <polygon id="s3-tri" class="dio" points="188,84 212,84 200,64"/>
+        <path id="s3-bar" class="w" style="stroke-width:2.5" d="M188,64 H212"/>
+        <text x="182" y="80" text-anchor="end" class="t">D</text>
+        <text id="s3-vrl" x="216" y="102" class="v">Vref 0 V</text>
+        <text x="336" y="44" class="t">Vout</text>
+        <path id="s3-f" class="flow thin" d="M200,110 V40 H116 M102,40 H40 V56"/>
+        <line class="gl" x1="50" y1="160" x2="470" y2="160"/>
+        <line class="gl" x1="50" y1="205" x2="470" y2="205"/>
+        <line class="gl" x1="50" y1="295" x2="470" y2="295"/>
+        <line class="gl" x1="50" y1="340" x2="470" y2="340"/>
+        <path class="ax" d="M50,156 V344 M50,250 H470"/>
+        <text x="44" y="164" text-anchor="end" class="v">20</text>
+        <text x="44" y="209" text-anchor="end" class="v">10</text>
+        <text x="44" y="254" text-anchor="end" class="v">0</text>
+        <text x="44" y="299" text-anchor="end" class="v">−10</text>
+        <text x="44" y="344" text-anchor="end" class="v">−20</text>
+        <text x="56" y="152" class="tm">电压 / V（横轴 3 个周期）</text>
+        <line id="s3-cl" class="ax dash" x1="50" y1="253" x2="470" y2="253"/>
+        <text id="s3-clt" x="466" y="268" text-anchor="end" class="tm">钳位电平 −0.7 V</text>
+        <polyline id="s3-in" class="ideal" points="50,250"/>
+        <polyline id="s3-out" class="real" points="50,250"/>
+      </svg>
+      <figcaption>灰虚线是输入，橙线是输出。第一个周期里电容还在充电，之后输出形状和输入完全一样，只是整体平移了。绿色虚线是充电电流路径，只在波峰附近二极管导通时流过。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">二极管方向</span>
+        <div class="seg" id="s3-m"><button id="s3-m-u" data-v="u" aria-pressed="true">抬高（正钳位）</button><button id="s3-m-d" data-v="d" aria-pressed="false">下移（负钳位）</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s3-a">输入幅度 A</label>
+        <span class="rv" id="s3-av">8 V</span>
+        <input type="range" id="s3-a" min="1" max="8" step="0.5" value="8"></div>
+      <div class="ctl"><label class="ctl-l" for="s3-vr">参考电压 Vref</label>
+        <span class="rv" id="s3-vrv">0 V</span>
+        <input type="range" id="s3-vr" min="-3" max="3" step="0.5" value="0"></div>
+      <dl class="read">
+        <dt>电容稳态电压</dt><dd id="s3-vc">7.3 V</dd>
+        <dt>输出直流电平</dt><dd id="s3-dc">+7.3 V</dd>
+        <dt>输出范围</dt><dd id="s3-rg">−0.7 ~ +15.3 V</dd>
+        <dt>峰峰值</dt><dd id="s3-pp">16 V，和输入相同</dd>
+        <dt>效果</dt><dd><span id="s3-state" class="chip on">整体上移</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>限幅电路和钳位电路有什么区别？</summary>
+      <div class="ans"><p>限幅是把超出范围的部分削掉，波形形状变了，靠的是二极管导通后压降恒定，需要串联电阻承担多余电压。直流钳位是用电容加二极管把整个波形上下平移，形状和峰峰值都不变，改变的是直流电平。</p></div></details>
+    <details><summary>ADC 输入口怎么做过压保护？</summary>
+      <div class="ans"><p>串一个限流电阻，再用两只二极管分别钳到 VDD 和地，常用 BAT54S 这类双肖特基，让它比芯片内部的 ESD 二极管先导通。电阻要保证最坏情况下的钳位电流不超过芯片允许的注入电流。电阻也不能太大，否则 ADC 采样电容来不及充电，一般在引脚处再加一个小电容。</p></div></details>
+    <details><summary>钳位到 VDD 有什么隐患？</summary>
+      <div class="ans"><p>上管导通时电流灌进 VDD。如果系统此时耗电很小，或者 VDD 还没上电，这个电流会把 VDD 抬高，甚至让芯片从 IO 口被"反向供电"。输入可能长时间过压的场合，可以改用钳到齐纳或 TVS，或者用专门的保护芯片。</p></div></details>
+    <details><summary>二极管限幅的输出为什么不是刚好 Vref？</summary>
+      <div class="ans"><p>因为二极管要导通需要约 0.7 V（肖特基约 0.3 V），所以输出被限在 Vref + VF。VF 还会随电流和温度变化，所以二极管限幅不是精确的，要精确就用运放做精密限幅。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="04-续流二极管.html"><span>上一页</span>续流二极管</a><a class="next" href="06-稳压二极管应用.html"><span>下一页</span>稳压二极管应用</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+const VD=0.7,TAU=2*Math.PI;
+const sgn=v=>(v<0?'−':'+')+Math.abs(v).toFixed(1)+' V';
+const P2=(x,y)=>x.toFixed(1)+','+y.toFixed(1);
+
+/* 1. 限幅 */
+const s1={dbl:false};
+const X1=t=>50+t*210,Y1=v=>240-v*7;
+function s1u(){
+  const A=+$('s1-a').value,vr=+$('s1-vr').value,hi=vr+VD,lo=s1.dbl?-(vr+VD):-Infinity;
+  $('s1-av').textContent=A+' V';$('s1-a').setAttribute('aria-valuetext',A+' V');
+  $('s1-vrv').textContent=vr+' V';$('s1-vr').setAttribute('aria-valuetext',vr+' V');
+  $('s1-vr1').textContent='+'+vr+' V';$('s1-vr2').textContent='−'+vr+' V';
+  show($('s1-d2'),s1.dbl);
+  const pi=[],po=[];let clip=0;const N=400;
+  for(let k=0;k<=N;k++){const t=2*k/N,vi=A*Math.sin(TAU*t),vo=Math.max(lo,Math.min(hi,vi));
+    if(vo!==vi&&k<N)clip++;pi.push(P2(X1(t),Y1(vi)));po.push(P2(X1(t),Y1(vo)));}
+  $('s1-in').setAttribute('points',pi.join(' '));$('s1-out').setAttribute('points',po.join(' '));
+  const hl=$('s1-hl'),ll=$('s1-ll');hl.setAttribute('y1',Y1(hi));hl.setAttribute('y2',Y1(hi));
+  $('s1-hlt').setAttribute('y',(Y1(hi)-6).toFixed(1));$('s1-hlt').textContent=sgn(hi);
+  show(ll,s1.dbl);show($('s1-llt'),s1.dbl);
+  if(s1.dbl){ll.setAttribute('y1',Y1(lo));ll.setAttribute('y2',Y1(lo));$('s1-llt').setAttribute('y',(Y1(lo)+16).toFixed(1));$('s1-llt').textContent=sgn(lo);}
+  const cp=A>hi,cn=s1.dbl&&A>-lo;
+  show($('s1-f1'),cp);show($('s1-f2'),cn);
+  $('s1-hi').textContent=sgn(hi);$('s1-lo').textContent=s1.dbl?sgn(lo):'不限';
+  $('s1-rg').textContent=sgn(Math.max(-A,lo)).replace('+','')+' ~ '+sgn(Math.min(A,hi));
+  const fr=clip/N;$('s1-fr').textContent=(fr*100).toFixed(0)+' %';
+  let note;
+  if(!cp&&!cn){chip($('s1-state'),'未限幅','off');note='输入峰值 '+A+' V 没超过 Vref + 0.7 V = '+hi.toFixed(1)+' V，二极管一直截止，输出等于输入。把幅度调大试试。';}
+  else{chip($('s1-state'),cp&&cn?'正负峰都被削':'正峰被削','on');
+    note='输入超过 '+hi.toFixed(1)+' V 时 D1 导通，输出被钉住，多出来的最多 '+(A-hi).toFixed(1)+' V 压在 R 上，R 里电流最大 '+fmtA((A-hi)/1000)+'。'+(s1.dbl?'负半周同理由 D2 限在 '+sgn(lo)+'。':'负半周 D1 反偏，波形原样通过。');}
+  $('s1-note').textContent=note;
+}
+seg('s1-m',v=>{s1.dbl=v==='2';s1u();});
+$('s1-a').addEventListener('input',s1u);$('s1-vr').addEventListener('input',s1u);
+s1u();
+
+/* 2. IO 保护 */
+const s2={r:1000,vf:0.3},VDD=3.3,IINJ=5e-3;
+function s2u(){
+  const vin=+$('s2-v').value,R=s2.r,vf=s2.vf;
+  let pin,I,st;
+  if(vin>VDD+vf){pin=VDD+vf;I=(vin-pin)/R;st='up';}
+  else if(vin<-vf){pin=-vf;I=(vin-pin)/R;st='dn';}
+  else{pin=vin;I=0;st='ok';}
+  $('s2-vv').textContent=fmtV(vin,1);$('s2-v').setAttribute('aria-valuetext',fmtV(vin,1));
+  $('s2-vt').textContent=fmtV(vin,1);setLv($('s2-vt'),null,vin>0);
+  $('s2-pt').textContent=fmtV(pin);setLv($('s2-pt'),null,pin>0);
+  $('s2-rl').textContent='R '+fmtR(R);
+  show($('s2-fu'),st==='up');show($('s2-fd'),st==='dn');
+  $('s2-pin').textContent=fmtV(pin);
+  $('s2-on').textContent=st==='up'?'D1，泄放到 VDD':st==='dn'?'D2，从地抽电流':'都不导通';
+  $('s2-i').textContent=I===0?'0':fmtA(I);
+  const over=Math.abs(I)>IINJ,intl=vf>0.5;
+  let note;
+  if(st==='ok'){chip($('s2-state'),'正常','on');note='输入在 −VF 到 VDD + VF 之间，两只二极管都反偏，信号原样送到 ADC。';}
+  else if(over){chip($('s2-state'),'电流超限','bad');note='钳位电流 '+fmtA(Math.abs(I))+' 超过约 5 mA 的注入限值。钳位电流 = (Vin − 钳位电压) / R，把 R 加大到 '+fmtR(Math.abs(vin-pin)/IINJ)+' 以上才行。';}
+  else{chip($('s2-state'),'钳位中','warn');
+    note=(st==='up'?'D1 导通，引脚被钳在 VDD + '+vf+' V。':'D2 导通，引脚被钳在 −'+vf+' V。')+'多出来的 '+fmtV(Math.abs(vin-pin),1)+' 压在 R 上，电流在允许范围内。'
+      +(intl?'但这是芯片内部的 ESD 管在长期导通，超出了它的设计用途，也更容易触发闩锁。':'外部肖特基比内部 ESD 管先导通，内部管基本不承担电流。');}
+  $('s2-note').textContent=note;
+}
+seg('s2-r',v=>{s2.r=+v;s2u();});
+seg('s2-d',v=>{s2.vf=+v;s2u();});
+$('s2-v').addEventListener('input',s2u);
+s2u();
+
+/* 3. 直流钳位 */
+const s3={up:true};
+const X3=t=>50+t*140,Y3=v=>250-v*4.5;
+function s3u(){
+  const A=+$('s3-a').value,vr=+$('s3-vr').value,up=s3.up;
+  $('s3-av').textContent=A+' V';$('s3-a').setAttribute('aria-valuetext',A+' V');
+  $('s3-vrv').textContent=vr+' V';$('s3-vr').setAttribute('aria-valuetext',vr+' V');
+  $('s3-vrl').textContent='Vref '+(vr<0?'−':'')+Math.abs(vr)+' V';
+  let vc=0;const pi=[],po=[];
+  for(let k=0;k<=480;k++){const t=3*k/480,vi=A*Math.sin(TAU*t);
+    vc=up?Math.max(vc,(vr-VD)-vi):Math.min(vc,(vr+VD)-vi);
+    pi.push(P2(X3(t),Y3(vi)));po.push(P2(X3(t),Y3(vi+vc)));}
+  $('s3-in').setAttribute('points',pi.join(' '));$('s3-out').setAttribute('points',po.join(' '));
+  const lv=up?vr-VD:vr+VD,vcs=up?lv+A:lv-A;
+  const cl=$('s3-cl');cl.setAttribute('y1',Y3(lv));cl.setAttribute('y2',Y3(lv));
+  $('s3-clt').setAttribute('y',(up?Y3(lv)+16:Y3(lv)-6).toFixed(1));$('s3-clt').textContent='钳位电平 '+sgn(lv);
+  $('s3-tri').setAttribute('points',up?'188,84 212,84 200,64':'188,64 212,64 200,84');
+  $('s3-bar').setAttribute('d',up?'M188,64 H212':'M188,84 H212');
+  $('s3-f').classList.toggle('rev',!up);
+  $('s3-vcl').textContent=fmtV(Math.abs(vcs),1);
+  $('s3-vc').textContent=fmtV(Math.abs(vcs),1)+(vcs>=0?'，右正左负':'，左正右负');
+  $('s3-dc').textContent=sgn(vcs);
+  $('s3-rg').textContent=(up?sgn(lv)+' ~ '+sgn(lv+2*A):sgn(lv-2*A)+' ~ '+sgn(lv)).replace(/\+/g,'');
+  $('s3-pp').textContent=2*A+' V，和输入相同';
+  chip($('s3-state'),up?'整体上移':'整体下移','on');
+  $('s3-note').textContent=up?'二极管阴极接输出，输出低于 '+sgn(lv)+' 时它导通给电容充电，所以输出最低点被钉在这里，整个正弦波被抬高 '+fmtV(Math.abs(vcs),1)+'。'
+    :'二极管阳极接输出，输出高于 '+sgn(lv)+' 时它导通给电容充电，所以输出最高点被钉在这里，整个正弦波被往下压 '+fmtV(Math.abs(vcs),1)+'。';
+}
+seg('s3-m',v=>{s3.up=v==='u';s3u();});
+$('s3-a').addEventListener('input',s3u);$('s3-vr').addEventListener('input',s3u);
+s3u();
+</script>
+</body>
+</html>

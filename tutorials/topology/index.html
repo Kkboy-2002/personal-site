@@ -1,0 +1,2438 @@
+<meta name="color-scheme" content="dark">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>硬件拓扑图实验室</title>
+<style>
+:root{
+  --bg:#080c11;--panel:#0f1621;--panel2:#0c121b;--line:#1e2a3a;
+  --tx:#dce7f2;--mu:#7d92a7;--dim:#55677a;
+  --cy:#3ad0e6;--am:#ffb03a;--gr:#5ddf9c;--rd:#ff6b6b;--pu:#a78bfa;--pk:#f472b6;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,"Courier New",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--tx);
+  font:14px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
+.wrap{display:flex;align-items:flex-start}
+nav{position:sticky;top:0;flex:0 0 214px;width:214px;height:100vh;overflow:auto;
+  background:var(--panel2);border-right:1px solid var(--line);padding:20px 0 40px;z-index:5}
+nav .brand{padding:0 18px 14px;font-weight:700}
+nav .brand small{display:block;font-weight:400;color:var(--dim);font-size:11px;margin-top:3px}
+nav a{display:block;padding:8px 18px;color:var(--mu);text-decoration:none;font-size:13px;
+  border-left:2px solid transparent}
+nav a:hover{color:var(--tx);background:#131d29}
+nav a.on{color:var(--cy);border-left-color:var(--cy);background:#0f1a26}
+nav .grp{padding:15px 18px 5px;font-size:11px;color:var(--dim);letter-spacing:1px}
+main{flex:1;min-width:0;padding:26px 32px 110px;max-width:1200px}
+h1{font-size:24px;margin:0 0 6px}
+h2{font-size:19px;margin:0 0 5px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+h2 .tag{font:400 11px/1.6 var(--mono);color:var(--cy);border:1px solid #1d3d47;
+  background:#0c1f26;padding:1px 8px;border-radius:99px}
+h3{font-size:14px;margin:16px 0 5px}
+h4{margin:0 0 8px;font-size:12px;color:var(--mu);font-weight:600;letter-spacing:.5px}
+p{margin:8px 0}
+.sub{color:var(--mu);margin:0 0 14px}
+section{padding:32px 0;border-top:1px solid var(--line)}
+section:first-of-type{border-top:0;padding-top:6px}
+.g2{display:grid;grid-template-columns:minmax(0,1.28fr) minmax(0,.72fr);gap:18px;
+  align-items:start}
+.g2c{display:grid;grid-template-columns:repeat(auto-fit,minmax(262px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card.tight{padding:10px}
+.card+.card{margin-top:12px}
+svg.dia{width:100%;height:auto;display:block}
+canvas{width:100%;display:block}
+ul{margin:6px 0;padding-left:19px}
+li{margin:3px 0}
+.ctrls{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:11px 15px;margin-top:12px}
+.ctrl{font-size:12px}
+.ctrl .lab{display:flex;justify-content:space-between;color:var(--mu);margin-bottom:3px;gap:6px}
+.ctrl .lab b{color:var(--cy);font:600 12px/1.5 var(--mono);white-space:nowrap}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;
+  background:#22323f;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;
+  border-radius:50%;background:var(--cy);border:2px solid #06222a;cursor:pointer}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border:2px solid #06222a;
+  border-radius:50%;background:var(--cy);cursor:pointer}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+button{background:#16222f;color:var(--tx);border:1px solid #26374a;border-radius:8px;
+  padding:6px 12px;font:12px/1.4 inherit;cursor:pointer}
+button:hover{background:#1d2c3c;border-color:#38516b}
+button.pri{background:#0d2b33;border-color:#1d5766;color:var(--cy)}
+.reads{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:8px;margin-top:12px}
+.read{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px 9px}
+.read .k{font-size:10.5px;color:var(--dim);white-space:nowrap}
+.read .v{font:600 16px/1.4 var(--mono);color:var(--cy)}
+.read .v small{font-size:10.5px;color:var(--mu);font-weight:400}
+.read.am .v{color:var(--am)}.read.gr .v{color:var(--gr)}.read.pu .v{color:var(--pu)}
+.read.rd .v{color:var(--rd)}.read.pk .v{color:var(--pk)}
+.legend{display:flex;flex-wrap:wrap;gap:13px;font-size:11px;color:var(--mu);margin-top:7px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:5px;
+  vertical-align:3px}
+.note{background:#0d1620;border-left:3px solid var(--am);border-radius:0 8px 8px 0;
+  padding:9px 12px;margin:11px 0;font-size:12.5px;color:#c6d5e3}
+.note.cy{border-left-color:var(--cy)}.note.rd{border-left-color:var(--rd)}
+.note.gr{border-left-color:var(--gr)}
+code,.m{font-family:var(--mono);font-size:12.5px;background:#0d1620;border:1px solid #1b2735;
+  padding:1px 5px;border-radius:5px;color:#a8e8f2}
+.eq{font-family:var(--mono);font-size:12.5px;background:#0b131c;border:1px solid #1b2735;
+  border-radius:8px;padding:9px 11px;margin:9px 0;color:#b9d4e2;overflow-x:auto;white-space:pre}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:10px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mu);font-weight:600;font-size:11.5px}
+td.mo{font-family:var(--mono);color:var(--am);white-space:nowrap}
+.warn{color:var(--rd)}.ok{color:var(--gr)}
+.dia .wire{fill:none;stroke:#3e5468;stroke-width:2;stroke-linecap:round}
+.dia .rail{fill:none;stroke:#4d6780;stroke-width:2.6}
+.dia .comp{fill:none;stroke:#a3b9cb;stroke-width:2;stroke-linejoin:round}
+.dia .fill{fill:#101b26;stroke:#354a5e;stroke-width:1.6}
+.dia .sym{fill:none;stroke:#a3b9cb;color:#a3b9cb;stroke-width:2;stroke-linejoin:round;
+  stroke-linecap:round}
+.dia .blk{fill:#111c28;stroke:#2c4257;stroke-width:1.5}
+.dia text{fill:#9db2c6;font:11px var(--mono)}
+.dia text.n{fill:#e4eef7;font-weight:600}
+.dia text.v{fill:var(--cy)}
+.dia text.i{fill:var(--am)}
+.dia text.s{font-size:9.5px;fill:var(--dim)}
+.dia .node{fill:#3ad0e6}
+.dia .flow{fill:none;stroke:var(--am);stroke-width:3.4;stroke-linecap:round;
+  stroke-dasharray:2.5 11;opacity:0}
+.dia .flow.on{opacity:.95}
+.dia .flow.p{stroke:var(--pu)}
+.dia .flow.g{stroke:var(--gr)}
+.dia .lit{stroke:var(--am);color:var(--am);filter:drop-shadow(0 0 5px rgba(255,176,58,.75))}
+.dia .lit2{stroke:var(--gr);color:var(--gr);filter:drop-shadow(0 0 5px rgba(93,223,156,.65))}
+.dia .dull{opacity:.3}
+@keyframes fl{to{stroke-dashoffset:-54}}
+.dia .anim{animation:fl 1s linear infinite;opacity:.95}
+.dia .anim.s2{animation-duration:1.9s}
+.layers{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:10px;margin:14px 0}
+.layer{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+.layer b{display:block;color:var(--cy);font-size:13px}
+.layer .lv{font:600 10px/1.4 var(--mono);color:var(--dim);letter-spacing:1px}
+.layer p{margin:5px 0 0;font-size:12px;color:var(--mu)}
+.layer.hl{border-color:#1d5766;background:#0d1a22}
+.bar{height:8px;border-radius:5px;background:#1a2735;overflow:hidden;margin:6px 0 2px}
+.bar i{display:block;height:100%;border-radius:5px;
+  background:linear-gradient(90deg,#5ddf9c,#ffb03a,#ff6b6b);transition:width .15s}
+.bits{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px}
+.bit{width:32px;text-align:center;padding:4px 0;border-radius:6px;background:#101b26;
+  border:1px solid var(--line);font:600 13px/1.3 var(--mono);color:var(--dim)}
+.bit.one{color:var(--gr);border-color:#20503a;background:#0d1f18}
+.bit.zero{color:#6b7d8f}
+.bit.cur{border-color:var(--cy);background:#0d232b}
+.bit .w{display:block;font-size:8.5px;color:var(--dim);font-weight:400}
+.tg{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.tg label{display:flex;align-items:center;gap:5px;background:#101b26;border:1px solid var(--line);
+  border-radius:7px;padding:4px 9px;font-size:11.5px;cursor:pointer;color:var(--mu)}
+.tg label:has(input:checked){color:var(--tx);border-color:#2b4a5e;background:#0e2028}
+.foot{color:var(--dim);font-size:12px;padding:24px 0 0;border-top:1px solid var(--line);margin-top:28px}
+@media(max-width:1020px){.g2{grid-template-columns:1fr}}
+@media(max-width:900px){
+ .wrap{flex-direction:column}
+ nav{position:sticky;top:0;width:100%;flex:none;height:auto;border-right:0;
+  border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;padding:8px}
+ nav .brand,nav .grp{display:none}
+ nav a{border-left:0;padding:6px 9px;font-size:12px}
+ main{padding:16px 13px 70px}
+}
+</style>
+<div class="wrap">
+<nav>
+  <div class="brand">硬件拓扑图实验室<small>可调参数 · 实时电流流向 · 波形</small></div>
+  <div class="grp">基础</div>
+  <a href="#intro">① 什么是拓扑图</a>
+  <div class="grp">开关电源</div>
+  <a href="#buck">② Buck 降压</a>
+  <a href="#boost">③ Boost 升压</a>
+  <a href="#dctopo">④ DC-DC 拓扑选型</a>
+  <a href="#ldo">⑤ LDO 线性稳压</a>
+  <a href="#filter">⑥ LC 滤波与纹波</a>
+  <div class="grp">混合信号</div>
+  <a href="#opamp">⑦ 运放基本电路</a>
+  <a href="#adc">⑧ SAR ADC 逐次逼近</a>
+  <div class="grp">系统级</div>
+  <a href="#tree">⑨ 电源树 Power Tree</a>
+  <a href="#bus">⑩ 通信总线拓扑</a>
+</nav>
+<main>
+<!-- 标准元件符号库(GB/T 4728 / IEC 风格),各拓扑图用 <use href="#..."> 引用 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <g id="nmos">
+    <path vector-effect="non-scaling-stroke" d="M0 -25 V-9.5 H-12 M0 25 V9.5 H-12 M-12 0 H0 V9.5
+      M-12 -13 V-6 M-12 -3.5 V3.5 M-12 6 V13 M-18 -12 V12 M-18 0 H-36"/>
+    <path fill="currentColor" stroke="none" d="M-12 0 L-5 -3.2 V3.2 Z"/>
+  </g>
+  <g id="pmos">
+    <path vector-effect="non-scaling-stroke" d="M0 -25 V-9.5 H-12 M0 25 V9.5 H-12 M-12 0 H0 V-9.5
+      M-12 -13 V-6 M-12 -3.5 V3.5 M-12 6 V13 M-18 -12 V12 M-18 0 H-36"/>
+    <path fill="currentColor" stroke="none" d="M-2 0 L-9 -3.2 V3.2 Z"/>
+  </g>
+  <g id="diode">
+    <path vector-effect="non-scaling-stroke" d="M0 -20 V-10 M0 10 V20 M-10 10 H10"/>
+    <path vector-effect="non-scaling-stroke" fill="#101b26" d="M-10 -10 H10 L0 10 Z"/>
+  </g>
+  <g id="res">
+    <path vector-effect="non-scaling-stroke" d="M0 -26 V-18 M0 18 V26"/>
+    <rect vector-effect="non-scaling-stroke" fill="#101b26" x="-7" y="-18" width="14" height="36"/>
+  </g>
+  <g id="opamp">
+    <path vector-effect="non-scaling-stroke" fill="#101b26" d="M0 -26 V26 L54 0 Z"/>
+    <path vector-effect="non-scaling-stroke" d="M5 -12 H11 M8 -15 V-9 M5 12 H11"/>
+  </g>
+</defs></svg>
+
+<section id="intro">
+  <h1>硬件拓扑图实验室</h1>
+  <p class="sub">拓扑图只回答一件事:<b>谁和谁连在一起、按什么结构连</b>。它不关心型号、封装和走线位置。
+  下面每一节都可以拖动参数、看电流实时流动、看波形跟着变。</p>
+
+  <h3>四个抽象层次,别搞混</h3>
+  <div class="layers">
+    <div class="layer"><span class="lv">L1</span><b>框图 Block</b>
+      <p>只有功能方块和箭头。电源 → MCU → 传感器。粒度最粗,用来对齐需求。</p></div>
+    <div class="layer hl"><span class="lv">L2 · 本页</span><b>拓扑图 Topology</b>
+      <p>出现关键元件(开关管/电感/电容/节点),用<b>标准电路符号</b>画,但不带型号和参数。表达<b>连接结构</b>和<b>能量、信号流向</b>。</p></div>
+    <div class="layer"><span class="lv">L3</span><b>原理图 Schematic</b>
+      <p>拓扑 + 型号 + 阻容值 + 位号 + 网络名。可以直接导出 BOM 和网表。</p></div>
+    <div class="layer"><span class="lv">L4</span><b>PCB 布局布线</b>
+      <p>物理层:坐标、层叠、线宽、间距、回流路径。同一原理图能画出好坏差很远的 PCB。</p></div>
+  </div>
+  <div class="card tight">
+    <h4 style="padding:2px 4px 0">本页使用的标准符号(GB/T 4728 / IEC)</h4>
+    <svg class="dia" viewBox="0 0 760 84">
+      <use class="sym" href="#nmos" transform="translate(56 36)"/>
+      <use class="sym" href="#pmos" transform="translate(156 36)"/>
+      <use class="sym" href="#diode" transform="translate(250 36)"/>
+      <use class="sym" href="#res" transform="translate(350 36)"/>
+      <path class="comp" d="M450 12 V30 M450 42 V60 M436 30 H464 M436 42 H464"/>
+      <path class="comp" d="M520 36 a7.5 7.5 0 0 1 15 0 a7.5 7.5 0 0 1 15 0 a7.5 7.5 0 0 1 15 0
+        a7.5 7.5 0 0 1 15 0"/>
+      <path class="comp" d="M640 20 V40 M626 40 H654 M631 45 H649 M636 50 H644"/>
+      <use class="sym" href="#opamp" transform="translate(692 36) scale(.8)"/>
+      <text class="s" x="24" y="78">NMOS 开关管</text>
+      <text class="s" x="124" y="78">PMOS 调整管</text>
+      <text class="s" x="232" y="78">二极管</text>
+      <text class="s" x="322" y="78">电阻 / 负载</text>
+      <text class="s" x="438" y="78">电容</text>
+      <text class="s" x="538" y="78">电感</text>
+      <text class="s" x="634" y="78">地</text>
+      <text class="s" x="700" y="78">运放</text>
+    </svg>
+  </div>
+  <div class="note cy">一个拓扑对应无数张原理图。换个型号的 MOS、换个电感值,拓扑不变;
+  但把二极管换成同步管、把电感挪到另一条支路,<b>拓扑就变了</b>——这是判断"改动大不大"的标准。</div>
+
+  <h3>硬件里"拓扑"这个词的四种用法</h3>
+  <table>
+    <tr><th style="width:118px">语境</th><th>指什么</th><th style="width:230px">常见选项</th></tr>
+    <tr><td class="mo">电源拓扑</td><td>开关、电感、电容、二极管的连接方式,决定能量怎么搬</td>
+      <td>Buck / Boost / Buck-Boost / SEPIC / 反激 / 正激 / 半桥 / 全桥 / LLC</td></tr>
+    <tr><td class="mo">互连拓扑</td><td>多个器件挂在一组信号上的物理结构</td>
+      <td>点对点 / 总线型 / 菊花链 / 星形 / 环形 / 树形</td></tr>
+    <tr><td class="mo">走线拓扑</td><td>高速信号的分支方式与长度关系</td>
+      <td>T 型 / fly-by 菊花链 / 星形 / 远端与近端匹配</td></tr>
+    <tr><td class="mo">单元接法</td><td>一个功能块内部的电路结构形式</td>
+      <td>共射共基共集 / 反相同相差分 / L 型 T 型 π 型滤波</td></tr>
+  </table>
+  <div class="note">为什么要先画拓扑图:结构错了,换任何型号都救不回来。而且不用具体器件就能先估算
+  效率、压差、终端匹配、上拉阻值——这是选型前唯一能做的定量工作。</div>
+</section>
+<section id="buck">
+  <h2>Buck 降压拓扑 <span class="tag">同步降压 DC-DC</span></h2>
+  <p class="sub">开关把输入电压斩成方波,电感和电容把方波的<b>平均值</b>取出来。核心直觉:
+  电感不允许电流突变,所以它把断续的开关电流"抹平"成连续的输出电流。</p>
+  <div class="g2">
+  <div>
+    <div class="card tight">
+    <svg class="dia" viewBox="0 0 660 248">
+      <path class="wire" d="M44 64 H168 M218 64 H320 M440 64 H561 M100 64 V118 M100 130 V196
+        M300 64 V103 M300 153 V196 M490 64 V118 M490 130 V196 M561 64 V104 M561 156 V196 M44 196 V208"/>
+      <path class="rail" d="M44 196 H561"/>
+      <path class="comp" d="M30 208 H58 M35 213 H53 M40 218 H48"/>
+      <path class="comp" d="M86 118 H114 M86 130 H114"/>
+      <path class="comp" d="M320 64 a15 15 0 0 1 30 0 a15 15 0 0 1 30 0 a15 15 0 0 1 30 0
+        a15 15 0 0 1 30 0"/>
+      <path class="comp" d="M476 118 H504 M476 130 H504"/>
+      <use class="sym" href="#res" transform="translate(561 130)"/>
+      <circle class="node" cx="44" cy="64" r="4"/>
+      <circle class="node" cx="100" cy="64" r="3.6"/>
+      <circle class="node" cx="300" cy="64" r="3.6"/><circle class="node" cx="490" cy="64" r="3.6"/>
+      <use id="bkQ1" class="sym lit" href="#nmos" transform="translate(193 64) rotate(-90)"/>
+      <use id="bkQ2" class="sym" href="#nmos" transform="translate(300 128)"/>
+      <path id="bkFon" class="flow" d="M44 64 H183.5 V76 H202.5 V64 H561 V196 H44"/>
+      <path id="bkFoff" class="flow p" d="M300 196 V137.5 H288 V118.5 H300 V64 H561 V196 H300"/>
+      <text class="n" x="18" y="46">VIN <tspan id="bkTvin" class="v">12.0V</tspan></text>
+      <text x="76" y="150">Cin</text>
+      <text class="n" x="160" y="44">Q1 <tspan class="s">高边 NMOS</tspan></text>
+      <text id="bkQ1g" class="s" x="200" y="108">G=1 通</text>
+      <text class="n" x="244" y="46">SW</text>
+      <text class="n" x="314" y="132">Q2 <tspan class="s">同步整流 NMOS(或二极管)</tspan></text>
+      <text id="bkQ2g" class="s" x="218" y="132">G=0 断</text>
+      <text x="336" y="34">L1 = <tspan id="bkTl" class="v">22</tspan> µH</text>
+      <text id="bkTil" class="i" x="332" y="90">iL = 0.90 A</text>
+      <text x="462" y="164">C1 = <tspan id="bkTc" class="v">47</tspan> µF</text>
+      <text class="n" x="440" y="46">VOUT <tspan id="bkTvo" class="v">4.20V</tspan></text>
+      <text class="n" x="584" y="122">负载</text>
+      <text x="584" y="140"><tspan id="bkTr" class="v">4.0</tspan> Ω</text>
+      <text id="bkState" class="i" x="18" y="236">Q1 导通:输入向电感充能</text>
+    </svg>
+    </div>
+    <div class="card tight">
+      <h4 style="padding:2px 4px 0">稳态波形(慢动作,阴影为 Q1 导通区间)</h4>
+      <canvas id="bkWave" style="height:262px"></canvas>
+      <div class="legend"><span><i style="background:#4a6c80"></i>SW 节点电压</span>
+        <span><i style="background:#3ad0e6"></i>VOUT</span>
+        <span><i style="background:#ffb03a"></i>电感电流 iL</span>
+        <span><i style="background:#586b7d"></i>平均值参考</span></div>
+    </div>
+    <div class="ctrls">
+      <div class="ctrl"><div class="lab"><span>输入 VIN</span><b id="bkVinv">12.0 V</b></div>
+        <input type="range" id="bkVin" min="4" max="24" step="0.5" value="12"></div>
+      <div class="ctrl"><div class="lab"><span>占空比 D</span><b id="bkDv">35 %</b></div>
+        <input type="range" id="bkD" min="0.03" max="0.95" step="0.01" value="0.35"></div>
+      <div class="ctrl"><div class="lab"><span>电感 L</span><b id="bkLv">22 µH</b></div>
+        <input type="range" id="bkL" min="2" max="100" step="1" value="22"></div>
+      <div class="ctrl"><div class="lab"><span>输出电容 C</span><b id="bkCv">47 µF</b></div>
+        <input type="range" id="bkC" min="4" max="470" step="1" value="47"></div>
+      <div class="ctrl"><div class="lab"><span>负载 R</span><b id="bkRv">4.0 Ω</b></div>
+        <input type="range" id="bkR" min="0.5" max="60" step="0.5" value="4"></div>
+      <div class="ctrl"><div class="lab"><span>开关频率 fs</span><b id="bkFsv">200 kHz</b></div>
+        <input type="range" id="bkFs" min="50" max="1000" step="10" value="200"></div>
+      <div class="ctrl"><div class="lab"><span>慢放速度</span><b id="bkSpv">5.0 µs/秒</b></div>
+        <input type="range" id="bkSp" min="-6.5" max="-3.6" step="0.05" value="-5.3"></div>
+    </div>
+    <div class="btns">
+      <button class="pri" id="bkRun">暂停</button>
+      <button id="bkSs">跳到稳态</button>
+      <button id="bkZero">从零重启(看软启动)</button>
+    </div>
+    <div class="reads">
+      <div class="read"><div class="k">VOUT 实测</div><div class="v"><span id="bkRvo">4.20</span><small> V</small></div></div>
+      <div class="read"><div class="k">D·VIN 理想</div><div class="v"><span id="bkRid">4.20</span><small> V</small></div></div>
+      <div class="read am"><div class="k">iL 平均</div><div class="v"><span id="bkRil">1.05</span><small> A</small></div></div>
+      <div class="read am"><div class="k">ΔiL 峰峰</div><div class="v"><span id="bkRdil">0.62</span><small> A</small></div></div>
+      <div class="read pu"><div class="k">ΔVOUT 纹波</div><div class="v"><span id="bkRdvo">12</span><small> mV</small></div></div>
+      <div class="read gr"><div class="k">效率(估算)</div><div class="v"><span id="bkReta">92</span><small> %</small></div></div>
+      <div class="read pk"><div class="k">导通模式</div><div class="v" id="bkRmode" style="font-size:14px">CCM</div></div>
+    </div>
+    <div class="card tight" style="margin-top:12px">
+      <h4 style="padding:2px 4px 0">上电瞬态:从 0 到稳态的 <span id="bkTt">3.0</span> ms(带包络,参数一改立即重算)</h4>
+      <canvas id="bkStart" style="height:190px"></canvas>
+      <div class="legend"><span><i style="background:#3ad0e6"></i>VOUT 包络</span>
+        <span><i style="background:#ffb03a"></i>iL 包络</span>
+        <span><i style="background:#586b7d"></i>目标 D·VIN</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <h4>它到底怎么降压的</h4>
+    <p>三条铁律撑起整个开关电源:<b>电感电流不能突变</b>、<b>稳态下电感一个周期的净伏秒为零</b>、
+    <b>电容电压不能突变</b>。</p>
+    <div class="eq">Q1 通 (时长 D·T):  电感两端 = VIN − VOUT   电流上升
+Q1 断 (时长 (1−D)·T): 电感两端 = −VOUT      电流下降
+
+伏秒平衡:(VIN−VOUT)·D·T = VOUT·(1−D)·T
+      ⇒  VOUT = D · VIN</div>
+    <p>所以占空比就是电压比。反馈环路做的事只有一件:不停微调 D,把 VOUT 顶在设定值上。</p>
+    <h4 style="margin-top:16px">跟着调,你会看到</h4>
+    <ul>
+      <li>拖 <b>D</b>:VOUT 跟着线性变。这是最直接的因果。</li>
+      <li>拖 <b>L</b> 变小:ΔiL 三角波变陡变高。<span class="m">ΔiL = (VIN−VOUT)·D / (L·fs)</span></li>
+      <li>拖 <b>fs</b> 变高:ΔiL 和纹波都变小,但效率往下掉——开关损耗和驱动损耗跟 fs 成正比。
+        这就是"高频换体积、低频换效率"的取舍。</li>
+      <li>拖 <b>C</b> 变小:VOUT 纹波变大。<span class="m">ΔVOUT ≈ ΔiL / (8·fs·C)</span>
+        (真实电路里常被电容 ESR 主导:<span class="m">ΔVOUT ≈ ΔiL·ESR</span>)</li>
+      <li>把 <b>R</b> 调很大(轻载):iL 谷值触底、出现断流,徽标变成 <b>DCM</b>。
+        此时 VOUT 不再只由 D 决定,会比 D·VIN 高——很多"轻载电压偏高"的现象就是这个。</li>
+    </ul>
+    <div class="note">DCM 边界:<span class="m">IOUT &lt; ΔiL / 2</span>。设计时如果要求全负载都 CCM,
+    就得在最轻负载下反推最小电感。</div>
+    <h4 style="margin-top:16px">为什么效率能到 90%+</h4>
+    <p>Buck 不"烧掉"压差,它把能量存进电感再倒出去。损耗只剩三块:
+    MOS 导通损耗 (I²·Rds)、电感铜损 (I²·DCR)、开关与驱动损耗 (∝ fs)。
+    上面的效率是含这三块的粗略模型,数量级可信,具体值要看真实器件参数。</p>
+    <h4 style="margin-top:16px">拓扑决定的 PCB 铁律</h4>
+    <ul>
+      <li><b>VIN→Q1→Q2→GND 是高 di/dt 热回路</b>。输入电容必须紧贴这两个管子,回路面积越小越好,
+        这是 EMI 和 SW 尖峰的第一决定因素。</li>
+      <li><b>SW 节点是全板最脏的铜皮</b>,能连通就行,面积尽量小,不要在它下面走敏感信号。</li>
+      <li><b>反馈取样点要在负载端</b>,否则线上的压降会被算进输出。</li>
+      <li>Q2 换成肖特基二极管就是"异步 Buck",省驱动但白扔 0.3~0.5V 的导通压降。</li>
+    </ul>
+  </div>
+  </div>
+</section>
+<section id="boost">
+  <h2>Boost 升压拓扑 <span class="tag">升压 DC-DC</span></h2>
+  <p class="sub">同样三个元件,只是<b>换了个连接顺序</b>:电感挪到输入端常通,开关放到低边。
+  电感先从输入"抽能量",开关一断,电感为了维持电流硬把电压顶起来,经二极管灌进输出电容。</p>
+  <div class="g2">
+  <div>
+    <div class="card tight">
+    <svg class="dia" viewBox="0 0 660 248">
+      <path class="wire" d="M44 64 H140 M260 64 H338 M377 64 H561 M96 64 V118 M96 130 V196
+        M300 64 V103 M300 153 V196 M470 64 V118 M470 130 V196 M561 64 V104 M561 156 V196 M44 196 V208"/>
+      <path class="rail" d="M44 196 H561"/>
+      <path class="comp" d="M30 208 H58 M35 213 H53 M40 218 H48"/>
+      <path class="comp" d="M82 118 H110 M82 130 H110"/>
+      <path class="comp" d="M140 64 a15 15 0 0 1 30 0 a15 15 0 0 1 30 0 a15 15 0 0 1 30 0
+        a15 15 0 0 1 30 0"/>
+      <path class="comp" d="M456 118 H484 M456 130 H484"/>
+      <use id="bsD1" class="sym" href="#diode" transform="translate(357.5 64) rotate(-90)"/>
+      <use class="sym" href="#res" transform="translate(561 130)"/>
+      <circle class="node" cx="44" cy="64" r="4"/>
+      <circle class="node" cx="96" cy="64" r="3.6"/>
+      <circle class="node" cx="300" cy="64" r="3.6"/><circle class="node" cx="470" cy="64" r="3.6"/>
+      <use id="bsQ1" class="sym" href="#nmos" transform="translate(300 128)"/>
+      <path id="bsFon" class="flow" d="M44 64 H300 V118.5 H288 V137.5 H300 V196 H44"/>
+      <path id="bsFoff" class="flow g" d="M44 64 H561 V196 H44"/>
+      <text class="n" x="18" y="46">VIN <tspan id="bsTvin" class="v">5.0V</tspan></text>
+      <text x="74" y="150">Cin</text>
+      <text x="156" y="34">L1 = <tspan id="bsTl" class="v">10</tspan> µH</text>
+      <text id="bsTil" class="i" x="152" y="90">iL = 1.00 A</text>
+      <text class="n" x="276" y="46">SW</text>
+      <text class="n" x="314" y="132">Q1 <tspan class="s">低边 NMOS</tspan></text>
+      <text id="bsQ1g" class="s" x="218" y="132">G=1 通</text>
+      <text class="n" x="350" y="42">D1</text>
+      <text x="440" y="164">C1 = <tspan id="bsTc" class="v">100</tspan> µF</text>
+      <text class="n" x="400" y="46">VOUT <tspan id="bsTvo" class="v">10.0V</tspan></text>
+      <text class="n" x="584" y="122">负载</text>
+      <text x="584" y="140"><tspan id="bsTr" class="v">20</tspan> Ω</text>
+      <text id="bsState" class="i" x="18" y="236">Q1 导通:电感储能,输出靠电容维持</text>
+    </svg>
+    </div>
+    <div class="card tight">
+      <h4 style="padding:2px 4px 0">稳态波形(阴影为 Q1 导通区间)</h4>
+      <canvas id="bsWave" style="height:262px"></canvas>
+      <div class="legend"><span><i style="background:#4a6c80"></i>SW 节点电压</span>
+        <span><i style="background:#3ad0e6"></i>VOUT</span>
+        <span><i style="background:#ffb03a"></i>电感电流 iL</span></div>
+    </div>
+    <div class="ctrls">
+      <div class="ctrl"><div class="lab"><span>输入 VIN</span><b id="bsVinv">5.0 V</b></div>
+        <input type="range" id="bsVin" min="1.5" max="12" step="0.1" value="5"></div>
+      <div class="ctrl"><div class="lab"><span>占空比 D</span><b id="bsDv">50 %</b></div>
+        <input type="range" id="bsD" min="0.05" max="0.92" step="0.01" value="0.5"></div>
+      <div class="ctrl"><div class="lab"><span>电感 L</span><b id="bsLv">10 µH</b></div>
+        <input type="range" id="bsL" min="1" max="80" step="1" value="10"></div>
+      <div class="ctrl"><div class="lab"><span>输出电容 C</span><b id="bsCv">100 µF</b></div>
+        <input type="range" id="bsC" min="10" max="680" step="5" value="100"></div>
+      <div class="ctrl"><div class="lab"><span>负载 R</span><b id="bsRv">20 Ω</b></div>
+        <input type="range" id="bsR" min="2" max="300" step="1" value="20"></div>
+      <div class="ctrl"><div class="lab"><span>开关频率 fs</span><b id="bsFsv">300 kHz</b></div>
+        <input type="range" id="bsFs" min="50" max="1000" step="10" value="300"></div>
+      <div class="ctrl"><div class="lab"><span>慢放速度</span><b id="bsSpv">5.0 µs/秒</b></div>
+        <input type="range" id="bsSp" min="-6.5" max="-3.6" step="0.05" value="-5.3"></div>
+    </div>
+    <div class="btns">
+      <button class="pri" id="bsRun">暂停</button>
+      <button id="bsSs">跳到稳态</button>
+      <button id="bsZero">从零重启</button>
+    </div>
+    <div class="reads">
+      <div class="read"><div class="k">VOUT 实测</div><div class="v"><span id="bsRvo">10.0</span><small> V</small></div></div>
+      <div class="read"><div class="k">VIN/(1−D) 理想</div><div class="v"><span id="bsRid">10.0</span><small> V</small></div></div>
+      <div class="read am"><div class="k">iL 平均 = 输入电流</div><div class="v"><span id="bsRil">1.00</span><small> A</small></div></div>
+      <div class="read am"><div class="k">ΔiL 峰峰</div><div class="v"><span id="bsRdil">0.83</span><small> A</small></div></div>
+      <div class="read pu"><div class="k">ΔVOUT 纹波</div><div class="v"><span id="bsRdvo">18</span><small> mV</small></div></div>
+      <div class="read gr"><div class="k">效率(估算)</div><div class="v"><span id="bsReta">90</span><small> %</small></div></div>
+      <div class="read pk"><div class="k">导通模式</div><div class="v" id="bsRmode" style="font-size:14px">CCM</div></div>
+    </div>
+    <div class="card tight" style="margin-top:12px">
+      <h4 style="padding:2px 4px 0">上电瞬态(t=0 时输出已经等于 VIN,因为 L 和 D1 是一条直通路径)·
+        窗口 <span id="bsTt">20.0</span> ms</h4>
+      <canvas id="bsStart" style="height:190px"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <h4>升压的伏秒平衡</h4>
+    <div class="eq">Q1 通:  电感两端 = VIN          ,时长 D·T
+Q1 断:  电感两端 = VIN − VOUT ,时长 (1−D)·T
+
+VIN·D·T = (VOUT−VIN)·(1−D)·T
+      ⇒  VOUT = VIN / (1 − D)</div>
+    <p>D=0.5 时输出翻倍,D=0.8 时是 5 倍。注意这是<b>非线性</b>的:D 越靠近 1,曲线越陡,
+    环路增益跟着变,所以 Boost 比 Buck 难稳。</p>
+    <h4 style="margin-top:16px">和 Buck 完全相反的三个性质</h4>
+    <ul>
+      <li><b>输入电流连续,输出电流断续。</b>只有 Q1 断开时才有电流灌进输出电容,
+        所以输出电容的<b>纹波电流</b>很大,选电容要看 ripple current 额定值,不只是容量。</li>
+      <li><b>输入到输出有一条直通路径</b>(L + D1)。Boost 无法关断输出,也不能承受输出短路——
+        短路电流直接从输入经电感二极管灌下去,没有任何开关能挡。</li>
+      <li><b>存在右半平面零点</b>,环路带宽被迫做得比 Buck 低,负载突变时的响应更肉。</li>
+    </ul>
+    <div class="note rd">把 D 拖到 0.9 以上试试:输出电压确实跟着 VIN/(1−D) 一路涨上去(这个模型是理想无损的),
+    但看一眼 <b>iL 平均值</b>——它按 <span class="m">IIN = IOUT/(1−D)</span> 暴涨。
+    真实电路里,电感 DCR、MOS 导通电阻上的损耗按 I² 增长,所以输出根本涨不到理想值,
+    效率还会崩掉。<b>实际设计里 D 一般不超过 0.75~0.8</b>,要更高的升压比就换反激或者做两级。</div>
+    <h4 style="margin-top:16px">同一组元件,三种拓扑</h4>
+    <table>
+      <tr><th>拓扑</th><th>电感位置</th><th>输出</th></tr>
+      <tr><td class="mo">Buck</td><td>开关之后、串在输出路径</td><td>D·VIN,同极性,降压</td></tr>
+      <tr><td class="mo">Boost</td><td>输入端常通</td><td>VIN/(1−D),同极性,升压</td></tr>
+      <tr><td class="mo">Buck-Boost</td><td>开关之后、并到地</td><td>−D/(1−D)·VIN,<b>反极性</b>,可升可降</td></tr>
+    </table>
+    <p style="color:var(--mu);font-size:12.5px">元件清单一模一样,只是连法不同——这就是"拓扑"最直白的含义。</p>
+  </div>
+  </div>
+</section>
+
+<section id="dctopo">
+  <h2>DC-DC 拓扑选型全家福 <span class="tag">从 Buck 到 LLC,一张图选对</span></h2>
+  <p class="sub">上面两节只讲了 Buck 和 Boost,它们只是开关电源家族的两个成员。
+  真实选型先问一个问题:<b>输入和输出要不要电气隔离</b>(变压器隔开,常见于市电 AC-DC、安规要求、地环路隔离)。
+  这一问把拓扑劈成两大类,后面才看电压关系和功率。</p>
+  <div class="card tight">
+    <svg class="dia" viewBox="0 0 660 200">
+      <rect class="blk" x="8" y="86" width="80" height="30" rx="6"/>
+      <text class="n" x="20" y="99">VIN</text>
+      <text class="s" x="20" y="112">→ VOUT</text>
+      <path class="wire" d="M88 101 H108"/>
+      <rect class="blk" x="108" y="86" width="66" height="30" rx="6"/>
+      <text class="n" x="118" y="105">隔离?</text>
+      <path class="wire" d="M174 101 H210 M210 25 V177"/>
+      <path class="wire" d="M210 25 H250 M210 47 H250 M210 69 H250 M210 91 H250
+        M210 113 H250 M210 135 H250 M210 157 H250 M210 177 H250"/>
+      <text class="s" x="214" y="20" fill="#5ddf9c">否 · 非隔离</text>
+      <text class="s" x="214" y="195" fill="#ff6b6b">是 · 隔离</text>
+      <g font-size="11">
+        <rect class="blk" x="250" y="14" width="398" height="22" rx="5"/><text class="n" x="258" y="29">Buck 降压</text><text class="s" x="360" y="29">Vout &lt; Vin · 同相 · 最常见,效率最高</text>
+        <rect class="blk" x="250" y="36" width="398" height="22" rx="5"/><text class="n" x="258" y="51">Boost 升压</text><text class="s" x="360" y="51">Vout &gt; Vin · 同相 · 电池升压、PFC</text>
+        <rect class="blk" x="250" y="58" width="398" height="22" rx="5"/><text class="n" x="258" y="73">SEPIC / Ćuk</text><text class="s" x="360" y="73">可升可降 · 同相 · 输入电压跨越输出</text>
+        <rect class="blk" x="250" y="80" width="398" height="22" rx="5"/><text class="n" x="258" y="95">Buck-Boost(反相)</text><text class="s" x="378" y="95">可升可降 · 反极性 · 单管出负压</text>
+        <rect class="blk" x="250" y="102" width="398" height="22" rx="5"/><text class="n" x="258" y="117">反激 Flyback</text><text class="s" x="378" y="117">&lt; 75W · 变压器兼作储能电感 · 多路输出</text>
+        <rect class="blk" x="250" y="124" width="398" height="22" rx="5"/><text class="n" x="258" y="139">正激 Forward</text><text class="s" x="378" y="139">75 ~ 500W · 变压器只传递不储能</text>
+        <rect class="blk" x="250" y="146" width="398" height="22" rx="5"/><text class="n" x="258" y="161">半桥 / 全桥</text><text class="s" x="378" y="161">&gt; 500W · 大功率、服务器电源</text>
+        <rect class="blk" x="250" y="168" width="398" height="22" rx="5"/><text class="n" x="258" y="183">LLC 谐振</text><text class="s" x="378" y="183">软开关 · 极高效率 · 高端电源</text>
+      </g>
+    </svg>
+  </div>
+
+  <h3>非隔离家族(输入输出共地,占板级 DC-DC 的绝大多数)</h3>
+  <div class="g2c">
+    <div class="card tight">
+      <h4>Buck 降压 · 同步 / 异步</h4>
+      <div class="eq">Vout = D · Vin</div>
+      <p style="font-size:12.5px;color:var(--mu)">同步用低边 MOS 代替续流二极管,轻载效率更高;异步用肖特基,便宜。
+      这就是上面第②节画的电路,也是 90% 板级降压的选择。</p>
+    </div>
+    <div class="card tight">
+      <h4>Buck-Boost(反相)</h4>
+      <div class="eq">Vout = −D/(1−D) · Vin</div>
+      <p style="font-size:12.5px;color:var(--mu)">元件和 Buck 一样(MOS、电感、二极管),只是电感"开关后并到地",
+      输出<b>反极性</b>。用来产生负电源轨(−5V、−12V)。见第③节末尾的三拓扑对比表。</p>
+    </div>
+    <div class="card tight">
+      <h4>SEPIC / Ćuk</h4>
+      <div class="eq">Vout = D/(1−D) · Vin(同相)</div>
+      <p style="font-size:12.5px;color:var(--mu)">靠一个耦合电容(或耦合电感)实现<b>升降压且输出同相</b>。
+      用在输入电压会跨越输出的场合,如锂电池 3.0~4.2V 稳压到 3.3V。Ćuk 输入输出电流都连续,纹波小。</p>
+    </div>
+    <div class="card tight">
+      <h4>四开关 Buck-Boost</h4>
+      <div class="eq">降压段 / 升降压段 / 升压段自动切换</div>
+      <p style="font-size:12.5px;color:var(--mu)">同相、可升可降、效率高于 SEPIC。USB-PD、电池供电系统的主力拓扑,
+      一颗芯片覆盖 3~24V 宽输入。</p>
+    </div>
+    <div class="card tight">
+      <h4>电荷泵 Charge Pump</h4>
+      <div class="eq">无电感,靠电容"搬运"电荷</div>
+      <p style="font-size:12.5px;color:var(--mu)">倍压 / 负压 / 分数比(如 1.5×)。体积小、无磁性元件、EMI 低,
+      但只能供小电流(通常 &lt; 200mA)。负压、LCD 偏压、栅极驱动常用。</p>
+    </div>
+    <div class="card tight">
+      <h4>多相 Buck(Multiphase)</h4>
+      <div class="eq">N 相并联,纹波互抵</div>
+      <p style="font-size:12.5px;color:var(--mu)">CPU/GPU 核心供电(VRM)。多相错相开关,分摊大电流(几十~几百 A)、
+      降低输出纹波和电容需求。</p>
+    </div>
+  </div>
+
+  <h3>隔离家族(变压器隔开,AC-DC、安规、抗地环路)</h3>
+  <div class="g2c">
+    <div class="card tight">
+      <h4>反激 Flyback</h4>
+      <p style="font-size:12.5px;color:var(--mu)">变压器<b>兼作储能电感</b>(先存后放),结构最简单、元件最少。
+      &lt; 75W 的充电器、适配器、家电辅助电源几乎全是它。容易做多路输出。</p>
+    </div>
+    <div class="card tight">
+      <h4>正激 Forward</h4>
+      <p style="font-size:12.5px;color:var(--mu)">变压器<b>只传递能量不储能</b>,开关导通时直接送能量到输出。
+      75~500W,比反激效率高、变压器利用率高,需要磁复位绕组。</p>
+    </div>
+    <div class="card tight">
+      <h4>推挽 / 半桥 / 全桥</h4>
+      <p style="font-size:12.5px;color:var(--mu)">变压器双向磁化,利用率高。半桥最常用(平衡、变压器不会偏磁饱和),
+      全桥用于 &gt; 500W 大功率。服务器、通信电源的主力。</p>
+    </div>
+    <div class="card tight">
+      <h4>LLC 谐振</h4>
+      <p style="font-size:12.5px;color:var(--mu)">靠谐振实现<b>软开关</b>(ZVS/ZCS),开关损耗极低,效率可达 96%+。
+      高端电源、服务器、快充。控制复杂,是半桥的谐振升级版。</p>
+    </div>
+  </div>
+
+  <h3>按集成度选(定了拓扑,再定用哪种芯片形态)</h3>
+  <table>
+    <tr><th style="width:150px">形态</th><th style="width:120px">外接什么</th><th>说明 / 代表</th></tr>
+    <tr><td class="mo">控制器 Controller</td><td>MOS + 电感 + …</td><td>只出驱动和反馈环路,功率管外置。适合大电流 / 高压 / 定制:TL494、UC3843(反激)、SG3525</td></tr>
+    <tr><td class="mo">单片转换器 Converter</td><td>电感 + 输入输出电容</td><td>内置开关管,最常见。LM2596、MP2307、TPS54331</td></tr>
+    <tr><td class="mo">电源模块 Module</td><td>输入输出电容</td><td>连电感都封装进去,贴片即用,占板小、省调试、但贵。µModule LTM4644、TPSM 系列</td></tr>
+    <tr><td class="mo">78xx 封装开关稳压</td><td>电容</td><td>引脚兼容 LM7805 但效率高得多,直接替换线性 78L05。Recom R-78E5.0-1.0</td></tr>
+    <tr><td class="mo">电荷泵 IC</td><td>几个电容</td><td>无电感,小电流升压 / 负压。ICL7660、LM2664、TPS60403</td></tr>
+  </table>
+
+  <h3>常见"降压模块"清单(淘宝蓝色 / 红色小板,按芯片查)</h3>
+  <table>
+    <tr><th style="width:120px">芯片</th><th style="width:74px">电流</th><th style="width:110px">输入范围</th><th>备注</th></tr>
+    <tr><td class="mo">LM2596</td><td>3A</td><td>4.5 – 40V</td><td>最经典的蓝色降压板,<b>异步</b>,需外接肖特基续流二极管</td></tr>
+    <tr><td class="mo">MP1584EN</td><td>3A</td><td>4.5 – 28V</td><td>"Mini360"迷你板,1.5MHz,体积极小</td></tr>
+    <tr><td class="mo">MP2307</td><td>3A</td><td>4.75 – 23V</td><td>常见迷你降压板,同步整流</td></tr>
+    <tr><td class="mo">TPS54331</td><td>3A</td><td>3.5 – 28V</td><td>TI,同步,效率高、纹波小</td></tr>
+    <tr><td class="mo">XL4015</td><td>5A</td><td>4 – 36V</td><td>大电流可调板(常见红色),带恒流(CC)可做充电</td></tr>
+    <tr><td class="mo">XL4016</td><td>8A</td><td>5 – 40V</td><td>更大电流,需散热</td></tr>
+    <tr><td class="mo">LM317</td><td>1.5A</td><td>—</td><td class="warn">⚠️ 线性可调稳压,不是开关降压,压差全变热</td></tr>
+    <tr><td class="mo">AMS1117 / LM7805</td><td>1A</td><td>—</td><td class="warn">⚠️ 线性稳压(LDO / 78xx),效率 = Vout/Vin,大压差大电流必过热,应换 Buck</td></tr>
+  </table>
+  <div class="note rd"><b>最容易踩的坑</b>:AMS1117、LM7805、LM317 常和降压模块放一起卖,但它们是<b>线性稳压器</b>,
+  不是开关降压。线性稳压的效率就是 Vout/Vin(5V→3.3V 只有 66%,12V→3.3V 只有 27%),压差全变成热。
+  判断口诀:<b>大压差 × 大电流 → 一定用 Buck;小电流 + 要低噪声(如 ADC/射频模拟电源)→ 才用 LDO</b>。
+  这正是第⑤节 LDO 和第⑨节电源树反复强调的取舍。</div>
+  <div class="note gr"><b>一句话选型</b>:要不要隔离?→ 否:降压用 Buck、升压用 Boost、输入跨越输出用 SEPIC/四开关、
+  要负压用反相 Buck-Boost 或电荷泵、小电流负压用电荷泵;→ 是:小功率反激、中功率正激、大功率半桥/全桥、
+  追求效率上 LLC。定了拓扑再按集成度(控制器/单片/模块)选芯片。</div>
+</section>
+
+<section id="ldo">
+  <h2>LDO 线性稳压 <span class="tag">对照组:为什么它简单但发热</span></h2>
+  <p class="sub">LDO 的拓扑本质是<b>一个被反馈控制的可变电阻</b>,串在输入和输出之间。
+  多余的电压差全部变成热。没有开关、没有电感,所以也没有纹波和 EMI。</p>
+  <div class="g2">
+  <div>
+    <div class="card tight">
+    <svg class="dia" viewBox="0 0 660 232">
+      <defs><radialGradient id="hg"><stop offset="0" stop-color="#ff6b6b" stop-opacity=".9"/>
+        <stop offset="1" stop-color="#ff6b6b" stop-opacity="0"/></radialGradient></defs>
+      <circle id="ldHeat" cx="189" cy="58" r="46" fill="url(#hg)" opacity="0"/>
+      <path class="wire" d="M44 58 H164 M214 58 H561 M92 58 V112 M92 124 V200 M330 58 V68
+        M330 116 V128 M330 176 V200 M400 58 V112 M400 124 V200 M561 58 V104 M561 156 V200
+        M189 94 V140 M330 122 H278 V128 H243 M243 152 H270 V164 M270 184 V200 M44 200 V212"/>
+      <path class="rail" d="M44 200 H561"/>
+      <path class="comp" d="M30 212 H58 M35 217 H53 M40 222 H48"/>
+      <path class="comp" d="M78 112 H106 M78 124 H106"/>
+      <path class="comp" d="M386 112 H414 M386 124 H414"/>
+      <use class="sym" href="#pmos" transform="translate(189 58) rotate(-90)"/>
+      <use class="sym" href="#opamp" transform="translate(243 140) scale(-1 1)"/>
+      <use class="sym" href="#res" transform="translate(330 92)"/>
+      <use class="sym" href="#res" transform="translate(330 152)"/>
+      <use class="sym" href="#res" transform="translate(561 130)"/>
+      <circle class="comp" cx="270" cy="174" r="10" fill="#101b26"/>
+      <path class="comp" d="M270 167.5 V173.5 M267 170.5 H273 M267 178 H273" stroke-width="1.5"/>
+      <circle class="node" cx="44" cy="58" r="4"/>
+      <circle class="node" cx="92" cy="58" r="3.6"/>
+      <circle class="node" cx="330" cy="58" r="3.6"/><circle class="node" cx="400" cy="58" r="3.6"/>
+      <circle class="node" cx="330" cy="122" r="3.6"/>
+      <path id="ldFlow" class="flow" d="M44 58 H179.5 V70 H198.5 V58 H561 V200 H44"/>
+      <text class="n" x="18" y="40">VIN <tspan id="ldTvin" class="v">5.0V</tspan></text>
+      <text x="70" y="144">Cin</text>
+      <text class="n" x="128" y="30">Q1 调整管 <tspan class="s">PMOS · 受控可变电阻</tspan></text>
+      <text class="n" x="197" y="112">误差放大器</text>
+      <text class="s" x="212" y="144">EA</text>
+      <text x="346" y="96">R1</text><text x="346" y="156">R2</text>
+      <text class="n" x="290" y="117">FB</text>
+      <text x="284" y="178">Vref</text>
+      <text x="410" y="120">Cout</text>
+      <text class="n" x="440" y="40">VOUT <tspan id="ldTvo" class="v">3.30V</tspan></text>
+      <text class="n" x="584" y="122">负载</text>
+      <text id="ldTio" x="584" y="140" class="i">0.30 A</text>
+      <text id="ldState" class="i" x="18" y="226">压差 1.70 V × 0.30 A = 0.51 W 全部变成热</text>
+    </svg>
+    </div>
+    <div class="ctrls">
+      <div class="ctrl"><div class="lab"><span>输入 VIN</span><b id="ldVinv">5.0 V</b></div>
+        <input type="range" id="ldVin" min="1.2" max="16" step="0.1" value="5"></div>
+      <div class="ctrl"><div class="lab"><span>设定输出 VOUT</span><b id="ldVov">3.3 V</b></div>
+        <input type="range" id="ldVo" min="0.8" max="5" step="0.1" value="3.3"></div>
+      <div class="ctrl"><div class="lab"><span>负载电流 IOUT</span><b id="ldIov">0.30 A</b></div>
+        <input type="range" id="ldIo" min="0" max="1.5" step="0.01" value="0.3"></div>
+      <div class="ctrl"><div class="lab"><span>热阻 θja</span><b id="ldThv">60 °C/W</b></div>
+        <input type="range" id="ldTh" min="15" max="150" step="5" value="60"></div>
+    </div>
+    <div class="reads">
+      <div class="read"><div class="k">实际 VOUT</div><div class="v"><span id="ldRvo">3.30</span><small> V</small></div></div>
+      <div class="read am"><div class="k">压差 VIN−VOUT</div><div class="v"><span id="ldRdrop">1.70</span><small> V</small></div></div>
+      <div class="read rd"><div class="k">管子发热 Pd</div><div class="v"><span id="ldRpd">0.51</span><small> W</small></div></div>
+      <div class="read gr"><div class="k">LDO 效率</div><div class="v"><span id="ldReta">66</span><small> %</small></div></div>
+      <div class="read pk"><div class="k">同条件 Buck</div><div class="v"><span id="ldRbe">93</span><small> %</small></div></div>
+      <div class="read rd"><div class="k">结温 Tj(25℃环境)</div><div class="v"><span id="ldRtj">56</span><small> °C</small></div></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h4>热量与效率对比</h4>
+      <div style="font-size:11.5px;color:var(--mu)">结温余量(125 °C 为限)</div>
+      <div class="bar"><i id="ldBarT" style="width:25%"></i></div>
+      <div style="font-size:11.5px;color:var(--mu);margin-top:10px">LDO 效率 <span id="ldBarLt" class="m">66%</span></div>
+      <div class="bar"><i id="ldBarL" style="width:66%;background:#ffb03a"></i></div>
+      <div style="font-size:11.5px;color:var(--mu);margin-top:8px">Buck 效率 <span id="ldBarBt" class="m">93%</span></div>
+      <div class="bar"><i id="ldBarB" style="width:93%;background:#5ddf9c"></i></div>
+      <div id="ldWarn" class="note rd" style="display:none">已进入 <b>Dropout</b>:输入不够高,
+        调整管已经全开,输出只能跟着输入走,不再稳压。</div>
+    </div>
+  </div>
+  <div class="card">
+    <h4>拓扑读法</h4>
+    <p>从右往左看:R1/R2 把输出分压给 FB,误差放大器拿 FB 跟内部基准 Vref 比,
+    差多少就把调整管的阻值调多少。这是一个纯粹的负反馈闭环。</p>
+    <div class="eq">VOUT = Vref · (1 + R1/R2)
+Pd   = (VIN − VOUT) · IOUT      ← 全部是热
+η    = VOUT / VIN               ← 与负载无关,只看电压比
+Tj   = Tambient + Pd · θja</div>
+    <h4 style="margin-top:16px">两个必须记住的坑</h4>
+    <ul>
+      <li><b>Dropout 电压。</b>调整管不是理想开关,它自己需要一点压差才能工作。
+        VIN 掉到 VOUT+Vdo 以下时,输出就直接跟着输入抖。拖 VIN 到 3.4V 以下看效果。</li>
+      <li><b>发热与 θja。</b>Pd 不变,换个封装(θja 从 150 降到 25)结温能差 100 °C 以上。
+        SOT-23 的 LDO 掉 3V 拉 300mA 基本必然过温。</li>
+    </ul>
+    <h4 style="margin-top:16px">那为什么还要用 LDO</h4>
+    <ul>
+      <li><b>干净。</b>没有开关动作,输出噪声可以做到几十 µV,PSRR 高。ADC 基准、PLL、射频、
+        晶振都爱用它。</li>
+      <li><b>简单便宜。</b>两颗电容就能工作,不用电感,不用管环路和布局。</li>
+      <li><b>响应快。</b>环路带宽可以做得比开关电源高得多。</li>
+    </ul>
+    <div class="note gr">工程上最常见的组合拳:<b>Buck 先把 12V 高效降到 3.6V,再用 LDO 出 3.3V 模拟电源</b>。
+    压差只剩 0.3V,发热很小,又拿到了 LDO 的干净输出。这就是下面"电源树"那一节要解决的问题。</div>
+  </div>
+  </div>
+</section>
+<section id="filter">
+  <h2>LC 滤波拓扑与纹波 <span class="tag">为什么电感电容能"抹平"方波</span></h2>
+  <p class="sub">上面 Buck 的输出滤波器就是这一节的主角:一个二阶低通。
+  开关节点是个方波,里面装着 fs、2fs、3fs… 一大堆谐波;LC 的任务是只放直流过去。</p>
+  <div class="g2">
+  <div>
+    <div class="card tight">
+    <svg class="dia" viewBox="0 0 660 196">
+      <path class="wire" d="M44 60 H110 M230 60 H310 M270 60 V94 M270 104 V107 M270 139 V170
+        M44 170 V182"/>
+      <path class="rail" d="M44 170 H561"/>
+      <path class="comp" d="M30 182 H58 M35 187 H53 M40 192 H48"/>
+      <path class="comp" d="M110 60 a15 15 0 0 1 30 0 a15 15 0 0 1 30 0 a15 15 0 0 1 30 0
+        a15 15 0 0 1 30 0"/>
+      <path class="comp" d="M256 94 H284 M256 104 H284"/>
+      <use class="sym" href="#res" transform="translate(270 123) scale(.6)"/>
+      <g id="ftS2">
+        <path class="wire" d="M430 60 H561 M470 60 V94 M470 104 V107 M470 139 V170"/>
+        <path class="comp" d="M310 60 a15 15 0 0 1 30 0 a15 15 0 0 1 30 0 a15 15 0 0 1 30 0
+          a15 15 0 0 1 30 0"/>
+        <path class="comp" d="M456 94 H484 M456 104 H484"/>
+        <use class="sym" href="#res" transform="translate(470 123) scale(.6)"/>
+        <text x="326" y="34">L2 <tspan class="s">第二级</tspan></text>
+        <text x="490" y="102">C2</text><text class="s" x="490" y="128">ESR</text>
+      </g>
+      <path class="wire" d="M561 60 V95 M561 147 V170"/>
+      <use class="sym" href="#res" transform="translate(561 121)"/>
+      <circle class="node" cx="44" cy="60" r="4"/>
+      <circle class="node" cx="270" cy="60" r="3.6"/><circle class="node" cx="470" cy="60" r="3.6"/>
+      <path class="flow p anim s2" d="M44 60 H561"/>
+      <path class="flow anim" d="M270 60 V170"/>
+      <path id="ftF2" class="flow anim" d="M470 60 V170"/>
+      <text class="n" x="16" y="42">SW 方波</text>
+      <text x="130" y="34">L1 = <tspan id="ftTl" class="v">22</tspan> µH</text>
+      <text x="290" y="102">C1 = <tspan id="ftTc" class="v">47</tspan> µF</text>
+      <text class="s" x="290" y="128">ESR = <tspan id="ftTesr">20</tspan> mΩ</text>
+      <text class="n" x="584" y="112">负载</text>
+      <text class="i" x="16" y="80">含 fs 谐波</text>
+      <text class="v" x="500" y="42">只剩直流</text>
+    </svg>
+    </div>
+    <div class="card tight">
+      <h4 style="padding:2px 4px 0">幅频响应(点线为开关频率及其谐波位置)</h4>
+      <canvas id="ftBode" style="height:280px"></canvas>
+      <div class="legend"><span><i style="background:#3ad0e6"></i>|H(f)| 传递函数</span>
+        <span><i style="background:#ffb03a"></i>谐振点 f0</span>
+        <span><i style="background:#a78bfa"></i>fs / 2fs / 3fs</span>
+        <span><i style="background:#ff6b6b"></i>ESR 拐点频率</span></div>
+    </div>
+    <div class="ctrls">
+      <div class="ctrl"><div class="lab"><span>电感 L</span><b id="ftLv">22 µH</b></div>
+        <input type="range" id="ftL" min="-1" max="2" step="0.02" value="1.342"></div>
+      <div class="ctrl"><div class="lab"><span>电容 C</span><b id="ftCv">47 µF</b></div>
+        <input type="range" id="ftC" min="-1" max="3" step="0.02" value="1.672"></div>
+      <div class="ctrl"><div class="lab"><span>电容 ESR</span><b id="ftEsrv">20 mΩ</b></div>
+        <input type="range" id="ftEsr" min="0" max="500" step="5" value="20"></div>
+      <div class="ctrl"><div class="lab"><span>负载 R</span><b id="ftRv">4.0 Ω</b></div>
+        <input type="range" id="ftR" min="0.5" max="100" step="0.5" value="4"></div>
+      <div class="ctrl"><div class="lab"><span>开关频率 fs</span><b id="ftFsv">200 kHz</b></div>
+        <input type="range" id="ftFs" min="4.3" max="6.5" step="0.02" value="5.301"></div>
+    </div>
+    <div class="tg"><label><input type="checkbox" id="ftTwo"> 改成两级 LC(π 型思路)</label></div>
+    <div class="reads">
+      <div class="read am"><div class="k">谐振频率 f0</div><div class="v"><span id="ftRf0">4.94 kHz</span></div></div>
+      <div class="read"><div class="k">品质因数 Q</div><div class="v"><span id="ftRq">5.85</span></div></div>
+      <div class="read pu"><div class="k">fs 处衰减</div><div class="v"><span id="ftRa1">−32</span><small> dB</small></div></div>
+      <div class="read pu"><div class="k">2fs 处衰减</div><div class="v"><span id="ftRa2">−44</span><small> dB</small></div></div>
+      <div class="read gr"><div class="k">fs / f0 倍数</div><div class="v"><span id="ftRratio">41</span><small> ×</small></div></div>
+      <div class="read rd"><div class="k">ESR 拐点频率</div><div class="v"><span id="ftRfl">169 kHz</span></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h4>二阶 LC 的三个数</h4>
+    <div class="eq">f0 = 1 / (2π·√(L·C))        谐振频率
+Q  = R · √(C/L)             品质因数(R 是负载)
+斜率 = −40 dB/十倍频        超过 f0 之后</div>
+    <p>设计口诀:<b>把 f0 放在 fs 的 1/10 以下</b>。这样 fs 处至少能拿到 40 dB(100 倍)衰减。
+    右上角的 fs/f0 倍数就是在盯这件事。</p>
+    <h4 style="margin-top:16px">调一调,三个反直觉的现象</h4>
+    <ul>
+      <li><b>ESR 会把滚降斜率从 −40 掰回 −20 dB/十倍频。</b>把 ESR 从 0 拖到 200 mΩ,
+        看曲线高频段明显变缓。拐点在 <span class="m">f = 1/(2π·C·ESR)</span>——超过它以后,
+        电容的容抗已经比自己的 ESR 还小,滤波能力被 ESR 卡死。
+        <b>这时候再加容量几乎没用,必须换低 ESR 的电容或者并联多颗分摊。</b>
+        默认参数下这个拐点就落在 fs 附近,所以真实纹波常常是
+        <span class="m">ΔVOUT ≈ ΔiL × ESR</span> 而不是理论的 1/(8fsC)。</li>
+      <li><b>轻载时 Q 会变高。</b>把 R 拖大,f0 处冒出一个尖峰。这个峰会放大落在附近的负载扰动,
+        也是环路补偿要处理的对象。</li>
+      <li><b>容量翻倍只降 6 dB,频率翻倍降 12 dB。</b>二阶滤波器里,提高 fs 比堆电容划算得多——
+        代价是开关损耗,回到 Buck 那一节的取舍。</li>
+    </ul>
+    <h4 style="margin-top:16px">π 型 / 两级的真正用途</h4>
+    <p>勾上"两级 LC":高频段斜率从 −40 变成 −80 dB/十倍频。代价是多一个谐振点、
+    环路更难稳、体积更大。所以两级一般只用在:</p>
+    <ul>
+      <li>给 ADC、射频、PLL 的模拟电源做二次滤波(常见做法是第二级用小电感或磁珠 + MLCC)</li>
+      <li>需要过 EMI 传导测试,把开关谐波压到限值以下</li>
+    </ul>
+    <div class="note">选电容的拓扑经验:<b>大容量电解/钽负责低频储能,小容量 MLCC 负责高频去耦</b>,
+    并联使用。因为 MLCC 有 ESL(寄生电感),超过自谐振点后它自己就变成电感了——
+    所以去耦电容一定要靠近芯片引脚,那段走线的电感比电容本身的 ESL 还大。</div>
+  </div>
+  </div>
+</section>
+<section id="opamp">
+  <h2>运放基本电路 <span class="tag">同一个三角形,八种接法</span></h2>
+  <p class="sub">运放本身只是一个增益极大(10⁵ 以上)的差分放大器,它自己什么都干不了。
+  真正决定功能的是<b>外面的反馈网络怎么接</b>:换一套阻容的连法,就从放大器变成加法器、积分器或者比较器。
+  这是"拓扑决定功能"最经典的例子。点下面的按钮切换。</p>
+  <div class="btns" id="oaTypes"></div>
+  <div class="g2">
+  <div>
+    <div class="card tight"><svg class="dia" id="oaSvg" viewBox="0 0 660 236"></svg></div>
+    <div class="card tight">
+      <h4 style="padding:2px 4px 0">输入 / 输出波形(±VCC 供电,输出到饱和电压就被削顶)</h4>
+      <canvas id="oaWave" style="height:270px"></canvas>
+      <div class="legend"><span><i style="background:#ffb03a"></i>VIN / V1</span>
+        <span><i style="background:#7d92a7"></i>V2</span>
+        <span><i style="background:#a78bfa"></i>V3</span>
+        <span><i style="background:#3ad0e6"></i>VOUT</span>
+        <span><i style="background:#ff6b6b"></i>±Vsat 饱和</span>
+        <span><i style="background:#5ddf9c"></i>迟滞阈值 ±VT</span></div>
+    </div>
+    <div class="ctrls" id="oaCtrls">
+      <div class="ctrl" data-t="inv noninv follower sum diff integ deriv schmitt">
+        <div class="lab"><span>输入幅度 VIN / V1</span><b id="oaA1v">1.0 V</b></div>
+        <input type="range" id="oaA1" min="0" max="5" step="0.1" value="1"></div>
+      <div class="ctrl" data-t="sum diff">
+        <div class="lab"><span>V2(直流)</span><b id="oaV2v">0.5 V</b></div>
+        <input type="range" id="oaV2" min="-5" max="5" step="0.1" value="0.5"></div>
+      <div class="ctrl" data-t="sum">
+        <div class="lab"><span>V3 幅度(3 倍频)</span><b id="oaA3v">0.5 V</b></div>
+        <input type="range" id="oaA3" min="0" max="3" step="0.1" value="0.5"></div>
+      <div class="ctrl" data-t="inv noninv sum diff integ schmitt">
+        <div class="lab"><span>R1</span><b id="oaR1v">10 kΩ</b></div>
+        <input type="range" id="oaR1" min="3" max="5" step="0.05" value="4"></div>
+      <div class="ctrl" data-t="sum">
+        <div class="lab"><span>R2</span><b id="oaR2v">10 kΩ</b></div>
+        <input type="range" id="oaR2" min="3" max="5" step="0.05" value="4"></div>
+      <div class="ctrl" data-t="sum">
+        <div class="lab"><span>R3</span><b id="oaR3v">20 kΩ</b></div>
+        <input type="range" id="oaR3" min="3" max="5" step="0.05" value="4.3"></div>
+      <div class="ctrl" data-t="inv noninv sum diff deriv schmitt">
+        <div class="lab"><span>Rf</span><b id="oaRfv">100 kΩ</b></div>
+        <input type="range" id="oaRf" min="3" max="6" step="0.05" value="5"></div>
+      <div class="ctrl" data-t="integ deriv">
+        <div class="lab"><span>电容 C</span><b id="oaCv">10 nF</b></div>
+        <input type="range" id="oaC" min="-9" max="-6" step="0.05" value="-8"></div>
+      <div class="ctrl" data-t="integ">
+        <div class="lab"><span>反馈电阻 Rf(并联 C)</span><b id="oaIfv">1.00 MΩ</b></div>
+        <input type="range" id="oaIf" min="5.3" max="7" step="0.05" value="6"></div>
+      <div class="ctrl" data-t="inv noninv follower sum diff integ deriv schmitt">
+        <div class="lab"><span>信号频率 f</span><b id="oaFv">1.00 kHz</b></div>
+        <input type="range" id="oaF" min="1" max="4" step="0.05" value="3"></div>
+      <div class="ctrl" data-t="inv noninv follower sum diff integ deriv schmitt">
+        <div class="lab"><span>供电 ±VCC</span><b id="oaVccv">±12 V</b></div>
+        <input type="range" id="oaVcc" min="3" max="15" step="0.5" value="12"></div>
+    </div>
+    <div class="tg" id="oaIntegTg" style="display:none">
+      <label><input type="checkbox" id="oaCkRf" checked> 反馈电容并联 Rf(防漂移)</label>
+      <label><input type="checkbox" id="oaCkVos"> 模拟 Vos 直流漂移</label>
+      <label><input type="checkbox" id="oaCkRst"> 并联复位开关</label>
+    </div>
+    <div class="note rd" id="oaIntegWarn" style="display:none"></div>
+    <div class="reads">
+      <div class="read"><div class="k">增益 / 传递关系</div><div class="v" id="oaRg" style="font-size:14px">−10.0</div></div>
+      <div class="read am"><div class="k">VOUT 峰值</div><div class="v"><span id="oaRvo">10.0</span><small> V</small></div></div>
+      <div class="read pk"><div class="k">工作状态</div><div class="v" id="oaRst" style="font-size:14px">线性</div></div>
+      <div class="read gr"><div class="k">输入阻抗</div><div class="v" id="oaRin" style="font-size:14px">10 kΩ</div></div>
+      <div class="read pu"><div class="k" id="oaRxk">VOUT 峰峰</div><div class="v" id="oaRx" style="font-size:14px">20.0 V</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h4>先记住两条"虚"</h4>
+    <div class="eq">虚短:负反馈成立时 V− = V+   (增益无穷大,输出有限 ⇒ 差值只能是零)
+虚断:两个输入端不取电流       (输入阻抗无穷大 ⇒ 电流只能走外部支路)
+饱和:|VOUT| 最多到 VCC − 1.2 V 左右,再大就削顶</div>
+    <p>下面每一种电路都按同一套三步推:<b>① 虚短</b>定出 − 端电压 → <b>② 算出输入支路的电流</b> → <b>③ 虚断</b>说明这股电流只能钻进反馈支路,于是反馈元件两端的压降就是输出。</p>
+    <div id="oaText">
+      <div class="oaX" data-t="inv">
+        <h4 style="margin-top:14px">反相放大器</h4>
+        <div class="eq">① 虚短:+ 端接地 ⇒ V− = V+ = 0,称"虚地"
+② R1 两端是 VIN 和 0 ⇒ i = VIN / R1
+③ 虚断:i 进不了运放,只能全部流过 Rf
+   VOUT = 0 − i·Rf = −(Rf / R1) · VIN</div>
+        <ul>
+          <li><b>增益可以小于 1</b>(Rf &lt; R1),这是同相放大做不到的。</li>
+          <li><b>输入阻抗 = R1</b>,信号源要驱动它。R1 取大则噪声和失调变大,这是它的主要缺点。</li>
+          <li>− 端是"虚地":电压为零但并不真的接地。PCB 上这个节点要短、要小,它对寄生电容最敏感。</li>
+          <li>把 Rf 拖到 1 MΩ:增益 100,输出立刻撞到 ±Vsat 削顶——运放不会"放大到无穷",只会饱和。</li>
+        </ul>
+      </div>
+      <div class="oaX" data-t="noninv">
+        <h4 style="margin-top:14px">同相放大器</h4>
+        <div class="eq">① 虚断:VIN 直接进 + 端,不取电流 ⇒ V+ = VIN
+② 虚短:V− = V+ = VIN
+③ − 端是 Rf、R1 对 VOUT 的分压点:VIN = VOUT · R1/(R1+Rf)
+   VOUT = (1 + Rf / R1) · VIN</div>
+        <ul>
+          <li><b>增益 ≥ 1</b>,永远不小于 1(R1 → ∞ 就退化成跟随器)。</li>
+          <li><b>输入阻抗极高</b>:信号直接进运放输入端,不取电流。高阻传感器优先用它。</li>
+          <li>增益越大,闭环带宽越窄:GBW 固定,增益 100 时带宽只剩 GBW/100。</li>
+        </ul>
+      </div>
+      <div class="oaX" data-t="follower">
+        <h4 style="margin-top:14px">电压跟随器(缓冲器)</h4>
+        <div class="eq">① 输出直接短接回 − 端 ⇒ V− = VOUT
+② 虚短:V− = V+ = VIN
+   VOUT = VIN,增益 = 1(同相放大取 Rf = 0、R1 = ∞ 的特例)</div>
+        <ul>
+          <li>不放大电压,放大的是<b>电流驱动能力</b>:输入阻抗极高,输出阻抗接近零。</li>
+          <li>典型用法:高阻传感器 → 跟随器 → ADC。这就是 SAR ADC 那一节说的"采样瞬间抽电荷"的解药。</li>
+          <li>把基准电压、分压点"复制"一份去驱动负载,而不影响原来的节点。</li>
+          <li>100% 负反馈,是最容易振荡的接法:选运放时要看它是不是 "unity-gain stable"。</li>
+        </ul>
+      </div>
+      <div class="oaX" data-t="sum">
+        <h4 style="margin-top:14px">反相加法器(求和放大器)</h4>
+        <div class="eq">① 虚短:+ 端接地 ⇒ − 端仍是虚地 0 V
+② 每路电阻的另一端都被钉在 0 V,所以三路电流互不干扰:
+   i = V1/R1 + V2/R2 + V3/R3
+③ 虚断:三路电流在 − 端汇合后只能一起流过 Rf
+   VOUT = −Rf · (V1/R1 + V2/R2 + V3/R3)</div>
+        <ul>
+          <li>每一路的权重是 <b>Rf/Ri</b>,各自独立、互不影响——因为虚地把各输入隔开了。</li>
+          <li>图里 V1 是正弦,V2 是直流偏置,V3 是 3 倍频正弦。看输出:直流把整个波形抬起来,3 倍频叠成小波纹。</li>
+          <li>用途:音频混音、给信号加偏置(把 ±1V 变成 0~3.3V 送进单电源 ADC)、R-2R DAC 的核心。</li>
+          <li>想要不反相,后面再串一级增益 −1 的反相器,或者用同相加法(但那种各路权重会互相牵连)。</li>
+        </ul>
+      </div>
+      <div class="oaX" data-t="diff">
+        <h4 style="margin-top:14px">差分放大器(减法器)</h4>
+        <div class="eq">① 虚断:V2 经 R2、R3 分压后进 + 端,分压点不被取电流
+   V+ = V2 · R3/(R2+R3)
+② 虚短:V− = V+
+③ 虚断:R1 上的电流只能全部流过 Rf
+   (V1 − V−)/R1 = (V− − VOUT)/Rf
+取 R2 = R1、R3 = Rf(图中已固定)化简:
+   VOUT = (Rf / R1) · (V2 − V1)</div>
+        <ul>
+          <li><b>名字容易混</b>:运放芯片内部本身就是个差分放大器(开环、增益 10⁵、不可控);这里说的是外面用四个电阻搭出的<b>差分放大电路</b>,增益由电阻定,做的是减法运算。</li>
+          <li>只放大<b>两端的差</b>,两端共有的部分(共模)被抵消。测电流采样电阻两端的压差、抑制地线噪声都靠它。</li>
+          <li><b>四个电阻必须精确匹配</b>,失配 0.1% 就让共模抑制比(CMRR)掉到 60 dB 左右。用集成的电阻阵列或者仪表放大器。</li>
+          <li>两个输入阻抗不一样(V1 端看到 R1,V2 端看到 R2+R3)而且都不高——这是它的先天缺陷,仪表放大器就是在前面加两个跟随器来解决。</li>
+        </ul>
+      </div>
+      <div class="oaX" data-t="integ">
+        <h4 style="margin-top:14px">积分器</h4>
+        <div class="eq">反馈支路的 Rf 换成电容 C
+① 虚短:− 端仍是虚地 0 V ⇒ ② i = VIN / R1
+③ 虚断:i 只能给 C 充电,而 C 上的电压 = 0 − VOUT
+   VOUT = −(1 / R1·C) · ∫ VIN dt
+方波输入 → 三角波输出,斜率 = VIN / (R1·C)</div>
+        <ul>
+          <li>时间常数 τ = R1·C。τ 越小,三角波越陡、幅度越大,很快撞饱和。拖 C 或 f 试试。</li>
+          <li>它就是一个截止频率极低的一阶低通:高于 1/(2πR1C) 的成分以 −20 dB/十倍频衰减。</li>
+          <li>用途:三角波发生器、PID 里的 I 项、Σ-Δ ADC 的调制器前端。</li>
+        </ul>
+        <h4 style="margin-top:14px">为什么反馈电容必须并联 Rf(默认已开启,取消勾选对比)</h4>
+        <div class="eq">理想积分器的增益: |H(f)| = 1 / (2πf·R1·C)   ⇒ f → 0 时增益 → ∞
+
+运放不是理想的,输入端存在:
+  失调电压 Vos (几 mV)   偏置电流 Ib (nA ~ pA)
+这些直流误差被"无穷大的直流增益"积分:
+  dVOUT/dt = Vos / (R1·C)   单向漂移,几秒内撞到 ±Vsat
+
+并联 Rf 后,反馈阻抗 Zf = Rf ‖ (1/sC):
+  H(s) = −(Rf/R1) / (1 + s·Rf·C)
+  直流增益被封顶在 −Rf/R1(有限值),漂移消失
+  拐点 fc = 1 / (2π·Rf·C),高于 fc 才是"真积分"</div>
+        <ul>
+          <li><b>低频段(f ≪ fc)</b>:退化成一个增益 −Rf/R1 的普通反相放大器——Rf 把直流和失调"钳住"了。</li>
+          <li><b>高频段(f ≫ fc)</b>:电容阻抗远小于 Rf,Rf 不起作用,纯积分。</li>
+          <li><b>取值是权衡</b>:Rf 太小 → fc 偏高,积分频段变窄;Rf 太大 → 直流增益 Rf/R1 又太大,漂移回来了。
+            经验:fc 放在最低有用信号频率的 <b>1/10 以下</b>,同时 Rf/R1 ≤ 100 左右。
+            典型 R1=10k、Rf=1M、C=10nF → fc ≈ 16 Hz。</li>
+          <li><b>勾选"模拟 Vos 直流漂移"</b>:输入里叠加一个 5 mV 失调,取消 Rf 看输出以固定斜率单向爬向饱和;
+            勾回 Rf,输出稳定在 Vos·(Rf/R1) 的小值上。这就是这颗电阻存在的全部意义。</li>
+          <li><b>电容旁边除了电阻,还可能是一个开关</b>(勾选"并联复位开关"):周期性把 C 短路放电、输出清零。
+            双积分 ADC、峰值保持、脉冲积分电路都是这么做的。</li>
+          <li>微分器的对偶问题:它把 C 放在输入侧,高频增益 → ∞ 会放大噪声,
+            所以实际电路在 C 前串小电阻、Rf 上并小电容,变成"带限微分器"——同样是给无穷大增益封顶。</li>
+        </ul>
+        <table>
+          <tr><th>频段</th><th>反馈阻抗</th><th>行为</th><th>增益</th></tr>
+          <tr><td class="mo">f ≪ fc</td><td>Rf 主导</td><td>反相放大器</td><td>−Rf / R1(有限)</td></tr>
+          <tr><td class="mo">f ≫ fc</td><td>C 主导</td><td>纯积分器</td><td>−1/(ωR1C),−20 dB/dec</td></tr>
+          <tr><td class="mo">f = fc</td><td>Rf = 1/ωC</td><td>拐点</td><td>−Rf/(√2·R1)</td></tr>
+        </table>
+      </div>
+      <div class="oaX" data-t="deriv">
+        <h4 style="margin-top:14px">微分器</h4>
+        <div class="eq">输入支路的 R1 换成电容 C
+① 虚短:− 端仍是虚地 0 V ⇒ C 两端电压就是 VIN
+② 电容电流只看电压变化率:i = C · dVIN/dt
+③ 虚断:i 全部流过 Rf
+   VOUT = −Rf·C · dVIN/dt
+三角波输入 → 方波输出,幅度 = Rf·C · 斜率</div>
+        <ul>
+          <li>增益随频率线性上升,<b>高频噪声被无限放大</b>——这是它几乎不单独使用的原因。</li>
+          <li>实际会在 C 前串一个小电阻、Rf 上并一个小电容,把高频增益压住,变成"带限微分器"。</li>
+          <li>输入阻抗 = 1/(2πfC),频率越高越低,信号源会被拉垮。</li>
+          <li>用途:边沿检测、PID 里的 D 项、把三角波变方波。</li>
+        </ul>
+      </div>
+      <div class="oaX" data-t="schmitt">
+        <h4 style="margin-top:14px">迟滞比较器(施密特触发器)</h4>
+        <div class="eq">反馈接到 + 端 ⇒ 正反馈,<b>虚短不成立</b>(差值被越推越大),只剩虚断可用
+① 输出只有两态:+Vsat 或 −Vsat
+② 虚断:+ 端不取电流,R1、Rf 就是 VOUT 到地的纯分压器
+   V+ = VOUT · R1/(R1+Rf) = ±VT
+③ 翻转条件是 VIN 追过 V+:
+   VIN &gt; +VT ⇒ VOUT = −Vsat;VIN &lt; −VT ⇒ VOUT = +Vsat</div>
+        <ul>
+          <li>普通比较器在阈值附近遇到一点噪声就来回抖;<b>迟滞把上下阈值分开</b>,翻转之后要反向越过另一个阈值才能翻回来。</li>
+          <li>把 R1 拖大、Rf 拖小,阈值张开;把输入幅度拖到阈值以下,输出就再也不翻转了。</li>
+          <li>这一节唯一的正反馈电路。和前面所有负反馈电路的区别只是<b>反馈接到了 + 端</b>,拓扑差一根线,行为完全不同。</li>
+          <li>用途:开关信号整形、按键去抖、加一个 RC 就是张弛振荡器。</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note cy">怎么快速认出一张运放电路:先找<b>反馈从输出接回哪个输入端</b>——接 − 端是负反馈(放大/滤波/运算),接 + 端是正反馈(比较/振荡);再看反馈支路和输入支路是<b>电阻还是电容</b>——电阻是比例,电容是积分/微分。</div>
+  </div>
+  </div>
+  <table>
+    <tr><th style="width:120px">电路</th><th style="width:120px">反馈</th><th>输出关系</th><th style="width:200px">典型用途</th></tr>
+    <tr><td class="mo">反相放大</td><td>Rf → −</td><td>−(Rf/R1)·VIN,输入阻抗 R1</td><td>增益可 &lt;1,通用放大</td></tr>
+    <tr><td class="mo">同相放大</td><td>Rf → −,信号进 +</td><td>(1+Rf/R1)·VIN,高输入阻抗</td><td>传感器前级</td></tr>
+    <tr><td class="mo">跟随器</td><td>直连 −</td><td>VOUT = VIN</td><td>缓冲、隔离、驱动 ADC</td></tr>
+    <tr><td class="mo">加法器</td><td>Rf → −,多路进 −</td><td>−Rf·Σ(Vi/Ri)</td><td>混音、加偏置、DAC</td></tr>
+    <tr><td class="mo">差分放大</td><td>Rf → −,两路分别进 ±</td><td>(Rf/R1)·(V2−V1),做减法</td><td>电流检测、共模抑制</td></tr>
+    <tr><td class="mo">积分器</td><td>C → −</td><td>−(1/R1C)·∫VIN dt</td><td>三角波、PID-I、Σ-Δ</td></tr>
+    <tr><td class="mo">微分器</td><td>Rf → −,C 进 −</td><td>−RfC·dVIN/dt</td><td>边沿检测、PID-D</td></tr>
+    <tr><td class="mo">迟滞比较</td><td>Rf → +(正反馈)</td><td>±Vsat,阈值 ±Vsat·R1/(R1+Rf)</td><td>整形、去抖、振荡器</td></tr>
+  </table>
+
+  <h3 style="margin-top:26px">运放不理想的四个参数(上面八种电路都是"理想运放",真实芯片差在哪)</h3>
+  <p style="color:var(--mu);font-size:12.5px">前面所有推导都用了"增益无穷大、输入不取电流、速度无限快"三个假设。
+  真实运放这四条都不成立,于是有了四个必须查手册的参数。它们不改拓扑,但决定拓扑<b>能不能用、用到什么程度</b>。</p>
+  <div class="card tight">
+    <svg class="dia" viewBox="0 0 660 210">
+      <path class="wire" d="M40 190 H600 M40 30 V190"/>
+      <g stroke="#151f2a"><path d="M110 30 V190 M180 30 V190 M250 30 V190 M320 30 V190 M390 30 V190 M460 30 V190 M530 30 V190"/></g>
+      <path class="comp" d="M40 30 H110 L460 190" stroke-width="2.4"/>
+      <path class="wire" d="M40 126 H320 M320 126 V190" stroke-dasharray="5 4"/>
+      <path class="wire" d="M40 158 H390 M390 158 V190" stroke-dasharray="5 4"/>
+      <path class="wire" d="M40 190 H460" stroke-dasharray="5 4"/>
+      <circle class="node" cx="320" cy="126" r="3.6"/><circle class="node" cx="390" cy="158" r="3.6"/><circle class="node" cx="460" cy="190" r="3.6"/>
+      <text x="44" y="24">开环增益 A0 = 100 dB(10⁵)</text>
+      <text class="s" x="104" y="44">主极点 fp = 10 Hz</text>
+      <text class="v" x="466" y="186">0 dB @ 1 MHz = GBW</text>
+      <text class="i" x="44" y="120">闭环增益 100(40 dB)→ 带宽 10 kHz</text>
+      <text class="i" x="44" y="152">闭环增益 10(20 dB)→ 带宽 100 kHz</text>
+      <text class="i" x="44" y="184">闭环增益 1(0 dB)→ 带宽 1 MHz</text>
+      <text class="s" x="560" y="204">频率(对数)</text>
+      <text class="s" x="6" y="34">dB</text>
+    </svg>
+  </div>
+  <div class="g2">
+  <div>
+    <div class="eq">增益带宽积:  GBW = A0 · fp = 闭环增益 × 闭环带宽(常数)
+闭环带宽:  f−3dB = GBW / A噪声
+   增益 100、GBW 1 MHz ⇒ 带宽只剩 10 kHz
+满功率带宽: FPBW = SR / (2π · Vpeak)
+   摆率不够,大信号正弦会被压成三角波</div>
+    <table>
+      <tr><th style="width:130px">参数</th><th style="width:120px">典型量级</th><th>后果 / 在哪感受到</th></tr>
+      <tr><td class="mo">失调电压 Vos</td><td>0.1 ~ 5 mV</td><td>直流误差被放大;积分器被它积分到饱和——就是上面"模拟 Vos 漂移"演示的那件事</td></tr>
+      <tr><td class="mo">偏置电流 Ib</td><td>pA~nA(双极)/ fA(CMOS)</td><td>流过外部电阻产生附加失调;高阻信号源被拉偏——跟随器/同相放大就是为它生的</td></tr>
+      <tr><td class="mo">增益带宽积 GBW</td><td>1 ~ 100 MHz</td><td>闭环带宽 = GBW/增益,见上图。增益越大越慢;跟随器带宽最宽却最容易振荡</td></tr>
+      <tr><td class="mo">摆率 SR</td><td>0.5 ~ 100 V/µs</td><td>大信号速度上限:方波边沿变斜坡、正弦变三角。本页模型是理想的,没模拟它</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>四个参数怎么影响选型</h4>
+    <ul>
+      <li><b>放大直流/缓变信号</b>(称重、温度):Vos 和温漂是主角,选"零漂移/自稳零"运放,或者用下面仪表放大器把 Vos 的影响压下去。</li>
+      <li><b>放大交流快信号</b>(音频、视频):GBW 和 SR 是主角,带宽要留 10 倍以上余量。</li>
+      <li><b>高阻源</b>(pH 电极、光电二极管):Ib 是主角,选 CMOS/JFET 输入(fA 级),否则偏置电流在源阻抗上的压降比信号还大。</li>
+      <li><b>积分器</b>:四个参数全中——Vos/Ib 造成漂移(所以并 Rf)、GBW 限制高频、SR 限制大幅值。它是最"挑剔"的接法。</li>
+      <li>手册上还有两个常看的:<b>CMRR</b>(共模抑制,差分/仪表放大器的命根子)和<b>是否 rail-to-rail</b>(低压单电源系统必问)。</li>
+    </ul>
+    <div class="note cy">记住这张图的形状:<b>开环增益是一条 −20 dB/十倍频的斜线</b>,闭环增益是一条水平线,
+    两条线的交点就是闭环带宽。水平线抬高一格(增益 ×10),交点就左移一格(带宽 ÷10)——GBW 守恒,没有免费午餐。</div>
+  </div>
+  </div>
+
+  <h3 style="margin-top:26px">实战中另外三种常见接法(八种基本接法的组合与变形)</h3>
+  <div class="g2c">
+    <div class="card tight">
+      <h4>仪表放大器 In-Amp(三运放)</h4>
+      <svg class="dia" viewBox="0 0 340 160">
+        <path class="wire" d="M40 55 H70 M40 125 H70
+          M30 35 H70 M30 105 H70 M30 35 V44 M30 96 V105
+          M50 35 V14 H100 M152 14 H170 V45 M110 45 H170
+          M50 105 V146 H100 M152 146 H170 V115 M110 115 H170
+          M170 45 V70 H210 M170 115 V90 H210 M310 80 H332"/>
+        <path class="comp" d="M70 25 V65 L110 45 Z M70 95 V135 L110 115 Z"/>
+        <use class="sym" href="#res" transform="translate(30 70)"/>
+        <use class="sym" href="#res" transform="translate(126 14) rotate(90)"/>
+        <use class="sym" href="#res" transform="translate(126 146) rotate(90)"/>
+        <rect class="blk" x="210" y="55" width="100" height="50" rx="6"/>
+        <circle class="node" cx="40" cy="55" r="3.2"/><circle class="node" cx="40" cy="125" r="3.2"/>
+        <circle class="node" cx="50" cy="35" r="3.2"/><circle class="node" cx="50" cy="105" r="3.2"/>
+        <circle class="node" cx="170" cy="45" r="3.2"/><circle class="node" cx="170" cy="115" r="3.2"/>
+        <text class="n" x="8" y="50">V1</text><text class="n" x="8" y="120">V2</text>
+        <text x="36" y="74">Rg</text><text class="s" x="120" y="9">R</text><text class="s" x="120" y="141">R</text>
+        <text x="222" y="76">差分放大级</text><text class="s" x="222" y="92">四个 R 精确匹配</text>
+        <text class="n" x="316" y="74">VOUT</text>
+      </svg>
+      <div class="eq">Vout = (1 + 2R/Rg) · (Rf/R1) · (V2 − V1)</div>
+      <ul>
+        <li>上面差分放大器的两个先天缺陷(输入阻抗低且不平衡、CMRR 靠电阻匹配)在这里都被解决:
+          第一级两个同相端<b>输入阻抗极高且对称</b>,共模增益只有 1。</li>
+        <li><b>增益只靠一颗 Rg 调</b>(外接一个电阻即可),其余电阻厂内激光修调,CMRR 可达 100 dB 以上。</li>
+        <li>用途:电桥传感器(应变片、称重、压力)、心电图 ECG、热电偶——所有"小差模骑在大共模上"的场合。</li>
+        <li>实际工程直接买集成仪表放大器(AD620/INA128/INA826),比自搭三运放便宜且指标更好。</li>
+      </ul>
+    </div>
+    <div class="card tight">
+      <h4>跨阻放大器 TIA(电流 → 电压)</h4>
+      <svg class="dia" viewBox="0 0 330 150">
+        <path class="wire" d="M60 67 H150 M150 93 H130 V112
+          M110 67 V30 H124 M176 30 H205 V80
+          M110 67 V48 H144 M150 48 H215 V80
+          M200 80 H252 M60 67 V72 M60 112 V118"/>
+        <path class="comp" d="M150 55 V105 L200 80 Z M130 67 V77 M144 41 V55 M150 41 V55"/>
+        <use class="sym" href="#res" transform="translate(150 30) rotate(90)"/>
+        <use class="sym" href="#diode" transform="translate(60 92)"/>
+        <path class="comp" d="M116 112 H144 M121 117 H139 M126 122 H134 M46 118 H74 M51 123 H69 M56 128 H64"/>
+        <path class="wire" d="M30 78 L46 88 M38 70 L54 80" stroke-width="1.4"/>
+        <circle class="node" cx="110" cy="67" r="3.2"/><circle class="node" cx="205" cy="80" r="3.2"/><circle class="node" cx="215" cy="80" r="3.2"/>
+        <text class="s" x="22" y="66">光</text>
+        <text class="s" x="10" y="142">光电二极管</text>
+        <text x="140" y="22">Rf</text><text x="156" y="44">Cf</text>
+        <text class="n" x="256" y="76">VOUT</text>
+        <text class="i" x="120" y="144">VOUT = −I · Rf</text>
+      </svg>
+      <ul>
+        <li>光电二极管输出的是<b>电流</b>(nA~mA,正比于光强),不是电压。TIA 把它变成电压:虚地让二极管两端压差恒为 0,电流全部流过 Rf。</li>
+        <li><b>Cf 是稳定性补偿</b>:二极管的结电容 + 运放输入电容和 Rf 构成极点,不加 Cf 会振荡。Cf 与 Rf 并联把这个极点压住,代价是带宽 f ≈ 1/(2πRfCf)。</li>
+        <li>这就是"积分器拓扑"的近亲:反馈同样是 R∥C,只是这里要的是<b>直流增益 Rf</b>,积分行为反而是需要 Cf 小心控制的副作用。</li>
+        <li>用途:光模块接收端、激光雷达、脉搏血氧、烟雾探测器。选运放第一看 Ib(fA 级),第二看 GBW。</li>
+      </ul>
+    </div>
+    <div class="card tight">
+      <h4>Sallen-Key 二阶有源滤波</h4>
+      <svg class="dia" viewBox="0 0 340 150">
+        <path class="wire" d="M20 60 H34 M86 60 H134 M166 60 H190
+          M190 60 V84 M190 90 V104
+          M110 60 V80 M110 86 V110 H280 V65
+          M260 65 H280 M280 65 V30 H196 V52 M196 52 H210
+          M190 60 V78 H196 M196 78 H210
+          M280 65 H320"/>
+        <path class="comp" d="M210 40 V90 L260 65 Z M104 80 H116 M104 86 H116 M184 84 H196 M184 90 H196"/>
+        <use class="sym" href="#res" transform="translate(60 60) rotate(90)"/>
+        <use class="sym" href="#res" transform="translate(150 60) rotate(90)"/>
+        <path class="comp" d="M176 104 H204 M181 109 H199 M186 114 H194"/>
+        <circle class="node" cx="110" cy="60" r="3.2"/><circle class="node" cx="190" cy="60" r="3.2"/><circle class="node" cx="280" cy="65" r="3.2"/>
+        <text class="n" x="8" y="54">VIN</text><text class="n" x="286" y="56">VOUT</text>
+        <text x="52" y="50">R1</text><text x="142" y="50">R2</text>
+        <text x="120" y="86">C1</text><text x="198" y="88">C2</text>
+        <text class="s" x="222" y="26">跟随器(增益 1)</text>
+        <text class="i" x="20" y="140">f0 = 1 / (2π·√(R1·R2·C1·C2))</text>
+      </svg>
+      <ul>
+        <li>用运放(这里接成跟随器)把两级 RC "顶"起来,得到<b>真正的二阶响应</b>:−40 dB/十倍频,且两级之间不互相拖累——无源两级 RC 做不到(Q 永远 ≤ 0.5)。</li>
+        <li>C1 接到<b>输出</b>而不是地,这是它和普通两级 RC 的拓扑差别,正是这个正反馈路径把 Q 提了上来。</li>
+        <li>用途:ADC 前的抗混叠滤波、音频分频、传感器信号调理。要更陡就 cascading 多级,或用多重反馈(MFB)变体。</li>
+        <li>和 LC 滤波那一节对照:LC 靠储能元件、能过大电流;Sallen-Key 靠运放、只适合小信号,但不需要电感、频率做得很低。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section id="adc">
+  <h2>SAR ADC 逐次逼近拓扑 <span class="tag">模拟 → 数字</span></h2>
+  <p class="sub">SAR 的拓扑就是一个<b>用二分查找做的天平</b>:一个采样保持电容、一个比较器、
+  一个 DAC、一套寄存器。每个时钟比一次,把不确定区间对半砍,N 位就要 N 次。</p>
+  <div class="g2">
+  <div>
+    <div class="card tight">
+    <svg class="dia" viewBox="0 0 660 240">
+      <path class="wire" d="M44 70 H100 M150 70 H300 M200 70 V120 M200 132 V190
+        M372 85 H410 M475 116 V150 M540 80 H604 M410 180 H250 M250 180 V110 M300 110 H250"/>
+      <path class="comp" d="M186 190 H214 M191 195 H209 M196 200 H204"/>
+      <path class="comp" d="M186 120 H214 M186 132 H214"/>
+      <path class="comp" d="M300 40 V130 L372 85 Z" fill="#101b26"/>
+      <rect class="blk" x="410" y="44" width="130" height="72" rx="6"/>
+      <rect class="blk" x="410" y="150" width="130" height="58" rx="6"/>
+      <circle class="node" cx="44" cy="70" r="4"/>
+      <circle class="node" cx="200" cy="70" r="3.6"/>
+      <circle class="node" cx="100" cy="70" r="3.6"/><circle class="node" cx="150" cy="70" r="3.6"/>
+      <line id="adS1" class="comp lit" x1="100" y1="70" x2="147" y2="70" stroke-width="2.8"/>
+      <path id="adFin" class="flow" d="M44 70 H200 V120"/>
+      <path id="adFdac" class="flow p" d="M410 180 H250 V110 H300"/>
+      <text class="n" x="14" y="52">VIN <tspan id="adTvin" class="v">2.130V</tspan></text>
+      <text class="n" x="100" y="52">S1 <tspan class="s">采样开关</tspan></text>
+      <text x="150" y="146">Chold</text>
+      <text class="s" x="150" y="162">采样保持电容</text>
+      <text class="n" x="308" y="66">+</text><text class="n" x="308" y="116">−</text>
+      <text class="s" x="306" y="30">比较器</text>
+      <text id="adTvh" class="v" x="212" y="60">2.130 V</text>
+      <text id="adTvd" class="i" x="256" y="104">1.650 V</text>
+      <text class="n" x="424" y="72">SAR 逻辑</text>
+      <text class="s" x="424" y="88">+ 输出寄存器</text>
+      <text class="s" x="424" y="104">每个 clk 定一位</text>
+      <text class="n" x="432" y="176">N 位 DAC</text>
+      <text class="s" x="432" y="192">把码变回电压</text>
+      <text class="s" x="482" y="140">code</text>
+      <text class="n" x="548" y="74">D[N−1:0]</text>
+      <text id="adTcode" class="v" style="font-size:10px" x="548" y="94">1010 0011</text>
+      <text id="adState" class="i" x="14" y="230">采样中:S1 闭合,Chold 跟随输入</text>
+    </svg>
+    </div>
+    <div class="card tight">
+      <h4 style="padding:2px 4px 0">二分查找过程(灰带 = 当前不确定区间,圆点 = 本次试探的 DAC 电压)</h4>
+      <canvas id="adChart" style="height:290px"></canvas>
+      <div class="legend"><span><i style="background:#3ad0e6"></i>被测电压 Vhold</span>
+        <span><i style="background:#ffb03a"></i>DAC 试探值</span>
+        <span><i style="background:#5ddf9c"></i>该位判 1(保留)</span>
+        <span><i style="background:#ff6b6b"></i>该位判 0(丢弃)</span></div>
+    </div>
+    <div class="bits" id="adBits"></div>
+    <div class="ctrls">
+      <div class="ctrl"><div class="lab"><span>输入电压 VIN</span><b id="adVinv">2.130 V</b></div>
+        <input type="range" id="adVin" min="0" max="1" step="0.001" value="0.6455"></div>
+      <div class="ctrl"><div class="lab"><span>基准 VREF</span><b id="adVrefv">3.30 V</b></div>
+        <input type="range" id="adVref" min="1" max="5" step="0.1" value="3.3"></div>
+      <div class="ctrl"><div class="lab"><span>分辨率 N</span><b id="adNv">8 位</b></div>
+        <input type="range" id="adN" min="4" max="14" step="1" value="8"></div>
+      <div class="ctrl"><div class="lab"><span>时钟 fclk</span><b id="adFcv">2.0 MHz</b></div>
+        <input type="range" id="adFc" min="5" max="7.3" step="0.02" value="6.301"></div>
+      <div class="ctrl"><div class="lab"><span>演示节奏</span><b id="adSpv">420 ms/步</b></div>
+        <input type="range" id="adSp" min="60" max="1400" step="20" value="420"></div>
+    </div>
+    <div class="btns">
+      <button class="pri" id="adRun">暂停</button>
+      <button id="adStep">单步</button>
+      <button id="adReset">重新转换</button>
+    </div>
+    <div class="reads">
+      <div class="read"><div class="k">输出码(十进制)</div><div class="v"><span id="adRdec">163</span></div></div>
+      <div class="read pu"><div class="k">十六进制</div><div class="v"><span id="adRhex">0xA3</span></div></div>
+      <div class="read am"><div class="k">1 LSB</div><div class="v"><span id="adRlsb">12.9</span><small> mV</small></div></div>
+      <div class="read rd"><div class="k">量化误差</div><div class="v"><span id="adRerr">4.2</span><small> mV</small></div></div>
+      <div class="read gr"><div class="k">还原电压</div><div class="v"><span id="adRrec">2.101</span><small> V</small></div></div>
+      <div class="read pk"><div class="k">转换时间</div><div class="v"><span id="adRt">4.5</span><small> µs</small></div></div>
+      <div class="read"><div class="k">最高采样率</div><div class="v"><span id="adRsps">222</span><small> kSPS</small></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h4>一次转换发生了什么</h4>
+    <ol style="padding-left:19px;margin:6px 0">
+      <li><b>采样。</b>S1 闭合,Chold 充到 VIN。这一步要花时间,因为它是个 RC 充电。</li>
+      <li><b>保持。</b>S1 断开,Chold 上的电压被冻结,后面所有比较都针对这个冻结值。</li>
+      <li><b>N 次比较。</b>从最高位开始,DAC 先输出半量程 VREF/2,比较器问一句
+        "被测电压比这个大吗?" 大→该位记 1 并保留,小→该位记 0 丢掉。
+        然后拿次高位继续,每次把区间对半砍。</li>
+    </ol>
+    <div class="eq">1 LSB   = VREF / 2^N
+量化误差 ≤ ±0.5 LSB
+转换时间 = (N + 1) / fclk       ← 采样占 1 个时钟
+最高采样率 = fclk / (N + 1)</div>
+    <p>看图里的灰带:每一步高度都缩一半,N 步之后缩到 1 个 LSB。这就是"逐次逼近"这个名字的来历——
+    它是二分查找的硬件实现。</p>
+    <h4 style="margin-top:16px">拓扑上的三个致命细节</h4>
+    <ul>
+      <li><b>VREF 就是标尺。</b>所有结果都是 VIN/VREF 的比值。VREF 抖 1 mV,读数就跟着错。
+        所以 VREF 必须低噪声、低阻、就近去耦——这正是上一节 LDO + 二次 LC 滤波的战场。
+        拖动 VREF 你会看到同一个 VIN 读出完全不同的码。</li>
+      <li><b>采样瞬间要抽电荷。</b>S1 一闭合,Chold 要从信号源身上瞬间抽走一坨电荷。
+        如果前面接的是高阻传感器,电压会被拉塌,读数偏低。解决办法:前面加运放缓冲,
+        或者留够采样时间 + 加 RC。这也是"我的 ADC 读数不准"最常见的原因。</li>
+      <li><b>N 大不等于准。</b>12 位 ADC 在噪声 3 mV 的板子上,后面 3 位纯粹是噪声。
+        有效位数由布局、地、参考源决定,不由数据手册上的位数决定。</li>
+    </ul>
+    <div class="note cy">采样定理:输入频率必须低于 fclk/(N+1)/2,否则高频成分会折叠到低频伪装成信号
+    (aliasing),而且<b>软件里无法分辨</b>。唯一的解决办法是在 ADC 前面加模拟抗混叠滤波器——
+    又回到 LC/RC 滤波那一节。</div>
+    <h4 style="margin-top:16px">几种 ADC 拓扑的分工</h4>
+    <table>
+      <tr><th>拓扑</th><th>速度</th><th>典型场合</th></tr>
+      <tr><td class="mo">SAR</td><td>kSPS ~ 几 MSPS</td><td>MCU 内置、通用采集、电流电压监测</td></tr>
+      <tr><td class="mo">Σ-Δ</td><td>慢,但 16~32 位</td><td>称重、温度、精密仪表</td></tr>
+      <tr><td class="mo">Pipeline</td><td>几十 ~ 几百 MSPS</td><td>视频、通信中频</td></tr>
+      <tr><td class="mo">Flash</td><td>GSPS,位数低</td><td>示波器前端、超高速链路</td></tr>
+    </table>
+  </div>
+  </div>
+</section>
+<section id="tree">
+  <h2>电源树 Power Tree <span class="tag">系统级拓扑</span></h2>
+  <p class="sub">这是整块板子最先要画的一张图。画法是<b>从末端往上算</b>:先列每个负载要多少电流,
+  往上除以效率,一级一级推到入口。勾掉几个负载看看上游电流怎么变。</p>
+  <div class="g2">
+  <div>
+    <div class="card tight">
+    <svg class="dia" viewBox="0 0 680 268">
+      <path class="wire" d="M116 147 H134 V75 H152 M308 75 H326 V51 H344 M326 75 V195 H344
+        M500 51 H520"/>
+      <rect class="blk" x="16" y="112" width="100" height="70" rx="7"/>
+      <rect class="blk" x="152" y="32" width="156" height="86" rx="7"/>
+      <rect class="blk" x="344" y="8" width="156" height="86" rx="7"/>
+      <rect class="blk" x="520" y="8" width="150" height="86" rx="7"/>
+      <rect class="blk" x="344" y="152" width="156" height="86" rx="7"/>
+      <path class="flow anim" d="M116 147 H134 V75 H152"/>
+      <path class="flow anim s2" d="M308 75 H326 V51 H344"/>
+      <path class="flow anim s2" d="M308 75 H326 V195 H344"/>
+      <path class="flow anim s2" d="M500 51 H520"/>
+      <text class="n" x="30" y="133">12 V 输入</text>
+      <text class="i" x="30" y="151"><tspan id="trInI">0.75</tspan> A</text>
+      <text class="s" x="30" y="167"><tspan id="trInP">9.0</tspan> W 总功率</text>
+      <text class="n" x="166" y="51">Buck 12V → 5V</text>
+      <text class="s" x="166" y="67">开关式,η ≈ 93%</text>
+      <text class="i" x="166" y="82">IOUT = <tspan id="trB5o">1.60</tspan> A</text>
+      <text class="v" x="166" y="97">IIN  = <tspan id="trB5i">0.75</tspan> A</text>
+      <text x="166" y="112" fill="#ff6b6b">损耗 <tspan id="trB5l">0.60</tspan> W</text>
+      <text class="n" x="358" y="27">Buck 5V → 3.3V</text>
+      <text class="s" x="358" y="43">开关式,η ≈ 90%</text>
+      <text class="i" x="358" y="58">IOUT = <tspan id="trB3o">0.80</tspan> A</text>
+      <text class="v" x="358" y="73">IIN  = <tspan id="trB3i">0.59</tspan> A</text>
+      <text x="358" y="88" fill="#ff6b6b">损耗 <tspan id="trB3l">0.29</tspan> W</text>
+      <text class="n" x="534" y="27">LDO 3.3V → 1.8V</text>
+      <text class="s" x="534" y="43">线性,η = 1.8/3.3 = 55%</text>
+      <text class="i" x="534" y="58">IOUT = <tspan id="trL1o">0.30</tspan> A</text>
+      <text class="v" x="534" y="73">IIN  = <tspan id="trL1i">0.30</tspan> A</text>
+      <text x="534" y="88" fill="#ff6b6b">发热 <tspan id="trL1l">0.45</tspan> W</text>
+      <text class="n" x="358" y="171">LDO 5V → 3.3V_A</text>
+      <text class="s" x="358" y="187">给 ADC 的干净电源</text>
+      <text class="i" x="358" y="202">IOUT = <tspan id="trL2o">0.05</tspan> A</text>
+      <text class="v" x="358" y="217">IIN  = <tspan id="trL2i">0.05</tspan> A</text>
+      <text x="358" y="232" fill="#ff6b6b">发热 <tspan id="trL2l">0.09</tspan> W</text>
+    </svg>
+    </div>
+    <div class="card">
+      <h4>负载开关(勾掉看上游电流怎么变)</h4>
+      <div class="tg" id="trLoads"></div>
+    </div>
+    <div class="reads">
+      <div class="read"><div class="k">12V 输入电流</div><div class="v"><span id="trRi">0.75</span><small> A</small></div></div>
+      <div class="read"><div class="k">输入总功率</div><div class="v"><span id="trRpin">9.0</span><small> W</small></div></div>
+      <div class="read gr"><div class="k">送到负载</div><div class="v"><span id="trRpo">7.6</span><small> W</small></div></div>
+      <div class="read rd"><div class="k">全链路损耗</div><div class="v"><span id="trRpl">1.4</span><small> W</small></div></div>
+      <div class="read pk"><div class="k">系统效率</div><div class="v"><span id="trReta">84</span><small> %</small></div></div>
+    </div>
+    <div class="note" id="trNote">提示:LDO 的损耗和它的<b>压差</b>成正比,和效率无关地"白烧"。
+    上面 3.3→1.8V 的 LDO 效率只有 55%,如果 FPGA 内核电流再翻一倍就该换 Buck 了。</div>
+  </div>
+  <div class="card">
+    <h4>怎么算</h4>
+    <div class="eq">从末端往上,逐级推:
+
+开关电源:  IIN = (VOUT · IOUT) / (η · VIN)
+线性 LDO:  IIN = IOUT           (电流不变,压差变热)
+           Pd  = (VIN − VOUT) · IOUT
+
+某一级的 IOUT = 挂在它上面的负载 + 它下游所有子级的 IIN</div>
+    <h4 style="margin-top:16px">为什么要分级,不直接 12V → 1.8V</h4>
+    <ul>
+      <li><b>占空比太极端。</b>12V 到 1.8V 需要 D=0.15,开关导通时间被压得很短,
+        高频下精度和效率都难看。分两级各自工作在舒服的占空比区间。</li>
+      <li><b>模拟和数字要隔开。</b>数字域的开关噪声会顺着电源灌进 ADC。
+        所以给模拟域单独拉一路 LDO(图里的 3.3V_A),而不是从数字 3.3V 直接分。</li>
+      <li><b>就近降压。</b>大电流的低压轨要尽量靠近负载,否则铜皮上的 IR 压降吃掉余量。</li>
+    </ul>
+    <h4 style="margin-top:16px">画电源树时顺手要定的几件事</h4>
+    <ul>
+      <li><b>电流预算留 30% 余量。</b>手册上的 typ 值不是最坏情况。</li>
+      <li><b>上电顺序。</b>很多 FPGA/SoC 要求内核先上、IO 后上,顺序错了会有大电流甚至锁死。
+        树上要标出 EN 引脚是被谁的 PG(Power Good)拉起来的。</li>
+      <li><b>浪涌电流。</b>所有电容一起充电的瞬间电流可能是稳态的好几倍,决定保险丝和上游选型。</li>
+      <li><b>标出每一级的地。</b>模拟地和数字地在哪一点单点连接,这条信息属于电源树,不属于原理图。</li>
+    </ul>
+    <div class="note gr">这张图的价值在于:它是唯一能在<b>选型之前</b>就发现"电流不够 / 发热爆表 /
+    级数太多"的图。改一次拓扑几分钟,改一次板子几周。</div>
+  </div>
+  </div>
+</section>
+<section id="bus">
+  <h2>通信总线拓扑 <span class="tag">互连结构</span></h2>
+  <p class="sub">同样是"几个芯片连起来",物理结构不同,能不能工作的结论就完全不同。
+  这类拓扑接错不会"性能差一点",而是直接通信失败。</p>
+  <div class="g2c">
+    <div class="card tight">
+      <h4 style="padding:2px 4px">I²C · 总线型 Bus</h4>
+      <svg class="dia" viewBox="0 0 300 140">
+        <path class="wire" d="M20 48 H270 M20 66 H270 M20 18 H60 M34 18 V20 M34 46 V48
+          M52 18 V20 M52 46 V66 M36 96 V48 M56 96 V66 M129 96 V48 M149 96 V66
+          M223 96 V48 M243 96 V66"/>
+        <use class="sym" href="#res" transform="translate(34 33) scale(.5)"/>
+        <use class="sym" href="#res" transform="translate(52 33) scale(.5)"/>
+        <rect class="blk" x="16" y="96" width="60" height="32" rx="5"/>
+        <rect class="blk" x="110" y="96" width="58" height="32" rx="5"/>
+        <rect class="blk" x="204" y="96" width="58" height="32" rx="5"/>
+        <circle class="node" cx="36" cy="48" r="2.6"/><circle class="node" cx="56" cy="66" r="2.6"/>
+        <circle class="node" cx="129" cy="48" r="2.6"/><circle class="node" cx="149" cy="66" r="2.6"/>
+        <circle class="node" cx="223" cy="48" r="2.6"/><circle class="node" cx="243" cy="66" r="2.6"/>
+        <path class="flow anim" d="M20 48 H270"/>
+        <text class="n" x="16" y="14">VDD</text>
+        <text class="s" x="62" y="34">上拉 4.7k</text>
+        <text class="v" x="274" y="52">SDA</text><text class="v" x="274" y="70">SCL</text>
+        <text class="n" x="24" y="116">主机</text><text class="n" x="122" y="116">从机 A</text>
+        <text class="n" x="216" y="116">从机 B</text>
+      </svg>
+      <p style="font-size:12px;color:var(--mu);margin:8px 2px 0">开漏输出 + 一对上拉,
+      所有器件挂同一对线,靠 7 位地址区分。<b>只在总线上拉一次</b>,每个从机再加上拉是常见错误。
+      总线电容(线长 + 器件数)决定上升时间,超了就必须降速或减小上拉阻值。</p>
+    </div>
+    <div class="card tight">
+      <h4 style="padding:2px 4px">SPI · 星形 Star</h4>
+      <svg class="dia" viewBox="0 0 300 140">
+        <path class="wire" d="M82 58 H170 M170 27 V115 M170 27 H210 M170 71 H210 M170 115 H210"/>
+        <path class="comp" d="M82 80 H140 V36 H210" stroke="#5d7286" stroke-dasharray="3 3"
+          stroke-width="1.4"/>
+        <rect class="blk" x="12" y="44" width="70" height="52" rx="6"/>
+        <rect class="blk" x="210" y="12" width="76" height="30" rx="5"/>
+        <rect class="blk" x="210" y="56" width="76" height="30" rx="5"/>
+        <rect class="blk" x="210" y="100" width="76" height="30" rx="5"/>
+        <circle class="node" cx="170" cy="27" r="2.6"/><circle class="node" cx="170" cy="71" r="2.6"/>
+        <circle class="node" cx="170" cy="115" r="2.6"/>
+        <path class="flow anim" d="M82 58 H170 V27 H210"/>
+        <text class="n" x="26" y="66">主机</text><text class="s" x="20" y="82">Master</text>
+        <text class="v" x="86" y="52">SCK / MOSI / MISO 共享</text>
+        <text class="s" x="86" y="94">CS ×3 各自独立</text>
+        <text class="n" x="220" y="32">从机 1</text><text class="n" x="220" y="76">从机 2</text>
+        <text class="n" x="220" y="120">从机 3</text>
+      </svg>
+      <p style="font-size:12px;color:var(--mu);margin:8px 2px 0">时钟和数据三根共享,
+      片选一人一根——所以从机越多,主机 IO 越吃紧。没有地址、没有应答,速度可以做到几十 MHz。
+      另一种接法是<b>菊花链</b>:数据从上一个从机的输出串到下一个的输入,只用一根 CS,
+      代价是必须整链一起刷。</p>
+    </div>
+    <div class="card tight">
+      <h4 style="padding:2px 4px">CAN / RS-485 · 线型 + 两端终端</h4>
+      <svg class="dia" viewBox="0 0 300 140">
+        <path class="wire" d="M31 52 H262 M31 68 H262 M76 92 V68 M96 92 V52
+          M150 92 V68 M170 92 V52 M224 92 V68 M244 92 V52"/>
+        <use class="sym" href="#res" transform="translate(31 60) scale(.4)"/>
+        <use class="sym" href="#res" transform="translate(262 60) scale(.4)"/>
+        <rect class="blk" x="56" y="92" width="56" height="32" rx="5"/>
+        <rect class="blk" x="130" y="92" width="56" height="32" rx="5"/>
+        <rect class="blk" x="204" y="92" width="56" height="32" rx="5"/>
+        <circle class="node" cx="76" cy="68" r="2.6"/><circle class="node" cx="96" cy="52" r="2.6"/>
+        <circle class="node" cx="150" cy="68" r="2.6"/><circle class="node" cx="170" cy="52" r="2.6"/>
+        <circle class="node" cx="224" cy="68" r="2.6"/><circle class="node" cx="244" cy="52" r="2.6"/>
+        <path class="flow anim" d="M31 52 H262"/>
+        <text class="v" x="104" y="42">CANH / CANL 差分对</text>
+        <text class="i" x="10" y="86">120Ω</text><text class="i" x="242" y="86">120Ω</text>
+        <text class="n" x="64" y="112">节点1</text><text class="n" x="138" y="112">节点2</text>
+        <text class="n" x="212" y="112">节点3</text>
+      </svg>
+      <p style="font-size:12px;color:var(--mu);margin:8px 2px 0"><b>必须是一条线,两端各一个 120Ω。</b>
+      拉成星形、或者中间挂一条长支线,反射就会把差分眼图糊掉。中间节点的支线必须短
+      (几厘米级)。只装一个终端电阻或者装了三个,都是现场最常见的故障。</p>
+    </div>
+    <div class="card tight">
+      <h4 style="padding:2px 4px">DDR3/4 · fly-by 菊花链</h4>
+      <svg class="dia" viewBox="0 0 300 140">
+        <path class="wire" d="M78 72 H100 M100 72 V84 M100 84 H282 M282 84 V88
+          M122 84 V54 M168 84 V54 M214 84 V54 M260 84 V54 M282 116 V120"/>
+        <path class="comp" d="M268 120 H296 M273 125 H291 M278 130 H286"/>
+        <rect class="blk" x="12" y="50" width="66" height="44" rx="6"/>
+        <rect class="blk" x="104" y="20" width="36" height="34" rx="4"/>
+        <rect class="blk" x="150" y="20" width="36" height="34" rx="4"/>
+        <rect class="blk" x="196" y="20" width="36" height="34" rx="4"/>
+        <rect class="blk" x="242" y="20" width="36" height="34" rx="4"/>
+        <use class="sym" href="#res" transform="translate(282 102) scale(.55)"/>
+        <circle class="node" cx="122" cy="84" r="2.6"/><circle class="node" cx="168" cy="84" r="2.6"/>
+        <circle class="node" cx="214" cy="84" r="2.6"/><circle class="node" cx="260" cy="84" r="2.6"/>
+        <path class="flow anim" d="M78 72 H100 V84 H282"/>
+        <text class="n" x="20" y="70">控制器</text><text class="s" x="20" y="86">SoC</text>
+        <text class="s" x="110" y="40">DRAM</text><text class="s" x="156" y="40">DRAM</text>
+        <text class="s" x="202" y="40">DRAM</text><text class="s" x="248" y="40">DRAM</text>
+        <text class="i" x="292" y="106">VTT</text>
+        <text class="v" x="106" y="106">时钟与地址一路"路过"每颗颗粒</text>
+      </svg>
+      <p style="font-size:12px;color:var(--mu);margin:8px 2px 0">走线依次经过每颗颗粒,末端接
+      VTT 终端。代价是每颗颗粒收到时钟的时刻不同,所以 DDR3 引入了
+      <b>write leveling</b> 在控制器里补偿相位差。DDR2 时代用的是 T 型(分支点到各颗等长),
+      频率上去之后分支的残端反射受不了,才换成 fly-by。</p>
+    </div>
+  </div>
+  <table>
+    <tr><th style="width:96px">拓扑</th><th style="width:150px">典型总线</th><th>为什么必须这样</th></tr>
+    <tr><td class="mo">总线型</td><td>I²C、SMBus、1-Wire</td>
+      <td>开漏 + 一对上拉,谁都可以把线拉低。速度低,所以不用管反射,只管总线电容。</td></tr>
+    <tr><td class="mo">星形</td><td>SPI(独立 CS)、并行总线</td>
+      <td>点对点性质最好,时序最容易满足;代价是主机 IO 数量随从机线性增长。</td></tr>
+    <tr><td class="mo">菊花链</td><td>SPI 链、CAN、RS-485、LED 灯串</td>
+      <td>一条线串下去,布线最省。差分高速场合必须两端匹配,支线要短。</td></tr>
+    <tr><td class="mo">fly-by</td><td>DDR3/4 的 CLK/ADDR/CMD</td>
+      <td>用相位补偿换掉分支残端,频率才能上去。</td></tr>
+    <tr><td class="mo">树形</td><td>以太网交换、USB Hub、时钟分配</td>
+      <td>每一级都是缓冲/交换,把长距离拆成多段点对点。</td></tr>
+  </table>
+  <div class="note">判断一个互连拓扑对不对,只问三个问题:
+  <b>①</b> 谁驱动这根线,会不会有两个驱动源同时上(冲突)?
+  <b>②</b> 空闲时电平由谁决定(上拉/下拉/失效偏置)?
+  <b>③</b> 信号边沿够快时,这根线是不是传输线——如果是,阻抗和终端就必须算。</div>
+</section>
+
+<div class="foot">
+  硬件拓扑图实验室 · 所有波形都是页面里实时数值积分算出来的,不是预录动画。<br>
+  开关电源用理想开关 + 电感电容的状态方程逐步求解;效率是含导通、开关、驱动三项的粗略模型,
+  数量级可信,具体数值请以真实器件手册为准。
+</div>
+</main>
+</div>
+<script>
+'use strict';
+const $=(s)=>document.querySelector(s);
+const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+const F=(v,n)=>(Math.abs(v)<1e-12?0:v).toFixed(n);
+
+/* 画布:处理高分屏,并清空 */
+function ctxOf(cv){
+  const d=window.devicePixelRatio||1, w=cv.clientWidth, h=cv.clientHeight;
+  if(cv._w!==w||cv._h!==h||cv._d!==d){cv.width=Math.round(w*d);cv.height=Math.round(h*d);
+    cv._w=w;cv._h=h;cv._d=d;}
+  const c=cv.getContext('2d');
+  c.setTransform(d,0,0,d,0,0); c.clearRect(0,0,w,h);
+  return {c,w,h};
+}
+/* 滑块绑定:input#id + 显示 span#idv */
+function slider(id,fn,fmt){
+  const el=$('#'+id), out=$('#'+id+'v');
+  const u=()=>{const v=parseFloat(el.value); if(out&&fmt)out.textContent=fmt(v); fn(v);};
+  el.addEventListener('input',u); u(); return el;
+}
+/* 面板背景 + 网格 */
+function pane(c,b,label,yl){
+  c.fillStyle='#0a1017'; c.fillRect(b.x,b.y,b.w,b.h);
+  c.strokeStyle='#1b2735'; c.lineWidth=1;
+  c.strokeRect(b.x+.5,b.y+.5,b.w-1,b.h-1);
+  c.setLineDash([2,4]); c.strokeStyle='#16212d';
+  for(let k=1;k<4;k++){const y=Math.round(b.y+b.h*k/4)+.5;
+    c.beginPath();c.moveTo(b.x,y);c.lineTo(b.x+b.w,y);c.stroke();}
+  for(let k=1;k<8;k++){const x=Math.round(b.x+b.w*k/8)+.5;
+    c.beginPath();c.moveTo(x,b.y);c.lineTo(x,b.y+b.h);c.stroke();}
+  c.setLineDash([]);
+  c.fillStyle='#55677a'; c.font='10px ui-monospace,Consolas,monospace';
+  if(label)c.fillText(label,b.x+6,b.y+12);
+  if(yl){c.textAlign='right';
+    for(let k=0;k<=2;k++){const y=b.y+b.h*k/2, v=yl.max-(yl.max-yl.min)*k/2;
+      c.fillText(yl.f(v),b.x-5,y+3.5);} c.textAlign='left';}
+}
+/* 折线,超出面板裁剪 */
+function trace(c,b,a,n,vmin,vmax,col,lw,dash){
+  if(n<2)return;
+  c.save();c.beginPath();c.rect(b.x,b.y,b.w,b.h);c.clip();
+  c.beginPath();
+  const sc=b.h/((vmax-vmin)||1);
+  for(let k=0;k<n;k++){
+    const x=b.x+b.w*k/(n-1), y=b.y+b.h-(a[k]-vmin)*sc;
+    k?c.lineTo(x,y):c.moveTo(x,y);
+  }
+  if(dash)c.setLineDash(dash);
+  c.strokeStyle=col;c.lineWidth=lw||1.6;c.lineJoin='round';c.stroke();
+  c.restore();
+}
+/* 水平参考线 */
+function href(c,b,v,vmin,vmax,col,txt){
+  const y=b.y+b.h-(v-vmin)/((vmax-vmin)||1)*b.h;
+  if(y<b.y||y>b.y+b.h)return;
+  c.save();c.setLineDash([4,4]);c.strokeStyle=col;c.lineWidth=1;
+  c.beginPath();c.moveTo(b.x,y);c.lineTo(b.x+b.w,y);c.stroke();c.restore();
+  if(txt){c.fillStyle=col;c.font='10px ui-monospace,Consolas,monospace';
+    c.fillText(txt,b.x+b.w-c.measureText(txt).width-5,y-4);}
+}
+/* 导通区间阴影 */
+function bands(c,b,on,n){
+  c.fillStyle='rgba(58,208,230,.055)';
+  let s=-1;
+  for(let k=0;k<n;k++){
+    if(on[k]&&s<0)s=k;
+    if((!on[k]||k===n-1)&&s>=0){
+      const x0=b.x+b.w*s/(n-1), x1=b.x+b.w*k/(n-1);
+      c.fillRect(x0,b.y+1,Math.max(1,x1-x0),b.h-2); s=-1;
+    }
+  }
+}
+
+/* ============ 开关电源:状态方程逐步积分 ============ */
+function mkConv(kind,pfx){
+  const s={kind:kind,pfx:pfx,Vin:12,D:.35,L:22e-6,C:47e-6,R:4,fs:2e5,
+    IL:0,Vo:0,ph:0,vsw:0,on:true,run:true,spd:5e-6,acc:0,fp:0,vis:true,
+    va:12,ia:1,dirty:true,
+    buf:{vo:[],il:[],vsw:[],on:[]},N:1000};
+  s.dt=()=>1/(s.fs*250);
+  return s;
+}
+function conv1(s,dt){
+  s.ph+=dt*s.fs; if(s.ph>=1)s.ph-=1;
+  const on=s.ph<s.D;
+  let dIL=0;
+  if(s.kind==='buck'){
+    if(on)dIL=(s.Vin-s.Vo)/s.L;
+    else dIL=s.IL>0?(-s.Vo/s.L):0;
+    s.IL=Math.max(0,s.IL+dIL*dt);
+    s.Vo=Math.max(0,s.Vo+(s.IL-s.Vo/s.R)/s.C*dt);
+    s.vsw=on?s.Vin:(s.IL>0?0:s.Vo);
+  }else{
+    if(on)dIL=s.Vin/s.L;
+    else dIL=s.IL>0?((s.Vin-s.Vo)/s.L):0;
+    s.IL=Math.max(0,s.IL+dIL*dt);
+    const ic=on?0:s.IL;
+    s.Vo=Math.max(.001,s.Vo+(ic-s.Vo/s.R)/s.C*dt);
+    s.vsw=on?0:(s.IL>0?s.Vo:s.Vin);
+  }
+  s.on=on;
+}
+function convPush(s){
+  const b=s.buf;
+  b.vo.push(s.Vo);b.il.push(s.IL);b.vsw.push(s.vsw);b.on.push(s.on?1:0);
+  if(b.vo.length>s.N){b.vo.shift();b.il.shift();b.vsw.shift();b.on.shift();}
+}
+/* 直接把状态置到解析稳态工作点,再短暂收敛出真实纹波形状。
+   比从零跑 40 ms 快得多,而且避免高 Q 谐振残留污染纹波读数 */
+function convSeed(s){
+  s.ph=0;
+  if(s.kind==='buck'){s.Vo=s.D*s.Vin;s.IL=s.Vo/s.R;}
+  else{const k=Math.max(.06,1-s.D);s.Vo=s.Vin/k;s.IL=s.Vo/(s.R*k);}
+}
+/* 收敛判据:周期平均值连续两次几乎不变(DCM 时解析种子不准,靠这里补) */
+function convSettle(s){
+  const dt=s.dt(), blk=5000;
+  let prev=1e9, total=0, hit=0;
+  for(let it=0;it<260;it++){
+    let sum=0;
+    for(let k=0;k<blk;k++){conv1(s,dt);sum+=s.Vo;}
+    total+=blk;
+    const avg=sum/blk;
+    if(Math.abs(avg-prev)<Math.max(2e-5,avg*3e-5)){if(++hit>=2)break;}else hit=0;
+    prev=avg;
+    if(total>1.2e6)break;
+  }
+}
+function convFill(s){                   /* 重新填满显示窗口 */
+  const dt=s.dt(); s.buf={vo:[],il:[],vsw:[],on:[]};
+  for(let k=0;k<s.N;k++){conv1(s,dt);convPush(s);}
+}
+function convStats(s){
+  const b=s.buf,n=b.vo.length; if(!n)return null;
+  let vmn=1e9,vmx=-1e9,imn=1e9,imx=-1e9,vs=0,is=0;
+  for(let k=0;k<n;k++){const v=b.vo[k],i=b.il[k];
+    if(v<vmn)vmn=v; if(v>vmx)vmx=v; if(i<imn)imn=i; if(i>imx)imx=i; vs+=v; is+=i;}
+  return {vo:vs/n,il:is/n,dvo:(vmx-vmn)*1000,dil:imx-imn,imin:imn,vmax:vmx};
+}
+/* 粗略损耗模型:导通 + 开关 + 驱动 */
+function convEff(s,st){
+  const Io=st.vo/s.R, Po=st.vo*Io;
+  if(Po<=1e-6)return 0;
+  const Rds=.03,DCR=.045,tsw=2e-8,Qg=8e-9,Vdrv=5;
+  const Vhi=s.kind==='buck'?s.Vin:st.vo;
+  const Pc=st.il*st.il*(DCR+Rds);
+  const Psw=Vhi*st.il*tsw*s.fs;
+  const Pg=2*Qg*Vdrv*s.fs;
+  return clamp(Po/(Po+Pc+Psw+Pg),0,1);
+}
+/* 上电瞬态包络 */
+function convStartup(s,T,pts){
+  const t={kind:s.kind,Vin:s.Vin,D:s.D,L:s.L,C:s.C,R:s.R,fs:s.fs,
+    IL:0,Vo:s.kind==='boost'?s.Vin:0,ph:0,vsw:0,on:true};
+  const dt=s.dt(), N=Math.min(900000,Math.ceil(T/dt)), bs=Math.max(1,Math.floor(N/pts));
+  const A=[]; let vmn=1e9,vmx=-1e9,imn=1e9,imx=-1e9,c=0;
+  for(let k=0;k<N;k++){
+    conv1(t,dt);
+    if(t.Vo<vmn)vmn=t.Vo; if(t.Vo>vmx)vmx=t.Vo;
+    if(t.IL<imn)imn=t.IL; if(t.IL>imx)imx=t.IL;
+    if(++c===bs){A.push([vmn,vmx,imn,imx]);c=0;vmn=1e9;vmx=-1e9;imn=1e9;imx=-1e9;}
+  }
+  A.T=N*dt;                     /* 实际覆盖到的时间,受步数上限限制 */
+  return A;
+}
+function fillEnv(c,b,A,lo,hi,vmax,col){
+  const n=A.length, sc=b.h/(vmax||1);
+  c.save();c.beginPath();c.rect(b.x,b.y,b.w,b.h);c.clip();c.beginPath();
+  for(let k=0;k<n;k++){const x=b.x+b.w*k/(n-1);
+    const y=b.y+b.h-A[k][hi]*sc; k?c.lineTo(x,y):c.moveTo(x,y);}
+  for(let k=n-1;k>=0;k--)c.lineTo(b.x+b.w*k/(n-1),b.y+b.h-A[k][lo]*sc);
+  c.closePath();c.fillStyle=col;c.fill();c.restore();
+}
+function drawConvWave(s){
+  const {c,w,h}=ctxOf(s.cv);
+  const b=s.buf,n=b.vo.length; if(n<2)return;
+  const st=convStats(s), pad=40;
+  const A={x:pad,y:16,w:w-pad-12,h:(h-56)*.56};
+  const B={x:pad,y:A.y+A.h+32,w:w-pad-12,h:(h-56)*.44};
+  s.va+=(Math.max(s.Vin,st.vmax)*1.14+.3-s.va)*.14;
+  s.ia+=(Math.max(.05,st.il*1.3+st.dil*.75)-s.ia)*.14;
+  pane(c,A,'电压 (V)',{min:0,max:s.va,f:v=>F(v,1)});
+  bands(c,A,b.on,n);
+  trace(c,A,b.vsw,n,0,s.va,'#41627a',1.5);
+  trace(c,A,b.vo,n,0,s.va,'#3ad0e6',2.1);
+  const ideal=s.kind==='buck'?s.D*s.Vin:s.Vin/(1-s.D);
+  href(c,A,ideal,0,s.va,'#6a7f92',s.kind==='buck'?'D·VIN':'VIN/(1−D)');
+  pane(c,B,'电感电流 (A)',{min:0,max:s.ia,f:v=>F(v,2)});
+  bands(c,B,b.on,n);
+  trace(c,B,b.il,n,0,s.ia,'#ffb03a',2.1);
+  href(c,B,st.vo/s.R,0,s.ia,'#6a7f92','IOUT');
+  c.fillStyle='#55677a';c.font='10px ui-monospace,Consolas,monospace';
+  c.fillText('时间 →  窗口 '+F(s.N*s.dt()*1e6,2)+' µs = 4 个开关周期   fs = '+
+    F(s.fs/1000,0)+' kHz   慢放 '+F(s.spd*1e6,1)+' µs/秒',B.x,B.y+B.h+17);
+}
+function drawConvStart(s){
+  const {c,w,h}=ctxOf(s.cvs);
+  const A=s.env; if(!A||A.length<2)return;
+  const pad=40,B={x:pad,y:14,w:w-pad-12,h:h-38};
+  let vmx=.1,imx=.01;
+  for(const e of A){if(e[1]>vmx)vmx=e[1];if(e[3]>imx)imx=e[3];}
+  vmx*=1.12; imx*=1.12;
+  pane(c,B,'上电瞬态(左轴电压)',{min:0,max:vmx,f:v=>F(v,1)});
+  fillEnv(c,B,A,2,3,imx,'rgba(255,176,58,.32)');
+  fillEnv(c,B,A,0,1,vmx,'rgba(58,208,230,.36)');
+  const ideal=s.kind==='buck'?s.D*s.Vin:s.Vin/(1-s.D);
+  href(c,B,ideal,0,vmx,'#6a7f92','目标 '+F(ideal,2)+' V');
+  c.font='10px ui-monospace,Consolas,monospace';
+  c.fillStyle='#55677a'; c.fillText('0',B.x+3,B.y+B.h+14);
+  c.fillText(F(A.T*1e3,1)+' ms',B.x+B.w-40,B.y+B.h+14);
+  c.fillStyle='#ffb03a'; c.fillText('iL 峰值 '+F(imx/1.12,2)+' A',B.x+7,B.y+B.h-7);
+  c.fillStyle='#3ad0e6'; c.fillText('VOUT 过冲 '+F(vmx/1.12,2)+' V',B.x+7,B.y+B.h-21);
+}
+/* 原理图动画 + 数字更新:MOSFET 符号不再转动,改为按栅极状态点亮 */
+const gateTxt=(t,v)=>{if(!t)return;t.textContent=v?'G=1 通':'G=0 断';t.style.fill=v?'#ffb03a':'';};
+function convSvg(s,dtr){
+  const e=s.el, on=s.on, free=!on&&s.IL>1e-3;
+  e.fon.classList.toggle('on',on);
+  e.foff.classList.toggle('on',free);
+  s.fp-=(16+Math.min(s.IL,12)*26)*dtr;
+  e.fon.style.strokeDashoffset=s.fp;
+  e.foff.style.strokeDashoffset=s.fp;
+  if(s.kind==='buck'){
+    e.q1.classList.toggle('lit',on);
+    e.q2.classList.toggle('lit',!on);
+    gateTxt(e.q1g,on); gateTxt(e.q2g,!on);
+    e.state.textContent=on?'Q1 导通:VIN 经电感给负载供电,电感储能,iL 上升'
+      :(free?'Q1 关断:电感靠自感维持电流,经 Q2 续流,iL 下降'
+            :'电流已降到零(DCM 断流期):输出全靠电容维持');
+  }else{
+    e.q1.classList.toggle('lit',on);
+    gateTxt(e.q1g,on);
+    e.d1.classList.toggle('lit2',free);
+    e.state.textContent=on?'Q1 导通:电感被输入电压直接充能,输出靠电容单独撑着'
+      :(free?'Q1 关断:电感把电压顶高,经 D1 把能量灌进输出电容和负载'
+            :'电感电流归零(DCM):等下一个周期');
+  }
+  e.til.textContent='iL = '+F(s.IL,2)+' A';
+}
+function convRead(s){
+  const st=convStats(s); if(!st)return;
+  const p=s.pfx, ideal=s.kind==='buck'?s.D*s.Vin:s.Vin/(1-s.D);
+  const eta=convEff(s,st), dcm=st.imin<2e-3;
+  $('#'+p+'Rvo').textContent=F(st.vo,2);
+  $('#'+p+'Rid').textContent=F(ideal,2);
+  $('#'+p+'Ril').textContent=F(st.il,2);
+  $('#'+p+'Rdil').textContent=F(st.dil,2);
+  $('#'+p+'Rdvo').textContent=st.dvo<100?F(st.dvo,1):Math.round(st.dvo);
+  $('#'+p+'Reta').textContent=Math.round(eta*100);
+  const m=$('#'+p+'Rmode');
+  m.textContent=dcm?'DCM 断流':'CCM 连续';
+  m.style.color=dcm?'#ffb03a':'#5ddf9c';
+  s.el.tvo.textContent=F(st.vo,2)+'V';
+}
+function convBind(s,el){
+  s.el=el; s.cv=$('#'+s.pfx+'Wave'); s.cvs=$('#'+s.pfx+'Start');
+  s.T=clamp(10*s.R*s.C,6e-4,2.4e-2);
+  s.recalc=()=>{
+    s.T=clamp(10*s.R*s.C,6e-4,2.4e-2);
+    s.env=convStartup(s,s.T,340);
+    const t=$('#'+s.pfx+'Tt'); if(t)t.textContent=F(s.env.T*1e3,1);
+    drawConvStart(s);
+  };
+  let tm=0;
+  s.touch=()=>{clearTimeout(tm);tm=setTimeout(()=>{
+    convSeed(s); convSettle(s); convFill(s); s.recalc();},150);};
+  new IntersectionObserver(r=>{s.vis=r[0].isIntersecting;},{rootMargin:'120px'})
+    .observe(s.cv);
+}
+function convStep(s,dtr){
+  if(!s.run||!s.vis)return;
+  const dt=s.dt();
+  s.acc+=(s.spd*dtr)/dt;
+  let n=Math.floor(s.acc); s.acc-=n;
+  if(n>40000)n=40000;
+  for(let k=0;k<n;k++){conv1(s,dt);convPush(s);}
+}
+/* ---- Buck 实例 ---- */
+const BK=mkConv('buck','bk');
+convBind(BK,{fon:$('#bkFon'),foff:$('#bkFoff'),q1:$('#bkQ1'),q2:$('#bkQ2'),
+  q1g:$('#bkQ1g'),q2g:$('#bkQ2g'),
+  state:$('#bkState'),til:$('#bkTil'),tvo:$('#bkTvo')});
+slider('bkVin',v=>{BK.Vin=v;$('#bkTvin').textContent=F(v,1)+'V';BK.touch();},v=>F(v,1)+' V');
+slider('bkD',v=>{BK.D=v;BK.touch();},v=>Math.round(v*100)+' %');
+slider('bkL',v=>{BK.L=v*1e-6;$('#bkTl').textContent=v;BK.touch();},v=>v+' µH');
+slider('bkC',v=>{BK.C=v*1e-6;$('#bkTc').textContent=v;BK.touch();},v=>v+' µF');
+slider('bkR',v=>{BK.R=v;$('#bkTr').textContent=F(v,1);BK.touch();},v=>F(v,1)+' Ω');
+slider('bkFs',v=>{BK.fs=v*1e3;BK.touch();},v=>v+' kHz');
+const spdFmt=v=>{const u=Math.pow(10,v)*1e6;return (u<100?F(u,1):Math.round(u))+' µs/秒';};
+slider('bkSp',v=>{BK.spd=Math.pow(10,v);},spdFmt);
+$('#bkRun').onclick=e=>{BK.run=!BK.run;e.target.textContent=BK.run?'暂停':'继续';};
+$('#bkSs').onclick=()=>{convSeed(BK);convSettle(BK);convFill(BK);};
+$('#bkZero').onclick=()=>{
+  BK.IL=0;BK.Vo=0;BK.ph=0;BK.buf={vo:[],il:[],vsw:[],on:[]};BK.run=true;
+  $('#bkRun').textContent='暂停';
+  const el=$('#bkSp');el.value=el.max;el.dispatchEvent(new Event('input'));};
+$('#bkTt').textContent=F(BK.T*1e3,1);
+
+/* ---- Boost 实例 ---- */
+const BS=mkConv('boost','bs');
+BS.Vin=5;BS.D=.5;BS.L=1e-5;BS.C=1e-4;BS.R=20;BS.fs=3e5;BS.Vo=5;BS.va=12;
+convBind(BS,{fon:$('#bsFon'),foff:$('#bsFoff'),q1:$('#bsQ1'),d1:$('#bsD1'),q1g:$('#bsQ1g'),
+  state:$('#bsState'),til:$('#bsTil'),tvo:$('#bsTvo')});
+slider('bsVin',v=>{BS.Vin=v;$('#bsTvin').textContent=F(v,1)+'V';BS.touch();},v=>F(v,1)+' V');
+slider('bsD',v=>{BS.D=v;BS.touch();},v=>Math.round(v*100)+' %');
+slider('bsL',v=>{BS.L=v*1e-6;$('#bsTl').textContent=v;BS.touch();},v=>v+' µH');
+slider('bsC',v=>{BS.C=v*1e-6;$('#bsTc').textContent=v;BS.touch();},v=>v+' µF');
+slider('bsR',v=>{BS.R=v;$('#bsTr').textContent=v;BS.touch();},v=>v+' Ω');
+slider('bsFs',v=>{BS.fs=v*1e3;BS.touch();},v=>v+' kHz');
+slider('bsSp',v=>{BS.spd=Math.pow(10,v);},spdFmt);
+$('#bsRun').onclick=e=>{BS.run=!BS.run;e.target.textContent=BS.run?'暂停':'继续';};
+$('#bsSs').onclick=()=>{convSeed(BS);convSettle(BS);convFill(BS);};
+$('#bsZero').onclick=()=>{
+  BS.IL=0;BS.Vo=BS.Vin;BS.ph=0;BS.buf={vo:[],il:[],vsw:[],on:[]};BS.run=true;
+  $('#bsRun').textContent='暂停';
+  const el=$('#bsSp');el.value=el.max;el.dispatchEvent(new Event('input'));};
+/* ============ LDO ============ */
+const LD={Vin:5,Vset:3.3,Io:.3,th:60,fp:0};
+function ldoUpd(){
+  const Vdo=.15+LD.Io*.25, Iq=5e-5;
+  const inDrop=(LD.Vin-LD.Vset)<Vdo;
+  const Vo=inDrop?Math.max(0,LD.Vin-Vdo):LD.Vset;
+  const Pd=(LD.Vin-Vo)*LD.Io+LD.Vin*Iq;
+  const Po=Vo*LD.Io;
+  const eta=Po>1e-4?Po/(LD.Vin*(LD.Io+Iq)):0;
+  const Tj=25+Pd*LD.th;
+  const fs=5e5,Rds=.03,DCR=.045,tsw=2e-8,Qg=8e-9;
+  const be=Po>1e-4?clamp(Po/(Po+LD.Io*LD.Io*(DCR+Rds)+LD.Vin*LD.Io*tsw*fs+2*Qg*5*fs),0,1):0;
+  $('#ldRvo').textContent=F(Vo,2);
+  $('#ldRdrop').textContent=F(LD.Vin-Vo,2);
+  $('#ldRpd').textContent=F(Pd,2);
+  $('#ldReta').textContent=Po>1e-4?Math.round(eta*100):'—';
+  $('#ldRbe').textContent=Po>1e-4?Math.round(be*100):'—';
+  const tj=$('#ldRtj'); tj.textContent=Math.round(Tj);
+  tj.parentElement.style.color=Tj>125?'#ff6b6b':'';
+  $('#ldTvin').textContent=F(LD.Vin,1)+'V';
+  $('#ldTvo').textContent=F(Vo,2)+'V';
+  $('#ldTio').textContent=F(LD.Io,2)+' A';
+  $('#ldState').textContent=inDrop
+    ?'压差不足,已进入 dropout:调整管全开,输出只能跟着输入走'
+    :'压差 '+F(LD.Vin-Vo,2)+' V × '+F(LD.Io,2)+' A = '+F(Pd,2)+' W 全部变成热';
+  const hg=$('#ldHeat');
+  hg.setAttribute('opacity',clamp(Pd/3,0,1).toFixed(3));
+  hg.setAttribute('r',(34+clamp(Pd,0,4)*7).toFixed(0));
+  $('#ldBarT').style.width=clamp(Tj/125*100,0,100)+'%';
+  $('#ldBarL').style.width=clamp(eta*100,0,100)+'%';
+  $('#ldBarB').style.width=clamp(be*100,0,100)+'%';
+  $('#ldBarLt').textContent=Po>1e-4?Math.round(eta*100)+'%':'—';
+  $('#ldBarBt').textContent=Po>1e-4?Math.round(be*100)+'%':'—';
+  $('#ldWarn').style.display=inDrop?'block':'none';
+}
+slider('ldVin',v=>{LD.Vin=v;ldoUpd();},v=>F(v,1)+' V');
+slider('ldVo',v=>{LD.Vset=v;ldoUpd();},v=>F(v,1)+' V');
+slider('ldIo',v=>{LD.Io=v;ldoUpd();},v=>F(v,2)+' A');
+slider('ldTh',v=>{LD.th=v;ldoUpd();},v=>v+' °C/W');
+$('#ldFlow').classList.add('on');
+/* ============ LC 滤波器:复数阻抗精确计算 ============ */
+const FT={L:22e-6,C:47e-6,esr:.02,R:4,fs:2e5,two:false};
+const cmul=(a,b)=>[a[0]*b[0]-a[1]*b[1],a[0]*b[1]+a[1]*b[0]];
+const cadd=(a,b)=>[a[0]+b[0],a[1]+b[1]];
+const cdiv=(a,b)=>{const d=b[0]*b[0]+b[1]*b[1]||1e-30;
+  return [(a[0]*b[0]+a[1]*b[1])/d,(a[1]*b[0]-a[0]*b[1])/d];};
+const cpar=(a,b)=>cdiv(cmul(a,b),cadd(a,b));
+const cabs=a=>Math.hypot(a[0],a[1]);
+function ftH(f){
+  const w=2*Math.PI*f;
+  const ZL=[0,w*FT.L], ZC=[FT.esr,-1/(w*FT.C)], ZR=[FT.R,0];
+  const Zp2=cpar(ZR,ZC);
+  const H2=cdiv(Zp2,cadd(ZL,Zp2));
+  if(!FT.two)return cabs(H2);
+  const Zin2=cadd(ZL,Zp2);
+  const Zp1=cpar(ZC,Zin2);
+  return cabs(cmul(cdiv(Zp1,cadd(ZL,Zp1)),H2));
+}
+const ftDb=f=>20*Math.log10(Math.max(1e-9,ftH(f)));
+function drawBode(){
+  const {c,w,h}=ctxOf($('#ftBode'));
+  const B={x:46,y:14,w:w-58,h:h-38}, L0=2.3,L1=7.5, dT=20,dB=-100;
+  const X=f=>B.x+B.w*(Math.log10(f)-L0)/(L1-L0);
+  const Y=d=>B.y+B.h*(dT-d)/(dT-dB);
+  c.fillStyle='#0a1017';c.fillRect(B.x,B.y,B.w,B.h);
+  c.font='10px ui-monospace,Consolas,monospace';
+  c.setLineDash([2,4]);
+  for(let e=2;e<=7;e++)for(const m of [1,2,5]){
+    const f=m*Math.pow(10,e);
+    if(Math.log10(f)<L0||Math.log10(f)>L1)continue;
+    const x=Math.round(X(f))+.5;
+    c.strokeStyle=m===1?'#1f2d3c':'#151f2a';
+    c.beginPath();c.moveTo(x,B.y);c.lineTo(x,B.y+B.h);c.stroke();
+    if(m===1){c.fillStyle='#55677a';
+      c.fillText(e>=6?Math.pow(10,e-6)+'M':Math.pow(10,e-3)+'k',x-7,B.y+B.h+14);}
+  }
+  for(let d=dT;d>=dB;d-=20){
+    const y=Math.round(Y(d))+.5;
+    c.strokeStyle=d===0?'#2a3b4e':'#151f2a';
+    c.beginPath();c.moveTo(B.x,y);c.lineTo(B.x+B.w,y);c.stroke();
+    c.fillStyle='#55677a';c.textAlign='right';c.fillText(d+' dB',B.x-5,y+3.5);c.textAlign='left';
+  }
+  c.setLineDash([]);
+  c.strokeStyle='#1b2735';c.lineWidth=1;c.strokeRect(B.x+.5,B.y+.5,B.w-1,B.h-1);
+  const vline=(f,col,txt,dash)=>{
+    if(Math.log10(f)<L0||Math.log10(f)>L1)return;
+    const x=X(f);
+    c.save();c.setLineDash(dash||[5,4]);c.strokeStyle=col;c.lineWidth=1.3;
+    c.beginPath();c.moveTo(x,B.y);c.lineTo(x,B.y+B.h);c.stroke();c.restore();
+    c.fillStyle=col;c.fillText(txt,x+4,B.y+13);
+  };
+  const f0=1/(2*Math.PI*Math.sqrt(FT.L*FT.C));
+  const fesr=1/(2*Math.PI*FT.C*Math.max(FT.esr,1e-4));
+  vline(f0,'#ffb03a','f0 '+(f0>1e3?F(f0/1e3,1)+'k':Math.round(f0)));
+  vline(FT.fs,'#a78bfa','fs');
+  vline(2*FT.fs,'#7c68c4','2fs',[3,5]);
+  vline(3*FT.fs,'#6a58ad','3fs',[3,5]);
+  if(FT.esr>0.001)vline(fesr,'#ff6b6b','ESR 拐点',[2,3]);
+  c.save();c.beginPath();c.rect(B.x,B.y,B.w,B.h);c.clip();
+  c.beginPath();
+  for(let px=0;px<=B.w;px++){
+    const f=Math.pow(10,L0+(L1-L0)*px/B.w), y=Y(ftDb(f));
+    px?c.lineTo(B.x+px,y):c.moveTo(B.x+px,y);
+  }
+  c.strokeStyle='#3ad0e6';c.lineWidth=2.2;c.lineJoin='round';c.stroke();
+  const a1=ftDb(FT.fs);
+  if(Math.log10(FT.fs)>=L0&&Math.log10(FT.fs)<=L1){
+    c.beginPath();c.arc(X(FT.fs),Y(a1),4,0,7);c.fillStyle='#a78bfa';c.fill();
+  }
+  c.restore();
+  c.fillStyle='#a78bfa';
+  c.fillText('fs 处 '+F(a1,1)+' dB = 衰减 '+Math.round(1/Math.pow(10,a1/20))+' 倍',
+    B.x+8,B.y+B.h-9);
+  $('#ftRf0').textContent=(f0>=1e3?F(f0/1e3,2)+' kHz':Math.round(f0)+' Hz');
+  $('#ftRq').textContent=F(FT.R*Math.sqrt(FT.C/FT.L),2);
+  $('#ftRa1').textContent=F(a1,1);
+  $('#ftRa2').textContent=F(ftDb(2*FT.fs),1);
+  $('#ftRratio').textContent=F(FT.fs/f0,0);
+  $('#ftRfl').textContent=fesr>=1e6?F(fesr/1e6,1)+' MHz':
+    (fesr>=1e3?Math.round(fesr/1e3)+' kHz':Math.round(fesr)+' Hz');
+}
+slider('ftL',v=>{const u=Math.pow(10,v);FT.L=u*1e-6;
+  $('#ftTl').textContent=u<10?F(u,1):Math.round(u);drawBode();},
+  v=>{const u=Math.pow(10,v);return (u<10?F(u,2):Math.round(u))+' µH';});
+slider('ftC',v=>{const u=Math.pow(10,v);FT.C=u*1e-6;
+  $('#ftTc').textContent=u<10?F(u,1):Math.round(u);drawBode();},
+  v=>{const u=Math.pow(10,v);return (u<10?F(u,2):Math.round(u))+' µF';});
+slider('ftEsr',v=>{FT.esr=v/1000;$('#ftTesr').textContent=v;drawBode();},v=>v+' mΩ');
+slider('ftR',v=>{FT.R=v;drawBode();},v=>F(v,1)+' Ω');
+slider('ftFs',v=>{FT.fs=Math.pow(10,v);drawBode();},
+  v=>{const f=Math.pow(10,v);return f>=1e6?F(f/1e6,2)+' MHz':Math.round(f/1e3)+' kHz';});
+$('#ftTwo').addEventListener('change',e=>{
+  FT.two=e.target.checked;
+  $('#ftS2').classList.toggle('dull',!FT.two);
+  $('#ftF2').style.display=FT.two?'':'none';
+  drawBode();
+});
+$('#ftS2').classList.add('dull'); $('#ftF2').style.display='none';
+/* ============ 运放基本电路 ============ */
+const OA={type:'inv',A1:1,V2:.5,A3:.5,R1:1e4,R2:1e4,R3:2e4,Rf:1e5,C:1e-8,f:1e3,Vcc:12,
+  iRfOn:true,iRf:1e6,iVos:5,iDrift:false,iReset:false};
+const oaTypes=[['inv','反相放大器'],['noninv','同相放大器'],['follower','电压跟随器'],
+  ['sum','加法器'],['diff','差分放大器'],['integ','积分器'],['deriv','微分器'],['schmitt','迟滞比较器']];
+const fmtR=v=>v>=1e6?F(v/1e6,2)+' MΩ':(v>=1e3?(v/1e3<10?F(v/1e3,1):Math.round(v/1e3))+' kΩ':Math.round(v)+' Ω');
+const fmtC=v=>v>=1e-6?F(v*1e6,2)+' µF':(v*1e9<10?F(v*1e9,1):Math.round(v*1e9))+' nF';
+const fmtF=v=>v>=1e3?F(v/1e3,2)+' kHz':Math.round(v)+' Hz';
+/* SVG 图元拼装:全部使用标准符号 */
+const oaP={
+  w:d=>'<path class="wire" d="'+d+'"/>',
+  r:(x,y,h)=>'<use class="sym" href="#res" transform="translate('+x+' '+y+')'+(h?' rotate(90)':'')+'"/>',
+  c:(x,y)=>'<path class="comp" d="M'+(x-6)+' '+(y-14)+' V'+(y+14)+' M'+(x+6)+' '+(y-14)+' V'+(y+14)+'"/>',
+  g:(x,y)=>'<path class="comp" d="M'+(x-14)+' '+y+' H'+(x+14)+' M'+(x-9)+' '+(y+5)+' H'+(x+9)+
+     ' M'+(x-4)+' '+(y+10)+' H'+(x+4)+'"/>',
+  n:(x,y)=>'<circle class="node" cx="'+x+'" cy="'+y+'" r="3.6"/>',
+  t:(x,y,s,cls)=>'<text class="'+(cls||'')+'" x="'+x+'" y="'+y+'">'+s+'</text>',
+  amp:(x,y,flip)=>'<use class="sym" href="#opamp" transform="translate('+x+' '+y+')'+
+     (flip?' scale(1 -1)':'')+'"/><path class="wire" d="M'+(x+27)+' '+(y-13)+' V'+(y-30)+
+     ' M'+(x+27)+' '+(y+13)+' V'+(y+30)+'"/>'+
+     '<text class="s" x="'+(x+12)+'" y="'+(y-34)+'">+VCC</text>'+
+     '<text class="s" x="'+(x+12)+'" y="'+(y+42)+'">−VEE</text>'
+};
+function oaBuild(t){
+  const o=OA, P=oaP, X=330, Y=110;            /* 运放基座 (330,110),翻转后 − 在上 (98)、+ 在下 (122) */
+  let s=P.amp(X,Y,true)+P.w('M384 110 H470')+P.n(420,110)+
+    P.t(436,96,'VOUT','n')+P.t(436,128,'','v oaG')+P.t(436,146,'','i oaVo');
+  const rf=P.w('M250 98 V40 H309 M361 40 H420 V110')+P.r(335,40,true)+
+    P.t(300,28,'Rf <tspan class="oaRf"></tspan>');
+  const vin=(y,lab)=>P.n(60,y)+P.t(24,y-14,(lab||'VIN')+' <tspan class="v oaVin"></tspan>','n');
+  switch(t){
+    case 'inv':
+      s+=P.w('M60 98 H144 M196 98 H330 M330 122 H290 V160')+P.r(170,98,true)+P.g(290,160)+rf+
+        vin(98)+P.n(250,98)+P.t(146,84,'R1 <tspan class="oaR1"></tspan>')+
+        P.t(206,118,'虚地 ≈ 0 V','s')+P.t(24,226,'VOUT = −(Rf / R1) · VIN','i');break;
+    case 'noninv':
+      s+=P.w('M60 122 H330 M330 98 H250 V124 M250 176 V186')+P.r(250,150)+P.g(250,186)+rf+
+        vin(122)+P.n(250,98)+P.t(262,154,'R1 <tspan class="oaR1"></tspan>')+
+        P.t(24,226,'VOUT = (1 + Rf / R1) · VIN','i');break;
+    case 'follower':
+      s+=P.w('M60 122 H330 M330 98 H250 V40 H420 V110')+vin(122)+
+        P.t(270,30,'100% 负反馈,Rf = 0','s')+P.t(24,226,'VOUT = VIN(增益 1,只放大驱动能力)','i');break;
+    case 'sum':
+      s+=P.w('M60 98 H144 M196 98 H250 M60 150 H144 M196 150 H250 M60 196 H144 M196 196 H250'+
+        ' M250 196 V98 H330 M330 122 H300 V160')+P.r(170,98,true)+P.r(170,150,true)+P.r(170,196,true)+
+        P.g(300,160)+rf+vin(98,'V1')+P.n(60,150)+P.t(24,136,'V2 <tspan class="v oaV2"></tspan>','n')+
+        P.n(60,196)+P.t(24,182,'V3 <tspan class="v oaV3"></tspan>','n')+P.n(250,98)+P.n(250,150)+
+        P.t(146,84,'R1 <tspan class="oaR1"></tspan>')+P.t(146,136,'R2 <tspan class="oaR2"></tspan>')+
+        P.t(146,182,'R3 <tspan class="oaR3"></tspan>')+P.t(206,118,'虚地:电流在此相加','s')+
+        P.t(300,230,'VOUT = −Rf · (V1/R1 + V2/R2 + V3/R3)','i');break;
+    case 'diff':
+      s+=P.w('M60 98 H144 M196 98 H330 M60 122 H144 M196 122 H330 M250 122 V134 M250 186 V192')+
+        P.r(170,98,true)+P.r(170,122,true)+P.r(250,160)+P.g(250,192)+rf+vin(98,'V1')+
+        P.n(60,122)+P.t(24,140,'V2 <tspan class="v oaV2"></tspan>','n')+P.n(250,98)+P.n(250,122)+
+        P.t(146,84,'R1 <tspan class="oaR1"></tspan>')+P.t(146,142,'R2 = R1','s')+
+        P.t(262,164,'R3 = Rf','s')+P.t(24,226,'VOUT = (Rf / R1) · (V2 − V1)','i');break;
+    case 'integ':{
+      /* 主反馈线 y=44,电容 C 串联其中(极板 x329/341, y30~58);
+         Rf 并联走上支路 y=20(水平电阻,在极板上方);复位开关走下支路 y=70(在极板下方) */
+      s+=P.w('M60 98 H144 M196 98 H330 M330 122 H290 V160 M250 98 V44 H329 M341 44 H420 V110')+
+        P.r(170,98,true)+P.c(335,44)+P.g(290,160)+vin(98)+P.n(250,98)+
+        P.t(146,84,'R1 <tspan class="oaR1"></tspan>')+P.t(206,118,'虚地','s')+
+        P.t(296,70,'C <tspan class="oaC"></tspan>')+
+        P.t(24,226,'VOUT = −(1 / R1·C) · ∫ VIN dt   方波 → 三角波','i');
+      if(o.iRfOn){
+        s+=P.w('M300 44 V20 H309 M361 20 H370 V44')+P.n(300,44)+P.n(370,44)+
+          P.r(335,20,true)+P.t(312,10,'Rf <tspan class="oaRfi"></tspan>');
+      }
+      if(o.iReset){
+        s+=P.w('M250 44 V70 H262 M278 70 H290 V44')+P.n(250,44)+P.n(290,44)+
+          P.n(262,70)+P.n(278,70)+'<path class="comp" d="M263 69 L273 61"/>'+
+          P.t(236,90,'SW 复位','s');
+      }
+      break;}
+    case 'deriv':
+      s+=P.w('M60 98 H164 M176 98 H330 M330 122 H290 V160')+P.c(170,98)+P.g(290,160)+rf+
+        vin(98)+P.n(250,98)+P.t(150,80,'C <tspan class="oaC"></tspan>')+
+        P.t(206,118,'虚地','s')+P.t(24,226,'VOUT = −Rf·C · dVIN/dt   三角波 → 方波','i');break;
+    case 'schmitt':
+      s+=P.w('M60 98 H330 M420 110 V178 H361 M309 178 H250 V122 H330 M250 178 H226 M174 178 V196')+
+        P.r(335,178,true)+P.r(200,178,true)+P.g(174,196)+vin(98)+P.n(250,178)+
+        P.t(298,166,'Rf <tspan class="oaRf"></tspan>')+P.t(180,166,'R1 <tspan class="oaR1"></tspan>')+
+        P.t(256,114,'正反馈 → + 端','s')+P.t(430,180,'VT = ±Vsat·R1/(R1+Rf)','i');break;
+  }
+  $('#oaSvg').innerHTML=s;
+}
+/* 有损积分器:解 ODE  dVout/dt = −Vin/(R1·C) − Vout/(Rf·C)
+   Rf→∞ 退化为纯积分;叠加 Vos 演示直流漂移;可选半周期复位 */
+function oaIntegWave(){
+  const o=OA, Vsat=o.Vcc-1.2, N=600;
+  const sq=x=>Math.sin(x)>=0?1:-1;
+  const Rf=o.iRfOn?o.iRf:Infinity;
+  const invRfC=Rf===Infinity?0:1/(Rf*o.C), invR1C=1/(o.R1*o.C);
+  const drift=o.iDrift, Vos=drift?o.iVos/1000:0;
+  let T;
+  if(drift){                                    /* 窗口拉到能看清漂移/钳位 */
+    const Tsat=Vsat/(Vos*invR1C), tauRf=Rf===Infinity?0:Rf*o.C;
+    T=Rf===Infinity?clamp(Tsat*1.6,1e-4,30):clamp(Math.max(tauRf*6,Tsat*0.5),1e-4,30);
+  }else T=2/o.f;                                /* 正常:2 个信号周期 */
+  const halfP=0.5/o.f;
+  const tauMin=Rf===Infinity?halfP:Math.min(Rf*o.C,halfP);
+  const dtTarget=drift?(Rf===Infinity?T/N:Math.min(T/N,Rf*o.C/16)):Math.min(T/N,tauMin/16);
+  const perPt=clamp(Math.ceil((T/N)/dtTarget),1,400), dt=T/(N*perPt);
+  const vo=new Array(N); let V=0, t=0;
+  for(let k=0;k<N;k++){
+    for(let s2=0;s2<perPt;s2++){
+      if(!drift&&o.iReset){const hp=Math.floor(t/halfP);if(hp!==Math.floor((t+dt)/halfP))V=0;}
+      const Vin=drift?Vos:o.A1*sq(2*Math.PI*o.f*t);
+      V+=(-Vin*invR1C-V*invRfC)*dt; t+=dt;
+    }
+    vo[k]=V;
+  }
+  /* 正常信号:去掉直流中心,把三角波居中(纯积分器稳态不唯一,有 Rf 时稳态中心≈0) */
+  if(!drift){const m=vo.reduce((s,v)=>s+v,0)/N;for(let k=0;k<N;k++)vo[k]-=m;}
+  let peak=0, clip=false;
+  for(let k=0;k<N;k++){
+    if(vo[k]>Vsat){vo[k]=Vsat;clip=true;} if(vo[k]<-Vsat){vo[k]=-Vsat;clip=true;}
+    const av=Math.abs(vo[k]); if(av>peak)peak=av;
+  }
+  return {vo,clip,peak,Vsat,T,drift};
+}
+function oaCalc(){
+  const o=OA, Vsat=o.Vcc-1.2, N=600;
+  const tri=x=>2/Math.PI*Math.asin(Math.sin(x)), sq=x=>Math.sin(x)>=0?1:-1;
+  if(o.type==='integ'){                          /* 独立窗口(漂移时非 2 周期),单独求解 */
+    const r=oaIntegWave();
+    const v1=new Array(N),v2=new Array(N).fill(0),v3=new Array(N).fill(0);
+    for(let k=0;k<N;k++){const t=r.T*k/(N-1);
+      v1[k]=r.drift?o.iVos/1000:o.A1*sq(2*Math.PI*o.f*t);}
+    return {v1,v2,v3,vo:r.vo,clip:r.clip,peak:r.peak,raw:r.peak,Vsat,VT:0,T:r.T,drift:r.drift};
+  }
+  const T=1/o.f, w=2*Math.PI*o.f, dt=2*T/(N-1);
+  const v1=[],v2=[],v3=[],vo=[]; let hi=true, clip=false, peak=0;
+  const VT=Vsat*o.R1/(o.R1+o.Rf);
+  for(let k=0;k<N;k++){
+    const x=w*k*dt; let a,b=0,c=0,y=0;
+    a=o.type==='deriv'?o.A1*tri(x):o.A1*Math.sin(x);
+    switch(o.type){
+      case 'inv': y=-o.Rf/o.R1*a; break;
+      case 'noninv': y=(1+o.Rf/o.R1)*a; break;
+      case 'follower': y=a; break;
+      case 'sum': b=o.V2; c=o.A3*Math.sin(3*x); y=-o.Rf*(a/o.R1+b/o.R2+c/o.R3); break;
+      case 'diff': b=o.V2; y=o.Rf/o.R1*(b-a); break;
+      case 'deriv': y=-o.Rf*o.C*4*o.A1*o.f*(Math.cos(x)>=0?1:-1); break;
+      case 'schmitt': if(hi&&a>VT)hi=false; else if(!hi&&a<-VT)hi=true; y=hi?Vsat:-Vsat; break;
+    }
+    v1.push(a);v2.push(b);v3.push(c);vo.push(y);
+  }
+  let raw=0;
+  for(let k=0;k<N;k++){const v=Math.abs(vo[k]); if(v>raw)raw=v;
+    if(v>Vsat){clip=true;vo[k]=Math.sign(vo[k])*Vsat;} if(Math.abs(vo[k])>peak)peak=Math.abs(vo[k]);}
+  return {v1,v2,v3,vo,clip,peak,raw,Vsat,VT,T};
+}
+function drawOa(r){
+  const {c,w,h}=ctxOf($('#oaWave'));
+  const o=OA, pad=44, n=r.v1.length;
+  const A={x:pad,y:14,w:w-pad-12,h:(h-56)*.42};
+  const B={x:pad,y:A.y+A.h+26,w:w-pad-12,h:(h-56)*.58};
+  let im=o.A1; for(let k=0;k<n;k++){im=Math.max(im,Math.abs(r.v1[k]),Math.abs(r.v2[k]),Math.abs(r.v3[k]));}
+  im=im*1.15+.05;
+  pane(c,A,'输入 (V)',{min:-im,max:im,f:v=>F(v,1)});
+  href(c,A,0,-im,im,'#2a3b4e');
+  if(o.type==='schmitt'){href(c,A,r.VT,-im,im,'#5ddf9c','+VT '+F(r.VT,2)+' V');
+    href(c,A,-r.VT,-im,im,'#5ddf9c','−VT');}
+  if(o.type==='sum'||o.type==='diff')trace(c,A,r.v2,n,-im,im,'#7d92a7',1.4,[4,3]);
+  if(o.type==='sum')trace(c,A,r.v3,n,-im,im,'#a78bfa',1.4);
+  trace(c,A,r.v1,n,-im,im,'#ffb03a',2);
+  const om=o.Vcc*1.12;
+  pane(c,B,'输出 (V)',{min:-om,max:om,f:v=>F(v,0)});
+  href(c,B,0,-om,om,'#2a3b4e');
+  href(c,B,r.Vsat,-om,om,'#ff6b6b','+Vsat '+F(r.Vsat,1)+' V');
+  href(c,B,-r.Vsat,-om,om,'#ff6b6b','−Vsat');
+  trace(c,B,r.vo,n,-om,om,'#3ad0e6',2.2);
+  c.fillStyle='#55677a';c.font='10px ui-monospace,Consolas,monospace';
+  const win=o.type==='integ'?r.T:r.T*2;
+  const wl=win>=1e-3?F(win*1e3,2)+' ms':F(win*1e6,0)+' µs';
+  c.fillText('时间 →  窗口 = '+wl+(o.type==='integ'&&r.drift?'   (演示 Vos 直流漂移)':'   f = '+fmtF(o.f)),
+    B.x,B.y+B.h+17);
+}
+function oaRead(r){
+  const o=OA, t=o.type; let g,rin,xk,xv;
+  const st=$('#oaRst');
+  if(t==='schmitt'){st.textContent='开关(两态)';st.style.color='#a78bfa';}
+  else{st.textContent=r.clip?'饱和削顶':'线性';st.style.color=r.clip?'#ff6b6b':'#5ddf9c';}
+  switch(t){
+    case 'inv': g='−'+F(o.Rf/o.R1,2); rin=fmtR(o.R1); xk='VOUT 峰峰'; xv=F(r.peak*2,1)+' V'; break;
+    case 'noninv': g='+'+F(1+o.Rf/o.R1,2); rin='≫ 1 MΩ'; xk='VOUT 峰峰'; xv=F(r.peak*2,1)+' V'; break;
+    case 'follower': g='+1'; rin='≫ 1 MΩ'; xk='VOUT 峰峰'; xv=F(r.peak*2,1)+' V'; break;
+    case 'sum': g='−'+F(o.Rf/o.R1,1)+' / −'+F(o.Rf/o.R2,1)+' / −'+F(o.Rf/o.R3,1);
+      rin=fmtR(o.R1)+' / '+fmtR(o.R2)+' / '+fmtR(o.R3); xk='输出直流分量';
+      xv=F(-o.Rf*o.V2/o.R2,2)+' V'; break;
+    case 'diff': g='+'+F(o.Rf/o.R1,2)+' ×(V2−V1)'; rin=fmtR(o.R1)+' / '+fmtR(o.R1+o.Rf);
+      xk='共模抑制'; xv='取决于电阻匹配'; break;
+    case 'integ':{
+      rin=fmtR(o.R1);
+      if(r.drift){
+        const ss=o.iVos/1000*(o.iRf/o.R1);
+        const tsat=(o.Vcc-1.2)/((o.iVos/1000)/(o.R1*o.C));
+        if(o.iRfOn){
+          g='钳位 −Rf/R1 = −'+F(o.iRf/o.R1,0);
+          xk='稳态漂移 V∞ = Vos·Rf/R1'; xv='±'+F(ss,2)+' V';
+        }else{
+          g='∞(纯积分,必饱和)';
+          xk='撞饱和时间 ≈ Vsat·R1C/Vos';
+          xv=(tsat>=1?F(tsat,1)+' s':F(tsat*1e3,0)+' ms');
+        }
+      }else if(o.iRfOn){
+        const fc=1/(2*Math.PI*o.iRf*o.C);
+        g='积分 (fc '+fmtF(fc)+' 以下变放大)';
+        xk='拐点 fc = 1/(2π·Rf·C)'; xv=fmtF(fc);
+      }else{
+        g='斜率 '+F(o.A1/(o.R1*o.C)/1000,1)+' V/ms';
+        xk='时间常数 τ = R1·C';
+        xv=(o.R1*o.C>=1e-3?F(o.R1*o.C*1e3,2)+' ms':F(o.R1*o.C*1e6,1)+' µs');
+      }
+      break;}
+    case 'deriv': g='Rf·C = '+(o.Rf*o.C>=1e-3?F(o.Rf*o.C*1e3,2)+' ms':F(o.Rf*o.C*1e6,1)+' µs');
+      rin=fmtR(1/(2*Math.PI*o.f*o.C))+' @f'; xk='理论输出(未削顶)'; xv='±'+F(r.raw,1)+' V'; break;
+    case 'schmitt': g='∞(开环)'; rin='≫ 1 MΩ'; xk='阈值 ±VT'; xv='±'+F(r.VT,2)+' V'; break;
+  }
+  $('#oaRg').textContent=g; $('#oaRin').textContent=rin;
+  $('#oaRxk').textContent=xk; $('#oaRx').textContent=xv;
+  $('#oaRvo').textContent=F(r.peak,1);
+  const set=(cls,v)=>document.querySelectorAll('#oaSvg .'+cls).forEach(e=>e.textContent=v);
+  set('oaR1',fmtR(o.R1)); set('oaR2',fmtR(o.R2)); set('oaR3',fmtR(o.R3)); set('oaRf',fmtR(o.Rf));
+  set('oaRfi',fmtR(o.iRf));
+  set('oaC',fmtC(o.C)); set('oaVin','±'+F(o.A1,1)+'V'); set('oaV2',F(o.V2,1)+'V'); set('oaV3','±'+F(o.A3,1)+'V');
+  let svgG='Av = '+g.split(' ')[0];
+  if(t==='schmitt')svgG='±Vsat = ±'+F(r.Vsat,1)+' V';
+  else if(t==='integ'){
+    if(r.drift)svgG=o.iRfOn?'钳位 ±'+F(o.iVos/1000*(o.iRf/o.R1),2)+' V':'漂向 ±Vsat!';
+    else svgG=o.iRfOn?'积分 (fc '+fmtF(1/(2*Math.PI*o.iRf*o.C))+')':'纯积分';
+  }
+  set('oaG',svgG);
+  set('oaVo',(r.clip&&t!=='schmitt'?'削顶!峰值 ':'峰值 ')+F(r.peak,2)+' V');
+}
+function oaUpd(){const r=oaCalc();drawOa(r);oaRead(r);oaIntegUi();}
+/* 积分器专属 UI:勾选开关显隐 + 危险提示 */
+function oaIntegUi(){
+  const o=OA, on=o.type==='integ';
+  $('#oaIntegTg').style.display=on?'':'none';
+  const w=$('#oaIntegWarn');
+  if(!on){w.style.display='none';return;}
+  let msg='';
+  if(!o.iRfOn&&!o.iDrift)
+    msg='<b>纯积分器(无 Rf)</b>:直流增益无穷大,运放的失调电压会被无限积分,输出必然漂到饱和。勾选"模拟 Vos 直流漂移"看它怎么漂的。';
+  else if(o.iDrift&&!o.iRfOn)
+    msg='<b>正在演示灾难</b>:没有 Rf,Vos 以斜率 Vos/(R1·C) 积分,输出单向爬升直到撞 ±Vsat。把 Rf 勾回来——输出会被钳在 Vos·(Rf/R1) 的小值上,不再漂。';
+  else if(o.iDrift&&o.iRfOn)
+    msg='<b>Rf 起效了</b>:直流增益被封顶在 −Rf/R1,输出稳定在 Vos·(Rf/R1) ≈ '+F(o.iVos/1000*(o.iRf/o.R1),2)+' V,不再漂移。拖 Rf 看这个稳态值怎么变。';
+  w.innerHTML=msg; w.style.display=msg?'':'none';
+}
+function oaSetType(t){
+  OA.type=t; oaBuild(t);
+  document.querySelectorAll('#oaCtrls .ctrl').forEach(el=>{
+    el.style.display=el.dataset.t.split(' ').includes(t)?'':'none';});
+  document.querySelectorAll('#oaText .oaX').forEach(el=>{el.style.display=el.dataset.t===t?'':'none';});
+  document.querySelectorAll('#oaTypes button').forEach(b=>b.classList.toggle('pri',b.dataset.t===t));
+  oaUpd();
+}
+$('#oaTypes').innerHTML=oaTypes.map(([k,n])=>'<button data-t="'+k+'">'+n+'</button>').join('');
+$('#oaTypes').querySelectorAll('button').forEach(b=>b.onclick=()=>oaSetType(b.dataset.t));
+slider('oaA1',v=>{OA.A1=v;oaUpd();},v=>F(v,1)+' V');
+slider('oaV2',v=>{OA.V2=v;oaUpd();},v=>F(v,1)+' V');
+slider('oaA3',v=>{OA.A3=v;oaUpd();},v=>F(v,1)+' V');
+slider('oaR1',v=>{OA.R1=Math.pow(10,v);oaUpd();},v=>fmtR(Math.pow(10,v)));
+slider('oaR2',v=>{OA.R2=Math.pow(10,v);oaUpd();},v=>fmtR(Math.pow(10,v)));
+slider('oaR3',v=>{OA.R3=Math.pow(10,v);oaUpd();},v=>fmtR(Math.pow(10,v)));
+slider('oaRf',v=>{OA.Rf=Math.pow(10,v);oaUpd();},v=>fmtR(Math.pow(10,v)));
+slider('oaIf',v=>{OA.iRf=Math.pow(10,v);oaUpd();},v=>fmtR(Math.pow(10,v)));
+slider('oaC',v=>{OA.C=Math.pow(10,v);oaUpd();},v=>fmtC(Math.pow(10,v)));
+slider('oaF',v=>{OA.f=Math.pow(10,v);oaUpd();},v=>fmtF(Math.pow(10,v)));
+slider('oaVcc',v=>{OA.Vcc=v;oaUpd();},v=>'±'+F(v,1)+' V');
+$('#oaCkRf').addEventListener('change',e=>{OA.iRfOn=e.target.checked;oaBuild('integ');oaUpd();});
+$('#oaCkVos').addEventListener('change',e=>{OA.iDrift=e.target.checked;oaUpd();});
+$('#oaCkRst').addEventListener('change',e=>{OA.iReset=e.target.checked;oaBuild('integ');oaUpd();});
+/* ============ SAR ADC ============ */
+const AD={Vref:3.3,frac:.6455,N:8,fclk:2e6,ms:420,run:true,vis:true,
+  Vh:0,code:0,bit:7,lo:0,hi:3.3,trials:[],phase:'sample',acc:0,vdac:0,fp:0};
+function adReset(){
+  AD.Vh=AD.frac*AD.Vref; AD.code=0; AD.bit=AD.N-1; AD.trials=[];
+  AD.phase='sample'; AD.acc=0; AD.lo=0; AD.hi=AD.Vref; AD.vdac=0;
+  adBits(); adDom();
+}
+function adStep(){
+  if(AD.phase==='done'){adReset();return;}
+  if(AD.phase==='sample'){AD.phase='convert';AD.vdac=0;adBits();adDom();return;}
+  const trial=AD.code|(1<<AD.bit);
+  const v=trial/(1<<AD.N)*AD.Vref;
+  const keep=AD.Vh>=v;
+  if(keep){AD.code=trial;AD.lo=v;}else{AD.hi=v;}
+  AD.vdac=v;
+  AD.trials.push({bit:AD.bit,v:v,keep:keep,lo:AD.lo,hi:AD.hi});
+  AD.bit--;
+  if(AD.bit<0)AD.phase='done';
+  adBits(); adDom();
+}
+function adBits(){
+  let html='';
+  for(let b=AD.N-1;b>=0;b--){
+    const done=AD.phase==='done'||b>AD.bit;
+    const val=(AD.code>>b)&1;
+    const cls='bit'+(AD.phase==='convert'&&b===AD.bit?' cur':'')+(done?(val?' one':' zero'):'');
+    html+='<div class="'+cls+'">'+(done?val:'?')+'<span class="w">b'+b+'</span></div>';
+  }
+  $('#adBits').innerHTML=html;
+}
+function adDom(){
+  const lsb=AD.Vref/(1<<AD.N), rec=AD.code*lsb, tconv=(AD.N+1)/AD.fclk;
+  $('#adTvin').textContent=F(AD.Vh,3)+'V';
+  $('#adTvh').textContent=F(AD.Vh,3)+' V';
+  $('#adTvd').textContent=F(AD.vdac,3)+' V';
+  $('#adRdec').textContent=AD.code;
+  $('#adRhex').textContent='0x'+AD.code.toString(16).toUpperCase()
+    .padStart(Math.ceil(AD.N/4),'0');
+  $('#adRlsb').textContent=lsb*1000<10?F(lsb*1000,3):F(lsb*1000,2);
+  $('#adRerr').textContent=F((AD.Vh-rec)*1000,2);
+  $('#adRrec').textContent=F(rec,3);
+  $('#adRt').textContent=tconv*1e6<10?F(tconv*1e6,2):F(tconv*1e6,1);
+  $('#adRsps').textContent=Math.round(AD.fclk/(AD.N+1)/1000);
+  $('#adTcode').textContent=AD.code.toString(2).padStart(AD.N,'0')
+    .replace(/(.{4})/g,'$1 ').trim();
+  const s1=$('#adS1');
+  s1.setAttribute('transform',AD.phase==='sample'?'':'rotate(-26 100 70)');
+  s1.classList.toggle('lit',AD.phase==='sample');
+  $('#adFin').classList.toggle('on',AD.phase==='sample');
+  $('#adFdac').classList.toggle('on',AD.phase==='convert');
+  let st;
+  if(AD.phase==='sample')st='采样中:S1 闭合,Chold 跟随输入 '+F(AD.Vh,3)+' V';
+  else if(AD.phase==='done')st='转换完成:'+AD.N+' 次比较,共耗时 '+F(tconv*1e6,2)+' µs';
+  else{const t=AD.trials[AD.trials.length-1];
+    st=t?('第 '+(AD.N-t.bit)+' 次比较:DAC 给 '+F(t.v,3)+' V,被测 '+F(AD.Vh,3)+' V → bit'
+      +t.bit+' = '+(t.keep?'1 保留':'0 丢弃')):'S1 已断开,电压被冻结,开始逐位比较';}
+  $('#adState').textContent=st;
+}
+function drawAdc(){
+  const {c,w,h}=ctxOf($('#adChart'));
+  const B={x:46,y:14,w:w-58,h:h-40}, N=AD.N;
+  pane(c,B,'电压 (V)',{min:0,max:AD.Vref,f:v=>F(v,2)});
+  const X=i=>B.x+B.w*(i+.5)/N, Y=v=>B.y+B.h*(1-v/AD.Vref);
+  let lo=0,hi=AD.Vref;
+  for(let i=0;i<N;i++){
+    const x0=B.x+B.w*i/N, x1=B.x+B.w*(i+1)/N, t=AD.trials[i];
+    c.fillStyle=t?'rgba(125,148,167,.15)':'rgba(125,148,167,.07)';
+    c.fillRect(x0+1.5,Y(hi),Math.max(1,x1-x0-3),Math.max(1.5,Y(lo)-Y(hi)));
+    if(!t)break;
+    lo=t.lo;hi=t.hi;
+  }
+  href(c,B,AD.Vh,0,AD.Vref,'#3ad0e6','Vhold '+F(AD.Vh,3)+' V');
+  c.font='10px ui-monospace,Consolas,monospace';
+  const hw=B.w/N*.34;
+  for(let i=0;i<AD.trials.length;i++){
+    const t=AD.trials[i], x=X(i), y=Y(t.v);
+    c.strokeStyle='#ffb03a';c.lineWidth=1.5;
+    c.beginPath();c.moveTo(x-hw,y);c.lineTo(x+hw,y);c.stroke();
+    c.fillStyle=t.keep?'#5ddf9c':'#ff6b6b';
+    c.beginPath();c.arc(x,y,4.2,0,7);c.fill();
+    c.fillText(t.keep?'1':'0',x-2.5,y-8);
+  }
+  if(AD.phase==='done'){
+    href(c,B,AD.code*AD.Vref/(1<<N),0,AD.Vref,'#5ddf9c','还原值');
+  }
+  c.fillStyle='#55677a';
+  for(let i=0;i<N;i++){const t='b'+(N-1-i);
+    c.fillText(t,X(i)-c.measureText(t).width/2,B.y+B.h+14);}
+  c.fillText('← 高位                                     低位 →',B.x+2,B.y+B.h+27);
+}
+slider('adVin',v=>{AD.frac=v;adReset();},v=>F(v*AD.Vref,3)+' V');
+slider('adVref',v=>{AD.Vref=v;$('#adVin').dispatchEvent(new Event('input'));},v=>F(v,2)+' V');
+slider('adN',v=>{AD.N=v;adReset();},v=>v+' 位');
+slider('adFc',v=>{AD.fclk=Math.pow(10,v);adDom();},
+  v=>{const f=Math.pow(10,v);return f>=1e6?F(f/1e6,2)+' MHz':Math.round(f/1e3)+' kHz';});
+slider('adSp',v=>{AD.ms=v;},v=>v+' ms/步');
+$('#adRun').onclick=e=>{AD.run=!AD.run;e.target.textContent=AD.run?'暂停':'继续';};
+$('#adStep').onclick=()=>{AD.run=false;$('#adRun').textContent='继续';adStep();};
+$('#adReset').onclick=()=>adReset();
+new IntersectionObserver(r=>{AD.vis=r[0].isIntersecting;},{rootMargin:'120px'})
+  .observe($('#adChart'));
+/* ============ 电源树 ============ */
+const TR={vin:12};
+const trNodes={
+  b5  :{v:5,  eta:.93, parent:null,  tag:'B5'},
+  b33 :{v:3.3,eta:.90, parent:'b5',  tag:'B3'},
+  l18 :{v:1.8,eta:null,parent:'b33', tag:'L1'},
+  l33a:{v:3.3,eta:null,parent:'b5',  tag:'L2'}
+};
+const trLoads=[
+  {node:'b5',  n:'USB 供电', i:1.00},
+  {node:'b5',  n:'风扇',     i:0.25},
+  {node:'b33', n:'MCU',      i:0.15},
+  {node:'b33', n:'LCD 背光', i:0.35},
+  {node:'l18', n:'FPGA 内核',i:0.30},
+  {node:'l33a',n:'ADC 模拟域',i:0.05}
+];
+trLoads.forEach(L=>L.on=true);
+function trCalc(id){
+  const nd=trNodes[id], vin=nd.parent?trNodes[nd.parent].v:TR.vin;
+  let io=0;
+  for(const L of trLoads)if(L.node===id&&L.on)io+=L.i;
+  for(const k in trNodes)if(trNodes[k].parent===id)io+=trCalc(k);
+  nd._io=io; nd._vin=vin;
+  if(nd.eta){nd._ii=(nd.v*io)/(nd.eta*vin); nd._pl=nd.v*io*(1/nd.eta-1);}
+  else{nd._ii=io; nd._pl=(vin-nd.v)*io;}
+  return nd._ii;
+}
+function trUpd(){
+  trCalc('b5');
+  for(const k in trNodes){const nd=trNodes[k];
+    $('#tr'+nd.tag+'o').textContent=F(nd._io,2);
+    $('#tr'+nd.tag+'i').textContent=F(nd._ii,2);
+    $('#tr'+nd.tag+'l').textContent=F(nd._pl,2);}
+  const iin=trNodes.b5._ii, pin=iin*TR.vin;
+  let pout=0,ploss=0;
+  for(const L of trLoads)if(L.on)pout+=L.i*trNodes[L.node].v;
+  for(const k in trNodes)ploss+=trNodes[k]._pl;
+  $('#trInI').textContent=F(iin,2);
+  $('#trInP').textContent=F(pin,1);
+  $('#trRi').textContent=F(iin,2);
+  $('#trRpin').textContent=F(pin,1);
+  $('#trRpo').textContent=F(pout,1);
+  $('#trRpl').textContent=F(ploss,2);
+  $('#trReta').textContent=pin>1e-4?Math.round(pout/pin*100):'—';
+}
+$('#trLoads').innerHTML=trLoads.map((L,i)=>
+  '<label><input type="checkbox" data-i="'+i+'" checked> '+L.n+
+  ' <span class="m">'+trNodes[L.node].v+'V / '+F(L.i,2)+'A</span></label>').join('');
+$('#trLoads').querySelectorAll('input').forEach(el=>{
+  el.onchange=()=>{trLoads[+el.dataset.i].on=el.checked;trUpd();};});
+/* ============ 侧栏高亮 ============ */
+const navLinks=[...document.querySelectorAll('nav a')];
+const navSecs=navLinks.map(a=>document.querySelector(a.getAttribute('href')));
+const navObs=new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(!e.isIntersecting)return;
+    const i=navSecs.indexOf(e.target);
+    navLinks.forEach((l,k)=>l.classList.toggle('on',k===i));
+  });
+},{rootMargin:'-15% 0px -75% 0px'});
+navSecs.forEach(s=>s&&navObs.observe(s));
+
+/* ============ 主循环 ============ */
+let tLast=performance.now();
+function frame(now){
+  const dtr=Math.min(.05,(now-tLast)/1000); tLast=now;
+  for(const s of [BK,BS]){
+    convStep(s,dtr);
+    if(s.vis){convSvg(s,dtr);drawConvWave(s);convRead(s);}
+  }
+  LD.fp-=(12+LD.Io*58)*dtr;
+  $('#ldFlow').style.strokeDashoffset=LD.fp;
+  if(AD.vis){
+    if(AD.run){AD.acc+=dtr*1000; if(AD.acc>=AD.ms){AD.acc=0;adStep();}}
+    AD.fp-=95*dtr;
+    $('#adFin').style.strokeDashoffset=AD.fp;
+    $('#adFdac').style.strokeDashoffset=AD.fp;
+    drawAdc();
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ============ 启动 ============ */
+trUpd(); ldoUpd(); adReset(); drawBode(); oaSetType('inv');
+BK.touch(); BS.touch();
+let rz=0;
+addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{
+  drawBode(); drawConvStart(BK); drawConvStart(BS); oaUpd();},150);});
+requestAnimationFrame(frame);
+</script>
+

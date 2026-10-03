@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>增益带宽积</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#opamp">运放</a><span class="sp"></span><span>07 / 12</span></nav>
+<header>
+  <span class="eyebrow">运放 · 频率响应</span>
+  <h1>增益带宽积 GBW</h1>
+  <p class="lede">运放的开环增益不是常数，频率越高越小。放大倍数定得越高，能放大的频率就越低。两者的乘积基本不变，这就是增益带宽积。</p>
+</header>
+
+<section id="bode">
+  <span class="eyebrow">开环增益 · 单极点</span>
+  <h2>开环增益每十倍频掉 20 dB</h2>
+  <p>运放内部故意放了一个补偿电容，让开环增益从几 Hz 到几十 Hz 就开始下降。因为只有这一个主极点，所以频率每升高十倍，增益就掉 20 dB，一直掉到 0 dB。这样做是为了闭环后稳定，不自激。</p>
+  <p>在下降段上任取一点，增益 × 频率 都等于同一个数。这个数就是 GBW，也约等于增益降到 1 时的频率，即单位增益带宽。</p>
+  <p class="eq">A(f) = A0 / (1 + j·f/fp)，GBW = A0 · fp</p>
+  <p class="eq">闭环带宽 fc ≈ GBW / 噪声增益</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="运放开环增益与闭环增益的伯德图，横轴对数频率，纵轴增益 dB">
+        <g id="a-ax"></g>
+        <polyline id="a-ol" class="real2" points=""/>
+        <polyline id="a-cl" class="real" points=""/>
+        <line id="a-vl" class="ax dash" x1="0" y1="0" x2="0" y2="250"/>
+        <circle id="a-pt" cx="0" cy="0" r="4.5" style="fill:var(--copper)"/>
+        <text id="a-fct" x="0" y="0" class="v hi">fc</text>
+        <text x="62" y="40" class="t" style="fill:var(--low)">开环 A(f)</text>
+        <text id="a-clt" x="62" y="0" class="t hi">闭环</text>
+        <text id="a-slt" x="0" y="0" class="tm">−20 dB / 十倍频</text>
+      </svg>
+      <figcaption>蓝线是开环增益，橙线是闭环增益。闭环增益是一条水平线，碰到开环曲线后只能贴着它往下走，交点就是闭环带宽。直流开环增益取 100 dB，示意。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">运放 GBW</span>
+        <div class="seg" id="a-gbw"><button id="a-gbw-1" data-v="1e6" aria-pressed="true">1 MHz</button><button id="a-gbw-10" data-v="1e7" aria-pressed="false">10 MHz</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="a-g">闭环增益（噪声增益）</label>
+        <span class="rv" id="a-gv">100 倍</span>
+        <input type="range" id="a-g" min="0" max="9" step="1" value="6"></div>
+      <dl class="read">
+        <dt>闭环增益</dt><dd id="a-gdb">40 dB</dd>
+        <dt>GBW / G</dt><dd id="a-bw">10 kHz</dd>
+        <dt>精确 −3 dB 点</dt><dd id="a-bwx">10 kHz</dd>
+        <dt>1 kHz 处环路增益</dt><dd id="a-lg">20 dB</dd>
+        <dt>1 kHz 处增益误差</dt><dd id="a-er">0.5 %</dd>
+        <dt>放 20 kHz 音频</dt><dd><span id="a-chip" class="chip bad">不够</span></dd>
+      </dl>
+      <p class="note" id="a-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="ng">
+  <span class="eyebrow">噪声增益 · 1 + Rf/Rg</span>
+  <h2>公式里的"增益"是噪声增益</h2>
+  <p>闭环带宽由反馈系数 β = Rg / (Rf + Rg) 决定，所以要用噪声增益 1/β = 1 + Rf/Rg 去除 GBW，而不是信号增益。同相放大时两者相等。反相放大时，噪声增益比信号增益的绝对值大 1。</p>
+  <p>最常见的坑：反相 −1 倍的带宽只有 GBW 的一半，而不是 GBW，因为它的噪声增益是 2。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 380 220" role="img" aria-label="运放放大电路，可切换反相或同相接法，反馈电阻 Rf 从输出接到反相输入端，Rg 接在反相输入端">
+        <polygon class="r" points="180,80 180,160 250,120"/>
+        <text x="186" y="105" class="t">−</text>
+        <text x="186" y="146" class="t">+</text>
+        <path class="w" d="M120,100 H180 M140,100 V40 H175 M225,40 H290 V120 M250,120 H340"/>
+        <circle class="dot" cx="140" cy="100" r="3.5"/>
+        <circle class="dot" cx="290" cy="120" r="3.5"/>
+        <rect class="r" x="175" y="32" width="50" height="16" rx="2"/>
+        <text id="b-rf" x="200" y="24" text-anchor="middle" class="v">Rf 99 kΩ</text>
+        <rect class="r" x="70" y="92" width="50" height="16" rx="2"/>
+        <text x="95" y="84" text-anchor="middle" class="v">Rg 1 kΩ</text>
+        <text x="346" y="125" class="t">Vo</text>
+        <g id="b-g-inv">
+          <text x="36" y="105" text-anchor="end" class="t">Vin</text>
+          <path class="w" d="M40,100 H70 M180,140 H150 V176 M138,176 H162 M143,181 H157 M148,186 H152"/>
+        </g>
+        <g id="b-g-non" hidden>
+          <text x="36" y="145" text-anchor="end" class="t">Vin</text>
+          <path class="w" d="M70,100 H50 V118 M38,118 H62 M43,123 H57 M48,128 H52 M40,140 H180"/>
+        </g>
+        <text id="b-ngt" x="190" y="210" text-anchor="middle" class="t hi">噪声增益 1 + Rf/Rg = 100</text>
+      </svg>
+      <figcaption>Rg 固定 1 kΩ，拖动改变 Rf，运放 GBW 按 1 MHz 算。两种接法从运放输出看回去的反馈网络完全一样，所以噪声增益一样，带宽也一样。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">接法</span>
+        <div class="seg" id="b-m"><button id="b-m-inv" data-v="inv" aria-pressed="true">反相放大</button><button id="b-m-non" data-v="non" aria-pressed="false">同相放大</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="b-r">Rf / Rg</label>
+        <span class="rv" id="b-rv">99</span>
+        <input type="range" id="b-r" min="0" max="6" step="1" value="6"></div>
+      <dl class="read">
+        <dt>信号增益</dt><dd id="b-sg">−99</dd>
+        <dt>噪声增益 1 + Rf/Rg</dt><dd id="b-ng">100</dd>
+        <dt>闭环带宽</dt><dd id="b-bw">10 kHz</dd>
+        <dt>按信号增益误算</dt><dd id="b-wr">10.1 kHz</dd>
+        <dt>误算偏差</dt><dd><span id="b-chip" class="chip off">可忽略</span></dd>
+      </dl>
+      <p class="note" id="b-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="margin">
+  <span class="eyebrow">选型 · 留余量</span>
+  <h2>GBW 刚好够是不够的</h2>
+  <p>fc 是 −3 dB 点，在这里增益已经掉了 29%。要让最高信号频率处的幅度误差很小，闭环带宽必须比信号频率高出好几倍。单极点下，幅度误差 ε 对应的要求是：</p>
+  <p class="eq">fc ≥ f / √(1/(1−ε)² − 1)，1% 要 7 倍，0.1% 要 22 倍</p>
+  <p>所以经验上 GBW 至少取 增益 × 最高信号频率 的 10 倍以上。增益太高时，宁可分成两级，每级增益低一些，带宽就宽得多。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 212" role="img" aria-label="三种精度要求下所需 GBW 的对数条形图">
+        <g id="c-ax"></g>
+        <text x="8" y="54" class="t">−3 dB 刚好</text>
+        <text id="c-v0" x="8" y="70" class="v">2 MHz</text>
+        <text x="8" y="99" class="t">幅度误差 1%</text>
+        <text id="c-v1" x="8" y="115" class="v">14 MHz</text>
+        <text x="8" y="144" class="t">幅度误差 0.1%</text>
+        <text id="c-v2" x="8" y="160" class="v">45 MHz</text>
+        <path id="c-b0" class="real2" style="stroke-width:14;stroke-linecap:butt" d="M150,58 H200"/>
+        <path id="c-b1" class="real" style="stroke-width:14;stroke-linecap:butt" d="M150,103 H200"/>
+        <path id="c-b2" class="real3" style="stroke-width:14;stroke-linecap:butt" d="M150,148 H200"/>
+      </svg>
+      <figcaption>横轴是所需 GBW，对数刻度。按单极点模型计算，只看小信号幅度，大幅度输出还要另外核对压摆率。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="c-f">最高信号频率</label>
+        <span class="rv" id="c-fv">20 kHz</span>
+        <input type="range" id="c-f" min="0" max="6" step="1" value="4"></div>
+      <div class="ctl"><label class="ctl-l" for="c-g">闭环增益（噪声增益）</label>
+        <span class="rv" id="c-gv">100 倍</span>
+        <input type="range" id="c-g" min="0" max="6" step="1" value="6"></div>
+      <dl class="read">
+        <dt>增益 × 频率</dt><dd id="c-gf">2 MHz</dd>
+        <dt>经验下限 10 倍</dt><dd id="c-rule">20 MHz</dd>
+        <dt>换成 1 MHz 运放</dt><dd id="c-one">带宽 10 kHz，幅度掉 55%</dd>
+        <dt>建议</dt><dd><span id="c-chip" class="chip warn">选高速运放</span></dd>
+      </dl>
+      <p class="note" id="c-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>什么是增益带宽积？</summary>
+      <div class="ans"><p>电压反馈运放内部有补偿电容，开环增益只有一个主极点，过了极点以后每十倍频掉 20 dB。在这段上增益乘频率是常数，叫 GBW。闭环时带宽约等于 GBW 除以噪声增益，例如 GBW 1 MHz 的运放做 100 倍放大，带宽只有约 10 kHz。</p></div></details>
+    <details><summary>反相 −1 倍放大器的带宽是 GBW 吗？</summary>
+      <div class="ans"><p>不是，是 GBW 的一半。带宽看的是噪声增益 1 + Rf/Rg，反相 −1 倍时 Rf = Rg，噪声增益是 2。只有电压跟随器的带宽才约等于 GBW。</p></div></details>
+    <details><summary>要做 100 倍、20 kHz 的放大，运放 GBW 选多少？</summary>
+      <div class="ans"><p>100 × 20 kHz = 2 MHz 只是让 20 kHz 落在 −3 dB 点上，幅度已经掉了 29%。要误差在 1% 以内需要约 14 MHz，经验上选 20 MHz 以上。也可以分两级各放大 10 倍，每级带宽都是 GBW / 10，要求低得多。</p></div></details>
+    <details><summary>为什么开环增益要故意做成随频率下降？</summary>
+      <div class="ans"><p>运放内部有好几个极点，每个极点最多带来 90° 相移。如果不管，环路相移可能到 180°，负反馈变成正反馈就会振荡。补偿电容把第一个极点压到很低的频率，让增益在其他极点起作用之前就降到 0 dB 以下，保证相位裕度。</p></div></details>
+    <details><summary>GBW 恒定这个结论什么时候不成立？</summary>
+      <div class="ans"><p>一是电流反馈运放，它的带宽主要由反馈电阻决定，不遵守 GBW 规律。二是去补偿运放，它要求最小闭环增益，低于这个增益会不稳定。三是大信号，这时受压摆率限制，下一页讲。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="06-微分电路.html"><span>上一页</span>微分电路</a><a class="next" href="08-压摆率SR.html"><span>下一页</span>压摆率 SR</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 通用：画网格、刻度、坐标轴 */
+function axGrid(gid,o){
+  const g=$(gid);g.textContent='';
+  o.yt.forEach(([py,l])=>g.append(svgEl('line',{class:'gl',x1:o.x0,y1:py,x2:o.x1,y2:py}),svgEl('text',{x:o.x0-6,y:py+4,'text-anchor':'end',class:'v'},l)));
+  o.xt.forEach(([px,l],i)=>g.append(svgEl('line',{class:'gl',x1:px,y1:o.y0,x2:px,y2:o.y1}),svgEl('text',{x:px,y:o.y1+16,'text-anchor':i===o.xt.length-1&&px>=o.x1-2?'end':'middle',class:'v'},l)));
+  g.append(svgEl('path',{class:'ax',d:`M${o.x0},${o.y0} V${o.y1} H${o.x1}`}));
+  if(o.yn)g.append(svgEl('text',{x:o.x0+4,y:o.y0-6,class:'tm'},o.yn));
+  if(o.xn)g.append(svgEl('text',{x:o.x1,y:o.y1+32,'text-anchor':'end',class:'tm'},o.xn));
+}
+const decLab=['1','10','100','1k','10k','100k','1M','10M','100M','1G'];
+
+/* a. 伯德图 */
+const aG=[1,2,5,10,20,50,100,200,500,1000];
+const aX=scale(0,7,56,500),aY=scale(-20,110,250,30);
+axGrid('a-ax',{x0:56,x1:500,y0:30,y1:250,
+  xt:[0,1,2,3,4,5,6,7].map(d=>[aX(d),decLab[d]]),
+  yt:[-20,0,20,40,60,80,100].map(v=>[aY(v),String(v).replace('-','−')]),
+  yn:'增益 dB',xn:'频率 Hz（对数）'});
+const a={gbw:1e6};
+function aU(){
+  const G=aG[+$('a-g').value],gbw=a.gbw,A0=1e5,fp=gbw/A0;
+  const ol=x=>{const v=20*Math.log10(A0/Math.hypot(1,Math.pow(10,x)/fp));return v<-20?NaN:v;};
+  const cl=x=>{const v=20*Math.log10(A0/Math.hypot(1+A0/G,Math.pow(10,x)/fp));return v<-20?NaN:v;};
+  $('a-ol').setAttribute('points',plot(ol,0,7,aX,aY,280));
+  $('a-cl').setAttribute('points',plot(cl,0,7,aX,aY,280));
+  const fc=fp*(1+A0/G),lx=Math.min(Math.log10(fc),7),px=aX(lx),py=aY(cl(lx));
+  $('a-pt').setAttribute('cx',px.toFixed(1));$('a-pt').setAttribute('cy',py.toFixed(1));
+  $('a-vl').setAttribute('x1',px.toFixed(1));$('a-vl').setAttribute('x2',px.toFixed(1));$('a-vl').setAttribute('y1',py.toFixed(1));
+  const t=$('a-fct'),right=px>400;t.textContent='fc '+fmtF(fc);
+  t.setAttribute('text-anchor',right?'end':'start');
+  t.setAttribute('x',(px+(right?-8:8)).toFixed(1));t.setAttribute('y',(py-10).toFixed(1));
+  const gdb=20*Math.log10(G);
+  $('a-clt').setAttribute('y',(aY(gdb)-8).toFixed(1));$('a-clt').textContent='闭环 G = '+G;
+  const fs=Math.log10(fp*10);$('a-slt').setAttribute('x',(aX(fs)+10).toFixed(1));$('a-slt').setAttribute('y',(aY(80)+4).toFixed(1));
+  $('a-gv').textContent=G+' 倍';$('a-g').setAttribute('aria-valuetext',G+' 倍');
+  $('a-gdb').textContent=gdb.toFixed(0)+' dB';
+  $('a-bw').textContent=fmtF(gbw/G);$('a-bwx').textContent=fmtF(fc);
+  const A1k=A0/Math.hypot(1,1e3/fp),lg=20*Math.log10(A1k/G);
+  $('a-lg').textContent=lg.toFixed(1)+' dB';
+  const acl=A0/Math.hypot(1+A0/G,1e3/fp),er=(1-acl/G)*100;
+  $('a-er').textContent=(er<0.01?'< 0.01':er.toFixed(er<1?2:1))+' %';
+  const ok=fc>=2e4;chip($('a-chip'),ok?'够用':'不够',ok?'on':'bad');
+  $('a-note').textContent=(G===1?'电压跟随器：闭环增益 1，带宽就是 GBW 本身，也叫单位增益带宽。':
+    '增益 '+G+' 倍，闭环线在 '+gdb.toFixed(0)+' dB 处走平，碰到开环曲线的地方就是 fc ≈ '+fmtF(gbw)+' / '+G+' = '+fmtF(gbw/G)+'。')
+    +(lg<20?' 1 kHz 处环路增益只剩 '+lg.toFixed(0)+' dB，负反馈的纠错能力变弱，增益误差和失真都会变大。':' 增益每提高 10 倍，交点就左移一个十倍频。');
+}
+seg('a-gbw',v=>{a.gbw=+v;aU();});
+$('a-g').addEventListener('input',aU);
+aU();
+
+/* b. 噪声增益 */
+const bR=[1,2,4,9,19,49,99];
+const b={inv:true};
+function bU(){
+  const r=bR[+$('b-r').value],ng=1+r,sg=b.inv?-r:ng,bw=1e6/ng,wr=1e6/Math.abs(sg),dev=(wr-bw)/bw*100;
+  show($('b-g-inv'),b.inv);show($('b-g-non'),!b.inv);
+  $('b-rv').textContent=r;$('b-r').setAttribute('aria-valuetext',String(r));
+  $('b-rf').textContent='Rf '+r+' kΩ';
+  $('b-ngt').textContent='噪声增益 1 + Rf/Rg = '+ng;
+  $('b-sg').textContent=(sg<0?'−':'+')+Math.abs(sg);
+  $('b-ng').textContent=String(ng);
+  $('b-bw').textContent=fmtF(bw);$('b-wr').textContent=fmtF(wr);
+  if(!b.inv)chip($('b-chip'),'无偏差','on');
+  else if(dev>=20)chip($('b-chip'),'高估 '+dev.toFixed(0)+'%','bad');
+  else chip($('b-chip'),'高估 '+dev.toFixed(dev<2?1:0)+'%','off');
+  $('b-note').textContent=b.inv
+    ?(r===1?'反相 −1 倍：信号增益绝对值是 1，但噪声增益是 2，带宽只有 500 kHz。按信号增益算会以为有 1 MHz，整整错了一倍。'
+      :'反相 −'+r+' 倍的噪声增益是 '+ng+'。增益越高，差的这个 1 影响越小，高增益时两种算法差不多。')
+    :'同相放大时信号从同相端进，信号增益就等于噪声增益 1 + Rf/Rg = '+ng+'，带宽 '+fmtF(bw)+'。';
+}
+seg('b-m',v=>{b.inv=v==='inv';bU();});
+$('b-r').addEventListener('input',bU);
+bU();
+
+/* c. 选型余量 */
+const cF=[1e3,2e3,5e3,1e4,2e4,5e4,1e5],cG=[1,2,5,10,20,50,100];
+const cX=scale(3,9,150,500);
+axGrid('c-ax',{x0:150,x1:500,y0:36,y1:172,
+  xt:[3,4,5,6,7,8,9].map(d=>[cX(d),decLab[d]]),yt:[],xn:'所需 GBW，Hz（对数）'});
+const cK=[1,1/Math.sqrt(1/0.99**2-1),1/Math.sqrt(1/0.999**2-1)];
+function cU(){
+  const f=cF[+$('c-f').value],G=cG[+$('c-g').value],gf=f*G;
+  $('c-fv').textContent=fmtF(f);$('c-f').setAttribute('aria-valuetext',fmtF(f));
+  $('c-gv').textContent=G+' 倍';$('c-g').setAttribute('aria-valuetext',G+' 倍');
+  cK.forEach((k,i)=>{const need=gf*k,x=cX(Math.min(9,Math.log10(need)));
+    $('c-b'+i).setAttribute('d','M150,'+(58+45*i)+' H'+x.toFixed(1));
+    $('c-v'+i).textContent=fmtF(need);});
+  $('c-gf').textContent=fmtF(gf);$('c-rule').textContent=fmtF(10*gf);
+  const fc1=1e6/G,drop=(1-1/Math.hypot(1,f/fc1))*100;
+  $('c-one').textContent='带宽 '+fmtF(fc1)+'，幅度掉 '+(drop<0.1?'< 0.1':drop.toFixed(drop<10?1:0))+'%';
+  let note;
+  if(10*gf>5e7){chip($('c-chip'),'考虑分两级','bad');note='要求的 GBW 已经到几十 MHz 以上，高速运放贵、功耗大、布板也难。把增益拆成两级，例如 '+G+' ≈ '+Math.sqrt(G).toFixed(1)+' × '+Math.sqrt(G).toFixed(1)+'，每级带宽都宽得多。';}
+  else if(10*gf>5e6){chip($('c-chip'),'选高速运放','warn');note='10 倍余量需要 '+fmtF(10*gf)+' 的 GBW，1 MHz 级的通用运放不够，要选 10 MHz 以上的运放，或者分两级。';}
+  else{chip($('c-chip'),'通用运放可行','on');note='10 倍余量只需 '+fmtF(10*gf)+'，GBW 1 MHz 量级的通用运放就能满足。';}
+  $('c-note').textContent=note;
+}
+$('c-f').addEventListener('input',cU);$('c-g').addEventListener('input',cU);
+cU();
+</script>
+</body>
+</html>

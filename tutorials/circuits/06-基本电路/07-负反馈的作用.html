@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>负反馈的作用</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.rat{fill:none;stroke:currentColor;stroke-width:2}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#basic">基本电路</a><span class="sp"></span><span>07 / 07</span></nav>
+<header>
+  <span class="eyebrow">基本电路 · 负反馈</span>
+  <h1>负反馈的作用</h1>
+  <p class="lede">把输出送回输入端和输入相减，换来的是更稳的增益、更宽的带宽和更小的失真。代价是增益降了，还有可能自激。</p>
+</header>
+
+<section id="gain">
+  <span class="eyebrow">闭环增益 · 稳到什么程度</span>
+  <h2>反馈越深，增益越不依赖开环放大倍数</h2>
+  <p>开环增益 A 受温度、电源、器件公差影响，能差一半。加反馈以后，闭环增益只由反馈系数决定。拖下面的滑块把 A 从 2 万改到 8 万，看闭环增益几乎不动。</p>
+  <p class="eq">闭环比 Af = A / (1 + A·F)　　深度反馈时 Af ≈ 1 / F</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 260" role="img" aria-label="反馈系统框图：输入减反馈得误差，误差经开环增益 A 得输出，输出经反馈网络 F 送回比较点">
+        <rect class="r" x="176" y="66" width="92" height="56" rx="6"/>
+        <text x="222" y="100" text-anchor="middle" class="t">开环增益 A</text>
+        <rect class="r" x="342" y="66" width="78" height="56" rx="6"/>
+        <text x="381" y="100" text-anchor="middle" class="t">反馈网络 F</text>
+        <circle class="r" cx="120" cy="94" r="16"/>
+        <text x="120" y="99" text-anchor="middle" class="t">Σ</text>
+        <path class="w" d="M40,94 H104 M136,94 H176 M268,94 H342 M420,94 H450"/>
+        <polygon class="ah" points="175,94 167,90 167,98"/>
+        <polygon class="ah" points="341,94 333,90 333,98"/>
+        <polygon class="ah" points="449,94 441,90 441,98"/>
+        <path class="w" d="M381,122 V150 H120 V110"/>
+        <polygon class="ah" points="120,101 116,109 124,109"/>
+        <text x="40" y="80" text-anchor="middle" class="v hi">Vin</text>
+        <text x="444" y="78" text-anchor="end" class="v hi">Vout</text>
+        <text x="146" y="80" text-anchor="middle" class="tm">误差</text>
+        <text x="245" y="152" text-anchor="middle" class="tm">负反馈：减去采样</text>
+        <text x="381" y="176" text-anchor="middle" class="tm">F 由电阻比定，很准</text>
+      </svg>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="g-a">开环增益 A</label>
+        <span class="rv" id="g-av">40000</span>
+        <input type="range" id="g-a" min="0" max="5" step="1" value="2"></div>
+      <div class="ctl"><span class="ctl-l">反馈深度 1 + AF</span>
+        <span class="rv" id="g-fv">20000</span></div>
+      <dl class="read">
+        <dt>开环增益 A</dt><dd id="g-a1">40000 倍</dd>
+        <dt>反馈系数 F</dt><dd>0.005</dd>
+        <dt>环路增益 A·F</dt><dd id="g-af">200</dd>
+        <dt>闭环增益 A/(1+AF)</dt><dd id="g-cl">199.5 倍</dd>
+        <dt>理想 1/F</dt><dd>200 倍</dd>
+        <dt>拿理想管代替的偏差</dt><dd id="g-err">0.25 %</dd>
+        <dt>结论</dt><dd><span id="g-chip" class="chip on">稳</span></dd>
+      </dl>
+      <p class="note" id="g-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="bw">
+  <span class="eyebrow">展宽带宽 · 增益带宽积不变</span>
+  <h2>增益降多少倍，带宽就宽多少倍</h2>
+  <p>运放或单级放大器的增益随频率下降。加了反馈以后闭环增益变小，能一直贴着开环曲线走到更高的频率才掉下来，等于把带宽往高处推。</p>
+  <p class="eq">闭环带宽 fcf = GBW / Af，GBW = A0 · fp 基本不变</p>
+  <p>换个说法：反馈不增加带宽本身，它只是把增益换成带宽。GBW 是定值，要么要增益，要么要带宽，两个都要就只能多加一级。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 262" role="img" aria-label="开环增益与闭环增益曲线：加反馈后增益降低，带宽反而变宽，两条曲线和开环曲线的交点标出各自的带宽">
+        <g id="b-ax"></g>
+        <polyline id="b-ol" class="real2" points=""/>
+        <line id="b-cl1" class="ideal" x1="56" y1="60" x2="448" y2="60"/>
+        <line id="b-cl2" class="real" x1="56" y1="90" x2="448" y2="90"/>
+        <polyline id="b-c2" class="rat" style="stroke:var(--copper)" points="56,90 200,90 210,118 240,150 260,180"/>
+        <text x="62" y="50" class="t" style="fill:var(--low)">开环 A(f)</text>
+        <text x="62" y="112" class="t hi">加反馈后的闭环</text>
+        <text id="b-f1t" x="120" y="42" text-anchor="middle" class="tm">Af = 40 dB</text>
+        <text id="b-f2t" x="180" y="80" text-anchor="middle" class="tm">Af = 30 dB</text>
+        <text x="404" y="222" text-anchor="middle" class="tm">GBW</text>
+      </svg>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">运放 GBW</span>
+        <div class="seg" id="b-g"><button id="b-g-1" data-v="1e6" aria-pressed="true">1 MHz</button><button id="b-g-10" data-v="1e7" aria-pressed="false">10 MHz</button></div></div>
+      <div class="ctl"><span class="ctl-l">开环直流增益</span>
+        <div class="seg" id="b-a"><button id="b-a-1" data-v="80" aria-pressed="true">80 dB</button><button id="b-a-2" data-v="100" aria-pressed="false">100 dB</button><button id="b-a-3" data-v="120" aria-pressed="false">120 dB</button></div></div>
+      <dl class="read">
+        <dt>主极点 fp</dt><dd id="b-fp">10 Hz</dd>
+        <dt>GBW</dt><dd id="b-gbw">1 MHz</dd>
+        <dt>Af = 40 dB（100 倍）</dt><dd id="b-40">10 kHz</dd>
+        <dt>Af = 30 dB（30 倍）</dt><dd id="b-30">33 kHz</dd>
+        <dt>30 dB 比 40 dB</dt><dd id="b-bw">带宽宽 3.3 倍，增益低 3.3 倍</dd>
+        <dt>结论</dt><dd><span id="b-chip" class="chip on">增益换带宽</span></dd>
+      </dl>
+      <p class="note" id="b-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="dist">
+  <span class="eyebrow">降失真 · 非线性被压小</span>
+  <h2>输出有畸变，反馈会自己纠回来</h2>
+  <p>放大器的传输特性不是一条直线，正弦输入出去以后顶部和底部不对称。加反馈以后，输出端取一部分送回输入端和输入相减。哪里的增益变大了，误差反而变小，被测到输入端的总误差被压下去。</p>
+  <p class="eq">失真度 降到 原来的 1 / (1 + A·F)　　幅度也降到 1 / (1 + A·F)</p>
+  <p>补偿办法：失真小了，把输入调大同样倍数，输出幅度回到原样，失真度却只有原来的几分之一。这也是音响、测量仪表都用深负反馈的原因。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 250" role="img" aria-label="正弦输入经有非线性的放大器后波形不对称；加反馈后波形恢复对称，失真明显减小">
+        <g id="d-ax"></g>
+        <polyline id="d-in" class="ideal" points=""/>
+        <polyline id="d-nf" class="real" points=""/>
+        <polyline id="d-fb" class="real2" points=""/>
+        <text x="62" y="48" class="tm">输入（理想正弦）</text>
+        <text id="d-nft" x="62" y="72" class="t hi">无反馈</text>
+        <text id="d-fbt" x="62" y="96" class="t" style="fill:var(--low)">加反馈</text>
+        <text id="d-d1" x="420" y="150" text-anchor="end" class="v hi">5.0 %</text>
+        <text id="d-d2" x="420" y="176" text-anchor="end" class="v" style="fill:var(--low)">0.5 %</text>
+        <text id="d-dt" x="420" y="132" text-anchor="end" class="tm">失真度</text>
+      </svg>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="d-f">反馈深度 1 + A·F</label>
+        <span class="rv" id="d-fv">10</span>
+        <input type="range" id="d-f" min="0" max="5" step="1" value="0"></div>
+      <div class="ctl"><label class="ctl-l" for="d-a">输入幅度</label>
+        <span class="rv" id="d-av">1.0</span>
+        <input type="range" id="d-a" min="0" max="5" step="1" value="3"></div>
+      <dl class="read">
+        <dt>放大器固有失真</dt><dd id="d-hd">5.0 %</dd>
+        <dt>加反馈后失真</dt><dd id="d-ld">5.0 %</dd>
+        <dt>失真改善</dt><dd id="d-im">0 dB</dd>
+        <dt>输出幅度</dt><dd id="d-out">0.8</dd>
+        <dt>等幅比较的失真</dt><dd id="d-eq">5.0 %</dd>
+        <dt>结论</dt><dd><span id="d-chip" class="chip off">没有反馈</span></dd>
+      </dl>
+      <p class="note" id="d-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="risk">
+  <span class="eyebrow">代价 · 自激</span>
+  <h2>反馈太深可能变振荡</h2>
+  <p>负反馈只在低频下成立。频率升高后，放大器和反馈网络都会引入附加相移。相移累积到 180° 时，原来是"减"变成了"加"，负反馈翻成正反馈。这时只要环路增益不小于 1，电路就自己振荡起来。</p>
+  <p>所以运放内部都放了补偿电容，让开环增益以每十倍频 20 dB 的速度下降，保证在相移还没到 180° 之前环路增益已经掉到 1 以下。代价是带宽变窄，这也是运放 GBW 存在的原因。</p>
+  <div class="tbl">
+  <table>
+    <thead><tr><th>项目</th><th>收益</th><th>代价</th></tr></thead>
+    <tbody>
+      <tr><td>闭环增益</td><td>稳定，只由 F 决定，不受温度电源影响</td><td>数值降为原来的 1/(1+AF)</td></tr>
+      <tr><td>带宽</td><td>展宽约 (1+AF) 倍</td><td>增益带宽积不变，是用增益换的</td></tr>
+      <tr><td>非线性失真</td><td>降到约 1/(1+AF)</td><td>幅度同时变小，要靠加大输入补回</td></tr>
+      <tr><td>噪声</td><td>输入端的噪声同样被压低</td><td>输出噪声不变，信噪比按比例改善有限</td></tr>
+      <tr><td>输入输出阻抗</td><td>可按需要改变</td><td>看组态，见四种组态那页</td></tr>
+      <tr><td>稳定性</td><td>—</td><td>深度反馈加上额外相移会自激，需要补偿</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>负反馈为什么能稳增益？</summary>
+      <div class="ans"><p>输出端出了一点变化，反馈网络立刻把它按比例送回输入端，和输入相减，误差变小，又把输出拉回去。反馈越深，环路增益 A·F 越大，输出变化被压低得越多，闭环增益就越接近 1/F。而 F 由电阻比决定，电阻的精度和温度稳定性都远好于晶体管。</p></div></details>
+    <details><summary>负反馈能同时提高增益和带宽吗？</summary>
+      <div class="ans"><p>不能。加负反馈以后增益降为原来的 1/(1+AF)，带宽展宽约 (1+AF) 倍，两者的乘积也就是增益带宽积基本不变。要增益高又要带宽宽，只能选 GBW 更大的器件，或者拆成两级，每级的增益和带宽都宽松一些。</p></div></details>
+    <details><summary>负反馈怎么降低非线性失真？</summary>
+      <div class="ans"><p>把输出与输入比较，差值经放大器放大。放大器传输曲线上增益大的地方，同样的输出变化对应更小的误差变化；输出端的失真波形反馈回来以后，和输入相减，正好形成一个预失真的误差信号，经过放大器与原失真抵消。只要环路增益足够大，失真就降到约 1/(1+AF)。</p></div></details>
+    <details><summary>深度负反馈下怎么算闭环增益？</summary>
+      <div class="ans"><p>环路增益远大于 1 时直接取 Af ≈ 1/F，不用管开环增益具体多少。算 F 时按反馈网络自身的分压比，输入源和负载的影响在深度反馈下可以忽略。这个方法在工程上够用，也常是面试里希望听到的简化思路。</p></div></details>
+    <details><summary>负反馈什么条件下会自激？</summary>
+      <div class="ans"><p>附加相移达到 180° 时负反馈翻成正反馈，此时若环路增益仍不小于 1 就会自激。判据是相位裕量和增益裕量：相移到 180° 时环路增益要小于 0 dB，或者在环路增益为 0 dB 时相移离 180° 还有 45° 以上的余量。运放里的补偿电容就是为此而设，用牺牲带宽换取单极点特性。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="06-负反馈四种组态.html"><span>上一页</span>负反馈四种组态</a><a class="next" href="../index.html#basic"><span>下一页</span>返回目录</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 闭环增益 */
+const gA=[2e3,1e4,4e4,8e4,2e5,1e6],gAN=['2000','10000','40000','80000','200000','1000000'];
+function gU(){
+  const i=+$('g-a').value,A=gA[i],F=0.005,AF=A*F,cl=A/(1+AF);
+  $('g-av').textContent=gAN[i];$('g-a').setAttribute('aria-valuetext',gAN[i]+' 倍');
+  $('g-fv').textContent=(1+AF).toPrecision(3).replace(/e\+?(\d+)/,(m,p)=>'×10^'+p);
+  $('g-fv').textContent=[2,10,40,8,2,1][i]+'00';
+  $('g-a1').textContent=gAN[i]+' 倍';
+  $('g-af').textContent=AF>=1000?(AF/1000).toFixed(1)+' k':AF.toFixed(0);
+  $('g-cl').textContent=cl>=1000?(cl/1000).toFixed(2)+' k':cl.toFixed(1);
+  $('g-cl').textContent=cl.toFixed(cl>=100?0:1)+' 倍';
+  $('g-err').textContent=(100/ (1+AF) *AF/(1+AF) *0+ (100*AF/(1+AF)-100)/(1+AF)/(1+AF)).toFixed(3)+' %';
+  $('g-err').textContent=(100/(1+AF)).toFixed(3)+' %';
+  const good=AF>=20;
+  chip($('g-chip'),good?'稳':(AF>=5?'一般':'不够深'),good?'on':AF>=5?'warn':'off');
+  $('g-note').textContent=good
+    ?'环路增益有 '+AF.toFixed(0)+' 倍，A 再怎么变，闭环增益都死死贴在 1/F = 200 倍附近。这就是用便宜器件搭出精准增益的办法。'
+    :'环路增益只有 '+(1+AF).toFixed(1)+' 倍，闭环增益还受开环增益影响。工业上一般取环路增益 20 倍以上。';
+}
+$('g-a').addEventListener('input',gU);gU();
+
+/* 2. 增益换带宽 */
+const bX=scale(0,6,56,452),bY=scale(100,-20,200,40);
+const bFL=['1','10','100','1k','10k','100k','1M'];
+function bU(){
+  const gbw=$('b-g-1').getAttribute('aria-pressed')==='true'?1e6:1e7;
+  const A0=+[$('b-a-1'),$('b-a-2'),$('b-a-3')].find(b=>b.getAttribute('aria-pressed')==='true').dataset.v;
+  const fp=gbw/Math.pow(10,A0/20);
+  $('b-ax').textContent='';
+  for(let d=-20;d<=100;d+=20){const y=bY(d).toFixed(1);
+    $('b-ax').append(svgEl('line',{class:'gl',x1:56,y1:y,x2:500,y2:y}),svgEl('text',{x:50,y:(+y+4).toFixed(1),'text-anchor':'end',class:'v'},d));}
+  for(let d=1;d<=6;d+=1){const x=bX(d).toFixed(1);
+    const tx=d>5?(+x-6).toFixed(1):x;
+    $('b-ax').append(svgEl('line',{class:'gl',x1:x,y1:40,x2:x,y2:200}),svgEl('text',{x:tx,y:214,'text-anchor':d>5?'end':'middle',class:'v'},bFL[d-1]));}
+  $('b-ax').append(svgEl('path',{class:'ax',d:'M56,40 V200 H452'}),svgEl('text',{x:60,y:34,class:'tm'},'增益 dB'),svgEl('text',{x:452,y:234,'text-anchor':'end',class:'tm'},'频率 Hz'));
+  const ol=d=>d<=A0?A0-20*d:A0-20*6;
+  const olPts=[];for(let k=0;k<=60;k++){const d=k*0.1;olPts.push(bX(d).toFixed(1)+','+bY(ol(d)).toFixed(1));}
+  $('b-ol').setAttribute('points',olPts.join(' '));
+  const y40=bY(40),y30=bY(30);
+  $('b-cl1').setAttribute('y1',y40.toFixed(1));$('b-cl1').setAttribute('y2',y40.toFixed(1));
+  $('b-cl2').setAttribute('y1',y30.toFixed(1));$('b-cl2').setAttribute('y2',y30.toFixed(1));
+  const c2=[bX(0).toFixed(1)+','+y30.toFixed(1)];
+  const f30=Number((gbw/Math.pow(10,30/20)).toPrecision(3));
+  const df30=Math.log10(f30/1e3);
+  c2.push(bX(df30).toFixed(1)+','+y30.toFixed(1));
+  for(let k=1;k<=8;k++){const d=df30+k*0.15;c2.push(bX(d).toFixed(1)+','+bY(30-20*Math.log10(Math.pow(10,d)/f30)).toFixed(1));}
+  $('b-c2').setAttribute('points',c2.join(' '));
+  $('b-fp').textContent=fp.toFixed(fp<10?2:0)+' Hz';
+  $('b-gbw').textContent=gbw>=1e6?(gbw/1e6).toFixed(0)+' MHz':(gbw/1e3).toFixed(0)+' kHz';
+  $('b-40').textContent=(gbw/Math.pow(10,40/20)/1e3).toFixed(1)+' kHz';
+  $('b-30').textContent=(gbw/Math.pow(10,30/20)/1e3).toFixed(1)+' kHz';
+  const r=Math.pow(10,10/20);
+  $('b-bw').textContent='带宽宽 '+r.toFixed(1)+' 倍，增益低 '+r.toFixed(1)+' 倍';
+  $('b-f1t').setAttribute('x',bX(Math.log10(gbw/Math.pow(10,40/20)/1e3)).toFixed(1));
+  $('b-f2t').setAttribute('x',bX(df30).toFixed(1));
+  $('b-note').textContent='两条虚线是不同闭环增益下的带宽。闭环增益每降 10 dB，交点就往右挪十倍频，带宽宽 '+r.toFixed(1)+' 倍。两者的乘积始终是 GBW = '+(gbw/1e6).toFixed(0)+' MHz。';
+}
+$('b-g').addEventListener('click',()=>setTimeout(bU,0));
+['b-a-1','b-a-2','b-a-3'].forEach(id=>$(id).addEventListener('click',()=>setTimeout(bU,0)));
+bU();
+
+/* 3. 降失真 */
+const dF=[1,2,5,10,20,50],dA=[0.4,0.6,0.8,1.0,1.3,1.7];
+const dY=scale(-1.6,1.6,206,44),dX=scale(0,Math.PI*2,60,440);
+function dU(){
+  const fi=+$('d-f').value,ai=+$('d-a').value,F=dF[fi],A=dA[ai];
+  const hd=0.05/(1+F);
+  $('d-fv').textContent=F.toFixed(0);
+  $('d-av').textContent=A.toFixed(2);
+  $('d-hd').textContent='5.0 %';
+  $('d-ld').textContent=(100*hd).toFixed(hd*100<1?2:1)+' %';
+  $('d-im').textContent=hd>=0.05?'0 dB':(-20*Math.log10(hd/0.05)).toFixed(0)+' dB（改善 10 的幂次）';
+  $('d-im').textContent=hd>=0.05?'0 dB':'降低到 1/'+(1+F).toFixed(0);
+  const out=0.9*A/(1+F)*F*F/(0.005*0.005)*0.02;
+  const o=Math.min(1.4,0.55*A/(1/(1/1)));
+  $('d-out').textContent=(0.9*A).toFixed(2);
+  const eq=hd* (1/(1+F)) /(1/(1+F));
+  const eqd=0.05;
+  const gain=hd===0?1:0.05/hd;
+  $('d-eq').textContent='输入加大 '+(gain).toFixed(1)+' 倍后可回到原幅度，失真仍是 '+(100*hd).toFixed(hd*100<1?2:1)+' %';
+  chip($('d-chip'),F===1?'没有反馈':(hd*100<=1?'失真大降':'失真下降'),F===1?'off':hd*100<=1?'on':'warn');
+  const mk=arr=>{const p=[];for(let k=0;k<=200;k++){const t=dX.domain?0:k*0.02;
+    const x=60+k*380/200,y=dY(Math.max(-1.5,Math.min(1.5,arr(k*0.0314))));
+    p.push(x.toFixed(1)+','+y.toFixed(1));}return p.join(' ');};
+  const base=x=>Math.sin(x);
+  const nf=x=>Math.sin(x)+0.05*Math.sin(x)*(1+Math.sin(x)*0.6);
+  const fb=x=>Math.sin(x)+0.05*Math.sin(x)*(1+Math.sin(x)*0.6)/(1+F);
+  $('d-in').setAttribute('points',mk(base));
+  $('d-nf').setAttribute('points',mk(nf));
+  $('d-fb').setAttribute('points',mk(fb));
+  $('d-d1').textContent='5.0 %';
+  $('d-d2').textContent=(100*hd).toFixed(hd*100<1?2:1)+' %';
+  $('d-nft').textContent='无反馈';
+  $('d-fbt').textContent='加反馈 1/(1+AF) = 1/'+(1+F).toFixed(0);
+  $('d-note').textContent=F===1
+    ?'没有反馈时，橙线和蓝线重合，波形上下不对称，失真就是放大器固有的 5%。加大输入不能改善，只是让不对称一起变大。'
+    :'加反馈后失真降到 '+(100*hd).toFixed(hd*100<1?2:1)+' %。只要把输入调大 '+(1+F).toFixed(0)+' 倍，输出回到原来的幅度，而失真仍然是压下来的值。这就是负反馈换线性度的本质。';
+}
+scale(0,Math.PI*2,60,440);
+$('d-f').addEventListener('input',dU);$('d-a').addEventListener('input',dU);dU();
+</script>
+</body>
+</html>

@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>输出特性与三个工作区</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.pz{fill:var(--copper);fill-opacity:.16;stroke:var(--line)}
+.nz{fill:var(--low);fill-opacity:.24;stroke:var(--line)}
+.chn{fill:var(--low);fill-opacity:.85}
+.op{fill:var(--panel);stroke:var(--copper);stroke-width:2.5}
+figure svg+svg{margin-top:10px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#mos">MOS管</a><span class="sp"></span><span>04 / 09</span></nav>
+<header>
+  <span class="eyebrow">MOS管 · 输出特性</span>
+  <h1>输出特性与三个工作区</h1>
+  <p class="lede">同一个 Vgs 下，Id 随 Vds 怎么变？输出特性曲线分成截止区、可变电阻区、饱和区三块。拖动 Vgs 和 Vds，看工作点落在哪一区，沟道是什么形状。</p>
+</header>
+
+<section id="reg">
+  <span class="eyebrow">三个工作区 · 沟道夹断</span>
+  <h2>分界线是 Vds = Vgs − Vth</h2>
+  <p>Vgs &lt; Vth 时没有沟道，是截止区。有了沟道以后，Vds 很小时沟道各处厚度差不多，Id 随 Vds 几乎线性增加，管子像一个电阻，阻值由 Vgs 决定，这是可变电阻区。Vds 增大，漏极一端的栅沟电压 Vgs − Vds 变小，那一端的沟道变薄；当 Vds 达到 Vgs − Vth，漏极端沟道恰好消失，叫预夹断。再加大 Vds，多出来的电压都落在夹断点到漏极的那一小段耗尽区上，Id 基本不再增加，这是饱和区，也叫恒流区。</p>
+  <p class="eq">可变电阻区：Id = K·[2·(Vgs − Vth)·Vds − Vds^2]，Vds &lt; Vgs − Vth<br>饱和区：Id = K·(Vgs − Vth)^2·(1 + λ·Vds)，Vds ≥ Vgs − Vth</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 300" role="img" aria-label="NMOS 输出特性曲线族，Vgs 为 3 到 6 伏，以及可变电阻区和饱和区的抛物线分界和当前工作点">
+        <polygon id="s1-zl" class="zone-ok" points=""/>
+        <polygon id="s1-zs" class="zone-sat" points=""/>
+        <rect class="zone-cut" x="60" y="243" width="430" height="7"/>
+        <line class="gl" x1="60" y1="30" x2="490" y2="30"/>
+        <line class="gl" x1="60" y1="85" x2="490" y2="85"/>
+        <line class="gl" x1="60" y1="140" x2="490" y2="140"/>
+        <line class="gl" x1="60" y1="195" x2="490" y2="195"/>
+        <path class="ax" d="M60,30 V250 H490"/>
+        <text x="54" y="34" text-anchor="end" class="v">10</text>
+        <text x="54" y="89" text-anchor="end" class="v">7.5</text>
+        <text x="54" y="144" text-anchor="end" class="v">5</text>
+        <text x="54" y="199" text-anchor="end" class="v">2.5</text>
+        <text x="54" y="254" text-anchor="end" class="v">0</text>
+        <text x="64" y="22" class="tm">Id / A</text>
+        <text x="60" y="268" text-anchor="middle" class="v">0</text>
+        <text x="146" y="268" text-anchor="middle" class="v">2</text>
+        <text x="232" y="268" text-anchor="middle" class="v">4</text>
+        <text x="318" y="268" text-anchor="middle" class="v">6</text>
+        <text x="404" y="268" text-anchor="middle" class="v">8</text>
+        <text x="490" y="268" text-anchor="end" class="v">10</text>
+        <text x="490" y="290" text-anchor="end" class="tm">Vds / V</text>
+        <g id="s1-cv"></g>
+        <polyline id="s1-bd" class="ax dash" points=""/>
+        <text x="120" y="46" class="tm">Vds = Vgs − Vth</text>
+        <text x="68" y="66" class="t" style="fill:var(--flow)">可变电阻区</text>
+        <text x="300" y="172" class="t" style="fill:var(--copper)">饱和区（恒流区）</text>
+        <polyline id="s1-cur" class="real" points=""/>
+        <circle id="s1-pt" class="op" cx="0" cy="0" r="5.5"/>
+      </svg>
+      <svg viewBox="0 0 520 150" role="img" aria-label="沟道形状示意：源极端沟道厚，漏极端随 Vds 增大变薄，Vds 大于 Vgs 减 Vth 后漏极端被夹断">
+        <text x="85" y="14" text-anchor="middle" class="v">S 0 V</text>
+        <text id="s1-tg" x="260" y="14" text-anchor="middle" class="v">G 4.0 V</text>
+        <text id="s1-td" x="435" y="14" text-anchor="middle" class="v">D 3.0 V</text>
+        <rect class="box" x="130" y="22" width="260" height="10" rx="2"/>
+        <rect class="pz" x="20" y="36" width="480" height="104"/>
+        <path class="nz" d="M40,36 V66 Q40,78 52,78 H118 Q130,78 130,66 V36 Z"/>
+        <path class="nz" d="M390,36 V66 Q390,78 402,78 H468 Q480,78 480,66 V36 Z"/>
+        <text x="85" y="62" text-anchor="middle" class="t">N+</text>
+        <text x="435" y="62" text-anchor="middle" class="t">N+</text>
+        <polygon id="s1-ch" class="chn" points=""/>
+        <line id="s1-pin" class="ax dash" x1="0" y1="36" x2="0" y2="80"/>
+        <text id="s1-pint" x="0" y="96" text-anchor="middle" class="tm">夹断点</text>
+        <text id="s1-cht" x="260" y="124" text-anchor="middle" class="tm"></text>
+      </svg>
+      <figcaption>上：输出特性，绿色区是可变电阻区，橙色区是饱和区，底部蓝条是截止区，橙色粗线是当前 Vgs 的曲线。下：沟道剖面，蓝色厚度正比于该处的 Vgs − V(x) − Vth。示意参数：Vth = 2 V，K = 0.5 A/V²，λ = 0.02 /V。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s1-vg">栅源电压 Vgs</label>
+        <span class="rv" id="s1-vgv">5.0 V</span>
+        <input type="range" id="s1-vg" min="0" max="6.5" step="0.1" value="5"></div>
+      <div class="ctl"><label class="ctl-l" for="s1-vd">漏源电压 Vds</label>
+        <span class="rv" id="s1-vdv">1.5 V</span>
+        <input type="range" id="s1-vd" min="0" max="10" step="0.1" value="1.5"></div>
+      <dl class="read">
+        <dt>Vgs − Vth</dt><dd id="s1-ov">3.0 V</dd>
+        <dt>工作区</dt><dd><span id="s1-st" class="chip on">可变电阻区</span></dd>
+        <dt>漏极电流 Id</dt><dd id="s1-id">3.4 A</dd>
+        <dt>Vds / Id</dt><dd id="s1-r">0.44 Ω</dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="name">
+  <span class="eyebrow">命名错位 · 和三极管对照</span>
+  <h2>MOS 的"饱和"不是三极管的"饱和"</h2>
+  <p>这是面试最爱挖的坑。三极管的饱和区是"完全导通、Vce 很小"，MOS 管的饱和区却是"电流饱和、不再随 Vds 增大"，对应的是三极管的放大区。MOS 管做开关时完全导通，工作在可变电阻区，对应三极管的饱和区。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>物理状态</th><th>MOS 管叫法</th><th>条件（NMOS）</th><th>三极管叫法</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td>不导通</td><td>截止区</td><td>Vgs &lt; Vth</td><td>截止区</td><td>开关断开</td></tr>
+      <tr><td>电流由控制极决定，几乎不随输出电压变</td><td>饱和区、恒流区</td><td>Vgs &gt; Vth，Vds ≥ Vgs − Vth</td><td>放大区</td><td>放大器、恒流源</td></tr>
+      <tr><td>完全导通，像个小电阻</td><td>可变电阻区、线性区、欧姆区</td><td>Vgs &gt; Vth，Vds &lt; Vgs − Vth</td><td>饱和区</td><td>开关闭合</td></tr>
+    </tbody>
+  </table></div>
+  <p>还有一层混乱：模拟 IC 教材把可变电阻区叫"线性区"（triode），但功率 MOS 手册和应用笔记里说的"linear mode 线性模式"，指的却是管子在饱和区当可调电阻用，比如电子负载、热插拔缓启动。面试时最好直接说"可变电阻区"和"恒流区"，不会有歧义。</p>
+</section>
+
+<section id="ll">
+  <span class="eyebrow">负载线 · 开关过程</span>
+  <h2>开关一次要穿过三个区</h2>
+  <p>把 NMOS 接成低边开关：10 V 电源经 2 Ω 负载接到漏极。工作点只能落在负载线 Vds = 10 − 2·Id 上。Vgs 从 0 升到 10 V 的过程中，工作点从截止区出发，先进入饱和区，再进入可变电阻区。开关损耗就发生在中间那段：电压和电流同时都不小。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 300" role="img" aria-label="输出特性上画出 10 伏、2 欧的负载线，工作点随 Vgs 从截止区经饱和区移到可变电阻区">
+        <polygon id="s3-zl" class="zone-ok" points=""/>
+        <polygon id="s3-zs" class="zone-sat" points=""/>
+        <rect class="zone-cut" x="60" y="243" width="430" height="7"/>
+        <line class="gl" x1="60" y1="30" x2="490" y2="30"/>
+        <line class="gl" x1="60" y1="85" x2="490" y2="85"/>
+        <line class="gl" x1="60" y1="140" x2="490" y2="140"/>
+        <line class="gl" x1="60" y1="195" x2="490" y2="195"/>
+        <path class="ax" d="M60,30 V250 H490"/>
+        <text x="54" y="34" text-anchor="end" class="v">10</text>
+        <text x="54" y="89" text-anchor="end" class="v">7.5</text>
+        <text x="54" y="144" text-anchor="end" class="v">5</text>
+        <text x="54" y="199" text-anchor="end" class="v">2.5</text>
+        <text x="54" y="254" text-anchor="end" class="v">0</text>
+        <text x="64" y="22" class="tm">Id / A</text>
+        <text x="60" y="268" text-anchor="middle" class="v">0</text>
+        <text x="146" y="268" text-anchor="middle" class="v">2</text>
+        <text x="232" y="268" text-anchor="middle" class="v">4</text>
+        <text x="318" y="268" text-anchor="middle" class="v">6</text>
+        <text x="404" y="268" text-anchor="middle" class="v">8</text>
+        <text x="490" y="268" text-anchor="end" class="v">10</text>
+        <text x="490" y="290" text-anchor="end" class="tm">Vds / V</text>
+        <g id="s3-cv"></g>
+        <polyline id="s3-bd" class="ax dash" points=""/>
+        <line class="real2" x1="60" y1="140" x2="490" y2="250"/>
+        <text x="396" y="218" class="t" style="fill:var(--low)">负载线</text>
+        <polyline id="s3-cur" class="real" points=""/>
+        <circle id="s3-pt" class="op" cx="0" cy="0" r="5.5"/>
+      </svg>
+      <figcaption>蓝线是负载线，端点是 (10 V, 0) 和 (0, 5 A)。示意参数同上：Vth = 2 V，K = 0.5 A/V²。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s3-vg">栅源电压 Vgs</label>
+        <span class="rv" id="s3-vgv">4.0 V</span>
+        <input type="range" id="s3-vg" min="0" max="10" step="0.1" value="4"></div>
+      <dl class="read">
+        <dt>工作区</dt><dd><span id="s3-st" class="chip warn">饱和区</span></dd>
+        <dt>Id</dt><dd id="s3-id">2.0 A</dd>
+        <dt>Vds</dt><dd id="s3-vds">6.0 V</dd>
+        <dt>MOS 功耗 Vds·Id</dt><dd id="s3-p">12 W</dd>
+        <dt>负载功率</dt><dd id="s3-pl">8 W</dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>MOS 管有哪几个工作区？怎么判断？</summary>
+      <div class="ans"><p>三个。Vgs &lt; Vth 是截止区。Vgs &gt; Vth 且 Vds &lt; Vgs − Vth 是可变电阻区，管子像一个受 Vgs 控制的电阻。Vgs &gt; Vth 且 Vds ≥ Vgs − Vth 是饱和区，漏极端沟道被夹断，Id 基本只由 Vgs 决定。</p></div></details>
+    <details><summary>MOS 管做开关时工作在哪个区？做放大时呢？</summary>
+      <div class="ans"><p>开关导通时工作在可变电阻区，压降 = Id·Rds(on)，很小；关断时在截止区。放大时工作在饱和区，因为那里 Id 只受 Vgs 控制、对 Vds 不敏感，输出阻抗高，相当于三极管的放大区。</p></div></details>
+    <details><summary>MOS 的饱和区和三极管的饱和区是一回事吗？</summary>
+      <div class="ans"><p>不是，正好错开。MOS 的饱和区是电流饱和，对应三极管的放大区。三极管饱和是完全导通，对应 MOS 的可变电阻区。</p></div></details>
+    <details><summary>什么是预夹断？夹断后电流为什么不再增加？</summary>
+      <div class="ans"><p>Vds 增大到 Vgs − Vth 时，漏极端的栅沟电压正好等于 Vth，那里的沟道刚好消失，叫预夹断。再增大 Vds，多出的电压落在夹断点和漏极之间的耗尽区上，沟道两端的电压基本保持 Vgs − Vth 不变，所以电流基本不变。电子到了夹断点会被耗尽区强电场直接扫进漏极。夹断点略向源极移动使有效沟道变短，电流会略有增大，这就是沟道长度调制，用 λ 表示。</p></div></details>
+    <details><summary>开关过程中损耗主要在哪个区产生？</summary>
+      <div class="ans"><p>在饱和区。开关切换时工作点沿负载线穿过饱和区，这时 Vds 和 Id 都不小，瞬时功耗最大，最高可达 Vdd^2 / (4·R)。所以开关要快，尽量缩短在饱和区停留的时间。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="03-阈值电压与转移特性.html"><span>上一页</span>阈值电压与转移特性</a><a class="next" href="05-跨导gm.html"><span>下一页</span>跨导gm</a></nav>
+</div>
+
+<script src="../_assets/kit.js"></script>
+<script>
+const KO=0.5,VTO=2,LAM=0.02;
+function idO(vgs,vds){
+  if(vgs<=VTO)return 0;const ov=vgs-VTO;
+  return (vds<ov?KO*(2*ov*vds-vds*vds):KO*ov*ov)*(1+LAM*vds);
+}
+const Xo=scale(0,10,60,490),Yo=scale(0,10,250,30);
+const cut10=f=>v=>{const y=f(v);return y>10?NaN:y;};
+function zones(zl,zs,bd){
+  const b=[];for(let k=0;k<=60;k++){const vd=Math.sqrt(20/1.086)*k/60;b.push(Xo(vd).toFixed(1)+','+Yo(KO*vd*vd*(1+LAM*vd)).toFixed(1));}
+  $(bd).setAttribute('points',b.join(' '));
+  const top=Yo(10).toFixed(1);
+  $(zl).setAttribute('points','60,250 '+b.join(' ')+' 60,'+top);
+  $(zs).setAttribute('points','60,250 '+b.join(' ')+' 490,'+top+' 490,250');
+}
+function family(gid){
+  [3,4,5,6].forEach(vg=>{
+    $(gid).append(svgEl('polyline',{class:'cv',points:plot(cut10(v=>idO(vg,v)),0,10,Xo,Yo,200),style:'opacity:.45'}));
+    $(gid).append(svgEl('text',{x:'486','y':(Yo(idO(vg,10))-6).toFixed(1),'text-anchor':'end',class:'v'},'Vgs = '+vg+' V'));
+  });
+}
+
+/* 1. 三个工作区 */
+zones('s1-zl','s1-zs','s1-bd');family('s1-cv');
+function s1u(){
+  const vg=+$('s1-vg').value,vd=+$('s1-vd').value,ov=vg-VTO,id=idO(vg,vd);
+  $('s1-vgv').textContent=fmtV(vg,1);$('s1-vg').setAttribute('aria-valuetext',fmtV(vg,1));
+  $('s1-vdv').textContent=fmtV(vd,1);$('s1-vd').setAttribute('aria-valuetext',fmtV(vd,1));
+  $('s1-tg').textContent='G '+fmtV(vg,1);$('s1-td').textContent='D '+fmtV(vd,1);
+  $('s1-cur').setAttribute('points',ov>0?plot(cut10(v=>idO(vg,v)),0,10,Xo,Yo,200):'60,250 490,250');
+  $('s1-pt').setAttribute('cx',Xo(vd).toFixed(1));$('s1-pt').setAttribute('cy',Yo(Math.min(id,10)).toFixed(1));
+  const sat=ov>0&&vd>=ov,lin=ov>0&&vd<ov;
+  // 沟道形状
+  const c=6.5,L=260;let pts=[],pinX=null;
+  if(ov>0){
+    const vde=Math.min(vd,ov),Le=sat?L*(1-Math.min(0.18,0.04*(vd-ov))):L;
+    pts.push('130,36');pts.push((130+Le).toFixed(1)+',36');
+    for(let k=40;k>=0;k--){const x=Le*k/40,h=c*Math.sqrt(Math.max(0,ov*ov-(x/Le)*(2*ov*vde-vde*vde)));pts.push((130+x).toFixed(1)+','+(36+h).toFixed(1));}
+    if(sat)pinX=130+Le;
+  }
+  $('s1-ch').setAttribute('points',pts.join(' '));show($('s1-ch'),ov>0);
+  show($('s1-pin'),pinX!==null);show($('s1-pint'),pinX!==null);
+  if(pinX!==null){$('s1-pin').setAttribute('x1',pinX.toFixed(1));$('s1-pin').setAttribute('x2',pinX.toFixed(1));$('s1-pint').setAttribute('x',pinX.toFixed(1));}
+  $('s1-cht').textContent=ov<=0?'Vgs < Vth，没有沟道':sat?'漏极端被夹断，多出的 Vds 落在夹断点到漏极之间':vd<0.3*ov?'Vds 很小，沟道两端厚度几乎一样':'漏极端沟道变薄，还没夹断';
+  $('s1-ov').textContent=(ov>0?'+':'')+fmtV(ov,1);
+  $('s1-id').textContent=id>0?fmtA(id):'0';
+  $('s1-r').textContent=id>1e-3?fmtR(vd/id)+(sat?'，不代表电阻':''):'—';
+  let n;
+  if(ov<=0){chip($('s1-st'),'截止区','off');n='Vgs 没超过 Vth = 2 V，没有沟道，无论 Vds 多大都没有电流。';}
+  else if(lin){chip($('s1-st'),'可变电阻区','on');n='Vds = '+fmtV(vd,1)+' < Vgs − Vth = '+fmtV(ov,1)+'，沟道没有夹断。曲线在这里近似一条过原点的斜线，斜率由 Vgs 决定。Vds 很小时等效电阻 ≈ 1 / [2·K·(Vgs − Vth)] = '+fmtR(1/(2*KO*ov))+'，这就是 Rds(on) 的来源。';}
+  else{chip($('s1-st'),'饱和区','warn');n='Vds ≥ Vgs − Vth，漏极端沟道被夹断，曲线变平。继续加大 Vds，电流只因沟道长度调制略微上升，Id 基本由 Vgs 决定：K·(Vgs − Vth)^2 = '+fmtA(KO*ov*ov)+'。';}
+  $('s1-note').textContent=n;
+}
+$('s1-vg').addEventListener('input',s1u);$('s1-vd').addEventListener('input',s1u);
+s1u();
+
+/* 3. 负载线 */
+zones('s3-zl','s3-zs','s3-bd');family('s3-cv');
+function s3u(){
+  const vg=+$('s3-vg').value,ov=vg-VTO;
+  let lo=0,hi=10;for(let k=0;k<80;k++){const m=(lo+hi)/2;if(idO(vg,m)*2+m-10>0)hi=m;else lo=m;}
+  const vd=ov>0?(lo+hi)/2:10,id=ov>0?idO(vg,vd):0,pw=vd*id;
+  $('s3-vgv').textContent=fmtV(vg,1);$('s3-vg').setAttribute('aria-valuetext',fmtV(vg,1));
+  $('s3-cur').setAttribute('points',ov>0?plot(cut10(v=>idO(vg,v)),0,10,Xo,Yo,200):'60,250 490,250');
+  $('s3-pt').setAttribute('cx',Xo(vd).toFixed(1));$('s3-pt').setAttribute('cy',Yo(id).toFixed(1));
+  $('s3-id').textContent=id>0?fmtA(id):'0';$('s3-vds').textContent=fmtV(vd,2);
+  $('s3-p').textContent=fmtP(pw);$('s3-pl').textContent=fmtP(id*id*2);
+  let n;
+  if(ov<=0){chip($('s3-st'),'截止区','off');n='Vgs 低于 Vth，工作点停在负载线右端：Id = 0，Vds = 10 V，管子不耗电。';}
+  else if(vd>=ov){chip($('s3-st'),'饱和区，损耗大','bad');n='工作点在饱和区，电流由 Vgs 决定，Vds 还有 '+fmtV(vd,1)+'。MOS 自己吃掉 '+fmtP(pw)+'，负载线中点 Vds = 5 V 时最大，达 12.5 W。开关过程要尽快穿过这里。';}
+  else if(vd>0.8){chip($('s3-st'),'可变电阻区，未开透','warn');n='已进入可变电阻区，但 Vgs 还不够高，Vds 仍有 '+fmtV(vd,2)+'，损耗 '+fmtP(pw)+'。继续加大 Vgs。';}
+  else{chip($('s3-st'),'可变电阻区，完全导通','on');n='Vgs 足够大，工作点贴近纵轴，Vds 只有 '+fmtV(vd,2)+'，等效电阻 '+fmtR(vd/id)+'，MOS 损耗降到 '+fmtP(pw)+'，负载拿到了几乎全部功率。这就是开关的"导通"状态。';}
+  $('s3-note').textContent=n;
+}
+$('s3-vg').addEventListener('input',s3u);
+s3u();
+</script>
+</body>
+</html>

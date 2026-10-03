@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>三个工作区</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#bjt">三极管</a><span class="sp"></span><span>02 / 09</span></nav>
+<header>
+  <span class="eyebrow">三极管 · 截止 放大 饱和</span>
+  <h1>三个工作区</h1>
+  <p class="lede">同一只三极管，两个结怎么偏置，决定它是断开的开关、线性放大器，还是闭合的开关。面试常让你拿到一个电路，判断管子在哪个区。</p>
+</header>
+
+<section id="bias">
+  <span class="eyebrow">判断依据 · 两个结</span>
+  <h2>看两个结的偏置</h2>
+  <p>三极管有两个结，每个结要么正偏要么反偏，组合出三个常用工作区。以 NPN 为例：</p>
+  <div class="tbl"><table>
+    <thead><tr><th>工作区</th><th>发射结</th><th>集电结</th><th>NPN 电位关系</th><th>Ic</th><th>Uce</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td>截止</td><td>零偏或反偏</td><td>反偏</td><td class="n">Ube &lt; 约 0.5 V</td><td>≈ 0，只有漏电流</td><td>≈ Vcc</td><td>开关断开</td></tr>
+      <tr><td>放大</td><td>正偏</td><td>反偏</td><td class="n">Uc &gt; Ub &gt; Ue</td><td>Ic = β·Ib，受 Ib 控制</td><td>介于 0.3 V 与 Vcc 之间</td><td>放大电路</td></tr>
+      <tr><td>饱和</td><td>正偏</td><td>正偏</td><td class="n">Ub &gt; Ue 且 Ub &gt; Uc</td><td>Ic &lt; β·Ib，由外电路决定</td><td>Uces ≈ 0.1~0.3 V（典型值）</td><td>开关闭合</td></tr>
+    </tbody>
+  </table></div>
+  <p>饱和这一行最容易答错。饱和不是"电流最大"那么简单：因为集电极电阻限死了电流，Ic 最多只有 (Vcc − Uces) / Rc，再加大 Ib 也涨不上去，所以 Ic &lt; β·Ib，β 在这里不再成立。</p>
+</section>
+
+<section id="ll">
+  <span class="eyebrow">负载线 · 工作点</span>
+  <h2>拖动 Ib，工作点沿负载线走</h2>
+  <p>集电极回路满足 Uce = Vcc − Ic·Rc，这是一条直线，叫直流负载线。管子自己的特性是一族曲线，Ib 选中其中一条。两者的交点就是工作点。Ib 从零往上加，工作点从右下的截止区，沿负载线往左上走，穿过放大区，最后卡在左边的饱和区。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 300" role="img" aria-label="NPN 输出特性曲线族和直流负载线，工作点随 Ib 在负载线上移动">
+        <rect id="w1-zs" class="zone-sat" x="56" y="36" width="23" height="220"/>
+        <rect class="zone-cut" x="56" y="250" width="400" height="6"/>
+        <line class="gl" x1="56" y1="36" x2="456" y2="36"/>
+        <line class="gl" x1="56" y1="109" x2="456" y2="109"/>
+        <line class="gl" x1="56" y1="183" x2="456" y2="183"/>
+        <line class="gl" x1="189" y1="36" x2="189" y2="256"/>
+        <line class="gl" x1="323" y1="36" x2="323" y2="256"/>
+        <path class="ax" d="M56,36 V256 H456"/>
+        <text x="50" y="40" text-anchor="end" class="v">12</text>
+        <text x="50" y="113" text-anchor="end" class="v">8</text>
+        <text x="50" y="187" text-anchor="end" class="v">4</text>
+        <text x="50" y="260" text-anchor="end" class="v">0</text>
+        <text x="60" y="26" class="tm">Ic / mA</text>
+        <text x="56" y="274" text-anchor="middle" class="v">0</text>
+        <text x="189" y="274" text-anchor="middle" class="v">4</text>
+        <text x="323" y="274" text-anchor="middle" class="v">8</text>
+        <text x="456" y="274" text-anchor="end" class="v">12</text>
+        <text x="456" y="292" text-anchor="end" class="tm">Uce / V</text>
+        <g id="w1-fam"></g>
+        <polyline id="w1-cur" class="real2" points="56,256 456,256"/>
+        <line class="real" x1="56" y1="146" x2="456" y2="256"/>
+        <text x="130" y="160" class="t" style="fill:var(--copper)">负载线</text>
+        <line id="w1-gx" class="ax dash" x1="56" y1="200" x2="200" y2="200"/>
+        <line id="w1-gy" class="ax dash" x1="200" y1="200" x2="200" y2="256"/>
+        <circle id="w1-q" class="dot" cx="200" cy="200" r="6" style="fill:var(--flow)"/>
+        <text id="w1-qt" x="210" y="196" class="t">Q</text>
+        <text x="84" y="52" class="tm">饱和区</text>
+        <text x="250" y="90" text-anchor="middle" class="tm">放大区</text>
+        <text x="300" y="246" class="tm">截止区（贴着横轴）</text>
+      </svg>
+      <figcaption>条件：Vcc 12 V，Rc 2 kΩ，β 取 100。灰线是 Ib = 20~100 µA 的特性曲线，蓝线是当前 Ib，曲线形状为示意。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="w1-ib">基极电流 Ib</label>
+        <span class="rv" id="w1-ibv">30 µA</span>
+        <input type="range" id="w1-ib" min="0" max="100" step="5" value="30"></div>
+      <dl class="read">
+        <dt>工作区</dt><dd><span id="w1-st" class="chip on">放大</span></dd>
+        <dt>β·Ib</dt><dd id="w1-bib">3.00 mA</dd>
+        <dt>实际 Ic</dt><dd id="w1-ic">3.00 mA</dd>
+        <dt>Uce</dt><dd id="w1-uce">6.00 V</dd>
+        <dt>管耗 P = Uce·Ic</dt><dd id="w1-p">18 mW</dd>
+      </dl>
+      <p class="note" id="w1-note"></p>
+    </div>
+  </div>
+  <p>留意管耗：截止时 Ic ≈ 0，饱和时 Uce ≈ 0，两头功耗都很小；放大区中间最大。这就是三极管做开关时要"快进快出"，不能停在放大区的原因。</p>
+</section>
+
+<section id="solve">
+  <span class="eyebrow">做题套路</span>
+  <h2>先假设放大，再验证</h2>
+  <p>拿到一个固定偏置电路，四步判断：① 先算 Ib；② 假设在放大区，Ic = β·Ib；③ 算 Uce = Vcc − Ic·Rc；④ 验证：Uce 大于饱和压降，假设成立；算出来 Uce 很小甚至为负，说明假设错了，管子饱和，改用 Ic = (Vcc − Uces) / Rc。Ib = 0 或发射结没正偏，就是截止。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 360 280" role="img" aria-label="固定偏置共射电路：Rb 从 Vcc 接到基极，Rc 从 Vcc 接到集电极，发射极接地">
+        <text x="170" y="18" text-anchor="middle" class="v">Vcc 12 V</text>
+        <path class="w" d="M110,26 H232 M110,26 V50 M220,26 V50"/>
+        <rect id="w2-rb" class="r" x="101" y="50" width="18" height="40" rx="2"/>
+        <text x="94" y="66" text-anchor="end" class="t">Rb</text>
+        <text id="w2-rbt" x="94" y="84" text-anchor="end" class="v">470 kΩ</text>
+        <path class="w" d="M110,90 V172 H198"/>
+        <text x="152" y="164" class="tm">B</text>
+        <rect class="r" x="211" y="50" width="18" height="40" rx="2"/>
+        <text x="236" y="66" class="t">Rc</text>
+        <text x="236" y="84" class="v">2 kΩ</text>
+        <path class="w" d="M220,90 V150 M198,164 L220,150 M198,180 L220,194 V250 M206,250 H234 M211,255 H229 M216,260 H224"/>
+        <line class="bar" x1="198" y1="154" x2="198" y2="190"/>
+        <polygon class="ah" points="217,192 208,191 212,184"/>
+        <text x="228" y="158" class="tm">C</text>
+        <text x="228" y="198" class="tm">E</text>
+        <text x="256" y="182" class="t">NPN</text>
+        <path id="w2-ow" class="w s-hi" style="stroke-width:3" d="M220,120 H300"/>
+        <circle class="dot" cx="220" cy="120" r="3.5"/>
+        <text x="306" y="124" class="t">Uce</text>
+        <text id="w2-out" x="298" y="110" text-anchor="end" class="v hi">7.19 V</text>
+        <path id="w2-f" class="flow" d="M220,30 V150 L202,162 V182 L220,194 V248"/>
+        <path id="w2-fb" class="flow thin" d="M110,30 V172 H196"/>
+      </svg>
+      <figcaption>绿色虚线是电流路径。Ube 按 0.7 V、饱和压降 Uces 按 0.2 V 估算。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">基极电阻 Rb</span>
+        <div class="seg" id="w2-r"><button id="w2-r-open" data-v="0" aria-pressed="false">开路</button><button id="w2-r-1m" data-v="1000000" aria-pressed="false">1 MΩ</button><button id="w2-r-470" data-v="470000" aria-pressed="true">470 kΩ</button><button id="w2-r-220" data-v="220000" aria-pressed="false">220 kΩ</button><button id="w2-r-100" data-v="100000" aria-pressed="false">100 kΩ</button></div></div>
+      <div class="ctl"><span class="ctl-l">β</span>
+        <div class="seg" id="w2-b"><button id="w2-b-100" data-v="100" aria-pressed="true">100</button><button id="w2-b-200" data-v="200" aria-pressed="false">200</button></div></div>
+      <dl class="read">
+        <dt>① Ib = (Vcc − 0.7) / Rb</dt><dd id="w2-ib">24.0 µA</dd>
+        <dt>② 假设放大 Ic = β·Ib</dt><dd id="w2-ica">2.40 mA</dd>
+        <dt>③ Uce = Vcc − Ic·Rc</dt><dd id="w2-ucea">7.19 V</dd>
+        <dt>④ 验证</dt><dd id="w2-chk">Uce &gt; 0.3 V，成立</dd>
+        <dt>结论</dt><dd><span id="w2-st" class="chip on">放大</span></dd>
+        <dt>实际 Ic / Uce</dt><dd id="w2-real">2.40 mA / 7.19 V</dd>
+      </dl>
+      <p class="note" id="w2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>三极管三个工作区的条件分别是什么？</summary>
+      <div class="ans"><p>截止：发射结零偏或反偏，集电结反偏，Ic ≈ 0。放大：发射结正偏，集电结反偏，Ic = β·Ib。饱和：两个结都正偏，Uce 只剩 0.1~0.3 V，Ic 由外电路决定。</p></div></details>
+    <details><summary>饱和时 Ic 为什么小于 β·Ib？</summary>
+      <div class="ans"><p>因为集电极回路里的电阻把电流限死了，Ic 最多是 (Vcc − Uces) / Rc。Ib 再大，Ic 也涨不上去，多出来的基极电流只是让管子饱和得更深。所以饱和区里 β 关系不成立。</p></div></details>
+    <details><summary>怎么判断一个电路里三极管处于哪个区？</summary>
+      <div class="ans"><p>先看发射结有没有正偏，没有就是截止。正偏的话先假设放大，算 Ic = β·Ib，再算 Uce = Vcc − Ic·Rc。Uce 还大于饱和压降，假设成立；算出来很小或是负的，就是饱和。</p></div></details>
+    <details><summary>做开关时为什么要让三极管深度饱和？</summary>
+      <div class="ans"><p>饱和时 Uce 最小，管耗 Uce·Ic 最小，负载拿到的电压最多。设计时通常让 β·Ib 是所需 Ic 的 2~10 倍（经验值），因为 β 离散性大，留足余量才能保证每只管子都饱和。代价是退出饱和慢，关断有存储时间。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="01-NPN与PNP结构.html"><span>上一页</span>NPN与PNP结构</a><a class="next" href="03-β放大倍数.html"><span>下一页</span>β放大倍数</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 负载线上的工作点 */
+const wX=scale(0,12,56,456),wY=scale(0,12,256,36);
+const wIc=(ibm,u)=>100*ibm*(1+u/100)*(1-Math.exp(-u/0.2)); /* ibm：Ib 单位 mA，返回 mA，示意模型 */
+[20,40,60,80,100].forEach(ib=>{
+  const fn=u=>wIc(ib/1000,u);
+  $('w1-fam').append(svgEl('polyline',{class:'cv',style:'stroke:var(--muted);stroke-width:1.2',points:plot(fn,0,12,wX,wY,120)}),
+    svgEl('text',{x:452,y:(wY(fn(12))-6).toFixed(1),'text-anchor':'end',class:'tm'},'Ib = '+ib+' µA'));
+});
+function w1u(){
+  const ibu=+$('w1-ib').value,ibm=ibu/1000;
+  let u=12;
+  if(ibu>0){let a=0,b=12;for(let k=0;k<50;k++){const m=(a+b)/2;if(wIc(ibm,m)-(12-m)/2>0)b=m;else a=m;}u=(a+b)/2;}
+  const ic=(12-u)/2; /* mA */
+  $('w1-cur').setAttribute('points',plot(v=>wIc(ibm,v),0,12,wX,wY,120));
+  const qx=wX(u),qy=wY(ic);
+  $('w1-q').setAttribute('cx',qx.toFixed(1));$('w1-q').setAttribute('cy',qy.toFixed(1));
+  $('w1-qt').setAttribute('x',(qx+(u>10?-18:10)).toFixed(1));$('w1-qt').setAttribute('y',(qy-8).toFixed(1));
+  $('w1-gx').setAttribute('x2',qx.toFixed(1));$('w1-gx').setAttribute('y1',qy.toFixed(1));$('w1-gx').setAttribute('y2',qy.toFixed(1));
+  $('w1-gy').setAttribute('x1',qx.toFixed(1));$('w1-gy').setAttribute('x2',qx.toFixed(1));$('w1-gy').setAttribute('y1',qy.toFixed(1));
+  $('w1-ibv').textContent=ibu+' µA';$('w1-ib').setAttribute('aria-valuetext',ibu+' µA');
+  $('w1-bib').textContent=fmtA(100*ibm/1000);
+  $('w1-ic').textContent=ibu>0?fmtA(ic/1000):'≈ 0';
+  $('w1-uce').textContent=fmtV(u);
+  $('w1-p').textContent=fmtP(u*ic/1000);
+  let note;
+  if(ibu===0){chip($('w1-st'),'截止','off');note='Ib = 0，发射结没有正偏电流，Ic 只剩 nA 级漏电流，电阻上几乎没压降，Uce ≈ Vcc。工作点在负载线右下端。';}
+  else if(u<0.3){chip($('w1-st'),'饱和','warn');note='β·Ib = '+fmtA(100*ibm/1000)+'，已超过外电路最多能给的 '+fmtA(5.9e-3)+'。Ic 被 Rc 限死，Uce 掉到 0.3 V 以下，集电结也正偏了。再加 Ib，工作点几乎不动。';}
+  else if(u<0.7){chip($('w1-st'),'临界饱和','warn');note='Uce 已小于 Ube，集电结开始正偏，Ic 不再跟着 β·Ib 线性增加，这是放大区和饱和区的交界。';}
+  else{chip($('w1-st'),'放大','on');note='发射结正偏，集电结反偏。Ic 基本等于 β·Ib，Ib 每加 5 µA，Ic 就加约 0.5 mA，工作点沿负载线均匀地往左上走。';}
+  $('w1-note').textContent=note;
+}
+$('w1-ib').addEventListener('input',w1u);
+w1u();
+
+/* 2. 做题套路：先假设放大再验证 */
+const w2={rb:470e3,b:100};
+function w2u(){
+  const rb=w2.rb,b=w2.b,open=rb===0,ib=open?0:(12-0.7)/rb,ica=b*ib,ucea=12-ica*2e3;
+  let st,ic,uce;
+  if(open){st='cut';ic=0;uce=12;}else if(ucea>0.3){st='amp';ic=ica;uce=ucea;}else{st='sat';ic=(12-0.2)/2e3;uce=0.2;}
+  $('w2-rbt').textContent=open?'开路':fmtR(rb);$('w2-rb').style.opacity=open?.3:1;
+  $('w2-ib').textContent=open?'0':fmtA(ib);
+  $('w2-ica').textContent=open?'—':fmtA(ica);
+  $('w2-ucea').textContent=open?'—':fmtV(ucea);
+  $('w2-chk').textContent=open?'发射结无正偏电流':ucea>0.3?'Uce > 0.3 V，假设成立':'Uce ≤ 0.3 V，假设不成立';
+  chip($('w2-st'),{cut:'截止',amp:'放大',sat:'饱和'}[st],{cut:'off',amp:'on',sat:'warn'}[st]);
+  $('w2-real').textContent=(st==='cut'?'≈ 0':fmtA(ic))+' / '+fmtV(uce);
+  $('w2-out').textContent=fmtV(uce);setLv($('w2-out'),$('w2-ow'),uce>6);
+  show($('w2-f'),!open);show($('w2-fb'),!open);
+  $('w2-f').classList.toggle('thin',st==='amp'&&ic<2e-3);
+  $('w2-note').textContent=st==='cut'?'基极没有电流通路，Ib = 0，管子截止，Rc 上没有压降，输出等于 Vcc。'
+    :st==='amp'?'算出的 Uce 仍有 '+fmtV(ucea)+'，集电结反偏，放大假设成立，Ic = β·Ib 可以直接用。'
+    :'假设放大时算出 Uce = '+fmtV(ucea)+'，电压不可能比地还低，说明假设错了。管子饱和，Ic 改由外电路决定：(12 − 0.2) / 2 kΩ = '+fmtA(ic)+'，远小于 β·Ib = '+fmtA(ica)+'。';
+}
+seg('w2-r',v=>{w2.rb=+v;w2u();});
+seg('w2-b',v=>{w2.b=+v;w2u();});
+w2u();
+</script>
+</body>
+</html>

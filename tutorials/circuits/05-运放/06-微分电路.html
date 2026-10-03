@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>微分电路</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#opamp">运放</a><span class="sp"></span><span>06 / 12</span></nav>
+<header>
+  <span class="eyebrow">运放 · 波形运算</span>
+  <h1>微分电路</h1>
+  <p class="lede">把积分电路里的 R 和 C 对调，输出就变成输入的变化率：三角波进去，方波出来。可它对高频的放大倍数跟着频率一起涨，噪声被放大，电路还容易振铃甚至振荡，所以实际电路必须加补偿。</p>
+</header>
+
+<section id="ideal">
+  <span class="eyebrow">推导 · 电容放到输入端</span>
+  <h2>Vo = −R·C·dVin/dt</h2>
+  <p>信号经电容 C 进反相端，电阻 R 从输出接回反相端，同相端接地。</p>
+  <ol>
+    <li>同相端接地，虚短得 V− ≈ 0，反相端是虚地。</li>
+    <li>电容左端是 Vin，右端是 0 V，电容电压就是 Vin。电容电流 I = C·dVin/dt，只在 Vin 变化时才有。</li>
+    <li>虚断，这个电流全部流过 R。</li>
+    <li>R 左端是 0 V，所以 Vo = 0 − I·R = −R·C·dVin/dt。</li>
+  </ol>
+  <p class="eq">Vo = −R·C·dVin/dt</p>
+  <p>三角波每半个周期是一段直线，斜率不变，所以输出是恒定电压；斜率一翻转，输出就跳到另一边，拼起来是方波。峰值为 A 的三角波，半个周期从 −A 走到 +A，斜率 = 2A ÷ (T/2) = 4·A·f。</p>
+  <p class="eq">方波幅度 = R·C·4·A·f</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 200" role="img" aria-label="微分电路：三角波 Vin 经电容 C 接反相端，电阻 R 从输出接回反相端，同相端接地，运放接正负 12 V 电源">
+        <text x="245" y="72" text-anchor="middle" class="v">+12 V</text>
+        <path class="w" d="M245,78 V95 M245,145 V160"/>
+        <text x="245" y="174" text-anchor="middle" class="v">−12 V</text>
+        <path class="r" d="M200,70 L290,120 L200,170 Z"/>
+        <text x="207" y="100" class="t">−</text>
+        <text x="207" y="150" class="t">+</text>
+        <circle class="r" cx="40" cy="140" r="16"/>
+        <path class="w" style="stroke-width:1.5" d="M30,144 L35,136 L40,144 L45,136 L50,144"/>
+        <text x="62" y="145" class="t">Vin</text>
+        <path class="w" d="M40,124 V95 H90 M100,95 H200 M40,156 V160 M26,160 H54 M31,165 H49 M36,170 H44"/>
+        <path class="w" style="stroke-width:2.5" d="M90,83 V107 M100,83 V107"/>
+        <text id="d1-ct" x="95" y="75" text-anchor="middle" class="v">C 10 nF</text>
+        <circle class="dot" cx="150" cy="95" r="3.5"/>
+        <text x="146" y="118" text-anchor="end" class="tm">虚地 0 V</text>
+        <path class="w" d="M150,95 V35 H215 M265,35 H340 V120"/>
+        <rect class="r" x="215" y="27" width="50" height="16" rx="2"/>
+        <text id="d1-rt" x="240" y="20" text-anchor="middle" class="v">R 10 kΩ</text>
+        <circle class="dot" cx="340" cy="120" r="3.5"/>
+        <path class="w" d="M200,145 H170 V175 M156,175 H184 M161,180 H179 M166,185 H174"/>
+        <path id="d1-ow" class="w s-lo" style="stroke-width:3" d="M290,120 H400"/>
+        <text x="400" y="110" text-anchor="end" class="t">Vo</text>
+        <path class="flow thin" d="M40,122 V95 H88 M102,95 H150 V35 H340 V118"/>
+      </svg>
+      <svg viewBox="0 0 420 268" role="img" aria-label="上：三角波输入；下：微分器输出，三角波变成方波，幅度过大时被电源轨限住">
+        <g id="d1-axi"></g>
+        <g id="d1-axo"></g>
+        <g id="d1-rails"><line id="d1-r1" class="ax dash" x1="44" x2="400" y1="0" y2="0"/><line id="d1-r2" class="ax dash" x1="44" x2="400" y1="0" y2="0"/>
+          <text x="398" y="100" text-anchor="end" class="tm">虚线：±10.5 V 饱和</text></g>
+        <polyline id="d1-vin" class="real2" points=""/>
+        <polyline id="d1-vo" class="real" points=""/>
+        <text x="398" y="18" text-anchor="end" class="tm">三角波 ±2.5 V</text>
+      </svg>
+      <figcaption>上：±12 V 供电的微分器。绿色是 Vin 上升时的电流路径：电容电流经 R 流向输出端，所以输出为负；Vin 下降时方向相反。下：峰值 2.5 V 的三角波输入（蓝）和输出（橙），画两个周期，输出纵轴随幅度自动缩放。这里按理想运放算，饱和电压 ±10.5 V 为示意值。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="d1-r">电阻 R</label>
+        <span class="rv" id="d1-rv">10 kΩ</span>
+        <input type="range" id="d1-r" min="0" max="6" step="1" value="3"></div>
+      <div class="ctl"><label class="ctl-l" for="d1-c">电容 C</label>
+        <span class="rv" id="d1-cv">10 nF</span>
+        <input type="range" id="d1-c" min="0" max="6" step="1" value="3"></div>
+      <div class="ctl"><label class="ctl-l" for="d1-f">三角波频率 f</label>
+        <span class="rv" id="d1-fv">1 kHz</span>
+        <input type="range" id="d1-f" min="0" max="6" step="1" value="3"></div>
+      <dl class="read">
+        <dt>输入斜率 4·A·f</dt><dd id="d1-sl">10 V/ms</dd>
+        <dt>时间常数 R·C</dt><dd id="d1-tau">100 µs</dd>
+        <dt>方波幅度 R·C·斜率</dt><dd id="d1-pk">±1.00 V</dd>
+        <dt>单位增益频率 1/(2π·R·C)</dt><dd id="d1-f0">1.6 kHz</dd>
+        <dt>输出</dt><dd><span id="d1-st" class="chip on">方波</span></dd>
+      </dl>
+      <p class="note" id="d1-note"></p>
+    </div>
+  </div>
+</section>
+<section id="noise">
+  <span class="eyebrow">实际问题 · 噪声与振铃</span>
+  <h2>频率越高放大越多，噪声和振铃一起冒出来</h2>
+  <p>对正弦信号，微分器的增益是 2π·f·R·C，频率每高十倍，增益大十倍。有用信号在低频，噪声和干扰往往在高频，所以输入上几乎看不见的噪声，到输出会被放大几十上百倍。</p>
+  <p>更麻烦的是稳定性。反馈网络对运放的要求随频率升高，运放能给的开环增益却随频率下降，两条线以 40 dB/十倍频的速度相交，相位裕度接近 0。结果是每个转折处都会振铃，稍有寄生电容就直接振荡。</p>
+  <p>标准改法有两个：输入端给 C 串一个小电阻 R1，把高频增益限制在 R / R1；反馈电阻 R 上并一个小电容 Cf，让更高频率的增益往下走。代价是微分只在 f1 = 1/(2π·R1·C) 以下成立，通常让 R1·C = R·Cf。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 210" role="img" aria-label="微分器，可在输入电容前串联小电阻 R1，在反馈电阻 R 上并联小电容 Cf">
+        <path class="r" d="M200,90 L290,140 L200,190 Z"/>
+        <text x="207" y="120" class="t">−</text>
+        <text x="207" y="170" class="t">+</text>
+        <circle class="r" cx="36" cy="165" r="16"/>
+        <path class="w" style="stroke-width:1.5" d="M26,169 L31,161 L36,169 L41,161 L46,169"/>
+        <text x="36" y="200" text-anchor="middle" class="t">Vin</text>
+        <path class="w" d="M36,149 V115 H52 M132,115 H200 M36,181 V186 M24,186 H48 M29,190 H43"/>
+        <g id="d2-g-r1" hidden>
+          <rect class="r" x="52" y="107" width="50" height="16" rx="2"/>
+          <text x="77" y="100" text-anchor="middle" class="v">R1 1 kΩ</text>
+          <path class="w" d="M102,115 H122"/>
+        </g>
+        <path id="d2-g-nr1" class="w" d="M52,115 H122"/>
+        <path class="w" style="stroke-width:2.5" d="M122,103 V127 M132,103 V127"/>
+        <text x="127" y="145" text-anchor="middle" class="v">C 10 nF</text>
+        <circle class="dot" cx="160" cy="115" r="3.5"/>
+        <path class="w" d="M160,115 V62 H225 M275,62 H340 V140"/>
+        <rect class="r" x="225" y="54" width="50" height="16" rx="2"/>
+        <text x="250" y="88" text-anchor="middle" class="v">R 10 kΩ</text>
+        <g id="d2-g-cf" hidden>
+          <path class="w" d="M160,62 V22 H245 M255,22 H340 V62"/>
+          <path class="w" style="stroke-width:2.5" d="M245,10 V34 M255,10 V34"/>
+          <text x="250" y="48" text-anchor="middle" class="v">Cf 1 nF</text>
+          <circle class="dot" cx="160" cy="62" r="3.5"/>
+          <circle class="dot" cx="340" cy="62" r="3.5"/>
+        </g>
+        <circle class="dot" cx="340" cy="140" r="3.5"/>
+        <path class="w" d="M200,170 H176 V184 M164,184 H188 M169,189 H183 M174,194 H178"/>
+        <path id="d2-ow" class="w s-bad" style="stroke-width:3" d="M290,140 H400"/>
+        <text x="400" y="130" text-anchor="end" class="t">Vo</text>
+      </svg>
+      <svg viewBox="0 0 420 300" role="img" aria-label="上：叠加了噪声的三角波输入；下：微分器输出与理想方波对比，理想微分器有振铃和放大的噪声">
+        <g id="d2-axi"></g>
+        <polyline id="d2-vin" class="real2" points=""/>
+        <g id="d2-axo"></g>
+        <polyline id="d2-id" class="ideal" points=""/>
+        <polyline id="d2-vo" class="real" points=""/>
+        <text x="398" y="18" text-anchor="end" class="tm">三角波 ±2.5 V + 噪声</text>
+        <text x="398" y="124" text-anchor="end" class="tm">虚线：理想方波 ±1 V</text>
+      </svg>
+      <figcaption>R = 10 kΩ、C = 10 nF，输入 1 kHz、峰值 2.5 V 的三角波，叠加一段固定的宽带噪声（示意）。运放按 GBW 1 MHz 的单极点模型计算，忽略压摆率。补偿取 R1 = 1 kΩ、Cf = 1 nF，f1 = f2 ≈ 16 kHz。输出纵轴随幅度自动缩放。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">电路</span>
+        <div class="seg" id="d2-m"><button id="d2-m-0" data-v="0" aria-pressed="true">理想微分</button><button id="d2-m-1" data-v="1" aria-pressed="false">加 R1 和 Cf</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="d2-n">输入噪声（有效值）</label>
+        <span class="rv" id="d2-nv">2 mV</span>
+        <input type="range" id="d2-n" min="0" max="5" step="1" value="2"></div>
+      <dl class="read">
+        <dt>1 kHz 信号增益</dt><dd id="d2-g1">0.63</dd>
+        <dt>50 kHz 噪声增益</dt><dd id="d2-g50">—</dd>
+        <dt>边沿过冲（占 2 V 跳变）</dt><dd id="d2-os">—</dd>
+        <dt>输出噪声有效值</dt><dd id="d2-no">—</dd>
+        <dt>输出</dt><dd><span id="d2-st" class="chip bad">振铃 + 噪声</span></dd>
+      </dl>
+      <p class="note" id="d2-note"></p>
+    </div>
+  </div>
+</section>
+<section id="bode">
+  <span class="eyebrow">频域 · 补偿怎么取值</span>
+  <h2>从幅频曲线看振铃从哪来</h2>
+  <p>闭环增益不可能高过运放的开环增益。理想微分要求的增益每十倍频升 20 dB，开环增益每十倍频降 20 dB，两条线在 fx 相交。交点附近环路相移接近 180°，闭环曲线在这里冒出一个很高的尖峰，尖峰频率就是振铃频率。</p>
+  <p class="eq">振铃频率 fx ≈ √(f0·GBW)，f0 = 1/(2π·R·C)</p>
+  <p>补偿的思路是让闭环曲线在碰到开环曲线之前先拐弯往下走。R1 太小，拐点太高，来不及；R1 太大，拐点太低，信号本身也被当成高频削掉了。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="微分器幅频曲线：运放开环增益、理想微分增益和实际闭环增益，横轴对数频率">
+        <g id="d3-ax"></g>
+        <polyline id="d3-ol" class="real2" points=""/>
+        <polyline id="d3-il" class="ideal" points=""/>
+        <polyline id="d3-cl" class="real" points=""/>
+        <text id="d3-olt" x="0" y="0" class="t" style="fill:var(--low)">运放开环 A(f)</text>
+        <text id="d3-ilt" x="0" y="0" class="tm">理想 2π·f·R·C</text>
+        <circle id="d3-pt" cx="0" cy="0" r="4.5" style="fill:var(--copper)"/>
+        <text id="d3-ptt" x="0" y="0" class="v hi"></text>
+      </svg>
+      <figcaption>R = 10 kΩ、C = 10 nF，运放 GBW 1 MHz、直流开环增益 100 dB，均为示意。补偿电容按 R1·C = R·Cf 取值。橙线是实际闭环增益，圆点标出它的最高点。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">补偿电阻 R1（Cf 自动配）</span>
+        <div class="seg" id="d3-m"><button id="d3-m-0" data-v="0" aria-pressed="true">不加</button><button id="d3-m-100" data-v="100" aria-pressed="false">100 Ω</button><button id="d3-m-1k" data-v="1000" aria-pressed="false">1 kΩ</button><button id="d3-m-3k3" data-v="3300" aria-pressed="false">3.3 kΩ</button></div></div>
+      <dl class="read">
+        <dt>补偿电容 Cf</dt><dd id="d3-cf">—</dd>
+        <dt>微分有效到 f1</dt><dd id="d3-f1">—</dd>
+        <dt>闭环尖峰</dt><dd id="d3-pk">—</dd>
+        <dt>相位裕度</dt><dd id="d3-pm">—</dd>
+        <dt>结论</dt><dd><span id="d3-st" class="chip bad">会振铃</span></dd>
+      </dl>
+      <p class="note" id="d3-note"></p>
+    </div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>元件</th><th>作用</th><th>取值思路</th></tr></thead>
+    <tbody>
+      <tr><td>R1，串在 C 前</td><td>高频时 C 近似短路，增益被限制在 R / R1</td><td>f1 = 1/(2π·R1·C) 取信号最高频率的 5~10 倍</td></tr>
+      <tr><td>Cf，并在 R 上</td><td>更高频率时反馈阻抗变小，增益往下走</td><td>常取 R·Cf = R1·C，两个拐点重合</td></tr>
+      <tr><td>运放 GBW</td><td>决定开环曲线的位置</td><td>闭环在 f1 附近的增益要远低于 A(f1)</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>画一个微分电路，推它的输出。</summary>
+      <div class="ans"><p>输入串电容 C 到反相端，R 做反馈，同相端接地。虚短得反相端是虚地，电容电压就是 Vin，电流 C·dVin/dt；虚断，电流全部流过 R；所以 Vo = −R·C·dVin/dt。</p></div></details>
+    <details><summary>输入三角波，输出是什么？</summary>
+      <div class="ans"><p>方波。三角波每段斜率不变，输出是恒定电压；斜率变号，输出跳到另一侧。幅度 = R·C × 斜率，峰值 A、频率 f 的三角波斜率是 4·A·f。</p></div></details>
+    <details><summary>理想微分电路为什么实际不能用？</summary>
+      <div class="ans"><p>两个原因。一是增益 2π·f·R·C 随频率升高，高频噪声被放大得最多。二是稳定性差：反馈网络要求的增益每十倍频升 20 dB，运放开环增益每十倍频降 20 dB，交点处相位裕度接近 0，输出振铃甚至振荡。</p></div></details>
+    <details><summary>怎么改成实用的微分电路？</summary>
+      <div class="ans"><p>输入电容前串一个小电阻 R1，把高频增益限制在 R / R1；反馈电阻上并一个小电容 Cf，让更高频率的增益下降。一般取 R1·C = R·Cf，拐点 f1 = 1/(2π·R1·C) 放在信号最高频率的几倍以上。这样在 f1 以下是微分，以上变成低通。</p></div></details>
+    <details><summary>积分电路和微分电路各自的毛病是什么？</summary>
+      <div class="ans"><p>积分电路怕低频和直流：电容隔直，失调被一直积分到饱和，要并大电阻 Rf。微分电路怕高频：增益随频率涨，噪声和振荡是问题，要串 R1、并 Cf。一个在电容旁并电阻，一个在电容前串电阻，都是给极端频率下的增益设上限。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="05-积分电路.html"><span>上一页</span>积分电路</a><a class="next" href="07-增益带宽积GBW.html"><span>下一页</span>增益带宽积 GBW</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+function axGrid(gid,o){
+  const g=$(gid);g.textContent='';
+  o.yt.forEach(([py,l])=>g.append(svgEl('line',{class:'gl',x1:o.x0,y1:py,x2:o.x1,y2:py}),svgEl('text',{x:o.x0-6,y:py+4,'text-anchor':'end',class:'v'},l)));
+  o.xt.forEach(([px,l],i)=>g.append(svgEl('line',{class:'gl',x1:px,y1:o.y0,x2:px,y2:o.y1}),svgEl('text',{x:px,y:o.y1+16,'text-anchor':i===o.xt.length-1&&px>=o.x1-2?'end':'middle',class:'v'},l)));
+  g.append(svgEl('path',{class:'ax',d:`M${o.x0},${o.y0} V${o.y1} H${o.x1}`}));
+  if(o.yn)g.append(svgEl('text',{x:o.x0+4,y:o.y0-6,class:'tm'},o.yn));
+  if(o.xn)g.append(svgEl('text',{x:o.x1,y:o.y1+32,'text-anchor':'end',class:'tm'},o.xn));
+}
+const SAT=10.5,AMP=2.5;
+const fmtCap=c=>c>=1e-6?+(c*1e6).toFixed(2)+' µF':c>=1e-9?+(c*1e9).toFixed(1)+' nF':+(c*1e12).toFixed(0)+' pF';
+const fmtVx=v=>{const s=v<0?'−':'';v=Math.abs(v);return v>=100?s+v.toFixed(0)+' V':v>=1?s+v.toFixed(2)+' V':s+(v*1e3).toFixed(v>=0.01?0:1)+' mV';};
+const fmtRate=s=>s>=1e6?+(s/1e6).toFixed(2)+' V/µs':s>=1e3?+(s/1e3).toFixed(2)+' V/ms':+s.toFixed(1)+' V/s';
+const tLab=s=>s>=1e-3?+(s*1e3).toFixed(2)+' ms':+(s*1e6).toFixed(1)+' µs';
+const niceFS=m=>[0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,1.5,2,3,4,6,8,12].find(x=>x>=m)||12;
+/* 峰值 AMP 的三角波，t = 0 在谷底 */
+const tri=(t,T)=>{const p=((t/T)%1+1)%1;return p<0.5?-AMP+4*AMP*p:3*AMP-4*AMP*p;};
+
+/* 1. 理想微分：三角波进方波出 */
+const d1R=[1e3,2.2e3,4.7e3,10e3,22e3,47e3,100e3],d1C=[1e-9,2.2e-9,4.7e-9,10e-9,22e-9,47e-9,100e-9],d1F=[100,200,500,1e3,2e3,5e3,1e4];
+const d1X=scale(0,2,44,400),d1Yi=scale(-3.5,3.5,78,28),d1Q=[0,.5,1,1.5,2];
+axGrid('d1-axi',{x0:44,x1:400,y0:28,y1:78,xt:d1Q.map(q=>[d1X(q),'']),yt:[[d1Yi(2.5),'2.5'],[d1Yi(0),'0'],[d1Yi(-2.5),'−2.5']],yn:'Vin / V'});
+$('d1-vin').setAttribute('points',plot(x=>tri(x,1),0,2,d1X,d1Yi,8));
+function d1u(){
+  const R=d1R[+$('d1-r').value],C=d1C[+$('d1-c').value],f=d1F[+$('d1-f').value],T=1/f,rc=R*C,sl=4*AMP*f,pk=rc*sl,clip=pk>SAT,v=Math.min(pk,SAT);
+  const FS=niceFS(1.15*v),mv=FS<1,k=mv?1e3:1,Y=scale(-FS,FS,232,110);
+  const tl=x=>x===0?'0':(x<0?'−':'')+(+(Math.abs(x)*k).toFixed(2));
+  axGrid('d1-axo',{x0:44,x1:400,y0:110,y1:232,xt:d1Q.map(q=>[d1X(q),q?tLab(q*T):'0']),yt:[-1,-.5,0,.5,1].map(q=>[Y(q*FS),tl(q*FS)]),yn:'Vo / '+(mv?'mV':'V'),xn:'时间'});
+  const p=[];[0,1].forEach(n=>p.push([n,-v],[n+.5,-v],[n+.5,v],[n+1,v]));
+  $('d1-vo').setAttribute('points',p.map(([q,y])=>d1X(q).toFixed(1)+','+Y(y).toFixed(1)).join(' '));
+  const rails=FS>=SAT;show($('d1-rails'),rails);
+  if(rails)[['d1-r1',SAT],['d1-r2',-SAT]].forEach(([id,val])=>{$(id).setAttribute('y1',Y(val).toFixed(1));$(id).setAttribute('y2',Y(val).toFixed(1));});
+  $('d1-rv').textContent=fmtR(R);$('d1-r').setAttribute('aria-valuetext',fmtR(R));
+  $('d1-cv').textContent=fmtCap(C);$('d1-c').setAttribute('aria-valuetext',fmtCap(C));
+  $('d1-fv').textContent=fmtF(f);$('d1-f').setAttribute('aria-valuetext',fmtF(f));
+  $('d1-rt').textContent='R '+fmtR(R);$('d1-ct').textContent='C '+fmtCap(C);
+  $('d1-sl').textContent=fmtRate(sl);$('d1-tau').textContent=tLab(rc);
+  $('d1-pk').textContent='±'+fmtVx(pk)+(clip?'（理想值），超出 ±10.5 V':'');
+  $('d1-f0').textContent=fmtF(1/(2*Math.PI*rc));
+  const ow=$('d1-ow');ow.classList.toggle('s-bad',clip);ow.classList.toggle('s-lo',!clip);
+  let n;
+  if(clip){chip($('d1-st'),'削顶','bad');n='理想方波幅度 ±'+fmtVx(pk)+'，超过了 ±10.5 V，输出在两个电源轨之间来回跳。减小 R·C 或降低频率就能恢复。';}
+  else if(pk<0.05){chip($('d1-st'),'幅度很小','warn');n='三角波变化太慢，斜率只有 '+fmtRate(sl)+'，输出只有 ±'+fmtVx(pk)+'。微分器只对变化有反应，频率越低输出越小，正好和积分器相反。';}
+  else{chip($('d1-st'),'方波','on');n='上升段斜率 +'+fmtRate(sl)+'，输出 = −R·C × 斜率 = −'+fmtVx(pk)+'；下降段斜率变号，输出跳到 +'+fmtVx(pk)+'。频率加倍，斜率加倍，方波幅度也加倍。';}
+  $('d1-note').textContent=n;
+}
+['d1-r','d1-c','d1-f'].forEach(id=>$(id).addEventListener('input',d1u));
+d1u();
+/* 复数与闭环响应：运放 A0 = 100 dB、GBW 1 MHz 单极点；R1 = 0 且 Cf = 0 即理想网络 */
+const cx=(re,im)=>({re,im}),cadd=(a,b)=>cx(a.re+b.re,a.im+b.im),cmul=(a,b)=>cx(a.re*b.re-a.im*b.im,a.re*b.im+a.im*b.re);
+const cdiv=(a,b)=>{const d=b.re*b.re+b.im*b.im;return cx((a.re*b.re+a.im*b.im)/d,(a.im*b.re-a.re*b.im)/d);},cabs=a=>Math.hypot(a.re,a.im);
+function dResp(f,R1,Cf){const w=2*Math.PI*f,R=10e3,C=10e-9,A=cdiv(cx(1e5,0),cx(1,f/10));
+  const Zin=cadd(cx(R1,0),cdiv(cx(1,0),cx(0,w*C))),Zf=cdiv(cx(R,0),cx(1,w*R*Cf)),Tl=cmul(A,cdiv(Zin,cadd(Zin,Zf)));
+  return{H:cmul(cdiv(Zf,Zin),cdiv(Tl,cadd(cx(1,0),Tl))),T:Tl};}
+
+/* 2. 振铃与噪声：RK4 逐步积分，运放 dVo/dt = −2π·GBW·V− */
+const D2={R:10e3,C:10e-9,R1:1e3,Cf:1e-9,wt:2*Math.PI*1e6,T:1e-3,dt:0.2e-6},d2N=[0,0.5e-3,1e-3,2e-3,5e-3,10e-3],d2={c:0};
+const d2Z=(()=>{let s=20240;const r=()=>(s=s*16807%2147483647)/2147483647,a=[];for(let i=0;i<=2001;i++)a.push((r()+r()+r()-1.5)*2);return a;})();
+const nz=t=>{const u=t/2e-6,i=Math.min(2000,Math.floor(u));return d2Z[i]+(d2Z[i+1]-d2Z[i])*(u-i);};
+const dnz=t=>{const i=Math.min(2000,Math.floor(t/2e-6));return (d2Z[i+1]-d2Z[i])/2e-6;};
+function d2sim(comp,na){
+  const {R,C,R1,Cf,wt,T,dt}=D2,N=20000,rec=[],o=comp?2:1;
+  const vin=t=>tri(t+T/4,T)+na*nz(t),dvin=t=>((((t+T/4)/T)%1)<0.5?4*AMP/T:-4*AMP/T)+na*dnz(t);
+  const f=comp?(t,s)=>{const vn=s[2]+s[1],i1=(vin(t)-vn-s[0])/R1;return[i1/C,(i1-s[1]/R)/Cf,-wt*vn];}
+    :(t,s)=>[dvin(t)-(s[0]-s[1])/(R*C),-wt*s[0]];
+  let x=comp?[0,0,0]:[0,0];
+  for(let i=0;i<N;i++){const t=i*dt,k1=f(t,x),k2=f(t+dt/2,x.map((v,j)=>v+dt/2*k1[j])),k3=f(t+dt/2,x.map((v,j)=>v+dt/2*k2[j])),k4=f(t+dt,x.map((v,j)=>v+dt*k3[j]));
+    x=x.map((v,j)=>v+dt/6*(k1[j]+2*k2[j]+2*k3[j]+k4[j]));x[o]=Math.max(-SAT,Math.min(SAT,x[o]));
+    if(i>=N/2-1&&(i+1)%10===0)rec.push(x[o]);}
+  return rec;
+}
+const d2X=scale(0,2,44,400),d2Yi=scale(-3.5,3.5,78,28),d2Q=[0,.5,1,1.5,2];
+axGrid('d2-axi',{x0:44,x1:400,y0:28,y1:78,xt:d2Q.map(q=>[d2X(q),'']),yt:[[d2Yi(2.5),'2.5'],[d2Yi(0),'0'],[d2Yi(-2.5),'−2.5']],yn:'Vin / V'});
+function d2u(){
+  const comp=d2.c===1,na=d2N[+$('d2-n').value],base=d2sim(comp,0),out=na?d2sim(comp,na):base;
+  const os=Math.max(0,(Math.max(...base.map(Math.abs))-1)/2*100);
+  let nr=0;if(na){for(let i=0;i<out.length;i++)nr+=(out[i]-base[i])**2;nr=Math.sqrt(nr/out.length);}
+  const FS=niceFS(1.1*Math.max(...out.map(Math.abs))),Y=scale(-FS,FS,250,130);
+  axGrid('d2-axo',{x0:44,x1:400,y0:130,y1:250,xt:d2Q.map(q=>[d2X(q),q?String(q):'0']),yt:[-1,-.5,0,.5,1].map(q=>[Y(q*FS),q?(q<0?'−':'')+(+Math.abs(q*FS).toFixed(2)):'0']),yn:'Vo / V',xn:'时间 ms'});
+  $('d2-vin').setAttribute('points',out.map((_,k)=>d2X(k*2e-3).toFixed(1)+','+d2Yi(tri(k*2e-6+D2.T/4,D2.T)+na*d2Z[1000+k]).toFixed(1)).join(' '));
+  $('d2-vo').setAttribute('points',out.map((v,k)=>d2X(k*2e-3).toFixed(1)+','+Y(v).toFixed(1)).join(' '));
+  $('d2-id').setAttribute('points',[[0,-1],[.25,-1],[.25,1],[.75,1],[.75,-1],[1.25,-1],[1.25,1],[1.75,1],[1.75,-1],[2,-1]].map(([q,v])=>d2X(q).toFixed(1)+','+Y(v).toFixed(1)).join(' '));
+  show($('d2-g-r1'),comp);show($('d2-g-nr1'),!comp);show($('d2-g-cf'),comp);
+  const ow=$('d2-ow');ow.classList.toggle('s-bad',!comp);ow.classList.toggle('s-hi',comp);
+  const r1=comp?D2.R1:0,cf=comp?D2.Cf:0,g1=cabs(dResp(1e3,r1,cf).H),g50=cabs(dResp(5e4,r1,cf).H);
+  const nl=na?+(na*1e3).toFixed(1)+' mV':'0';$('d2-nv').textContent=nl;$('d2-n').setAttribute('aria-valuetext',nl);
+  $('d2-g1').textContent=g1.toFixed(2);$('d2-g50').textContent=g50.toFixed(1)+' 倍';
+  $('d2-os').textContent=os.toFixed(0)+' %';
+  $('d2-no').textContent=na?fmtVx(nr)+'，是输入的 '+(nr/na).toFixed(0)+' 倍':'没有加噪声';
+  const noisy=na&&nr>0.03;let n;
+  if(!comp){chip($('d2-st'),noisy?'振铃 + 噪声':'振铃','bad');
+    n='每个转折处输出都过冲 '+os.toFixed(0)+' %，然后以约 40 kHz 来回振荡，要好几百微秒才衰减。'+(na?'输入噪声只有 '+nl+'，在三角波上根本看不见，输出却有 '+fmtVx(nr)+'，因为 50 kHz 附近增益高达 '+g50.toFixed(0)+' 倍。':'把噪声加上去看看。');}
+  else{chip($('d2-st'),noisy?'噪声仍明显':'干净',noisy?'warn':'on');
+    n='R1 把高频增益限制住，Cf 让 16 kHz 以上的增益往下走，环路有了足够的相位裕度，过冲只剩 '+os.toFixed(0)+' %。'+(na?'50 kHz 增益从几十倍降到 '+g50.toFixed(1)+' 倍，输出噪声只有 '+fmtVx(nr)+'。':'')+'代价是方波边沿被磨圆了一点，1 kHz 处增益 '+g1.toFixed(2)+'，和理想值 0.63 几乎一样。';}
+  $('d2-note').textContent=n;
+}
+seg('d2-m',v=>{d2.c=+v;d2u();});
+$('d2-n').addEventListener('input',d2u);
+d2u();
+/* 3. 幅频曲线与相位裕度 */
+const d3X=scale(1,7,56,500),d3Y=scale(-20,80,250,30),d3={r1:0},dB=x=>20*Math.log10(x),inR=v=>v>80||v<-20?NaN:v;
+axGrid('d3-ax',{x0:56,x1:500,y0:30,y1:250,xt:[1,2,3,4,5,6,7].map(d=>[d3X(d),['10','100','1k','10k','100k','1M','10M'][d-1]]),
+  yt:[-20,0,20,40,60,80].map(v=>[d3Y(v),String(v).replace('-','−')]),yn:'增益 dB',xn:'频率 Hz（对数）'});
+$('d3-ol').setAttribute('points',plot(x=>inR(dB(1e5/Math.hypot(1,10**x/10))),1,7,d3X,d3Y,200));
+$('d3-il').setAttribute('points',plot(x=>inR(dB(2*Math.PI*10**x*1e-4)),1,7,d3X,d3Y,200));
+$('d3-olt').setAttribute('x',(d3X(2.3)+10).toFixed(1));$('d3-olt').setAttribute('y',(d3Y(dB(1e6/10**2.3))-6).toFixed(1));
+$('d3-ilt').setAttribute('x',(d3X(5.5)+8).toFixed(1));$('d3-ilt').setAttribute('y',(d3Y(dB(2*Math.PI*10**5.5*1e-4))+16).toFixed(1));
+function d3u(){
+  const r1=d3.r1,cf=r1*10e-9/10e3,M=1500,pts=[];let pk={v:-1e9,f:0},pm=null;
+  for(let k=0;k<=M;k++){const x=1+6*k/M,f=10**x,r=dResp(f,r1,cf),v=dB(cabs(r.H));
+    if(v>pk.v)pk={v,f};
+    if(pm===null&&cabs(r.T)<1)pm=180+Math.atan2(r.T.im,r.T.re)*180/Math.PI;
+    if(!isNaN(inR(v)))pts.push(d3X(x).toFixed(1)+','+d3Y(v).toFixed(1));}
+  $('d3-cl').setAttribute('points',pts.join(' '));
+  const px=d3X(Math.log10(pk.f)),py=d3Y(Math.min(80,pk.v)),t=$('d3-ptt'),rt=px>420;
+  $('d3-pt').setAttribute('cx',px.toFixed(1));$('d3-pt').setAttribute('cy',py.toFixed(1));
+  t.textContent=pk.v.toFixed(0)+' dB';t.setAttribute('text-anchor',rt?'end':'start');
+  t.setAttribute('x',(px+(rt?-8:8)).toFixed(1));t.setAttribute('y',(py-8).toFixed(1));
+  const f1=r1?1/(2*Math.PI*r1*10e-9):0;
+  $('d3-cf').textContent=r1?fmtCap(cf):'不加';
+  $('d3-f1').textContent=r1?fmtF(f1):'没有拐点，一直往上升';
+  $('d3-pk').textContent=pk.v.toFixed(0)+' dB，在 '+fmtF(pk.f);
+  $('d3-pm').textContent=pm.toFixed(0)+'°';
+  if(pm<20)chip($('d3-st'),'会振铃','bad');else if(pm<45)chip($('d3-st'),'仍有振铃','warn');else if(f1<1e4)chip($('d3-st'),'稳定，但带宽窄','warn');else chip($('d3-st'),'稳定','on');
+  let n;
+  if(!r1)n='理想网络：闭环沿理想直线往上走，撞上开环曲线的地方 fx ≈ √(1.6 kHz × 1 MHz) ≈ 40 kHz 冒出 '+pk.v.toFixed(0)+' dB 的尖峰，相位裕度只有 '+pm.toFixed(0)+'°。上一节看到的约 40 kHz 振铃就是它。';
+  else if(pm<45)n='R1 太小，拐点 f1 = '+fmtF(f1)+'，比 fx 还高，闭环曲线来不及拐弯就撞上开环曲线，尖峰还有 '+pk.v.toFixed(0)+' dB，相位裕度 '+pm.toFixed(0)+'°，仍会明显振铃。';
+  else if(f1<1e4)n='很稳定，相位裕度 '+pm.toFixed(0)+'°，但 f1 降到 '+fmtF(f1)+'。1 kHz 三角波输出的方波靠 3、5、7 次等谐波撑出陡峭边沿，这些谐波已经开始被削弱，边沿明显变圆。R1 不是越大越好。';
+  else n='f1 = '+fmtF(f1)+'，闭环曲线在碰到开环曲线之前就掉头向下，最高只有 '+pk.v.toFixed(0)+' dB，相位裕度 '+pm.toFixed(0)+'°。f1 以下仍是标准的微分，以上变成低通，高频噪声也被压下去了。';
+  $('d3-note').textContent=n;
+}
+seg('d3-m',v=>{d3.r1=+v;d3u();});
+d3u();
+</script>
+</body>
+</html>

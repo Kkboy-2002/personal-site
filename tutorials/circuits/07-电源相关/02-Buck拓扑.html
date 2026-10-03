@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Buck拓扑</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#power">电源相关</a><span class="sp"></span><span>02 / 08</span></nav>
+<header>
+  <span class="eyebrow">电源相关 · 降压变换器</span>
+  <h1>Buck 拓扑</h1>
+  <p class="lede">Buck 只有五个元件：上管开关、续流二极管（或下管）、电感、输出电容、负载。开关一开一关，电感一充一放，输出就是输入按占空比打折：Vout = D·Vin。</p>
+</header>
+
+<section id="ckt">
+  <span class="eyebrow">电路 · 两个状态</span>
+  <h2>开关导通和关断，电流各走哪条路</h2>
+  <p>白板上先画一条横线：Vin → 上管 Q1 → SW 节点 → 电感 L → Vout。再从 SW 节点往下画续流二极管到地，阴极朝上接 SW；Vout 往下画输出电容和负载。二极管换成下管 Q2 就是同步 Buck。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 500 270" role="img" aria-label="Buck 电路：输入电源 Vin 和输入电容，上管 Q1 串在 Vin 与 SW 节点之间，SW 节点经续流二极管或下管 Q2 接地，SW 经电感 L 接到输出，输出接电容 Cout 和负载">
+        <circle class="r" cx="60" cy="150" r="14"/>
+        <text x="60" y="147" text-anchor="middle" class="tm">+</text>
+        <text x="60" y="160" text-anchor="middle" class="tm">−</text>
+        <text x="40" y="146" text-anchor="end" class="t">Vin</text>
+        <text x="40" y="162" text-anchor="end" class="v">12 V</text>
+        <path class="w" d="M60,136 V70 H150 M60,164 V230 H450 M110,70 V146 M110,154 V230"/>
+        <path class="w" style="stroke-width:3" d="M96,146 H124 M96,154 H124"/>
+        <text x="122" y="138" class="t">Cin</text>
+        <circle class="dot" cx="110" cy="70" r="3.5"/>
+        <circle class="dot" cx="110" cy="230" r="3.5"/>
+        <path class="w" d="M170,230 V240 M156,240 H184 M161,245 H179 M166,250 H174"/>
+        <circle class="dot" cx="170" cy="230" r="3.5"/>
+        <!-- Q1 上管，漏极在左、源极在右、栅极朝上 -->
+        <g transform="translate(190,50)">
+          <path class="w" d="M-40,20 H-14 V0 M40,20 H14 V0 M0,0 V20 H14 M-16,-8 H16 M0,-8 V-30"/>
+          <line class="bar" x1="-18" y1="0" x2="-10" y2="0"/>
+          <line class="bar" x1="-4" y1="0" x2="4" y2="0"/>
+          <line class="bar" x1="10" y1="0" x2="18" y2="0"/>
+          <polygon class="ah" points="0,3 -4,11 4,11"/>
+        </g>
+        <text x="190" y="14" text-anchor="middle" class="tm">PWM 驱动</text>
+        <text x="206" y="36" class="t">Q1 上管</text>
+        <text id="b1-gq1" x="174" y="36" text-anchor="end" class="v hi">开</text>
+        <!-- SW 节点 -->
+        <path id="b1-sww" class="w s-hi" style="stroke-width:3" d="M230,70 H290 M270,70 V100"/>
+        <circle class="dot" cx="270" cy="70" r="3.5"/>
+        <text x="262" y="98" text-anchor="end" class="t">SW</text>
+        <text id="b1-sw" x="262" y="114" text-anchor="end" class="v hi">12 V</text>
+        <!-- 续流二极管 -->
+        <g id="b1-gd">
+          <path class="w" d="M270,100 V142 M270,158 V230"/>
+          <polygon class="r" points="260,158 280,158 270,142"/>
+          <path class="w" d="M256,139 H260 V142 H280 V145 H284"/>
+          <text x="290" y="148" class="t">D1</text>
+          <text x="290" y="164" class="tm">肖特基</text>
+        </g>
+        <!-- 下管 Q2 -->
+        <g id="b1-gq" hidden>
+          <path class="w" d="M270,100 V110 M270,190 V230"/>
+          <g transform="translate(250,150)">
+            <path class="w" d="M0,-14 H20 V-40 M0,14 H20 V40 M0,0 H20 V14 M-8,-16 V16 M-30,0 H-8"/>
+            <line class="bar" x1="0" y1="-18" x2="0" y2="-10"/>
+            <line class="bar" x1="0" y1="-4" x2="0" y2="4"/>
+            <line class="bar" x1="0" y1="10" x2="0" y2="18"/>
+            <polygon class="ah" points="3,0 11,-4 11,4"/>
+          </g>
+          <text x="290" y="148" class="t">Q2 下管</text>
+          <text id="b1-gq2" x="290" y="164" class="v">关</text>
+          <text x="216" y="154" text-anchor="end" class="tm">反相驱动</text>
+        </g>
+        <circle class="dot" cx="270" cy="230" r="3.5"/>
+        <!-- 电感 -->
+        <path class="w" d="M290,70 a7,7 0 0 1 14,0 a7,7 0 0 1 14,0 a7,7 0 0 1 14,0 a7,7 0 0 1 14,0 M346,70 H450 V124 M450,176 V230"/>
+        <text x="318" y="48" text-anchor="middle" class="t">L 10 µH</text>
+        <text id="b1-lp" x="296" y="92" text-anchor="middle" class="t hi">+</text>
+        <text id="b1-lm" x="340" y="92" text-anchor="middle" class="t lo">−</text>
+        <text id="b1-vl" x="318" y="112" text-anchor="middle" class="v">VL +7 V</text>
+        <!-- 输出 -->
+        <circle class="dot" cx="380" cy="70" r="3.5"/>
+        <circle class="dot" cx="380" cy="230" r="3.5"/>
+        <path class="w" d="M380,70 V146 M380,154 V230"/>
+        <path class="w" style="stroke-width:3" d="M366,146 H394 M366,154 H394"/>
+        <text x="394" y="138" class="t">Cout</text>
+        <text x="415" y="58" text-anchor="middle" class="v hi">Vout 5 V</text>
+        <rect id="b1-load" class="box lit" x="441" y="124" width="18" height="52" rx="2"/>
+        <text x="466" y="146" class="t">负载</text>
+        <text x="466" y="162" class="v">2 A</text>
+        <path id="b1-fon" class="flow" d="M60,134 V70 H176 V52 H204 V70 H450 V228 H60 V166"/>
+        <path id="b1-fd" class="flow" d="M270,228 V72 H450 V228 H274" hidden/>
+        <path id="b1-fq" class="flow" d="M270,228 V164 H252 V136 H270 V72 H450 V228 H274" hidden/>
+      </svg>
+      <figcaption>绿色虚线是电流路径。电感两侧的 + − 是电感电压的极性。示例条件：Vin 12 V，Vout 5 V，L 10 µH，负载 2 A。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">上管 Q1</span>
+        <div class="seg" id="b1-s"><button id="b1-s-on" data-v="on" aria-pressed="true">导通</button><button id="b1-s-off" data-v="off" aria-pressed="false">关断</button></div></div>
+      <div class="ctl"><span class="ctl-l">续流元件</span>
+        <div class="seg" id="b1-r"><button id="b1-r-d" data-v="d" aria-pressed="true">二极管（异步）</button><button id="b1-r-q" data-v="q" aria-pressed="false">下管 MOS（同步）</button></div></div>
+      <dl class="read">
+        <dt>续流元件</dt><dd id="b1-rst">反偏截止</dd>
+        <dt>SW 节点电压</dt><dd id="b1-rsw">12 V</dd>
+        <dt>电感电压 VL</dt><dd id="b1-rvl">Vin − Vout = +7 V</dd>
+        <dt>电感电流斜率</dt><dd id="b1-rdi">+0.70 A/µs</dd>
+        <dt>电感</dt><dd><span id="b1-st" class="chip on">储能，电流上升</span></dd>
+      </dl>
+      <p class="note" id="b1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="wave">
+  <span class="eyebrow">波形 · 公式 · CCM 与 DCM</span>
+  <h2>SW 电压和电感电流长什么样</h2>
+  <p>SW 节点是一个在 Vin 和地之间跳的方波，LC 把它平均一下就是 Vout，所以 Vout = D·Vin。电感电流是三角波：导通时电感两端是 Vin − Vout，电流按斜率 (Vin − Vout)/L 上升 D·T 这么久，涨出来的就是纹波。</p>
+  <p class="eq">Vout = D·Vin　　ΔIL = (Vin − Vout)·D / (L·f)　　Ipk = Iout + ΔIL / 2</p>
+  <p>负载电流小到 Iout < ΔIL / 2 时，三角波的谷底碰到零。二极管不能反向导电，电流就停在零，这叫断续模式 DCM。平时的状态叫连续模式 CCM。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 326" role="img" aria-label="上图为 SW 节点电压方波，下图为电感电流三角波，横轴为三个开关周期">
+        <line class="gl" x1="56" y1="48.5" x2="500" y2="48.5"/>
+        <line class="gl" x1="56" y1="86" x2="500" y2="86"/>
+        <line class="gl" x1="204" y1="36" x2="204" y2="136"/><line class="gl" x1="352" y1="36" x2="352" y2="136"/>
+        <line class="gl" x1="204" y1="176" x2="204" y2="290"/><line class="gl" x1="352" y1="176" x2="352" y2="290"/>
+        <line class="gl" x1="56" y1="267.2" x2="500" y2="267.2"/><line class="gl" x1="56" y1="244.4" x2="500" y2="244.4"/>
+        <line class="gl" x1="56" y1="221.6" x2="500" y2="221.6"/><line class="gl" x1="56" y1="198.8" x2="500" y2="198.8"/>
+        <line class="gl" x1="56" y1="176" x2="500" y2="176"/>
+        <path class="ax" d="M56,36 V136 M56,123.5 H500 M56,176 V290 H500"/>
+        <text x="60" y="26" class="tm">SW 节点电压 / V</text>
+        <text x="50" y="52.5" text-anchor="end" class="v">12</text>
+        <text x="50" y="90" text-anchor="end" class="v">6</text>
+        <text x="50" y="127.5" text-anchor="end" class="v">0</text>
+        <text x="60" y="166" class="tm">电感电流 iL / A</text>
+        <text x="50" y="180" text-anchor="end" class="v">5</text>
+        <text x="50" y="225.6" text-anchor="end" class="v">3</text>
+        <text x="50" y="271.2" text-anchor="end" class="v">1</text>
+        <text x="50" y="294" text-anchor="end" class="v">0</text>
+        <text x="56" y="306" text-anchor="middle" class="v">0</text>
+        <text id="b2-x1" x="204" y="306" text-anchor="middle" class="v">2</text>
+        <text id="b2-x2" x="352" y="306" text-anchor="middle" class="v">4</text>
+        <text id="b2-x3" x="500" y="306" text-anchor="end" class="v">6</text>
+        <text x="500" y="322" text-anchor="end" class="tm">时间 / µs</text>
+        <line id="b2-vavg" class="ideal" x1="56" y1="100" x2="500" y2="100"/>
+        <text id="b2-vavgt" x="496" y="95" text-anchor="end" class="tm">平均值 = Vout</text>
+        <line id="b2-iavg" class="ideal" x1="56" y1="222" x2="500" y2="222"/>
+        <text id="b2-iavgt" x="496" y="217" text-anchor="end" class="tm">Iout</text>
+        <polyline id="b2-sw" class="real" points="56,100 500,100"/>
+        <polyline id="b2-il" class="real2" points="56,222 500,222"/>
+      </svg>
+      <figcaption>Vin = 12 V，按理想开关计算，续流二极管压降取 0.4 V。DCM 空闲段 SW 节点的振荡是电感和节点寄生电容谐振，幅度和频率为示意。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="b2-d">占空比 D</label>
+        <span class="rv" id="b2-dv">0.42</span>
+        <input type="range" id="b2-d" min="0.1" max="0.9" step="0.01" value="0.42"></div>
+      <div class="ctl"><span class="ctl-l">电感 L</span>
+        <div class="seg" id="b2-l"><button id="b2-l-4" data-v="4.7" aria-pressed="false">4.7 µH</button><button id="b2-l-10" data-v="10" aria-pressed="true">10 µH</button><button id="b2-l-22" data-v="22" aria-pressed="false">22 µH</button><button id="b2-l-47" data-v="47" aria-pressed="false">47 µH</button></div></div>
+      <div class="ctl"><span class="ctl-l">开关频率 f</span>
+        <div class="seg" id="b2-f"><button id="b2-f-200" data-v="200e3" aria-pressed="false">200 kHz</button><button id="b2-f-500" data-v="500e3" aria-pressed="true">500 kHz</button><button id="b2-f-1m" data-v="1e6" aria-pressed="false">1 MHz</button><button id="b2-f-2m" data-v="2e6" aria-pressed="false">2 MHz</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="b2-io">负载电流 Iout</label>
+        <span class="rv" id="b2-iov">1.50 A</span>
+        <input type="range" id="b2-io" min="0.1" max="3" step="0.05" value="1.5"></div>
+      <dl class="read">
+        <dt>Vout = D·Vin</dt><dd id="b2-vo">5.04 V</dd>
+        <dt>纹波 ΔIL</dt><dd id="b2-di">0.58 A</dd>
+        <dt>峰值 / 谷值</dt><dd id="b2-pk">1.79 A / 1.21 A</dd>
+        <dt>临界电流 ΔIL / 2</dt><dd id="b2-ic">0.29 A</dd>
+        <dt>实际占空比</dt><dd id="b2-da">0.42</dd>
+        <dt>模式</dt><dd><span id="b2-st" class="chip on">CCM 连续</span></dd>
+      </dl>
+      <p class="note" id="b2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="draw">
+  <span class="eyebrow">推导 · 白板画法</span>
+  <h2>Vout = D·Vin 是怎么来的</h2>
+  <p>稳态时电感电流每个周期回到原值，所以电感上的伏秒必须平衡：导通时正向"充"进去的，等于关断时反向"放"出来的。</p>
+  <p class="eq">(Vin − Vout)·D·T = Vout·(1 − D)·T　→　Vout = D·Vin</p>
+  <p>白板上按下面的顺序画，面试官最想听的是第 4、5 步：</p>
+  <ol>
+    <li>左边画 Vin 和输入电容 Cin，底下一条地线贯穿到右边。</li>
+    <li>横线上串上管 Q1，右边的连接点标 SW。</li>
+    <li>SW 往下画续流二极管到地，<b>阴极朝上</b>接 SW。同步 Buck 换成下管 Q2。</li>
+    <li>SW 往右串电感 L 到 Vout，Vout 往下画 Cout 和负载。</li>
+    <li>分两种颜色画电流：Q1 导通时 Vin → Q1 → L → 负载 → 地；Q1 关断时 地 → D → L → 负载 → 地。</li>
+    <li>旁边补一句：输出电压 D·Vin，电感电流三角波，纹波 ΔIL = (Vin − Vout)·D / (L·f)。</li>
+  </ol>
+  <p class="note">Buck 的输入电流是断续的脉冲（只在 Q1 导通时有电流），所以 Cin 必须靠近 Q1 和二极管，这个回路的面积决定了尖峰噪声。输出电流经过电感是连续的，输出纹波相对小。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>画一下 Buck，讲讲它怎么工作？</summary>
+      <div class="ans"><p>上管导通时，SW 接到 Vin，电感两端是 Vin − Vout，电流上升，电感储能，同时给负载供电。上管关断时，电感电流不能突变，它把 SW 拉到地以下，续流二极管导通，电流沿 地 → 二极管 → 电感 → 负载 形成回路，电感放能，电流下降。按伏秒平衡得到 Vout = D·Vin。</p></div></details>
+    <details><summary>续流二极管去掉会怎样？</summary>
+      <div class="ans"><p>上管一关，电感电流没有通路，L·di/dt 会产生很高的负压尖峰，把上管击穿。续流二极管就是给电感电流留一条路。</p></div></details>
+    <details><summary>什么是 CCM 和 DCM？边界在哪？</summary>
+      <div class="ans"><p>CCM 是电感电流始终大于零，DCM 是每个周期里有一段电流为零。边界是 Iout = ΔIL / 2。DCM 下 Vout = D·Vin 不再成立，同样的占空比输出会偏高，闭环会自动把占空比调小。同步 Buck 在强制 PWM 下电流可以反向，不进 DCM。</p></div></details>
+    <details><summary>同步 Buck 和异步 Buck 有什么区别？</summary>
+      <div class="ans"><p>同步 Buck 用下管 MOS 替代续流二极管，压降从 0.3~0.5 V 降到 Iout·Rds(on)，低压大电流时效率高得多。代价是需要两路互补驱动和死区时间，防止上下管直通。</p></div></details>
+    <details><summary>电感值怎么定？</summary>
+      <div class="ans"><p>先定纹波，一般取 ΔIL 为 20%~40% 的 Iout，再用 L = (Vin − Vout)·D / (f·ΔIL) 算，Vin 取最大值。然后核对饱和电流大于峰值电流。详细见 <a href="07-电感选型.html">电感选型</a>。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="01-LDO与开关电源对比.html"><span>上一页</span>LDO 与开关电源对比</a><a class="next" href="03-Boost拓扑.html"><span>下一页</span>Boost 拓扑</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 两个状态 */
+const b1={on:true,sync:false};
+function b1u(){
+  const on=b1.on,q=b1.sync,vin=12,vo=5,L=10,io=2;
+  const sw=on?vin-io*0.02:(q?-io*0.02:-0.4),vl=sw-vo,di=vl/L;
+  show($('b1-gd'),!q);show($('b1-gq'),q);
+  show($('b1-fon'),on);show($('b1-fd'),!on&&!q);show($('b1-fq'),!on&&q);
+  $('b1-gq1').textContent=on?'开':'关';setLv($('b1-gq1'),null,on);
+  $('b1-gq2').textContent=on?'关':'开';setLv($('b1-gq2'),null,!on);
+  $('b1-sw').textContent=fmtV(sw);setLv($('b1-sw'),$('b1-sww'),on);
+  $('b1-lp').textContent=on?'+':'−';$('b1-lm').textContent=on?'−':'+';
+  setLv($('b1-lp'),null,on);setLv($('b1-lm'),null,!on);
+  $('b1-vl').textContent='VL '+(vl>0?'+':'')+fmtV(vl,1);
+  $('b1-rst').textContent=q?(on?'Q2 关断（先关 Q2 再开 Q1）':'Q2 导通，电流由源极流向漏极'):(on?'反偏截止，阴极接 12 V':'正偏导通，VF ≈ 0.4 V');
+  $('b1-rsw').textContent=fmtV(sw)+(on?'，≈ Vin':q?'，= −Iout·Rds(on)':'，= −VF');
+  $('b1-rvl').textContent=(on?'Vin − Vout = ':'SW − Vout = ')+(vl>0?'+':'')+fmtV(vl);
+  $('b1-rdi').textContent=(di>0?'+':'−')+Math.abs(di).toFixed(2)+' A/µs';
+  chip($('b1-st'),on?'储能，电流上升':'放能，电流下降',on?'on':'warn');
+  $('b1-note').textContent=on
+    ?'Q1 导通，SW 被接到 Vin。电感左正右负，两端电压 Vin − Vout = 7 V，电流线性上升，电感储能，同时给负载供电。'+(q?'Q2 必须已经关断，否则 Vin 经 Q1、Q2 直通到地。':'二极管阴极接 12 V、阳极接地，反偏截止。')+'电流回路：Vin → Q1 → L → 负载 → 地 → Vin。'
+    :'Q1 关断。电感电流不能突变，电感电压反过来变成左负右正，把 SW 拉到地以下。'+(q?'下管 Q2 导通（第三象限，电流由源极流向漏极），SW 只比地低 Iout·Rds(on) ≈ 0.04 V，比二极管的 0.4 V 小一个数量级，这就是同步整流省下来的损耗。':'SW 被续流二极管钳在 −0.4 V。')+'电流回路：地 → '+(q?'Q2':'D1')+' → L → 负载 → 地。输入端此时没有电流。';
+}
+seg('b1-s',v=>{b1.on=v==='on';b1u();});
+seg('b1-r',v=>{b1.sync=v==='q';b1u();});
+b1u();
+
+/* 2. 波形 */
+const b2={L:10e-6,f:500e3},b2Vin=12,b2Vf=0.4;
+const b2X=scale(0,3,56,500),b2Ys=scale(-2,14,136,36),b2Yi=scale(0,5,290,176);
+function b2u(){
+  const D=+$('b2-d').value,io=+$('b2-io').value,L=b2.L,f=b2.f,T=1/f,vo=D*b2Vin;
+  const di=(b2Vin-vo)*D/(L*f),crit=di/2;
+  let dcm=io<crit,Da=D,D2=1-D,ipk,iv;
+  if(dcm){Da=Math.sqrt(2*L*f*vo*io/((b2Vin-vo)*b2Vin));ipk=(b2Vin-vo)*Da/(L*f);D2=(b2Vin-vo)*Da/vo;iv=0;}
+  else{ipk=io+di/2;iv=io-di/2;}
+  const ps=[],pi=[],P=(a,t,v,Y)=>a.push(b2X(t).toFixed(1)+','+Y(v).toFixed(1));
+  const ci=v=>Math.min(v,5);
+  for(let k=0;k<3;k++){
+    P(ps,k,b2Vin,b2Ys);P(ps,k+Da,b2Vin,b2Ys);P(ps,k+Da,-b2Vf,b2Ys);
+    P(pi,k,ci(iv),b2Yi);P(pi,k+Da,ci(ipk),b2Yi);
+    if(dcm){
+      const t0=Da+D2;P(ps,k+t0,-b2Vf,b2Ys);P(pi,k+t0,0,b2Yi);
+      for(let j=0;j<=40;j++){const tt=t0+(1-t0)*j/40,x=tt-t0;P(ps,k+tt,vo-(vo+b2Vf)*Math.exp(-x/0.07)*Math.cos(2*Math.PI*x/0.08),b2Ys);}
+      P(pi,k+1,0,b2Yi);
+    }else{P(ps,k+1,-b2Vf,b2Ys);P(pi,k+1,ci(iv),b2Yi);}
+  }
+  $('b2-sw').setAttribute('points',ps.join(' '));$('b2-il').setAttribute('points',pi.join(' '));
+  const yv=b2Ys(vo),yi=b2Yi(io);
+  ['y1','y2'].forEach(a=>{$('b2-vavg').setAttribute(a,yv.toFixed(1));$('b2-iavg').setAttribute(a,yi.toFixed(1));});
+  $('b2-vavgt').setAttribute('y',(yv-5).toFixed(1));$('b2-vavgt').textContent='平均值 = Vout = '+fmtV(vo);
+  $('b2-iavgt').setAttribute('y',(yi-5).toFixed(1));$('b2-iavgt').textContent='平均 = Iout';
+  $('b2-x2').textContent=+(2*T*1e6).toFixed(1);$('b2-x3').textContent=+(3*T*1e6).toFixed(1);
+  $('b2-x1').textContent=+(T*1e6).toFixed(1);
+  $('b2-dv').textContent=D.toFixed(2);$('b2-d').setAttribute('aria-valuetext',D.toFixed(2));
+  $('b2-iov').textContent=io.toFixed(2)+' A';$('b2-io').setAttribute('aria-valuetext',io.toFixed(2)+' A');
+  $('b2-vo').textContent=fmtV(vo);
+  $('b2-di').textContent=fmtA(dcm?ipk:di)+(dcm?'（DCM 下即峰值）':'，是 Iout 的 '+(di/io*100).toFixed(0)+'%');
+  $('b2-pk').textContent=fmtA(ipk)+' / '+(dcm?'0 A':fmtA(iv));
+  $('b2-ic').textContent=fmtA(crit);
+  $('b2-da').textContent=Da.toFixed(2)+(dcm?'，闭环把 D 调小了':'，= Vout / Vin');
+  const near=Math.abs(io-crit)<0.04;
+  chip($('b2-st'),near?'临界':dcm?'DCM 断续':'CCM 连续',near?'warn':dcm?'off':'on');
+  let n;
+  if(dcm)n='负载只有 '+io.toFixed(2)+' A，小于 ΔIL / 2。电流降到零后二极管截止，电感没有电流，SW 节点浮空，在 Vout 附近振荡。DCM 下同样的 D 会让输出偏高，闭环为了守住 '+fmtV(vo)+'，把实际占空比缩到 '+Da.toFixed(2)+'。同步 Buck 强制 PWM 时电流会反向，不进 DCM。';
+  else if(ipk>4.9)n='峰值电流已经接近 5 A。电感小、频率低时纹波很大，要核对电感饱和电流和芯片限流值。';
+  else n='CCM：电感电流始终大于零，三角波的中心就是 Iout，斜率上升段 (Vin − Vout)/L、下降段 Vout/L。加大 L 或 f，纹波变小；D 在 0.5 附近时 D·(1 − D) 最大，纹波也最大。';
+  $('b2-note').textContent=n;
+}
+seg('b2-l',v=>{b2.L=parseFloat(v)*1e-6;b2u();});
+seg('b2-f',v=>{b2.f=parseFloat(v);b2u();});
+$('b2-d').addEventListener('input',b2u);$('b2-io').addEventListener('input',b2u);
+b2u();
+</script>
+</body>
+</html>

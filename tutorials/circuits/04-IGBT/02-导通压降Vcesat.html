@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>导通压降 Vce(sat)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#igbt">IGBT</a><span class="sp"></span><span>02 / 07</span></nav>
+<header>
+  <span class="eyebrow">IGBT · 导通损耗</span>
+  <h1>导通压降 Vce(sat)</h1>
+  <p class="lede">IGBT 导通后不是一个电阻，而是"一个 PN 结 + 一个小电阻"。这决定了它什么时候比 MOS 省电，什么时候反而更费电。</p>
+</header>
+
+<section id="vi">
+  <span class="eyebrow">V-I 曲线 · 膝点</span>
+  <h2>IGBT 的压降有一个起步价</h2>
+  <p>电流从 P+ 集电区进入 N− 漂移区，要先过一个正偏的 PN 结，这部分约 0.7 V，电流再小也省不掉。过了这个结，漂移区被电导调制，剩下的电阻很小，所以曲线过了膝点以后很平。</p>
+  <p>MOS 导通时只有沟道和漂移区电阻，是一条过原点的直线。电流小时它压降更低；电流一大，斜率大的直线就追上并超过 IGBT。</p>
+  <p class="eq">IGBT：Vce(sat) ≈ V0 + r·Ic　　MOSFET：Vds = Rds(on)·Id</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="导通压降随电流变化：IGBT 曲线先有约 0.8 V 的膝点再缓慢上升，MOSFET 是过原点的直线">
+        <g id="a1-ax"></g>
+        <polyline id="a1-ext" class="ideal" points=""/>
+        <polyline id="a1-ig" class="real" points=""/>
+        <polyline id="a1-ms" class="real2" points=""/>
+        <text id="a1-lig" x="492" y="0" text-anchor="end" class="t" style="fill:var(--copper)">IGBT</text>
+        <text id="a1-lms" x="492" y="0" text-anchor="end" class="t" style="fill:var(--low)">MOSFET 40 mΩ</text>
+        <text id="a1-lv0" x="62" y="0" class="v">V0 ≈ 0.8 V</text>
+        <line id="a1-cur" class="ax dash" x1="0" y1="36" x2="0" y2="246"/>
+        <circle id="a1-pig" class="hi" r="5"/>
+        <circle id="a1-pms" class="lo" r="5"/>
+      </svg>
+      <figcaption>示意数据：650 V 级器件，25 °C。IGBT 按 0.8 V + 17 mΩ·I，MOS 按 Rds(on) = 40 mΩ。虚线是 IGBT 直线段向左的延长线，交纵轴处就是 V0。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="a1-i">导通电流 I</label>
+        <span class="rv" id="a1-iv">40 A</span>
+        <input type="range" id="a1-i" min="1" max="60" step="1" value="40"></div>
+      <dl class="read">
+        <dt>IGBT Vce(sat)</dt><dd id="a1-vig"></dd>
+        <dt>其中结压降部分</dt><dd id="a1-vj"></dd>
+        <dt>其中电阻部分</dt><dd id="a1-vr"></dd>
+        <dt>MOSFET Vds</dt><dd id="a1-vms"></dd>
+        <dt>压降更低</dt><dd><span id="a1-chip" class="chip on">IGBT</span></dd>
+      </dl>
+      <p class="note" id="a1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="loss">
+  <span class="eyebrow">导通损耗 · 交叉点</span>
+  <h2>损耗：一个随 I 线性涨，一个随 I² 涨</h2>
+  <p>导通损耗就是压降乘电流。IGBT 的主体是 V0·I，随电流线性增长；MOS 是 I²·Rds(on)，随电流平方增长。所以两条损耗曲线必然有一个交叉点：交叉点以下用 MOS 省，以上用 IGBT 省。</p>
+  <p class="eq">P_IGBT ≈ Vce(sat)·I = V0·I + r·I²　　P_MOS = I²·Rds(on)　　交叉点 Ix = V0 / (Rds(on) − r)</p>
+  <p>耐压越高，MOS 的漂移区越厚，Rds(on) 涨得越快（大致按耐压的 2~2.5 次方），交叉点就越往小电流移。这就是"高压大电流选 IGBT，低压小电流选 MOS"的根本原因。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="导通损耗随电流变化：IGBT 近似线性，MOSFET 按平方上升，两条曲线在交叉点相交">
+        <g id="a2-ax"></g>
+        <rect id="a2-zm" class="zone-cut" x="56" y="36" width="0" height="210"/>
+        <polyline id="a2-ig" class="real" points=""/>
+        <polyline id="a2-ms" class="real2" points=""/>
+        <text id="a2-lig" x="492" y="0" text-anchor="end" class="t" style="fill:var(--copper)">IGBT</text>
+        <text id="a2-lms" x="0" y="50" text-anchor="end" class="t" style="fill:var(--low)">MOSFET</text>
+        <line id="a2-x" class="ax dash" x1="0" y1="36" x2="0" y2="246"/>
+        <text id="a2-xt" x="0" y="52" class="tm">交叉点</text>
+        <text id="a2-zt" x="62" y="72" class="tm">MOS 更省</text>
+        <line id="a2-cur" class="gl" x1="0" y1="36" x2="0" y2="246" style="stroke:var(--muted)"/>
+        <circle id="a2-pig" class="hi" r="5"/>
+        <circle id="a2-pms" class="lo" r="5"/>
+      </svg>
+      <figcaption>示意数据：IGBT 同上，只算导通损耗、占空比 100%。蓝色底色是 MOS 更省的电流范围，超出纵轴的部分不画。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="a2-i">导通电流 I</label>
+        <span class="rv" id="a2-iv">50 A</span>
+        <input type="range" id="a2-i" min="1" max="80" step="1" value="50"></div>
+      <div class="ctl"><span class="ctl-l">对比的 MOS，Rds(on)</span>
+        <div class="seg" id="a2-r"><button id="a2-r-20" data-v="0.02" aria-pressed="false">20 mΩ</button><button id="a2-r-40" data-v="0.04" aria-pressed="true">40 mΩ</button><button id="a2-r-100" data-v="0.1" aria-pressed="false">100 mΩ</button></div></div>
+      <dl class="read">
+        <dt>IGBT 导通损耗</dt><dd id="a2-pi"></dd>
+        <dt>MOS 导通损耗</dt><dd id="a2-pm"></dd>
+        <dt>交叉电流 Ix</dt><dd id="a2-ix"></dd>
+        <dt>这个电流下</dt><dd><span id="a2-chip" class="chip on">IGBT 更省</span></dd>
+      </dl>
+      <p class="note" id="a2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="temp">
+  <span class="eyebrow">温度系数 · 并联</span>
+  <h2>结温升高，Vce(sat) 是涨还是降</h2>
+  <p>两个因素相反。PN 结压降随温度下降，大约 −2 mV/°C；而漂移区的载流子迁移率随温度下降，电阻部分变大。小电流时结压降占主导，温度系数为负；大电流时电阻占主导，温度系数为正。两条曲线交叉的那个电流，叫温度系数交叉点。</p>
+  <p>NPT（非穿通）和 FS（场截止）型的交叉点在额定电流的一小部分，正常工作区是正温度系数：哪个管子热，哪个压降大、电流就少，并联能自动均流。老式 PT（穿通）型在额定电流内基本是负温度系数，热的管子抢更多电流，并联容易热失控。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="IGBT 在 25 °C 和 150 °C 下的 V-I 曲线，两条曲线相交于温度系数交叉点">
+        <g id="a3-ax"></g>
+        <rect id="a3-zn" class="zone-sat" x="56" y="36" width="0" height="210"/>
+        <polyline id="a3-c" class="real2" points=""/>
+        <polyline id="a3-h" class="real" points=""/>
+        <text id="a3-lc" x="492" y="0" text-anchor="end" class="t" style="fill:var(--low)">25 °C</text>
+        <text id="a3-lh" x="492" y="0" text-anchor="end" class="t" style="fill:var(--copper)">150 °C</text>
+        <text id="a3-zt" x="62" y="52" class="tm">负温度系数区</text>
+        <line id="a3-cur" class="ax dash" x1="0" y1="36" x2="0" y2="246"/>
+        <circle id="a3-pc" class="lo" r="5"/>
+        <circle id="a3-ph" class="hi" r="5"/>
+      </svg>
+      <figcaption>示意数据，额定 50 A。橙色底色是负温度系数的电流范围。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">IGBT 类型</span>
+        <div class="seg" id="a3-t"><button id="a3-t-fs" data-v="fs" aria-pressed="true">FS / NPT</button><button id="a3-t-pt" data-v="pt" aria-pressed="false">PT 穿通型</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="a3-i">导通电流 I</label>
+        <span class="rv" id="a3-iv">40 A</span>
+        <input type="range" id="a3-i" min="1" max="60" step="1" value="40"></div>
+      <dl class="read">
+        <dt>Vce(sat) @ 25 °C</dt><dd id="a3-vc"></dd>
+        <dt>Vce(sat) @ 150 °C</dt><dd id="a3-vh"></dd>
+        <dt>温度系数</dt><dd id="a3-tc"></dd>
+        <dt>交叉点</dt><dd id="a3-x"></dd>
+        <dt>并联</dt><dd><span id="a3-chip" class="chip on">自动均流</span></dd>
+      </dl>
+      <p class="note" id="a3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>IGBT 的导通压降一般多大？为什么不能像 MOS 一样做到很低？</summary>
+      <div class="ans"><p>典型 1.5~2.5 V。因为电流要穿过 P+ 集电区和 N− 漂移区之间正偏的 PN 结，这里有约 0.7 V 的固定压降，再加上漂移区和沟道的电阻压降。小电流时 MOS 的 I·Rds(on) 可以只有零点几伏，IGBT 做不到。</p></div></details>
+    <details><summary>IGBT 和 MOS 的导通损耗怎么算，怎么比较？</summary>
+      <div class="ans"><p>IGBT 近似 P = Vce(sat)·I，随电流线性增长；MOS 是 P = I²·Rds(on)，随电流平方增长。存在一个交叉电流：小电流 MOS 省，大电流 IGBT 省。耐压越高，MOS 的 Rds(on) 越大，交叉点越低，所以 600 V 以上大电流一般用 IGBT。</p></div></details>
+    <details><summary>IGBT 能不能直接并联？</summary>
+      <div class="ans"><p>现在主流的 FS / NPT 型在工作电流下是正温度系数，热的管子压降升高，电流自动减小，适合并联，但仍要注意驱动对称、布局对称。老的 PT 型是负温度系数，并联容易出现一个管子抢电流、越热越抢，最终热失控。</p></div></details>
+    <details><summary>数据手册上的 Vce(sat) 要看哪个条件？</summary>
+      <div class="ans"><p>看测试条件：Vge 一般是 15 V，Ic 一般是额定电流，结温会分别给 25 °C 和 125 或 150 °C。算损耗要用高温下的值，而且 Vge 不足（比如只给 12 V）时 Vce(sat) 会明显变大。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="01-结构BJT加MOS复合.html"><span>上一页</span>IGBT = MOS 驱动 + BJT 输出</a><a class="next" href="03-开关频率对比.html"><span>下一页</span>开关频率对比</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 公共：坐标轴 */
+function mkAxes(gid,X,Y,xs,ys,xl,yl){
+  const g=$(gid),x0=X(xs[0]),x1=X(xs[xs.length-1]),y0=Y(ys[0]),y1=Y(ys[ys.length-1]);
+  ys.forEach(v=>g.append(svgEl('line',{class:'gl',x1:x0,x2:x1,y1:Y(v),y2:Y(v)}),svgEl('text',{x:x0-6,y:Y(v)+4,'text-anchor':'end',class:'v'},v)));
+  xs.forEach(v=>g.append(svgEl('text',{x:X(v),y:y0+18,'text-anchor':'middle',class:'v'},v)));
+  g.append(svgEl('path',{class:'ax',d:`M${x0},${y1} V${y0} H${x1}`}),
+    svgEl('text',{x:x1,y:y0+34,'text-anchor':'end',class:'tm'},xl),svgEl('text',{x:x0+4,y:y1-12,class:'tm'},yl));
+}
+const setP=(el,x,y)=>{el.setAttribute('cx',x.toFixed(1));el.setAttribute('cy',y.toFixed(1));};
+const setVL=(el,x)=>{el.setAttribute('x1',x.toFixed(1));el.setAttribute('x2',x.toFixed(1));};
+/* IGBT 模型（示意）：V = Vk·(1 − e^(−I/3)) + r·I */
+const igV=(I,Vk,r)=>Vk*(1-Math.exp(-I/3))+r*I;
+
+/* 1. V-I 曲线 */
+const a1X=scale(0,60,56,496),a1Y=scale(0,4,246,36);
+mkAxes('a1-ax',a1X,a1Y,[0,10,20,30,40,50,60],[0,1,2,3,4],'电流 I / A','压降 / V');
+$('a1-ig').setAttribute('points',plot(I=>igV(I,0.8,0.017),0,60,a1X,a1Y));
+$('a1-ms').setAttribute('points',plot(I=>0.04*I,0,60,a1X,a1Y));
+$('a1-ext').setAttribute('points',plot(I=>0.8+0.017*I,0,60,a1X,a1Y,2));
+$('a1-lig').setAttribute('y',(a1Y(igV(60,0.8,0.017))+20).toFixed(1));
+$('a1-lms').setAttribute('y',(a1Y(2.4)-10).toFixed(1));
+$('a1-lv0').setAttribute('y',(a1Y(0.8)-22).toFixed(1));
+function a1u(){
+  const I=+$('a1-i').value,vj=0.8*(1-Math.exp(-I/3)),vr=0.017*I,vi=vj+vr,vm=0.04*I;
+  $('a1-iv').textContent=I+' A';$('a1-i').setAttribute('aria-valuetext',I+' A');
+  setVL($('a1-cur'),a1X(I));setP($('a1-pig'),a1X(I),a1Y(vi));setP($('a1-pms'),a1X(I),a1Y(vm));
+  $('a1-vig').textContent=fmtV(vi);$('a1-vj').textContent=fmtV(vj);$('a1-vr').textContent=fmtV(vr);
+  $('a1-vms').textContent=fmtV(vm);
+  const ig=vi<vm;chip($('a1-chip'),ig?'IGBT':'MOSFET','on');
+  $('a1-note').textContent=ig?'电流大了，MOS 的压降按 I·Rds(on) 一路涨上去；IGBT 过了膝点后只剩很小的电阻，压降涨得慢，反而更低。'
+    :'电流小的时候，IGBT 那 0.7~0.8 V 的结压降是固定开销，MOS 的 I·Rds(on) 还不到它，MOS 压降更低。';
+}
+$('a1-i').addEventListener('input',a1u);
+a1u();
+
+/* 2. 导通损耗交叉 */
+const a2X=scale(0,80,56,496),a2Y=scale(0,240,246,36),a2={R:0.04};
+mkAxes('a2-ax',a2X,a2Y,[0,20,40,60,80],[0,60,120,180,240],'电流 I / A','导通损耗 / W');
+const a2Pi=I=>igV(I,0.8,0.017)*I;
+$('a2-ig').setAttribute('points',plot(a2Pi,0,80,a2X,a2Y));
+$('a2-lig').setAttribute('y',(a2Y(a2Pi(80))-10).toFixed(1));
+function a2u(){
+  const I=+$('a2-i').value,R=a2.R,pm=I*I*R,pi=a2Pi(I);
+  let ix=null;for(let k=1;k<=800;k++){const x=k/10;if(x*x*R>a2Pi(x)){ix=x;break;}}
+  $('a2-iv').textContent=I+' A';$('a2-i').setAttribute('aria-valuetext',I+' A');
+  $('a2-ms').setAttribute('points',plot(x=>{const p=x*x*R;return p>240?NaN:p;},0,80,a2X,a2Y,200));
+  const iTop=Math.min(80,Math.sqrt(230/R));
+  $('a2-lms').setAttribute('x',(a2X(iTop)-(iTop<80?8:4)).toFixed(1));$('a2-lms').setAttribute('y',(a2Y(Math.min(230,iTop*iTop*R))+(iTop<80?4:48)).toFixed(1));
+  $('a2-lms').textContent='MOS '+fmtR(R);
+  const xl=a2X(ix==null?80:ix);
+  $('a2-zm').setAttribute('width',(xl-56).toFixed(1));
+  show($('a2-x'),ix!=null);show($('a2-xt'),ix!=null);
+  if(ix!=null){setVL($('a2-x'),xl);$('a2-xt').setAttribute('x',(xl+6).toFixed(1));$('a2-xt').textContent='交叉点 '+ix.toFixed(0)+' A';}
+  setVL($('a2-cur'),a2X(I));setP($('a2-pig'),a2X(I),a2Y(pi));
+  show($('a2-pms'),pm<=240);if(pm<=240)setP($('a2-pms'),a2X(I),a2Y(pm));
+  $('a2-pi').textContent=fmtP(pi);$('a2-pm').textContent=fmtP(pm);
+  $('a2-ix').textContent=ix==null?'80 A 内没有交叉':'≈ '+ix.toFixed(0)+' A';
+  const ig=pi<pm;chip($('a2-chip'),ig?'IGBT 更省':'MOS 更省','on');
+  $('a2-note').textContent=ix==null?'Rds(on) 只有 20 mΩ 时，整个范围内 MOS 都更省。低压管或 SiC MOS 能做到这么低，这就是 SiC 在抢 IGBT 市场的原因。'
+    :ig?'电流超过交叉点，MOS 的 I² 项增长太快，IGBT 的 V0·I 反而更划算。电流越大，差距越大。'
+    :'电流在交叉点以下，IGBT 的 V0·I 是不管电流多小都要交的"起步价"，MOS 更省。';
+}
+$('a2-i').addEventListener('input',a2u);
+seg('a2-r',v=>{a2.R=+v;a2u();});
+a2u();
+
+/* 3. 温度系数 */
+const a3X=scale(0,60,56,496),a3Y=scale(0,3,246,36),a3={t:'fs'};
+const a3M={fs:{c:[0.8,0.017],h:[0.6,0.030]},pt:{c:[0.8,0.017],h:[0.45,0.0185]}};
+mkAxes('a3-ax',a3X,a3Y,[0,10,20,30,40,50,60],[0,1,2,3],'电流 I / A','Vce(sat) / V');
+function a3u(){
+  const m=a3M[a3.t],I=+$('a3-i').value,fc=x=>igV(x,m.c[0],m.c[1]),fh=x=>igV(x,m.h[0],m.h[1]);
+  let ix=null;for(let k=1;k<=600;k++){const x=k/10;if(fh(x)>fc(x)){ix=x;break;}}
+  $('a3-c').setAttribute('points',plot(fc,0,60,a3X,a3Y));$('a3-h').setAttribute('points',plot(fh,0,60,a3X,a3Y));
+  const hc=fh(60)>fc(60);
+  $('a3-lc').setAttribute('y',(a3Y(fc(60))+(hc?20:-10)).toFixed(1));$('a3-lh').setAttribute('y',(a3Y(fh(60))+(hc?-10:20)).toFixed(1));
+  const xe=a3X(ix==null?60:ix);$('a3-zn').setAttribute('width',(xe-56).toFixed(1));
+  $('a3-iv').textContent=I+' A';$('a3-i').setAttribute('aria-valuetext',I+' A');
+  setVL($('a3-cur'),a3X(I));setP($('a3-pc'),a3X(I),a3Y(fc(I)));setP($('a3-ph'),a3X(I),a3Y(fh(I)));
+  const vc=fc(I),vh=fh(I),pos=vh>vc;
+  $('a3-vc').textContent=fmtV(vc);$('a3-vh').textContent=fmtV(vh);
+  $('a3-tc').textContent=(pos?'正，':'负，')+((vh-vc)/125*1000).toFixed(1)+' mV/°C';
+  $('a3-x').textContent=ix==null?'60 A 内没有，整段为负':'≈ '+ix.toFixed(0)+' A，约额定的 '+(ix/50*100).toFixed(0)+'%';
+  chip($('a3-chip'),pos?'自动均流':'容易热失控',pos?'on':'warn');
+  $('a3-note').textContent=pos?'这个电流下，结温越高压降越大。并联时热的那只管子分到的电流变少，自己就凉下来，这是一个负反馈。'
+    :'这个电流下，结温越高压降越小。并联时热的管子反而抢到更多电流，越抢越热，是正反馈。'+(a3.t==='pt'?'PT 型在整个额定范围内都是这样，并联必须降额或加均流措施。':'FS 型只在小电流段这样，那时电流小，发热也小，问题不大。');
+}
+$('a3-i').addEventListener('input',a3u);
+seg('a3-t',v=>{a3.t=v;a3u();});
+a3u();
+</script>
+</body>
+</html>

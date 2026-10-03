@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>地平面与电源平面</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.gp{fill:var(--low);fill-opacity:.09;stroke:var(--low);stroke-width:1;stroke-dasharray:5 4}
+.slot{fill:var(--panel);stroke:var(--low);stroke-width:1}
+.trk{fill:none;stroke:var(--copper);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.via{fill:var(--panel);stroke:var(--copper);stroke-width:2.5}
+.die{fill:var(--grid);stroke:var(--line);stroke-width:1}
+.cu{fill:var(--copper)}
+.cup{fill:var(--low);fill-opacity:.55}
+.dim{stroke:var(--muted);stroke-width:1;fill:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#pcb">PCB与调试</a><span class="sp"></span><span>02 / 08</span></nav>
+<header>
+  <span class="eyebrow">PCB与调试 · 参考平面</span>
+  <h1>地平面与电源平面</h1>
+  <p class="lede">信号电流出去了一定要回来。完整的地平面给回流提供一条紧贴信号线、阻抗最低的路，这是多层板比两层板干净的根本原因。</p>
+</header>
+
+<section id="ret">
+  <span class="eyebrow">回流路径 · 环路面积</span>
+  <h2>高频回流走在信号线正下方</h2>
+  <p>回流总是走阻抗最小的路。低频时阻抗主要是电阻，回流在地平面上走直线最短路径。频率一高，阻抗主要是电感，而电感取决于环路面积，面积最小的路径就是紧贴在信号线正下方，所以高频回流会"跟着"信号线走。两种走法大约在几 kHz 到几百 kHz 之间过渡，MHz 以上基本完全贴着信号线（取决于铜厚和几何，典型值）。</p>
+  <p>地平面被割开，回流就只能绕着缝走，环路面积一下子变大。环路既是天线，也是串扰的来源：小环路的辐射场强正比于 f²·A·I，面积大一倍，辐射高 6 dB。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 270" role="img" aria-label="PCB 俯视图：驱动端经 U 形信号线连到接收端，绿色虚线是地平面上的回流路径，随地平面状态和频率改变">
+        <rect id="s1-plane" class="gp" x="10" y="10" width="440" height="222" rx="6"/>
+        <rect id="s1-slot" class="slot" x="224" y="10" width="12" height="190" hidden/>
+        <text id="s1-slt" x="246" y="192" class="tm" hidden>地平面割缝</text>
+        <g id="s1-gtr" hidden>
+          <path class="trk" d="M80,178 V215 H380 V178" style="stroke-width:3"/>
+          <text x="230" y="208" text-anchor="middle" class="tm">地线（两层板，没有地平面）</text>
+        </g>
+        <rect class="box" x="22" y="140" width="48" height="40" rx="4"/>
+        <text x="46" y="165" text-anchor="middle" class="t">驱动</text>
+        <rect class="box" x="390" y="140" width="48" height="40" rx="4"/>
+        <text x="414" y="165" text-anchor="middle" class="t">接收</text>
+        <path class="trk" d="M70,160 H130 V60 H330 V160 H390"/>
+        <text x="230" y="46" text-anchor="middle" class="t">信号线（顶层）</text>
+        <path class="trk" d="M70,178 H80 M390,178 H380" style="stroke-width:3"/>
+        <circle class="via" cx="80" cy="178" r="4"/>
+        <circle class="via" cx="380" cy="178" r="4"/>
+        <text x="84" y="198" class="tm">地过孔</text>
+        <path id="s1-ret" class="flow thin" d="M380,178 V167 H323 V67 H137 V167 H80 V178"/>
+        <text id="s1-pl" x="18" y="252" class="tm">蓝色虚框：L2 完整地平面。绿色虚线：回流电流。</text>
+      </svg>
+      <figcaption>比例 10 像素 = 1 mm，信号线长 52 mm，信号层到地平面的介质厚 0.2 mm。绿色回流画得稍微偏开一点，实际就在信号线正下方。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">地平面</span>
+        <div class="seg" id="s1-p"><button id="s1-p-full" data-v="full" aria-pressed="true">完整</button><button id="s1-p-slot" data-v="slot" aria-pressed="false">被割缝</button><button id="s1-p-none" data-v="none" aria-pressed="false">没有平面</button></div></div>
+      <div class="ctl"><span class="ctl-l">信号频率</span>
+        <div class="seg" id="s1-f"><button id="s1-f-hi" data-v="hi" aria-pressed="true">高频 MHz 以上</button><button id="s1-f-lo" data-v="lo" aria-pressed="false">直流 / 低频</button></div></div>
+      <dl class="read">
+        <dt>回流走哪</dt><dd id="s1-path">—</dd>
+        <dt>环路面积</dt><dd id="s1-a">—</dd>
+        <dt>辐射（相对完整平面）</dt><dd id="s1-db">—</dd>
+        <dt>评价</dt><dd><span id="s1-st" class="chip on">好</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="stack">
+  <span class="eyebrow">叠层 · 平面电容</span>
+  <h2>四层板为什么排成 信号-地-电源-信号</h2>
+  <p>顶层信号紧贴 L2 地平面，底层信号紧贴 L3 电源平面，两个信号层都有自己的参考平面。电源平面对高频来说也是参考平面，因为它和地之间有去耦电容和平面电容，高频回流可以经它们换到地上。</p>
+  <p>电源层和地层靠在一起，就是一个平板电容。它的 ESL 极低，能管到几百 MHz 以上，但容量不大。</p>
+  <p class="eq">平面电容 C = ε0·εr·A / d，ε0 = 8.85 pF/m，FR4 的 εr ≈ 4.3</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 484 250" role="img" aria-label="PCB 叠层剖面图：铜层与介质层按实际厚度比例画出，顶层信号线下方的地平面上标出回流集中区">
+        <rect class="die" x="60" y="56" width="340" height="128"/>
+        <rect id="s2-ret" class="zone-ok" x="200" y="60" width="60" height="20"/>
+        <rect id="s2-t1" class="cu" x="217" y="52" width="26" height="4"/>
+        <rect id="s2-l2" class="cup" x="60" y="72" width="340" height="4"/>
+        <rect id="s2-l3" class="cup" x="60" y="160" width="340" height="4"/>
+        <rect id="s2-t4" class="cu" x="140" y="184" width="26" height="4"/>
+        <text x="52" y="58" text-anchor="end" class="t">L1 信号</text>
+        <text id="s2-n2" x="52" y="78" text-anchor="end" class="t">L2 地</text>
+        <text id="s2-n3" x="52" y="166" text-anchor="end" class="t">L3 电源</text>
+        <text id="s2-n4" x="52" y="190" text-anchor="end" class="t">L4 信号</text>
+        <path id="s2-dh" class="dim" d="M412,56 V72 M406,56 H418 M406,72 H418"/>
+        <text id="s2-th" x="424" y="68" class="v">h</text>
+        <path id="s2-dd" class="dim" d="M412,76 V160 M406,76 H418 M406,160 H418"/>
+        <text id="s2-td" x="424" y="122" class="v">d</text>
+        <text id="s2-tr" x="230" y="40" text-anchor="middle" class="tm">50 Ω 走线</text>
+        <text id="s2-tz" x="230" y="120" text-anchor="middle" class="tm">绿色：约 80% 回流在 ±3h 内</text>
+        <text x="60" y="222" class="tm">铜层厚度放大画出，介质厚度按 1.6 mm 板厚等比例（80 像素 = 1 mm）。</text>
+      </svg>
+      <figcaption>绿色区域是地平面上回流最集中的位置。平面上的电流密度按 1/(1 + (x/h)²) 分布，±3h 内约占 80%。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">叠层</span>
+        <div class="seg" id="s2-m"><button id="s2-m-4" data-v="4" aria-pressed="true">四层 S-G-P-S</button><button id="s2-m-2" data-v="2" aria-pressed="false">两层板</button></div></div>
+      <div class="ctl" id="s2-hc"><label class="ctl-l" for="s2-h">L1 到 L2 介质厚度 h</label>
+        <span class="rv" id="s2-hv">0.20 mm</span>
+        <input type="range" id="s2-h" min="8" max="40" step="1" value="20"></div>
+      <dl class="read">
+        <dt>信号到参考平面 h</dt><dd id="s2-rh">—</dd>
+        <dt>50 Ω 需要的线宽</dt><dd id="s2-w">—</dd>
+        <dt>80% 回流宽度 6h</dt><dd id="s2-rw">—</dd>
+        <dt>电源-地间距 d</dt><dd id="s2-d">—</dd>
+        <dt>平面电容，10×10 cm</dt><dd id="s2-c">—</dd>
+        <dt>参考平面</dt><dd><span id="s2-st" class="chip on">紧贴</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+  <p>50 Ω 线宽用 IPC-2141 微带线近似公式 Z0 = 87/√(εr + 1.41)·ln(5.98h/(0.8w + t)) 反算，铜厚 t 取 35 µm，只作估算；实际以板厂阻抗计算为准。</p>
+</section>
+
+<section id="opt">
+  <span class="eyebrow">四层板叠层对比</span>
+  <h2>常见的几种排法</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>叠层（从顶到底）</th><th>优点</th><th>缺点</th></tr></thead>
+    <tbody>
+      <tr><td>信号-地-电源-信号</td><td>最常用；顶层紧贴完整地平面，布线和调试方便</td><td>标准板厚下电源和地隔着 1 mm 左右的芯板，平面电容很小，高频去耦仍要靠电容</td></tr>
+      <tr><td>信号-电源-地-信号</td><td>和上面对称，把关键信号放在底层参考地</td><td>顶层以电源为参考，回流换层时依赖去耦电容</td></tr>
+      <tr><td>地-信号-信号-地</td><td>两面都是地，屏蔽最好，EMI 低</td><td>两个信号层相邻容易串扰；电源只能铺铜走；元件焊盘把顶层地切得很碎，调试也难改线</td></tr>
+    </tbody>
+  </table></div>
+  <p>几条通用规则：每个信号层都要紧挨一个完整参考平面；高速线不要跨平面分割；信号换层时，如果参考平面也跟着换，要在过孔旁边打地过孔或放去耦电容，给回流一条换层的路。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>为什么要铺完整的地平面？</summary>
+      <div class="ans"><p>给信号提供一条紧贴的低阻抗回流路径。高频回流走电感最小的路，也就是信号线正下方，环路面积最小，所以辐射小、串扰小、地弹小。同时地平面也让走线有稳定的特征阻抗。</p></div></details>
+    <details><summary>回流电流到底走哪条路？</summary>
+      <div class="ans"><p>走阻抗最小的路。低频时电阻起主导，回流在平面上沿最短直线走；高频时电感起主导，回流集中在信号线正下方，约 80% 在 ±3h 宽度内，h 是信号层到平面的距离。</p></div></details>
+    <details><summary>信号线跨过地平面的割缝会怎样？</summary>
+      <div class="ans"><p>回流过不去缝，只能绕到缝的端头，环路面积和电感大增。结果是阻抗不连续引起反射，辐射变大，还会和绕行路径附近的其他信号串扰。实在要跨，就在跨越处并一个缝合电容，或在缝的两侧加桥接。</p></div></details>
+    <details><summary>四层板一般怎么叠层？</summary>
+      <div class="ans"><p>最常用的是 信号-地-电源-信号。两个信号层各有一个紧邻的参考平面，顶层参考地，底层参考电源。缺点是普通板厚下电源和地相距约 1 mm，平面电容小，高频去耦仍然要靠电容。</p></div></details>
+    <details><summary>电源平面能当参考平面吗？</summary>
+      <div class="ans"><p>能。对高频信号来说，电源平面和地平面之间通过去耦电容和平面电容相连，交流上是等电位的。但回流要从电源平面换到地时要经过这些电容，所以关键信号优先参考地平面。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="01-去耦电容布局.html"><span>上一页</span>去耦电容布局</a><a class="next" href="03-模拟地与数字地.html"><span>下一页</span>模拟地与数字地</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 回流路径 */
+const s1Sig=[[70,160],[130,160],[130,60],[330,60],[330,160],[390,160]];
+const s1R={
+  full_hi:{d:'M380,178 V167 H323 V67 H137 V167 H80 V178',c:[[390,160],[330,160],[330,60],[130,60],[130,160],[70,160]],p:'信号线正下方的地平面',
+    n:'回流紧贴在信号线正下方，去程和回程只隔 0.2 mm 的介质。环路面积就是 线长 × 介质厚度，是所有情况里最小的。'},
+  full_lo:{d:'M380,178 H80',c:[[380,178],[80,178]],p:'地平面上的直线最短路径',
+    n:'直流和低频时，平面阻抗主要是电阻，回流走最短的直线。环路面积虽然大，但辐射正比于 f²，低频时几乎不辐射，也不影响信号质量。'},
+  slot_hi:{d:'M380,178 V167 H323 V67 H250 L240,210 H220 L210,67 H137 V167 H80 V178',c:[[390,160],[330,160],[330,60],[250,60],[240,210],[220,210],[210,60],[130,60],[130,160],[70,160]],p:'跟着信号线走，到割缝处绕到缝的端头',
+    n:'回流过不去缝，只能绕到缝的端头再绕回来，多出一大块环路面积。缝本身还会像缝隙天线一样辐射，信号在跨缝处还会看到阻抗突变。'},
+  slot_lo:{d:'M380,178 L240,208 H220 L80,178',c:[[380,178],[240,208],[220,208],[80,178]],p:'绕过缝的端头，走最短路径',
+    n:'低频回流本来就不跟着信号线，只是被缝挡了一下，绕过去即可。割缝主要伤害的是高频信号。'},
+  none_hi:{d:'M380,178 V215 H80 V178',c:[[380,178],[380,215],[80,215],[80,178]],p:'只能走底部那根地线',
+    n:'没有地平面，回流只能走专门的地线，去程和回程之间隔着整块板子，环路面积是完整平面的几十倍。两层板做高速信号容易出 EMI 问题，就是这个原因。'},
+  none_lo:{d:'M380,178 V215 H80 V178',c:[[380,178],[380,215],[80,215],[80,178]],p:'只能走底部那根地线',
+    n:'低频时环路大影响不大，但这根地线的电阻和电感被所有电路共用，容易引入公共阻抗耦合。'}
+};
+const s1={p:'full',f:'hi'};
+function s1Area(ret){const P=s1Sig.concat(ret);let a=0;P.forEach((p,i)=>{const q=P[(i+1)%P.length];a+=p[0]*q[1]-q[0]*p[1];});return Math.abs(a)/2/100+52*0.2;}
+const s1Ref=s1Area(s1R.full_hi.c);
+function s1u(){
+  const k=s1.p+'_'+s1.f,r=s1R[k],A=s1Area(r.c),db=20*Math.log10(A/s1Ref);
+  show($('s1-plane'),s1.p!=='none');show($('s1-slot'),s1.p==='slot');show($('s1-slt'),s1.p==='slot');show($('s1-gtr'),s1.p==='none');
+  $('s1-pl').textContent=s1.p==='none'?'没有地平面：回流只能走地线。绿色虚线：回流电流。':s1.p==='slot'?'蓝色虚框：L2 地平面，中间被割开一条缝。绿色虚线：回流电流。':'蓝色虚框：L2 完整地平面。绿色虚线：回流电流。';
+  $('s1-ret').setAttribute('d',r.d);
+  $('s1-path').textContent=r.p;
+  $('s1-a').textContent=A.toFixed(0)+' mm²';
+  if(s1.f==='lo'){$('s1-db').textContent='低频几乎不辐射';}
+  else $('s1-db').textContent=db<0.5?'基准':'+'+db.toFixed(1)+' dB';
+  if(s1.f==='lo')chip($('s1-st'),'低频影响小','off');
+  else if(db<0.5)chip($('s1-st'),'环路最小','on');
+  else if(db<20)chip($('s1-st'),'环路变大','warn');
+  else chip($('s1-st'),'辐射大','bad');
+  $('s1-note').textContent=r.n;
+}
+seg('s1-p',v=>{s1.p=v;s1u();});
+seg('s1-f',v=>{s1.f=v;s1u();});
+s1u();
+
+/* 2. 叠层 */
+const s2={m:4};
+const s2K=80,s2Top=56,s2T=0.035,s2Er=4.3;
+function s2W(h){return (5.98*h*Math.exp(-50*Math.sqrt(s2Er+1.41)/87)-s2T)/0.8;}
+function s2u(){
+  const four=s2.m===4,h=four?+$('s2-h').value/100:1.53,w=s2W(h),d=four?1.6-2*h-4*s2T:0;
+  show($('s2-hc'),four);
+  const y2=s2Top+h*s2K,y3=s2Top+(h+d+2*s2T)*s2K,xc=230,wp=w*s2K,rw=6*h*s2K;
+  $('s2-t1').setAttribute('x',(xc-wp/2).toFixed(1));$('s2-t1').setAttribute('width',wp.toFixed(1));
+  $('s2-l2').setAttribute('y',(four?y2:s2Top+128-4).toFixed(1));
+  show($('s2-l3'),four);show($('s2-t4'),four);show($('s2-n3'),four);show($('s2-n4'),four);show($('s2-dd'),four);show($('s2-td'),four);
+  $('s2-l3').setAttribute('y',(y3-4).toFixed(1));
+  const yp=four?y2:s2Top+124;
+  $('s2-n2').setAttribute('y',Math.max(yp+6,74).toFixed(1));$('s2-n2').textContent=four?'L2 地':'L2 地（底层）';
+  $('s2-ret').setAttribute('x',Math.max(60,xc-rw/2).toFixed(1));$('s2-ret').setAttribute('width',Math.min(340,rw).toFixed(1));
+  $('s2-ret').setAttribute('y',s2Top);$('s2-ret').setAttribute('height',(yp-s2Top+4).toFixed(1));
+  $('s2-dh').setAttribute('d',`M412,${s2Top} V${yp} M406,${s2Top} H418 M406,${yp} H418`);
+  $('s2-th').setAttribute('y',((s2Top+yp)/2+5).toFixed(1));$('s2-th').textContent='h '+h.toFixed(2);
+  $('s2-dd').setAttribute('d',`M412,${yp+4} V${y3-4} M406,${yp+4} H418 M406,${y3-4} H418`);
+  $('s2-td').setAttribute('y',((yp+y3)/2+5).toFixed(1));$('s2-td').textContent='d '+d.toFixed(2);
+  $('s2-tz').setAttribute('y',four?(yp+26).toFixed(1):'206');
+  $('s2-hv').textContent=h.toFixed(2)+' mm';$('s2-h').setAttribute('aria-valuetext',h.toFixed(2)+' mm');
+  $('s2-rh').textContent=h.toFixed(2)+' mm';
+  $('s2-w').textContent=w.toFixed(2)+' mm';
+  $('s2-rw').textContent=(6*h).toFixed(2)+' mm';
+  if(four){const C=8.854e-12*s2Er*0.01/(d*1e-3);$('s2-d').textContent=d.toFixed(2)+' mm';$('s2-c').textContent=(C*1e12).toFixed(0)+' pF';}
+  else{$('s2-d').textContent='没有电源平面';$('s2-c').textContent='—';}
+  if(!four)chip($('s2-st'),'离得太远','bad');else if(h<=0.21)chip($('s2-st'),'紧贴','on');else chip($('s2-st'),'偏远','warn');
+  $('s2-note').textContent=!four?'两层板的参考平面在底层，隔着约 1.5 mm。50 Ω 线要宽到近 3 mm，回流分布很散，环路大。实际两层板很少控阻抗，高速信号尽量短。'
+    :h<=0.21?'h 越小，信号线和它的回流贴得越紧：环路面积小，串扰和辐射都小，50 Ω 线也可以做得细。标准 1.6 mm 四层板 h 约 0.1~0.2 mm（典型值）。'
+    :'h 变大后回流摊得更开，相邻走线的回流区域互相重叠，串扰变大；50 Ω 线宽也要跟着变宽。';
+}
+seg('s2-m',v=>{s2.m=+v;s2u();});
+$('s2-h').addEventListener('input',s2u);
+s2u();
+</script>
+</body>
+</html>

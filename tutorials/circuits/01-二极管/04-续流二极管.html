@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>续流二极管</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.dio{fill:currentColor;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#diode">二极管</a><span class="sp"></span><span>04 / 08</span></nav>
+<header>
+  <span class="eyebrow">二极管 · 感性负载</span>
+  <h1>续流二极管</h1>
+  <p class="lede">继电器线圈、电机、电磁阀都是电感。电感电流不能突变，开关一断，它会产生很高的反向电压把三极管击穿。并一个二极管给电流留条路，这就是续流二极管。</p>
+</header>
+
+<section id="spike">
+  <span class="eyebrow">关断瞬间 · V = L·di/dt</span>
+  <h2>开关一断，电压为什么会冲上去</h2>
+  <p>三极管导通时，电流从 Vcc 经线圈流到地，线圈里存了磁能 ½·L·I²。三极管一关，电流想在几微秒内降到零，di/dt 极大。电感为了维持电流，自己产生感应电压，下端（接集电极那端）变成正、而且很高。</p>
+  <p class="eq">V = L·di/dt　　E = ½·L·I²</p>
+  <p>按 100 mH、50 mA、1 µs 关断算，L·di/dt 约 5000 V。实际电压会被三极管 C-E 击穿或者触点拉弧钳住，但管子早已超过耐压。并上续流二极管后，线圈电流从二极管绕回自己，集电极只比 Vcc 高一个二极管压降。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 360 290" role="img" aria-label="NPN 驱动继电器线圈，线圈两端反并续流二极管，可选串联齐纳二极管">
+        <text x="200" y="18" text-anchor="middle" class="v">Vcc 12 V</text>
+        <path class="w" d="M188,26 H212 M200,26 V70 M200,56 H290 V64"/>
+        <circle class="dot" cx="200" cy="56" r="3.5"/>
+        <path class="w" d="M200,70 a10,10 0 0 0 0,20 a10,10 0 0 0 0,20 a10,10 0 0 0 0,20 a10,10 0 0 0 0,20 M200,150 V190"/>
+        <text x="182" y="100" text-anchor="end" class="t">继电器线圈</text>
+        <text x="182" y="118" text-anchor="end" class="v">100 mH / 240 Ω</text>
+        <g id="s1-gd">
+          <g id="s1-gz">
+            <polygon class="dio" points="278,64 302,64 290,84"/>
+            <path class="w" style="stroke-width:2.5" d="M274,80 L278,84 H302 L306,88"/>
+            <path class="w" d="M290,84 V104"/>
+            <text x="312" y="74" class="t">Dz</text>
+            <text id="s1-vzl" x="312" y="92" class="v">18 V</text>
+          </g>
+          <path id="s1-gw" class="w" d="M290,64 V104"/>
+          <polygon class="dio" points="278,124 302,124 290,104"/>
+          <path class="w" style="stroke-width:2.5" d="M278,104 H302"/>
+          <path class="w" d="M290,124 V150 H200"/>
+          <circle class="dot" cx="200" cy="150" r="3.5"/>
+          <text x="312" y="120" class="t">D1</text>
+        </g>
+        <text id="s1-vc" x="212" y="176" class="v">0.2 V</text>
+        <line class="bar" x1="178" y1="194" x2="178" y2="230"/>
+        <path class="w" d="M178,204 L200,190 M178,220 L200,234 V266"/>
+        <polygon class="ah" points="197,232 188,231 192,224"/>
+        <text x="236" y="216" class="t">NPN</text>
+        <text x="236" y="234" class="v">VCEO 45 V</text>
+        <path class="w" d="M186,266 H214 M191,271 H209 M196,276 H204"/>
+        <path class="w" d="M150,212 H178 M66,212 H100"/>
+        <rect class="r" x="100" y="204" width="50" height="16" rx="2"/>
+        <text x="125" y="196" text-anchor="middle" class="v">Rb</text>
+        <rect class="box" x="14" y="192" width="52" height="40" rx="4"/>
+        <text x="40" y="217" text-anchor="middle" class="t">驱动</text>
+        <text id="s1-drv" x="83" y="234" text-anchor="middle" class="v hi">高</text>
+        <path id="s1-f-on" class="flow" d="M200,30 V190 L182,202 V222 L200,234 V264"/>
+        <path id="s1-f-b" class="flow thin" d="M68,212 H176"/>
+        <path id="s1-f-loop" class="flow" d="M200,58 V150 H290 V56 H202"/>
+        <path id="s1-f-bad" class="flow bad" d="M200,58 V190 L182,202 V222 L200,234 V264"/>
+      </svg>
+      <figcaption>绿色虚线是电流路径，红色是被迫击穿三极管的电流。集电极旁的数字是 C 点对地电压。二极管阴极接 Vcc，正常工作时它反偏不导通。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">保护方式</span>
+        <div class="seg" id="s1-m"><button id="s1-m-n" data-v="n" aria-pressed="false">不加</button><button id="s1-m-d" data-v="d" aria-pressed="true">续流二极管</button><button id="s1-m-z" data-v="z" aria-pressed="false">二极管 + 齐纳</button></div></div>
+      <div class="ctl"><span class="ctl-l">三极管</span>
+        <div class="seg" id="s1-s"><button id="s1-s-on" data-v="on" aria-pressed="false">导通中</button><button id="s1-s-off" data-v="off" aria-pressed="true">刚关断</button></div></div>
+      <dl class="read">
+        <dt>线圈电流方向</dt><dd id="s1-dir">向下，不变</dd>
+        <dt>C 点电压</dt><dd id="s1-v">12.7 V</dd>
+        <dt>电流走哪</dt><dd id="s1-path">线圈 → D1 → 线圈</dd>
+        <dt>三极管</dt><dd><span id="s1-state" class="chip on">安全</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="wave">
+  <span class="eyebrow">波形 · 释放快慢</span>
+  <h2>二极管保住了管子，却让继电器释放变慢</h2>
+  <p>续流时线圈两端只有约 0.7 V 的反压，电流靠线圈电阻慢慢耗掉，按时间常数 τ = L / R 衰减，继电器要等好几个 τ 才能释放，触点分得慢，更容易拉弧。</p>
+  <p>想放得快，就要让回路里的反压更大：在二极管上串一个齐纳或 TVS。关断时 C 点被钳在 Vcc + 0.7 V + Vz，反压大了，电流下降就快。代价是 C 点电压升高，要保证它小于三极管耐压并留余量。</p>
+  <p class="eq">i(t) = (I0 + Vx / R)·e^(−t / τ) − Vx / R，Vx = 0.7 V 或 0.7 V + Vz</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 330" role="img" aria-label="关断前后的线圈电流和集电极电压波形，比较有无续流二极管和加齐纳的情况">
+        <line class="gl" x1="50" y1="40" x2="490" y2="40"/>
+        <line class="gl" x1="50" y1="70" x2="490" y2="70"/>
+        <line class="gl" x1="50" y1="100" x2="490" y2="100"/>
+        <line class="gl" x1="50" y1="202" x2="490" y2="202"/>
+        <line class="gl" x1="50" y1="224" x2="490" y2="224"/>
+        <line class="gl" x1="50" y1="246" x2="490" y2="246"/>
+        <line class="gl" x1="50" y1="268" x2="490" y2="268"/>
+        <line class="gl" x1="160" y1="36" x2="160" y2="290"/>
+        <line class="gl" x1="270" y1="36" x2="270" y2="290"/>
+        <line class="gl" x1="380" y1="36" x2="380" y2="290"/>
+        <path class="ax" d="M50,36 V130 H490 M50,176 V290 H490"/>
+        <line class="ax dash" x1="94" y1="36" x2="94" y2="290"/>
+        <text x="98" y="152" class="tm">关断</text>
+        <line class="ax dash" style="stroke:var(--danger)" x1="50" y1="191" x2="490" y2="191"/>
+        <text x="486" y="186" text-anchor="end" class="tm" style="fill:var(--danger)">VCEO 45 V</text>
+        <text x="44" y="44" text-anchor="end" class="v">60</text>
+        <text x="44" y="74" text-anchor="end" class="v">40</text>
+        <text x="44" y="104" text-anchor="end" class="v">20</text>
+        <text x="44" y="134" text-anchor="end" class="v">0</text>
+        <text x="44" y="206" text-anchor="end" class="v">40</text>
+        <text x="44" y="250" text-anchor="end" class="v">20</text>
+        <text x="44" y="294" text-anchor="end" class="v">0</text>
+        <text x="50" y="306" text-anchor="middle" class="v">0</text>
+        <text x="160" y="306" text-anchor="middle" class="v">0.5</text>
+        <text x="270" y="306" text-anchor="middle" class="v">1.0</text>
+        <text x="380" y="306" text-anchor="middle" class="v">1.5</text>
+        <text x="490" y="306" text-anchor="end" class="v">2.0</text>
+        <text x="56" y="30" class="tm">线圈电流 / mA</text>
+        <text x="56" y="170" class="tm">C 点电压 / V</text>
+        <text x="490" y="322" text-anchor="end" class="tm">时间 / ms</text>
+        <polyline id="s2-ir" class="ideal" points="50,55"/>
+        <polyline id="s2-vr" class="ideal" points="50,290"/>
+        <polyline id="s2-i" class="real" points="50,55"/>
+        <polyline id="s2-v" class="real" points="50,290"/>
+        <text id="s2-il" x="200" y="100" class="t hi">加齐纳</text>
+        <text id="s2-irl" x="300" y="100" class="tm">只有二极管</text>
+        <text id="s2-sp" x="102" y="206" class="t" style="fill:var(--danger)">尖峰远超坐标</text>
+      </svg>
+      <figcaption>条件：12 V 继电器线圈 100 mH、240 Ω，导通电流 50 mA，τ = L / R ≈ 0.42 ms，0.2 ms 时三极管关断。虚线是只加二极管的波形，便于对比。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">保护方式</span>
+        <div class="seg" id="s2-m"><button id="s2-m-n" data-v="n" aria-pressed="false">不加</button><button id="s2-m-d" data-v="d" aria-pressed="false">续流二极管</button><button id="s2-m-z" data-v="z" aria-pressed="true">二极管 + 齐纳</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s2-vz">齐纳电压 Vz</label>
+        <span class="rv" id="s2-vzv">18 V</span>
+        <input type="range" id="s2-vz" min="6" max="36" step="2" value="18"></div>
+      <dl class="read">
+        <dt>C 点峰值</dt><dd id="s2-pk">30.7 V</dd>
+        <dt>离 VCEO 还差</dt><dd id="s2-mg">14.3 V</dd>
+        <dt>降到 10%（约释放）</dt><dd id="s2-t10">0.15 ms</dd>
+        <dt>电流归零</dt><dd id="s2-te">0.17 ms</dd>
+        <dt>钳位元件吸收能量</dt><dd id="s2-ec">95 µJ / 125 µJ</dd>
+        <dt>结论</dt><dd><span id="s2-state" class="chip on">安全且快</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="choose">
+  <span class="eyebrow">方案对比 · 选型</span>
+  <h2>几种续流方案怎么选</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>方案</th><th>关断时 C 点电压</th><th>电流衰减</th><th>适用场合</th></tr></thead>
+    <tbody>
+      <tr><td>单个二极管</td><td class="n">Vcc + 0.7 V</td><td>最慢，约 3τ 归零</td><td>最常用，对释放时间不敏感的继电器</td></tr>
+      <tr><td>二极管 + 电阻</td><td class="n">Vcc + 0.7 V + I0·R</td><td>较快</td><td>便宜，R 按 (VCEO − Vcc) / I0 以内取</td></tr>
+      <tr><td>二极管 + 齐纳 / TVS</td><td class="n">Vcc + 0.7 V + Vz</td><td>快，电压恒定</td><td>要求快速释放、减少触点拉弧</td></tr>
+      <tr><td>RC 吸收、压敏电阻</td><td>由元件决定</td><td>快</td><td>交流线圈，不能用单向二极管</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li>接法：二极管反并在线圈两端，阴极接电源正，阳极接开关管那一端。接反了等于电源经二极管和三极管短路。</li>
+    <li>电流：续流电流就是线圈工作电流，二极管额定电流不小于它。继电器常用 1N4148 或 1N4007。</li>
+    <li>耐压：不小于电源电压并留余量。</li>
+    <li>速度：继电器开关频率低，普通管就行。电机 PWM 驱动每个周期都要续流，必须用快恢复或肖特基，原因见本组第 7 页。</li>
+  </ul>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>继电器线圈为什么要并一个二极管？</summary>
+      <div class="ans"><p>线圈是电感，电流不能突变。三极管关断时 di/dt 很大，线圈产生 L·di/dt 的感应电压，叠加在电源上加到集电极，能到几百甚至上千伏，会击穿三极管。并联二极管给线圈电流一条回路，把集电极电压钳在 Vcc + 0.7 V，线圈能量消耗在自身电阻和二极管上。</p></div></details>
+    <details><summary>续流二极管的方向怎么接？正常工作时它导通吗？</summary>
+      <div class="ans"><p>阴极接电源正，阳极接三极管集电极。三极管导通时，阳极接近地、阴极是 Vcc，二极管反偏不导通，不影响正常工作。只有关断瞬间集电极被抬到 Vcc 以上时它才导通。</p></div></details>
+    <details><summary>加了续流二极管有什么副作用？怎么改进？</summary>
+      <div class="ans"><p>续流回路里反压只有 0.7 V，电流按 τ = L / R 慢慢衰减，继电器释放变慢，触点分得慢容易拉弧。改进办法是加大回路反压：在二极管上串齐纳或 TVS，或串一个电阻。代价是关断时集电极电压升高，要保证小于三极管耐压。</p></div></details>
+    <details><summary>续流二极管怎么选型？</summary>
+      <div class="ans"><p>三条：额定电流不小于负载电流；反向耐压不小于电源电压并留余量；开关频率高的场合，比如电机 PWM、Buck，要用快恢复或肖特基，普通整流管反向恢复太慢会造成大的开关损耗和尖峰。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="03-反向击穿齐纳与雪崩.html"><span>上一页</span>反向击穿齐纳与雪崩</a><a class="next" href="05-钳位电路.html"><span>下一页</span>钳位电路</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+const L4=0.1,R4=240,VCC=12,VF=0.7,I0=VCC/R4,VCEO=45,T0=0.2e-3;
+function decay(vx){const a=vx/R4,tau=L4/R4,te=tau*Math.log((I0+a)/a),t10=tau*Math.log((I0+a)/(0.1*I0+a));
+  const Q=(I0+a)*tau*(1-Math.exp(-te/tau))-a*te;return {a,tau,te,t10,Ec:vx*Q};}
+
+/* 1. 电路：电流路径 */
+const s1={m:'d',on:false},VZ1=18;
+function s1u(){
+  const m=s1.m,on=s1.on;
+  show($('s1-gd'),m!=='n');show($('s1-gz'),m==='z');show($('s1-gw'),m==='d');
+  $('s1-drv').textContent=on?'高':'低';setLv($('s1-drv'),null,on);
+  show($('s1-f-on'),on);show($('s1-f-b'),on);
+  show($('s1-f-loop'),!on&&m!=='n');show($('s1-f-bad'),!on&&m==='n');
+  const vx=m==='z'?VF+VZ1:VF,vc=on?0.2:(m==='n'?null:VCC+vx);
+  const t=$('s1-vc');t.textContent=vc===null?'≫ 45 V':fmtV(vc,1);t.style.fill=vc===null?'var(--danger)':'';
+  $('s1-v').textContent=vc===null?'理论 ≈ 5000 V，实际把管子击穿':fmtV(vc,1)+(on?'，饱和压降':'，= Vcc + '+fmtV(vx,1));
+  $('s1-dir').textContent='向下，关断瞬间也不变';
+  $('s1-path').textContent=on?'Vcc → 线圈 → C → E → 地':m==='n'?'无路可走，只能击穿 C-E':m==='z'?'线圈 → D1 → Dz → 线圈':'线圈 → D1 → 线圈';
+  let note;
+  if(on){chip($('s1-state'),'饱和导通','on');note='三极管饱和，线圈电流 50 mA 向下流，线圈储能 ½·L·I² = 125 µJ。续流二极管阳极接近地，阴极是 12 V，反偏不导通。';}
+  else if(m==='n'){chip($('s1-state'),'击穿','bad');note='电流不能突变，线圈下端被推到远高于 Vcc 的电压，唯一的出路是把三极管 C-E 击穿。每关一次就被打一次，迟早损坏。';}
+  else if(m==='z'){chip($('s1-state'),'安全','on');note='线圈电流经 D1 和反向击穿的齐纳绕回线圈。C 点被钳在 12 + 0.7 + 18 = 30.7 V，低于 VCEO 45 V，而且回路反压大，电流降得快。';}
+  else{chip($('s1-state'),'安全','on');note='线圈电流从下端经 D1 绕回上端，电流方向不变，只是换了条路。C 点只比 Vcc 高 0.7 V，三极管安全。';}
+  $('s1-note').textContent=note;
+}
+seg('s1-m',v=>{s1.m=v;s1u();});
+seg('s1-s',v=>{s1.on=v==='on';s1u();});
+s1u();
+
+/* 2. 波形 */
+const s2={m:'z'};
+const XT=t=>50+t*1e3*220,YI=i=>130-i*1e3*1.5,YV=v=>290-v*2.2;
+function wv(vx){
+  const d=decay(vx),te=Math.min(d.te,2e-3-T0),ip=[],vp=[];
+  const P=(a,b)=>a.toFixed(1)+','+b.toFixed(1);
+  ip.push(P(XT(0),YI(I0)),P(XT(T0),YI(I0)));
+  for(let k=1;k<=100;k++){const s=te*k/100,i=Math.max(0,(I0+d.a)*Math.exp(-s/d.tau)-d.a);ip.push(P(XT(T0+s),YI(i)));}
+  ip.push(P(XT(2e-3),YI(0)));
+  const vk=Math.min(VCC+vx,54);
+  vp.push(P(XT(0),YV(0.2)),P(XT(T0),YV(0.2)),P(XT(T0),YV(vk)),P(XT(T0+te),YV(vk)),P(XT(T0+te),YV(VCC)),P(XT(2e-3),YV(VCC)));
+  return {ip:ip.join(' '),vp:vp.join(' '),d};
+}
+function s2u(){
+  const m=s2.m,vz=+$('s2-vz').value,vx=m==='z'?VF+vz:VF;
+  $('s2-vzv').textContent=vz+' V';$('s2-vz').setAttribute('aria-valuetext',vz+' V');
+  $('s2-vz').disabled=m!=='z';
+  const ref=wv(VF);
+  $('s2-ir').setAttribute('points',ref.ip);$('s2-vr').setAttribute('points',ref.vp);
+  show($('s2-ir'),m!=='d');show($('s2-vr'),m!=='d');show($('s2-irl'),m!=='d');
+  const E0=0.5*L4*I0*I0;
+  const vEl=$('s2-v');
+  if(m==='n'){
+    const x0=XT(T0);
+    $('s2-i').setAttribute('points',`50,${YI(I0)} ${x0},${YI(I0)} ${x0+1},${YI(0)} 490,${YI(0)}`);
+    vEl.setAttribute('points',`50,${YV(0.2)} ${x0},${YV(0.2)} ${x0},168 ${x0+5},168 ${x0+5},${YV(VCC)} 490,${YV(VCC)}`);
+    vEl.setAttribute('class','leak');show($('s2-sp'),true);
+    $('s2-il').textContent='不加';$('s2-il').setAttribute('x','100');$('s2-il').setAttribute('y','122');
+    $('s2-pk').textContent='理论 ≈ 5000 V';$('s2-mg').textContent='远超耐压';
+    $('s2-t10').textContent='约 1 µs';$('s2-te').textContent='约 1 µs';
+    $('s2-ec').textContent='能量砸在三极管上';
+    chip($('s2-state'),'三极管击穿','bad');
+    $('s2-note').textContent='电流被硬生生掐断，di/dt 极大，C 点电压冲到三极管击穿为止，125 µJ 能量全部由三极管的击穿吸收。';
+  }else{
+    const w=wv(vx),d=w.d,pk=VCC+vx,mg=VCEO-pk;
+    $('s2-i').setAttribute('points',w.ip);vEl.setAttribute('points',w.vp);vEl.setAttribute('class','real');show($('s2-sp'),false);
+    const il=$('s2-il');il.textContent=m==='z'?'加齐纳':'只有二极管';
+    const xl=XT(T0+Math.min(d.te,d.tau*0.5));il.setAttribute('x',(xl+10).toFixed(1));il.setAttribute('y',m==='z'?'122':'80');
+    $('s2-irl').setAttribute('x',(XT(T0+ref.d.tau*1.2)+8).toFixed(1));$('s2-irl').setAttribute('y','104');
+    $('s2-pk').textContent=fmtV(pk,1);$('s2-mg').textContent=mg>=0?fmtV(mg,1):'超出 '+fmtV(-mg,1);
+    $('s2-t10').textContent=fmtT(d.t10);$('s2-te').textContent=fmtT(d.te);
+    $('s2-ec').textContent=(d.Ec*1e6).toFixed(0)+' µJ / '+(E0*1e6).toFixed(0)+' µJ';
+    let note;
+    if(mg<0){chip($('s2-state'),'超过 VCEO','bad');note='Vz 选太大了，C 点 '+fmtV(pk,1)+' 已超过三极管耐压，等于又回到了没保护的状态。';}
+    else if(pk>0.8*VCEO){chip($('s2-state'),'余量不足','warn');note='释放很快，但 C 点离 VCEO 只剩 '+fmtV(mg,1)+'，一般要求留 20% 以上余量。';}
+    else if(m==='z'){chip($('s2-state'),'安全且快','on');note='回路反压 '+fmtV(vx,1)+'，电流降到 10% 只要 '+fmtT(d.t10)+'，比单个二极管快 '+(ref.d.t10/d.t10).toFixed(1)+' 倍。大部分能量由齐纳吸收，要核算它的功耗。';}
+    else{chip($('s2-state'),'安全但慢','warn');note='C 点只有 12.7 V，非常安全。但回路反压只有 0.7 V，能量几乎全靠线圈电阻消耗，电流要 '+fmtT(d.te)+' 才归零，继电器释放明显变慢。';}
+    $('s2-note').textContent=note;
+  }
+}
+seg('s2-m',v=>{s2.m=v;s2u();});
+$('s2-vz').addEventListener('input',s2u);
+s2u();
+</script>
+</body>
+</html>

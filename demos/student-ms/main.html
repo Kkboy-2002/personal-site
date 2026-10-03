@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>学生信息管理 - 在宿学生信息管理系统</title>
+</head>
+<body>
+    <h1>在宿学生信息管理系统</h1>
+    <p>当前用户: <span id="currentUser"></span> | <button onclick="logout()">退出登录</button></p>
+
+    <h2>学生信息管理</h2>
+
+    <!-- 学生信息表单 -->
+    <fieldset>
+        <legend>学生信息</legend>
+        学号: <input type="text" id="sno"><br><br>
+        姓名: <input type="text" id="sname"><br><br>
+        性别:
+        <select id="ssex">
+            <option value="男">男</option>
+            <option value="女">女</option>
+        </select><br><br>
+        专业: <input type="text" id="sdept"><br><br>
+        宿舍号: <input type="text" id="dno"><br><br>
+        入住时间: <input type="date" id="scheckin"><br><br>
+
+        <button onclick="addStudent()">新增学生</button>
+        <button onclick="updateStudent()">修改学生</button>
+        <button onclick="deleteStudent()">删除学生</button>
+        <button onclick="clearForm()">清空表单</button>
+    </fieldset>
+
+    <br>
+    <button onclick="getAllStudents()">查询全部学生</button>
+    <button onclick="getStatistics()">统计信息</button>
+
+    <!-- 统计信息显示 -->
+    <div id="statsDiv"></div>
+
+    <!-- 学生列表表格 -->
+    <h3>学生列表</h3>
+    <table border="1" id="studentTable">
+        <thead>
+            <tr>
+                <th>学号</th>
+                <th>姓名</th>
+                <th>性别</th>
+                <th>专业</th>
+                <th>宿舍号</th>
+                <th>入住时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="studentTableBody">
+        </tbody>
+    </table>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+
+        // 检查登录状态
+        window.onload = function() {
+            if(localStorage.getItem('isLoggedIn') !== 'true') {
+                window.location.href = 'login.html';
+                return;
+            }
+            document.getElementById('currentUser').textContent = localStorage.getItem('username');
+            getAllStudents();
+        };
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('username');
+            window.location.href = 'login.html';
+        }
+
+        // 查询全部学生
+        function getAllStudents() {
+            fetch(API_BASE + '/students')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('studentTableBody');
+                tbody.innerHTML = '';
+                data.forEach(student => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${student.sno}</td>
+                        <td>${student.sname}</td>
+                        <td>${student.ssex}</td>
+                        <td>${student.sdept}</td>
+                        <td>${student.dno}</td>
+                        <td>${student.scheckin}</td>
+                        <td><button onclick="editStudent('${student.sno}')">编辑</button></td>
+                    `;
+                });
+            })
+            .catch(err => alert('查询失败: ' + err));
+        }
+
+        // 新增学生
+        function addStudent() {
+            const student = getFormData();
+            if(!student.sno) {
+                alert('请输入学号');
+                return;
+            }
+
+            fetch(API_BASE + '/students', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(student)
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if(data.success) {
+                    clearForm();
+                    getAllStudents();
+                }
+            })
+            .catch(err => alert('新增失败: ' + err));
+        }
+
+        // 修改学生
+        function updateStudent() {
+            const student = getFormData();
+            if(!student.sno) {
+                alert('请输入学号');
+                return;
+            }
+
+            fetch(API_BASE + '/students/' + student.sno, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(student)
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if(data.success) {
+                    clearForm();
+                    getAllStudents();
+                }
+            })
+            .catch(err => alert('修改失败: ' + err));
+        }
+
+        // 删除学生
+        function deleteStudent() {
+            const sno = document.getElementById('sno').value;
+            if(!sno) {
+                alert('请输入要删除的学号');
+                return;
+            }
+
+            if(!confirm('确定删除学号为 ' + sno + ' 的学生吗？')) {
+                return;
+            }
+
+            fetch(API_BASE + '/students/' + sno, {
+                method: 'DELETE'
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if(data.success) {
+                    clearForm();
+                    getAllStudents();
+                }
+            })
+            .catch(err => alert('删除失败: ' + err));
+        }
+
+        // 编辑学生（填充表单）
+        function editStudent(sno) {
+            fetch(API_BASE + '/students/' + sno)
+            .then(res => res.json())
+            .then(student => {
+                document.getElementById('sno').value = student.sno;
+                document.getElementById('sname').value = student.sname;
+                document.getElementById('ssex').value = student.ssex;
+                document.getElementById('sdept').value = student.sdept;
+                document.getElementById('dno').value = student.dno;
+                document.getElementById('scheckin').value = student.scheckin;
+            })
+            .catch(err => alert('获取学生信息失败: ' + err));
+        }
+
+        // 统计信息
+        function getStatistics() {
+            fetch(API_BASE + '/students/statistics')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('statsDiv').innerHTML = `
+                    <h3>统计信息</h3>
+                    <p>总人数: ${data.total}</p>
+                    <p>男生人数: ${data.male}</p>
+                    <p>女生人数: ${data.female}</p>
+                `;
+            })
+            .catch(err => alert('统计失败: ' + err));
+        }
+
+        // 获取表单数据
+        function getFormData() {
+            return {
+                sno: document.getElementById('sno').value,
+                sname: document.getElementById('sname').value,
+                ssex: document.getElementById('ssex').value,
+                sdept: document.getElementById('sdept').value,
+                dno: document.getElementById('dno').value,
+                scheckin: document.getElementById('scheckin').value
+            };
+        }
+
+        // 清空表单
+        function clearForm() {
+            document.getElementById('sno').value = '';
+            document.getElementById('sname').value = '';
+            document.getElementById('ssex').value = '男';
+            document.getElementById('sdept').value = '';
+            document.getElementById('dno').value = '';
+            document.getElementById('scheckin').value = '';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 09 课 存储器:RAM、ROM 与 FIFO</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="09" data-root="../">
+
+<aside class="side">
+  <a class="brand" href="../index.html">Verilog 十二课<span>FPGA RTL 实训</span></a>
+  <ol></ol>
+  <div class="foot">
+    <button class="themer" type="button">主题</button>
+    <p>iverilog + GTKWave<br>Vivado / Quartus 可选</p>
+  </div>
+</aside>
+
+<main>
+<div class="ruler"></div>
+
+<p class="eyebrow">Lesson 09 <em>／ 片上存储</em></p>
+<h1>存储器:RAM、ROM 与 FIFO</h1>
+<p class="lede">FPGA 里有成百上千个独立的块 RAM,它们是这颗芯片最值钱的资源之一。而你调用它们的方式简单到令人意外:声明一个二维数组,在时钟块里读写它。这一课把三件事讲清楚 —— 数组怎么变成块 RAM、<code>$readmemh</code> 怎么把数据装进 ROM、FIFO 的空满判断为什么需要多一位指针。</p>
+
+<dl class="goals">
+  <dt>学完这一课你能</dt>
+  <dd>写出会被正确推断成块 RAM 的代码,并说清同步读为什么必然晚一拍</dd>
+  <dd>用 <code>$readmemh</code> 初始化查表 ROM,并绕开路径相对性的坑</dd>
+  <dd>实现同步 FIFO,解释“指针多一位”如何区分空和满</dd>
+  <dd>知道块 RAM、分布式 RAM、纯寄存器三者该在什么时候用</dd>
+</dl>
+
+<nav class="toc"><h2>本课路线</h2><ol></ol></nav>
+
+<h2 id="s1">一个数组,三种实现</h2>
+<p><code>reg [7:0] mem [0:255];</code> 这一行声明了 256 个 8 位存储单元。它最终变成什么,取决于你<strong>怎么访问它</strong>:</p>
+<div class="tw">
+<table>
+  <caption>三种片上存储资源</caption>
+  <thead><tr><th>实现</th><th>什么写法会推断出它</th><th>容量</th><th>读延迟</th><th>适合</th></tr></thead>
+  <tbody>
+    <tr><td>块 RAM(BRAM)</td><td>读也在时钟块里(<strong>同步读</strong>),端口数 ≤ 2</td><td>大,每块几 KB 到几十 KB</td><td>1 拍(或 2 拍)</td><td>几百字节以上的缓冲、帧存、查表</td></tr>
+    <tr><td>分布式 RAM(LUT RAM)</td><td><code>assign dout = mem[addr];</code>(<strong>组合读</strong>)</td><td>小,几十到几百比特</td><td>0 拍</td><td>浅 FIFO、小寄存器堆</td></tr>
+    <tr><td>纯触发器</td><td>整个数组同时被读写,或者有复位</td><td>非常小</td><td>0 拍</td><td>十几个以内的寄存器</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="box pit">
+  <b>块 RAM 不能复位</b>
+  <p>如果你写 <code>if (!rst_n) for (…) mem[k] &lt;= 0;</code>,综合工具会发现“这个存储必须能被整体清零”,而块 RAM 硬件做不到 —— 于是它<strong>放弃块 RAM,改用几百个触发器</strong>实现。资源报告上会看到触发器数量暴涨、BRAM 用量为 0。</p>
+  <p>正确做法:<strong>存储阵列不复位</strong>。数据的有效性靠别的机制保证 —— FIFO 用指针,帧存用“写过才读”。要初始内容就用 <code>$readmemh</code>,那是块 RAM 原生支持的。</p>
+</div>
+
+<h2 id="s2">同步 RAM:读一定晚一拍</h2>
+<figure class="file">
+  <figcaption><span class="path">code/lesson09/ram_sp.v</span><span class="note">可综合 · 会被推断成块 RAM</span></figcaption>
+  <div class="body"><pre><code>module ram_sp #(
+    parameter W     = 8,
+    parameter DEPTH = 256,
+    parameter AW    = $clog2(DEPTH)
+)(
+    input  wire          clk,
+    input  wire          we,       // 写使能
+    input  wire [AW-1:0] addr,     // 读写共用一个地址口
+    input  wire [W-1:0]  din,
+    output reg  [W-1:0]  dout      // 同步读:给地址的下一拍才有数据
+);
+
+    // 这个数组就是存储阵列。想强制指定实现方式:
+    //   Vivado :  (* ram_style = "block" *) reg [W-1:0] mem [0:DEPTH-1];
+    //   Quartus:  reg [W-1:0] mem [0:DEPTH-1] /* synthesis ramstyle = "M9K" */;
+    reg [W-1:0] mem [0:DEPTH-1];
+
+    always @(posedge clk) begin
+        if (we) mem[addr] &lt;= din;
+        dout &lt;= mem[addr];         // 读写同址时读到的是“写之前”的旧值
+    end
+
+endmodule</code></pre></div>
+</figure>
+
+<figure class="dia">
+<svg viewBox="0 0 460 145" role="img" aria-label="同步 RAM 的读时序:地址在每个时钟周期变化,数据总是在下一个时钟周期才出现在 dout 上">
+  <text class="w-lbl" x="92" y="44" text-anchor="end">clk</text>
+  <polyline class="w-clk" points="100,50 100,30 140,30 140,50 180,50 180,30 220,30 220,50 260,50 260,30 300,30 300,50 340,50 340,30 380,30 380,50 420,50 420,30"/>
+
+  <text class="w-lbl" x="92" y="80" text-anchor="end">addr</text>
+  <line class="w-ink" x1="100" y1="66" x2="420" y2="66"/>
+  <line class="w-ink" x1="100" y1="86" x2="420" y2="86"/>
+  <line class="w-ink" x1="180" y1="66" x2="180" y2="86"/>
+  <line class="w-ink" x1="260" y1="66" x2="260" y2="86"/>
+  <line class="w-ink" x1="340" y1="66" x2="340" y2="86"/>
+  <text class="w-val" x="140" y="80" text-anchor="middle">0</text>
+  <text class="w-val" x="220" y="80" text-anchor="middle">1</text>
+  <text class="w-val" x="300" y="80" text-anchor="middle">2</text>
+  <text class="w-val" x="380" y="80" text-anchor="middle">3</text>
+
+  <text class="w-lbl" x="92" y="116" text-anchor="end">dout</text>
+  <line class="w-sig" x1="100" y1="102" x2="420" y2="102"/>
+  <line class="w-sig" x1="100" y1="122" x2="420" y2="122"/>
+  <line class="w-sig" x1="180" y1="102" x2="180" y2="122"/>
+  <line class="w-sig" x1="260" y1="102" x2="260" y2="122"/>
+  <line class="w-sig" x1="340" y1="102" x2="340" y2="122"/>
+  <text class="w-val" x="140" y="116" text-anchor="middle">?</text>
+  <text class="w-val" x="220" y="116" text-anchor="middle">10</text>
+  <text class="w-val" x="300" y="116" text-anchor="middle">11</text>
+  <text class="w-val" x="380" y="116" text-anchor="middle">12</text>
+
+  <text class="w-note" x="100" y="140" text-anchor="start">地址 0 的数据(10)出现在地址已经变成 1 的那个周期里</text>
+</svg>
+<figcaption><b>这一拍延迟不是缺陷,是块 RAM 的物理特性。</b><code>dout</code> 是一个真实的输出寄存器,地址在沿上被锁存,数据在沿后才出来。读流水线因此天然有一级延迟,<strong>下游逻辑必须把它算进去</strong> —— 忘了这一拍,读出来的永远是上一个地址的数据,而波形上看起来“数据都对,只是错位”。</figcaption>
+</figure>
+
+<h2 id="s3">ROM 与 $readmemh</h2>
+<figure class="file">
+  <figcaption><span class="path">code/lesson09/rom_init.v</span><span class="note">可综合 · $readmemh 在综合时也生效</span></figcaption>
+  <div class="body"><pre><code>module rom_init #(
+    parameter W     = 8,
+    parameter DEPTH = 16,
+    parameter AW    = $clog2(DEPTH),
+    parameter FILE  = "lesson09/sine.hex"
+)(
+    input  wire          clk,
+    input  wire [AW-1:0] addr,
+    output reg  [W-1:0]  dout
+);
+
+    reg [W-1:0] mem [0:DEPTH-1];
+
+    initial begin
+        $readmemh(FILE, mem);      // 每行一个十六进制数,# 或 // 可写注释
+    end
+
+    always @(posedge clk)
+        dout &lt;= mem[addr];         // 同步读,和 RAM 一样晚一拍
+
+endmodule</code></pre></div>
+</figure>
+
+<figure class="file">
+  <figcaption><span class="path">code/lesson09/sine.hex</span><span class="note">数据文件 · 16 点正弦表</span></figcaption>
+  <div class="body"><pre>// 16 点正弦查表,8 位无符号,幅度 0..255,零点在 0x80
+// 公式:round(127.5 + 127.5 * sin(2*pi*i/16))
+80
+B0
+DA
+F5
+FF
+F5
+DA
+B0
+80
+4F
+25
+0A
+00
+0A
+25
+4F</pre></div>
+</figure>
+
+<div class="box pit">
+  <b>$readmemh 的路径是相对于“你在哪运行仿真”</b>
+  <p>不是相对于 <code>.v</code> 文件所在目录。<code>sim.bat</code> 在 <code>code\</code> 下运行 <code>vvp</code>,所以路径必须写成 <code>"lesson09/sine.hex"</code>。写成 <code>"sine.hex"</code> 会得到一句 <em>WARNING: cannot open file</em>,然后 <strong>ROM 全是 x</strong> —— 而 <code>$readmemh</code> 找不到文件<em>不会</em>让仿真失败,它只是警告。</p>
+  <p>两个应对办法:把路径做成 <code>parameter</code>,由顶层或 TB 传进来(本课的做法);或者在 Testbench 里额外检查一下第一个单元不是 <code>x</code>,把这类静默失败变成显式报错。</p>
+</div>
+<div class="box tip">
+  <b>综合时也认这一招</b>
+  <p>Vivado 和 Quartus 都支持从 <code>$readmemh</code> 的 <code>initial</code> 块推断块 RAM 的初始内容,并把数据写进 bitstream。所以正弦表、字符点阵、系数表这类东西不需要专门用 IP 核生成 —— 一个 <code>.hex</code> 文件加三行代码就够。别忘了把 <code>.hex</code> 也加入工程文件列表,否则综合时找不到。</p>
+</div>
+
+<h2 id="s4">同步 FIFO:多一位指针</h2>
+<p>FIFO 的难点从来不是存储,是<strong>怎么判断空和满</strong>。用 <code>DEPTH=8</code> 举例:读写指针都是 3 位,写满一圈之后 <code>wr_ptr</code> 又转回 0,和 <code>rd_ptr</code> 相等 —— 可这时候是<em>满</em>,不是空。两种截然相反的状态,指针看起来完全一样。</p>
+<p>解法漂亮得像个魔术:<strong>给指针多加一位</strong>。这一位不参与寻址,只用来记“转了几圈”。</p>
+
+<figure class="dia">
+<svg viewBox="0 0 590 275" role="img" aria-label="FIFO 空满判断:空的时候读写指针完全相同,满的时候低三位相同但多出来的那一位不同,所以两者可以区分">
+  <defs>
+    <marker id="ar-9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon class="d-mk" points="0,1 10,5 0,9"/>
+    </marker>
+  </defs>
+
+  <text class="d-sub" x="14" y="20" text-anchor="start">情况一:FIFO 空</text>
+  <text class="d-edge-hl" x="122" y="40" text-anchor="middle">wr_ptr</text>
+  <line class="d-arw-hl" x1="122" y1="46" x2="122" y2="57" marker-end="url(#ar-9)"/>
+  <rect class="d-box" x="100" y="60" width="45" height="34"/>
+  <rect class="d-box" x="145" y="60" width="45" height="34"/>
+  <rect class="d-box" x="190" y="60" width="45" height="34"/>
+  <rect class="d-box" x="235" y="60" width="45" height="34"/>
+  <rect class="d-box" x="280" y="60" width="45" height="34"/>
+  <rect class="d-box" x="325" y="60" width="45" height="34"/>
+  <rect class="d-box" x="370" y="60" width="45" height="34"/>
+  <rect class="d-box" x="415" y="60" width="45" height="34"/>
+  <line class="d-arw" x1="122" y1="108" x2="122" y2="97" marker-end="url(#ar-9)"/>
+  <text class="d-edge" x="122" y="122" text-anchor="middle">rd_ptr</text>
+  <text class="d-tab" x="478" y="72" text-anchor="start">wr_ptr = 0_000</text>
+  <text class="d-tab" x="478" y="90" text-anchor="start">rd_ptr = 0_000</text>
+  <text class="d-edge-hl" x="478" y="112" text-anchor="start">count = 0 → 空</text>
+
+  <text class="d-sub" x="14" y="158" text-anchor="start">情况二:FIFO 满</text>
+  <text class="d-edge-hl" x="122" y="178" text-anchor="middle">wr_ptr</text>
+  <line class="d-arw-hl" x1="122" y1="184" x2="122" y2="195" marker-end="url(#ar-9)"/>
+  <rect class="d-box-hl" x="100" y="198" width="45" height="34"/>
+  <rect class="d-box-hl" x="145" y="198" width="45" height="34"/>
+  <rect class="d-box-hl" x="190" y="198" width="45" height="34"/>
+  <rect class="d-box-hl" x="235" y="198" width="45" height="34"/>
+  <rect class="d-box-hl" x="280" y="198" width="45" height="34"/>
+  <rect class="d-box-hl" x="325" y="198" width="45" height="34"/>
+  <rect class="d-box-hl" x="370" y="198" width="45" height="34"/>
+  <rect class="d-box-hl" x="415" y="198" width="45" height="34"/>
+  <text class="d-tab" x="122" y="220" text-anchor="middle">a0</text>
+  <text class="d-tab" x="167" y="220" text-anchor="middle">a1</text>
+  <text class="d-tab" x="212" y="220" text-anchor="middle">a2</text>
+  <text class="d-tab" x="257" y="220" text-anchor="middle">a3</text>
+  <text class="d-tab" x="302" y="220" text-anchor="middle">a4</text>
+  <text class="d-tab" x="347" y="220" text-anchor="middle">a5</text>
+  <text class="d-tab" x="392" y="220" text-anchor="middle">a6</text>
+  <text class="d-tab" x="437" y="220" text-anchor="middle">a7</text>
+  <line class="d-arw" x1="122" y1="246" x2="122" y2="235" marker-end="url(#ar-9)"/>
+  <text class="d-edge" x="122" y="260" text-anchor="middle">rd_ptr</text>
+  <text class="d-tab" x="478" y="210" text-anchor="start">wr_ptr = 1_000</text>
+  <text class="d-tab" x="478" y="228" text-anchor="start">rd_ptr = 0_000</text>
+  <text class="d-edge-hl" x="478" y="250" text-anchor="start">count = 8 → 满</text>
+</svg>
+<figcaption><b>两种情况下指针都指着同一格,区别只在下划线前面那一位。</b>低三位负责寻址,多出来的第四位记录“转了几圈”。于是 <code>count = wr_ptr − rd_ptr</code> 在空时是 0、满时是 8,一个减法就把两种状态分开了 —— 不需要额外的标志位,也不会浪费一个存储单元。</figcaption>
+</figure>
+
+<figure class="file">
+  <figcaption><span class="path">code/lesson09/sync_fifo.v</span><span class="note">可综合 · DEPTH 必须是 2 的幂</span></figcaption>
+  <div class="body"><pre><code>    reg [W-1:0] mem [0:DEPTH-1];
+
+    // 指针比地址多一位:高位相同 = 同一圈,高位不同 = 差一圈
+    reg [AW:0] wr_ptr, rd_ptr;
+
+    // 满了不许写,空了不许读 —— 保护写在模块内部,调用者不用小心
+    wire do_wr = wr_en &amp; ~full;
+    wire do_rd = rd_en &amp; ~empty;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            wr_ptr &lt;= 0;
+        end else if (do_wr) begin
+            mem[wr_ptr[AW-1:0]] &lt;= din;
+            wr_ptr &lt;= wr_ptr + 1'b1;
+        end
+    end
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)     rd_ptr &lt;= 0;
+        else if (do_rd) rd_ptr &lt;= rd_ptr + 1'b1;
+    end
+
+    // 组合读:dout 始终等于队头,不用等一拍。
+    // 代价是这块存储会被推断成分布式 RAM(LUT RAM),深度大时应改成同步读。
+    assign dout  = mem[rd_ptr[AW-1:0]];
+
+    assign count = wr_ptr - rd_ptr;
+    assign empty = (wr_ptr == rd_ptr);
+    assign full  = (count == DEPTH);</code></pre></div>
+</figure>
+<ul>
+  <li><code>mem[wr_ptr[AW-1:0]]</code> —— 寻址只用<strong>低 AW 位</strong>,多出来的最高位不参与。</li>
+  <li><code>do_wr = wr_en &amp; ~full</code> —— 把保护做在模块<em>内部</em>。这样调用者写满了也不会破坏数据,是好接口设计的标志。</li>
+  <li><code>count = wr_ptr - rd_ptr</code> —— 指针回绕时这个减法照样正确,因为无符号减法本身就是模 2<sup>AW+1</sup> 运算。</li>
+  <li><code>DEPTH</code> 必须是 2 的幂,否则指针自然回绕的周期和 <code>DEPTH</code> 不一致,空满判断全错。</li>
+</ul>
+
+<h2 id="s5">跑仿真</h2>
+<div class="term"><pre><span class="cmd">.\sim.bat lesson09 ram_rom_tb</span>
+[1] 往 RAM 的 0..15 号地址写入 0x10..0x1f
+[2] 读回核对(同步读,给地址后要等一拍)
+     16 个地址核对完毕
+[3] ROM 正弦表(和 TB 独立读入的参考表比对)
+     addr   rom    ref
+      0     80     80   [PASS]
+      1     b0     b0   [PASS]
+      2     da     da   [PASS]
+      3     f5     f5   [PASS]
+      4     ff     ff   [PASS]
+   ...
+     15     4f     4f   [PASS]
+[结果] RAM 与 ROM 全部通过
+
+<span class="cmd">.\sim.bat lesson09 sync_fifo_tb</span>
+[TB] 复位后 count=0 empty=1 full=0
+[1] 连续写入 8 个数据 a0..a7
+    count=8 full=1 empty=0
+[2] 满的时候再写一个 ee,应该被挡住
+    count 仍是 8 —— 挡住了
+[3] 连续读出,顺序应该是 a0 a1 … a7
+    第 0 个读出 a0  [PASS]
+    第 1 个读出 a1  [PASS]
+   ...
+    第 7 个读出 a7  [PASS]
+    count=0 full=0 empty=1
+[结果] FIFO 全部检查通过</pre></div>
+<div class="box tip">
+  <b>测存储器,要测的是边界</b>
+  <p>“写进去能读出来”几乎不可能失败,测它没什么价值。真正会出错的是这四处:<strong>写满的那一刻</strong>、<strong>满了还写</strong>、<strong>读空的那一刻</strong>、<strong>空了还读</strong>。再加一条:<strong>指针回绕之后再走一圈</strong> —— 很多 FIFO 的 bug 在第一圈完全正常,第二圈才暴露。</p>
+  <p>在 GTKWave 里把 <code>wr_ptr</code> 和 <code>rd_ptr</code> 设成 Binary 显示,盯着最高位:写满一圈时它会翻一次,这就是“多一位”在工作的直接证据。</p>
+</div>
+
+<h2 id="sasync">异步 FIFO:第 06 课欠的那笔账</h2>
+<p>第 06 课的结论是:<strong>两级同步器只对单比特有效</strong>,多比特总线各位可能采到不同拍,拼出一个从未存在过的数值。当时留了个话头 —— 多比特跨时钟域要用握手或异步 FIFO。现在把它补上。</p>
+<p>异步 FIFO 的读写用<strong>两个独立时钟</strong>,频率可以毫无关系。它靠三招做到安全:</p>
+<ol class="steps">
+  <li><strong>指针用格雷码传过去。</strong>格雷码相邻两个值只差一位(第 08 课),所以对方同步时最坏情况也只是采到旧值或新值,<em>不可能</em>采到第三个值。二进制指针从 <code>0111</code> 跳到 <code>1000</code> 四位全翻,绝对不能直传。</li>
+  <li><strong>指针多一位。</strong>和同步 FIFO 一样,用来区分空和满。</li>
+  <li><strong>空满判断各在自己的时钟域里做。</strong>读侧判空、写侧判满,各自只需要对方那个<em>同步过来的</em>指针。而且判断结果必须寄存一拍,否则会形成组合环。</li>
+</ol>
+
+<figure class="dia">
+<svg viewBox="0 0 640 250" role="img" aria-label="异步 FIFO 的结构:写指针的格雷码经两级触发器同步到读时钟域用来判空,读指针的格雷码经两级触发器同步到写时钟域用来判满,两个时钟域各自独立">
+  <defs>
+    <marker id="ar-9b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon class="d-mk" points="0,1 10,5 0,9"/>
+    </marker>
+  </defs>
+
+  <rect class="d-box-dash" x="10" y="32" width="280" height="190"/>
+  <text class="d-sub" x="150" y="24" text-anchor="middle">写时钟域 wclk</text>
+  <rect class="d-box-dash" x="350" y="32" width="280" height="190"/>
+  <text class="d-sub" x="490" y="24" text-anchor="middle">读时钟域 rclk</text>
+
+  <rect class="d-box" x="30" y="58" width="120" height="40"/>
+  <text class="d-txt" x="90" y="78">写指针</text>
+  <text class="d-sub" x="90" y="93">wgray</text>
+
+  <rect class="d-box-hl" x="490" y="58" width="120" height="40"/>
+  <text class="d-txt" x="550" y="78">判空</text>
+  <text class="d-sub" x="550" y="93">rempty</text>
+
+  <rect class="d-box-hl" x="30" y="160" width="120" height="40"/>
+  <text class="d-txt" x="90" y="180">判满</text>
+  <text class="d-sub" x="90" y="195">wfull</text>
+
+  <rect class="d-box" x="490" y="160" width="120" height="40"/>
+  <text class="d-txt" x="550" y="180">读指针</text>
+  <text class="d-sub" x="550" y="195">rgray</text>
+
+  <line class="d-arw-hl" x1="152" y1="78" x2="360" y2="78" marker-end="url(#ar-9b)"/>
+  <text class="d-edge-hl" x="255" y="70" text-anchor="middle">wgray 打两拍</text>
+  <rect class="d-box" x="365" y="61" width="48" height="34"/>
+  <text class="d-txt" x="389" y="82">FF</text>
+  <line class="d-arw" x1="415" y1="78" x2="422" y2="78" marker-end="url(#ar-9b)"/>
+  <rect class="d-box" x="425" y="61" width="48" height="34"/>
+  <text class="d-txt" x="449" y="82">FF</text>
+  <line class="d-arw" x1="475" y1="78" x2="486" y2="78" marker-end="url(#ar-9b)"/>
+
+  <line class="d-arw-hl" x1="488" y1="180" x2="280" y2="180" marker-end="url(#ar-9b)"/>
+  <text class="d-edge-hl" x="380" y="172" text-anchor="middle">rgray 打两拍</text>
+  <rect class="d-box" x="227" y="163" width="48" height="34"/>
+  <text class="d-txt" x="251" y="184">FF</text>
+  <line class="d-arw" x1="225" y1="180" x2="218" y2="180" marker-end="url(#ar-9b)"/>
+  <rect class="d-box" x="167" y="163" width="48" height="34"/>
+  <text class="d-txt" x="191" y="184">FF</text>
+  <line class="d-arw" x1="165" y1="180" x2="154" y2="180" marker-end="url(#ar-9b)"/>
+
+  <text class="w-note" x="320" y="242" text-anchor="middle">存储阵列是普通双口 RAM,写侧写、读侧读 —— 图中省略</text>
+</svg>
+<figcaption><b>两个时钟域之间只有两条通路,而且两条都只传格雷码指针。</b>写指针同步到读域用来判空;读指针同步到写域用来判满。<em>注意方向</em>:判空的人需要知道"写到哪了",判满的人需要知道"读到哪了" —— 各自要对方的指针,所以两条链方向相反。数据本身不跨域,它躺在双口 RAM 里,一侧写一侧读。</figcaption>
+</figure>
+
+<figure class="file">
+  <figcaption><span class="path">code/lesson09/async_fifo.v</span><span class="note">可综合 · 核心就这几行</span></figcaption>
+  <div class="body"><pre><code>    // ---- 写域:二进制指针管寻址,格雷码指针管跨域 ----
+    reg  [AW:0] wbin, wgray;
+    wire [AW:0] wbin_next  = wbin + (winc &amp; ~wfull);
+    wire [AW:0] wgray_next = (wbin_next &gt;&gt; 1) ^ wbin_next;   // 二进制 → 格雷码
+
+    // ---- 跨域:只传格雷码指针,各自打两拍 ----
+    reg [AW:0] wgray_r1, wgray_r2;      // 写指针 → 读域
+    always @(posedge rclk or negedge rrst_n) begin
+        if (!rrst_n) begin wgray_r1 &lt;= 0; wgray_r2 &lt;= 0; end
+        else         begin wgray_r1 &lt;= wgray; wgray_r2 &lt;= wgray_r1; end
+    end
+
+    // ---- 空满判断:各在自己域里,而且必须寄存 ----
+    always @(posedge rclk or negedge rrst_n) begin
+        if (!rrst_n) rempty_r &lt;= 1'b1;               // 复位后是空的
+        else         rempty_r &lt;= (rgray_next == wgray_r2);
+    end
+
+    always @(posedge wclk or negedge wrst_n) begin
+        if (!wrst_n) wfull_r &lt;= 1'b0;
+        // 满 = 写指针比读指针多绕一圈。格雷码下就是"最高两位取反、其余相同"
+        else         wfull_r &lt;= (wgray_next == {~rgray_w2[AW:AW-1], rgray_w2[AW-2:0]});
+    end</code></pre></div>
+</figure>
+<div class="tw">
+<table>
+  <caption>三个非显然的细节</caption>
+  <thead><tr><th>写法</th><th>为什么必须这样</th></tr></thead>
+  <tbody>
+    <tr><td><code>(bin &gt;&gt; 1) ^ bin</code></td><td>二进制转格雷码的全部内容,就是第 08 课那一行 <code>bin ^ (bin&gt;&gt;1)</code></td></tr>
+    <tr><td>判断结果<strong>必须寄存</strong></td><td>否则 <code>rempty → rbin_next → rgray_next → rempty</code> 形成<strong>组合环</strong>,综合直接失败。用 <code>*_next</code> 算、寄存一拍输出,标志和指针才同拍生效</td></tr>
+    <tr><td>满的条件是"<strong>最高两位</strong>取反"</td><td>不是最高一位。格雷码里"多绕一圈"对应高两位同时反转 —— 拿 <code>DEPTH=8</code> 手算一遍:写 8 个后 <code>wgray=1100</code>、<code>rgray=0000</code>,正好符合</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="box pit">
+  <b>格雷码只保证"读到的值是旧的或新的",不保证"是最新的"</b>
+  <p>同步过来的指针天生落后 2 拍以上,所以 <code>rempty</code> 可能<strong>偏保守</strong> —— 明明已经写进去了,读侧还以为是空的。<code>wfull</code> 同理会偏早报满。</p>
+  <p>这是<strong>安全方向的误差</strong>,可以接受:保守判断只会少读几拍、少写几个,永远不会读到无效数据或覆盖未读数据。反过来如果误差朝另一个方向,那就是数据损坏。<em>设计跨时钟域逻辑时,永远要确认误差偏在安全的那一侧。</em></p>
+</div>
+
+<h2 id="ex">练习</h2>
+<ol class="tasks">
+<li>
+  <h3>把 ROM 的路径写错<span class="lv">热身</span></h3>
+  <p>把 <code>ram_rom_tb.v</code> 里 <code>.FILE("lesson09/sine.hex")</code> 改成 <code>.FILE("sine.hex")</code>,重跑。发生了什么?终端里那句提示很容易被忽略,怎么让这种失败变得响亮?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p><code>vvp</code> 会打印一句 <em>WARNING: … cannot open sine.hex</em>,然后继续跑,ROM 内容全是 <code>x</code>,第 3 部分全部 FAIL。<strong>仿真没有失败退出</strong>,只是警告 —— 在几百行日志里极易漏掉。</p>
+    <p>让它变响亮的办法:在模块的 <code>initial</code> 里加一句自检。</p>
+    <pre>initial begin
+    $readmemh(FILE, mem);
+    // synthesis translate_off
+    if (mem[0] === {W{1'bx}}) begin
+        $display("[致命] ROM 初始化文件没读到:%s", FILE);
+        $finish;                     // 直接终止,不要带着一堆 x 往下跑
+    end
+    // synthesis translate_on
+end</pre>
+    <p>这是一条通用原则:<strong>把静默失败改造成显式失败</strong>。仿真里最贵的时间都花在追查“为什么这里是 x”上,而 x 的源头往往就是某个没读到的文件、某个没接的端口。</p>
+  </div></details>
+</li>
+<li>
+  <h3>双端口 RAM<span class="lv">动手</span></h3>
+  <p>写 <code>ram_dp.v</code>:两个独立端口,A 口只写(<code>wr_addr</code>/<code>din</code>/<code>we</code>),B 口只读(<code>rd_addr</code>/<code>dout</code>),同一个时钟。写 TB 验证:同一拍写地址 5、读地址 5,读到的是新值还是旧值?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <pre>module ram_dp #(
+    parameter W     = 8,
+    parameter DEPTH = 256,
+    parameter AW    = $clog2(DEPTH)
+)(
+    input  wire          clk,
+    input  wire          we,
+    input  wire [AW-1:0] wr_addr,
+    input  wire [W-1:0]  din,
+    input  wire [AW-1:0] rd_addr,
+    output reg  [W-1:0]  dout
+);
+    reg [W-1:0] mem [0:DEPTH-1];
+
+    always @(posedge clk) begin
+        if (we) mem[wr_addr] &lt;= din;
+    end
+
+    always @(posedge clk) begin
+        dout &lt;= mem[rd_addr];
+    end
+endmodule</pre>
+    <p>读到的是<strong>旧值</strong>。因为两条 <code>&lt;=</code> 都在同一个时钟沿执行,<code>dout</code> 取的是写入生效之前的内容。这个行为叫 <em>READ_FIRST</em>(读优先)。</p>
+    <p>想读到新值(<em>WRITE_FIRST</em>),得自己在外面加旁路:</p>
+    <pre>wire same = we &amp;&amp; (wr_addr == rd_addr);
+reg  same_d, din_d;
+always @(posedge clk) begin
+    same_d &lt;= same;
+    din_d  &lt;= din;
+end
+wire [W-1:0] dout_wf = same_d ? din_d : dout;   // 撞地址时直接用刚写的数</pre>
+    <p><strong>不同工具、不同 RAM 原语的默认行为不一样</strong>,所以撞地址这件事永远要自己在 TB 里验一遍,不要假设。这是块 RAM 使用中最常见的一处“仿真和上板不一致”。</p>
+  </div></details>
+</li>
+<li>
+  <h3>给 FIFO 加“将满”和“将空”<span class="lv">动手</span></h3>
+  <p>给 <code>sync_fifo</code> 加两个输出:<code>almost_full</code>(还剩 <code>MARGIN</code> 个位置)和 <code>almost_empty</code>(只剩 <code>MARGIN</code> 个数据),<code>MARGIN</code> 做成参数。为什么真实系统里几乎必须有它们?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <pre>parameter MARGIN = 2;
+…
+assign almost_full  = (count &gt;= DEPTH - MARGIN);
+assign almost_empty = (count &lt;= MARGIN);</pre>
+    <p>为什么必须有:<strong>上游停不下来</strong>。<code>full</code> 拉高的那一拍才通知上游“别写了”,可上游收到这个信号需要一拍、它自己的流水线里可能还有两三拍的数据在路上 —— 等它真的停下来,FIFO 早就溢出了。</p>
+    <p>所以正确的握手是用 <code>almost_full</code> 提前刹车,<code>MARGIN</code> 至少等于<strong>上游的反应延迟(拍数)</strong>。同理 <code>almost_empty</code> 用来提前唤醒上游补数据,避免下游断流。</p>
+    <p>这就是为什么厂商 FIFO IP 都带一组可编程的阈值信号 —— 不是锦上添花,是能不能用的问题。</p>
+  </div></details>
+</li>
+<li>
+  <h3>DEPTH 不是 2 的幂会怎样<span class="lv">想清楚</span></h3>
+  <p>把 <code>sync_fifo_tb.v</code> 的 <code>DEPTH</code> 改成 6,重跑。哪里开始不对?如果一定要支持任意深度,该怎么改?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p><code>DEPTH=6</code> 时 <code>AW = $clog2(6) = 3</code>,指针是 4 位。写 6 个之后 <code>count = 6</code>,<code>full</code> 正确拉高 —— 第一圈看起来没问题。<strong>问题出在回绕</strong>:指针加到 4'b1111 之后回到 0,而 <code>16</code> 不是 <code>6</code> 的整数倍,于是 <code>count = wr_ptr - rd_ptr</code> 从某一圈开始就和真实占用量脱节,空满判断全乱。</p>
+    <p>要支持任意深度,得<strong>放弃“靠自然回绕”</strong>,改成显式管理:</p>
+    <pre>reg [AW-1:0] wr_ptr, rd_ptr;      // 回到 AW 位,不再多一位
+reg [AW:0]   count;               // 单独维护占用量
+
+always @(posedge clk or negedge rst_n) begin
+    if (!rst_n) wr_ptr &lt;= 0;
+    else if (do_wr)
+        wr_ptr &lt;= (wr_ptr == DEPTH-1) ? 0 : wr_ptr + 1'b1;   // 手动回绕
+end
+// rd_ptr 同理
+
+always @(posedge clk or negedge rst_n) begin
+    if (!rst_n)                     count &lt;= 0;
+    else if (do_wr &amp;&amp; !do_rd)       count &lt;= count + 1'b1;
+    else if (do_rd &amp;&amp; !do_wr)       count &lt;= count - 1'b1;
+    // 同时读写:占用量不变
+end
+
+assign empty = (count == 0);
+assign full  = (count == DEPTH);</pre>
+    <p>代价是多了一个计数器和两个比较器。所以工程上的默认选择很明确:<strong>能凑成 2 的幂就凑</strong>。要 6 个位置就做 8 个 —— 块 RAM 反正是按块分配的,多两个位置一分钱不花。</p>
+  </div></details>
+</li>
+</ol>
+
+<nav class="pager"></nav>
+</main>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

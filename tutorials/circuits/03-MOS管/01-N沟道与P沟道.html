@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>N沟道与P沟道</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.pz{fill:var(--copper);fill-opacity:.16;stroke:var(--line)}
+.nz{fill:var(--low);fill-opacity:.24;stroke:var(--line)}
+.ox{fill:var(--muted);fill-opacity:.35}
+.chn{fill:var(--low);fill-opacity:.85}
+.chp{fill:var(--copper);fill-opacity:.85}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#mos">MOS管</a><span class="sp"></span><span>01 / 09</span></nav>
+<header>
+  <span class="eyebrow">MOS管 · NMOS 与 PMOS</span>
+  <h1>N沟道与P沟道</h1>
+  <p class="lede">NMOS 和 PMOS 的差别在哪里？为什么低边开关用 NMOS，高边开关常用 PMOS？下面切换管子类型和栅极电压，看沟道有没有形成、电流往哪走。</p>
+</header>
+
+<section id="struct">
+  <span class="eyebrow">结构剖面 · 反型层</span>
+  <h2>沟道是栅极电压"吸"出来的</h2>
+  <p>NMOS 做在 P 型衬底上，源极和漏极是两块 N+ 区。两块 N+ 之间隔着 P 区，相当于两个背靠背的 PN 结，所以栅极不加电压时不通。栅极加正压，电场把衬底里的少数载流子电子吸到表面，形成一层 N 型的反型层，把源漏连起来，这层就是沟道。PMOS 把所有掺杂类型反过来，栅极要加负压，沟道里跑的是空穴。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 284" role="img" aria-label="MOS 管剖面：衬底上两块源漏掺杂区，中间上方是绝缘层和栅极，栅压合适时表面形成反型层沟道">
+        <text id="s1-ts" x="105" y="18" text-anchor="middle" class="v">S 0 V</text>
+        <text id="s1-tg" x="210" y="18" text-anchor="middle" class="v hi">G +10 V</text>
+        <text id="s1-td" x="315" y="18" text-anchor="middle" class="v">D 经负载接 12 V</text>
+        <path class="w" d="M105,28 V110 M210,28 V80 M315,28 V110"/>
+        <rect id="s1-sub" class="pz" x="30" y="110" width="360" height="130"/>
+        <path id="s1-ws" class="nz" d="M60,110 V145 Q60,160 75,160 H135 Q150,160 150,145 V110 Z"/>
+        <path id="s1-wd" class="nz" d="M270,110 V145 Q270,160 285,160 H345 Q360,160 360,145 V110 Z"/>
+        <rect class="ox" x="150" y="98" width="120" height="12"/>
+        <rect class="box" x="150" y="80" width="120" height="18" rx="2"/>
+        <text x="210" y="94" text-anchor="middle" class="tm">栅极</text>
+        <rect id="s1-ch" class="chn" x="150" y="110" width="120" height="8"/>
+        <text id="s1-lch" x="210" y="136" text-anchor="middle" class="tm">N 型反型层，电子</text>
+        <text id="s1-lws" x="105" y="142" text-anchor="middle" class="t">N+ 源区</text>
+        <text id="s1-lwd" x="315" y="142" text-anchor="middle" class="t">N+ 漏区</text>
+        <text id="s1-lsub" x="210" y="206" text-anchor="middle" class="t">P 型衬底</text>
+        <path class="w" d="M210,240 V262 H14 V62 H105"/>
+        <circle class="dot" cx="105" cy="62" r="3.5"/>
+        <text x="218" y="258" class="tm">B 衬底，内部接 S</text>
+        <path id="s1-flow" class="flow" d="M315,32 V114 H105 V32"/>
+      </svg>
+      <figcaption>栅极下面灰色薄层是二氧化硅绝缘层，栅极和沟道之间没有直流通路。绿色虚线是电流（按正电荷方向），电子的运动方向与它相反。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">管子类型</span>
+        <div class="seg" id="s1-t"><button id="s1-t-n" data-v="n" aria-pressed="true">NMOS</button><button id="s1-t-p" data-v="p" aria-pressed="false">PMOS</button></div></div>
+      <div class="ctl"><span class="ctl-l">栅源电压 Vgs</span>
+        <div class="seg" id="s1-g"><button id="s1-g-0" data-v="0" aria-pressed="false">Vgs = 0</button><button id="s1-g-on" data-v="on" aria-pressed="true">Vgs = +10 V</button><button id="s1-g-rev" data-v="rev" aria-pressed="false">Vgs = −10 V</button></div></div>
+      <dl class="read">
+        <dt>衬底 / 源漏区</dt><dd id="s1-dop">P 衬底，N+ 源漏</dd>
+        <dt>沟道载流子</dt><dd id="s1-car">电子</dd>
+        <dt>导通条件</dt><dd id="s1-cond">Vgs &gt; Vth ≈ +2 V</dd>
+        <dt>电流方向</dt><dd id="s1-dir">D → S</dd>
+        <dt>状态</dt><dd><span id="s1-st" class="chip on">导通</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="sym">
+  <span class="eyebrow">电路符号 · 箭头与体二极管</span>
+  <h2>符号怎么认</h2>
+  <p>符号里中间那根带箭头的引线代表衬底 B，分立 MOS 管在内部把它和源极短接。箭头表示衬底和沟道之间 PN 结的方向，从 P 指向 N：NMOS 衬底是 P、沟道是 N，箭头指向沟道；PMOS 反过来，箭头背离沟道。三段断开的竖线表示增强型，Vgs = 0 时沟道不存在。</p>
+  <p>衬底和源极一短接，衬底与漏区之间的 PN 结就变成了一个并在 D、S 之间的二极管，叫体二极管。NMOS 的体二极管从 S 指向 D，PMOS 的从 D 指向 S。它是结构自带的，不是额外加的。</p>
+  <figure style="max-width:620px">
+    <svg viewBox="0 0 520 250" role="img" aria-label="左边增强型 NMOS 符号，箭头指向沟道，体二极管从源极指向漏极；右边增强型 PMOS 符号，箭头背离沟道，体二极管从漏极指向源极">
+      <path class="w" d="M70,125 H118"/>
+      <text x="64" y="129" text-anchor="end" class="t">G</text>
+      <line class="bar" x1="118" y1="105" x2="118" y2="145"/>
+      <line class="bar" x1="130" y1="101" x2="130" y2="113"/>
+      <line class="bar" x1="130" y1="119" x2="130" y2="131"/>
+      <line class="bar" x1="130" y1="137" x2="130" y2="149"/>
+      <path class="w" d="M130,107 H152 V50 M130,143 H152 M130,125 H152 V200"/>
+      <circle class="dot" cx="152" cy="143" r="3.5"/>
+      <polygon class="ah" points="133,125 142,120 142,130"/>
+      <path class="w" d="M152,85 H176 V119 M176,132 V165 H152 M169,119 H183"/>
+      <polygon class="ah" points="169,132 183,132 176,119"/>
+      <circle class="dot" cx="152" cy="85" r="3.5"/>
+      <circle class="dot" cx="152" cy="165" r="3.5"/>
+      <text x="152" y="42" text-anchor="middle" class="t">D</text>
+      <text x="152" y="216" text-anchor="middle" class="t">S</text>
+      <text x="190" y="130" class="tm">体二极管</text>
+      <text x="190" y="146" class="tm">S → D</text>
+      <text x="120" y="242" text-anchor="middle" class="t">NMOS：箭头指向沟道</text>
+
+      <path class="w" d="M330,125 H378"/>
+      <text x="324" y="129" text-anchor="end" class="t">G</text>
+      <line class="bar" x1="378" y1="105" x2="378" y2="145"/>
+      <line class="bar" x1="390" y1="101" x2="390" y2="113"/>
+      <line class="bar" x1="390" y1="119" x2="390" y2="131"/>
+      <line class="bar" x1="390" y1="137" x2="390" y2="149"/>
+      <path class="w" d="M390,107 H412 M390,125 H412 V50 M390,143 H412 V200"/>
+      <circle class="dot" cx="412" cy="107" r="3.5"/>
+      <polygon class="ah" points="409,125 400,120 400,130"/>
+      <path class="w" d="M412,85 H436 V119 M436,132 V165 H412 M429,119 H443"/>
+      <polygon class="ah" points="429,132 443,132 436,119"/>
+      <circle class="dot" cx="412" cy="85" r="3.5"/>
+      <circle class="dot" cx="412" cy="165" r="3.5"/>
+      <text x="412" y="42" text-anchor="middle" class="t">S</text>
+      <text x="412" y="216" text-anchor="middle" class="t">D</text>
+      <text x="450" y="130" class="tm">体二极管</text>
+      <text x="450" y="146" class="tm">D → S</text>
+      <text x="380" y="242" text-anchor="middle" class="t">PMOS：箭头背离沟道</text>
+    </svg>
+    <figcaption>习惯画法：NMOS 漏极朝上，PMOS 源极朝上，也就是源极都朝着各自的电源轨。体二极管的三角形都指向上方，正常工作时它们是反偏的。</figcaption>
+  </figure>
+  <div class="tbl"><table>
+    <thead><tr><th>对比项</th><th>NMOS</th><th>PMOS</th></tr></thead>
+    <tbody>
+      <tr><td>衬底 / 沟道</td><td>P 衬底，N 沟道</td><td>N 衬底，P 沟道</td></tr>
+      <tr><td>沟道载流子</td><td>电子</td><td>空穴</td></tr>
+      <tr><td>体硅迁移率（典型值）</td><td class="n">约 1350 cm²/(V·s)</td><td class="n">约 480 cm²/(V·s)</td></tr>
+      <tr><td>同面积同耐压 Rds(on)</td><td>小</td><td>大，约为 NMOS 的 2~3 倍</td></tr>
+      <tr><td>导通条件</td><td>Vgs &gt; Vth，栅比源高</td><td>Vgs &lt; −|Vth|，栅比源低</td></tr>
+      <tr><td>体二极管方向</td><td>S → D</td><td>D → S</td></tr>
+      <tr><td>常见位置</td><td>低边开关，源极接地</td><td>高边开关，源极接电源</td></tr>
+      <tr><td>选型</td><td>型号多、便宜、性能好</td><td>同规格更贵，大电流型号少</td></tr>
+    </tbody>
+  </table></div>
+  <p>因为电子迁移率约是空穴的 2.5~3 倍，同样的沟道尺寸，NMOS 导电能力更强。要做到同样的 Rds(on)，PMOS 的芯片面积得大 2~3 倍，结电容和价格跟着上去。所以大电流场合优先用 NMOS。</p>
+</section>
+
+<section id="side">
+  <span class="eyebrow">低边与高边</span>
+  <h2>为什么 NMOS 放下面，PMOS 放上面</h2>
+  <p>MOS 管导通看的是 Vgs，也就是栅极相对源极的电压，不是栅极对地的电压。NMOS 放在负载下面，源极接地，栅极给正压就能导通。PMOS 放在负载上面，源极接电源，栅极拉到地就能导通。如果把 NMOS 放到上面，源极会跟着负载电压往上走，栅极电压不够高就开不透。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 380 290" role="img" aria-label="三种开关接法：NMOS 低边、PMOS 高边、NMOS 高边，栅极驱动电压可切换，12 伏电源经负载和 MOS 管到地">
+        <text x="250" y="18" text-anchor="middle" class="v">12 V</text>
+        <path class="w" d="M238,26 H262"/>
+        <g id="s3-g-a">
+          <path class="w" d="M250,26 V44 M250,94 V172 H228 M228,208 H250 M228,190 H250 V260 M236,260 H264 M241,265 H259 M246,270 H254"/>
+          <rect id="s3-load-a" class="box" x="232" y="44" width="36" height="50" rx="4"/>
+          <text x="250" y="73" text-anchor="middle" class="t">负载</text>
+          <text x="276" y="73" class="v">12 Ω</text>
+          <line class="bar" x1="216" y1="170" x2="216" y2="210"/>
+          <line class="bar" x1="228" y1="166" x2="228" y2="178"/>
+          <line class="bar" x1="228" y1="184" x2="228" y2="196"/>
+          <line class="bar" x1="228" y1="202" x2="228" y2="214"/>
+          <circle class="dot" cx="250" cy="208" r="3.5"/>
+          <polygon class="ah" points="231,190 240,185 240,195"/>
+          <path class="w" d="M250,130 H274 V184 M274,197 V230 H250 M267,184 H281"/>
+          <polygon class="ah" points="267,197 281,197 274,184"/>
+          <circle class="dot" cx="250" cy="130" r="3.5"/>
+          <circle class="dot" cx="250" cy="230" r="3.5"/>
+          <text x="256" y="162" class="tm">D</text>
+          <text x="256" y="250" class="tm">S</text>
+          <rect class="box" x="70" y="170" width="64" height="40" rx="4"/>
+          <text x="102" y="195" text-anchor="middle" class="t">驱动</text>
+          <path class="w" d="M134,190 H216"/>
+          <text id="s3-vg-a" x="175" y="182" text-anchor="middle" class="v">12 V</text>
+          <text x="210" y="240" text-anchor="end" class="t">NMOS</text>
+          <path id="s3-f-a" class="flow" d="M250,28 V172 H232 V208 H250 V258"/>
+        </g>
+        <g id="s3-g-b" hidden>
+          <path class="w" d="M250,26 V110 H228 M228,92 H250 M228,128 H250 V180 M250,230 V262 M236,262 H264 M241,267 H259 M246,272 H254"/>
+          <line class="bar" x1="216" y1="90" x2="216" y2="130"/>
+          <line class="bar" x1="228" y1="86" x2="228" y2="98"/>
+          <line class="bar" x1="228" y1="104" x2="228" y2="116"/>
+          <line class="bar" x1="228" y1="122" x2="228" y2="134"/>
+          <circle class="dot" cx="250" cy="92" r="3.5"/>
+          <polygon class="ah" points="247,110 238,105 238,115"/>
+          <path class="w" d="M250,50 H274 V104 M274,117 V150 H250 M267,104 H281"/>
+          <polygon class="ah" points="267,117 281,117 274,104"/>
+          <circle class="dot" cx="250" cy="50" r="3.5"/>
+          <circle class="dot" cx="250" cy="150" r="3.5"/>
+          <text x="256" y="80" class="tm">S</text>
+          <text x="256" y="170" class="tm">D</text>
+          <rect id="s3-load-b" class="box" x="232" y="180" width="36" height="50" rx="4"/>
+          <text x="250" y="209" text-anchor="middle" class="t">负载</text>
+          <text x="276" y="209" class="v">12 Ω</text>
+          <rect class="box" x="70" y="90" width="64" height="40" rx="4"/>
+          <text x="102" y="115" text-anchor="middle" class="t">驱动</text>
+          <path class="w" d="M134,110 H216"/>
+          <text id="s3-vg-b" x="175" y="102" text-anchor="middle" class="v">0 V</text>
+          <text x="210" y="158" text-anchor="end" class="t">PMOS</text>
+          <path id="s3-f-b" class="flow" d="M250,28 V92 H232 V128 H250 V260"/>
+        </g>
+        <g id="s3-g-c" hidden>
+          <path class="w" d="M250,26 V92 H228 M228,128 H250 M228,110 H250 V180 M250,230 V262 M236,262 H264 M241,267 H259 M246,272 H254"/>
+          <line class="bar" x1="216" y1="90" x2="216" y2="130"/>
+          <line class="bar" x1="228" y1="86" x2="228" y2="98"/>
+          <line class="bar" x1="228" y1="104" x2="228" y2="116"/>
+          <line class="bar" x1="228" y1="122" x2="228" y2="134"/>
+          <circle class="dot" cx="250" cy="128" r="3.5"/>
+          <polygon class="ah" points="231,110 240,105 240,115"/>
+          <path class="w" d="M250,50 H274 V104 M274,117 V150 H250 M267,104 H281"/>
+          <polygon class="ah" points="267,117 281,117 274,104"/>
+          <circle class="dot" cx="250" cy="50" r="3.5"/>
+          <circle class="dot" cx="250" cy="150" r="3.5"/>
+          <text x="256" y="80" class="tm">D</text>
+          <text x="256" y="170" class="tm">S</text>
+          <text id="s3-vs-c" x="200" y="172" text-anchor="end" class="v">Vs 0 V</text>
+          <rect id="s3-load-c" class="box" x="232" y="180" width="36" height="50" rx="4"/>
+          <text x="250" y="209" text-anchor="middle" class="t">负载</text>
+          <text x="276" y="209" class="v">12 Ω</text>
+          <rect class="box" x="70" y="90" width="64" height="40" rx="4"/>
+          <text x="102" y="115" text-anchor="middle" class="t">驱动</text>
+          <path class="w" d="M134,110 H216"/>
+          <text id="s3-vg-c" x="175" y="102" text-anchor="middle" class="v">12 V</text>
+          <text x="210" y="148" text-anchor="end" class="t">NMOS</text>
+          <path id="s3-f-c" class="flow" d="M250,28 V92 H232 V128 H250 V260"/>
+        </g>
+      </svg>
+      <figcaption>绿色虚线是负载电流。驱动电压是栅极对地的电压，管子认的却是栅极对源极的 Vgs。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">接法</span>
+        <div class="seg" id="s3-m"><button id="s3-m-a" data-v="a" aria-pressed="true">NMOS 低边</button><button id="s3-m-b" data-v="b" aria-pressed="false">PMOS 高边</button><button id="s3-m-c" data-v="c" aria-pressed="false">NMOS 高边</button></div></div>
+      <div class="ctl"><span class="ctl-l">栅极对地电压 Vg</span>
+        <div class="seg" id="s3-g"><button id="s3-g-0" data-v="0" aria-pressed="false">0 V</button><button id="s3-g-12" data-v="12" aria-pressed="true">12 V</button><button id="s3-g-24" data-v="24" aria-pressed="false">24 V，自举</button></div></div>
+      <dl class="read">
+        <dt>源极电位 Vs</dt><dd id="s3-vs">0 V</dd>
+        <dt>Vgs = Vg − Vs</dt><dd id="s3-vgs">12 V</dd>
+        <dt>MOS 状态</dt><dd><span id="s3-st" class="chip on">完全导通</span></dd>
+        <dt>负载电流</dt><dd id="s3-i">1.00 A</dd>
+        <dt>管压降 |Vds|</dt><dd id="s3-vds">10 mV</dd>
+        <dt>MOS 发热</dt><dd id="s3-p">10 mW</dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+  <p class="note">示意模型：Vth 取 2 V；NMOS 取 K = 5 A/V²，PMOS 因为空穴迁移率低取 K = 2 A/V²；电流、管压降都按平方律公式解出。Vgs 最大值按常见的 ±20 V。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>NMOS 和 PMOS 有什么区别？</summary>
+      <div class="ans"><p>NMOS 是 P 衬底上做 N 沟道，靠电子导电，Vgs 为正且大于 Vth 时导通。PMOS 是 N 衬底上做 P 沟道，靠空穴导电，Vgs 为负时导通。电子迁移率约是空穴的 2.5~3 倍，所以同样尺寸下 NMOS 的 Rds(on) 更小、更便宜，功率电路优先用 NMOS。</p></div></details>
+    <details><summary>符号上的箭头是什么意思？怎么一眼分出 N 管和 P 管？</summary>
+      <div class="ans"><p>箭头画在衬底引线上，表示衬底与沟道之间 PN 结的方向，从 P 指向 N。箭头指向沟道是 NMOS，背离沟道是 PMOS。三段断开的竖线表示增强型。</p></div></details>
+    <details><summary>为什么低边开关用 NMOS，高边开关常用 PMOS？</summary>
+      <div class="ans"><p>MOS 管导通看 Vgs。NMOS 放在低边，源极接地，Vgs 就等于驱动电压，单片机或普通驱动器就能直接开。PMOS 放在高边，源极接电源，把栅极拉到地就有足够的负 Vgs。</p><p>NMOS 放在高边时源极电位会升到接近电源，栅极必须比电源再高 10 V 左右才能开透，要用自举或电荷泵。大电流高边为了用 NMOS 的低导通电阻，都会上专门的高边驱动芯片。</p></div></details>
+    <details><summary>NMOS 高边开关直接用 12 V 驱动会怎样？</summary>
+      <div class="ans"><p>管子变成源极跟随器，源极最多升到 Vg − Vth 附近，负载拿不到全部电压，MOS 上压着好几伏，同时流过大电流，发热严重，容易烧管。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="next" href="02-增强型与耗尽型.html"><span>下一页</span>增强型与耗尽型</a></nav>
+</div>
+
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 结构剖面 */
+const s1={t:'n',g:'on'};
+const s1N={
+  n_on:'栅极比源极高 10 V，电场穿过绝缘层，把 P 衬底里的少数载流子电子吸到表面。表面电子浓度超过空穴，这一薄层就反型成了 N 型，把两块 N+ 连通。电子从 S 流向 D，电流从 D 流向 S。',
+  n_0:'Vgs = 0，表面仍是 P 型。源区、衬底、漏区构成 N-P-N，两个背靠背 PN 结总有一个反偏，D 和 S 之间不通。这就是增强型：不加栅压就关断。',
+  n_rev:'栅极加负压，吸到表面的是空穴，P 型表面变得更"P"，叫积累，根本不可能反型，管子可靠关断。大功率驱动里常用 −5 V 左右的负压关断来抗干扰。',
+  p_on:'PMOS 的栅极要比源极低。Vgs = −10 V 把 N 衬底里的少数载流子空穴吸到表面，形成 P 型反型层。空穴从 S 流向 D，电流方向也是 S → D。',
+  p_0:'Vgs = 0，N 型表面没有反型，P+ 源区、N 衬底、P+ 漏区构成 P-N-P，关断。',
+  p_rev:'栅极比源极还高，吸上来的是电子，N 型表面只会更"N"，PMOS 关断。注意：正 Vgs 对 NMOS 是开通，对 PMOS 是关断。'
+};
+function s1u(){
+  const n=s1.t==='n',g=s1.g;
+  const vgs=g==='0'?0:(g==='on'?(n?10:-10):(n?-10:10));
+  const on=n?vgs>2:vgs<-2;
+  const vs=n?0:12;
+  $('s1-g-on').textContent=n?'Vgs = +10 V':'Vgs = −10 V';
+  $('s1-g-rev').textContent=n?'Vgs = −10 V':'Vgs = +10 V';
+  $('s1-sub').setAttribute('class',n?'pz':'nz');
+  $('s1-ws').setAttribute('class',n?'nz':'pz');$('s1-wd').setAttribute('class',n?'nz':'pz');
+  $('s1-ch').setAttribute('class',n?'chn':'chp');show($('s1-ch'),on);show($('s1-lch'),on);
+  $('s1-lch').textContent=n?'N 型反型层，电子':'P 型反型层，空穴';
+  $('s1-lws').textContent=(n?'N+':'P+')+' 源区';$('s1-lwd').textContent=(n?'N+':'P+')+' 漏区';
+  $('s1-lsub').textContent=(n?'P':'N')+' 型衬底';
+  $('s1-ts').textContent='S '+(n?'0 V':'+12 V');
+  $('s1-td').textContent=n?'D 经负载接 12 V':'D 经负载接地';
+  const vg=vs+vgs;$('s1-tg').textContent='G '+(vg>0?'+':'')+fmtV(vg,0);
+  setLv($('s1-tg'),null,vg>0);
+  $('s1-flow').setAttribute('d',n?'M315,32 V114 H105 V32':'M105,32 V114 H315 V32');
+  show($('s1-flow'),on);
+  $('s1-dop').textContent=n?'P 衬底，N+ 源漏':'N 衬底，P+ 源漏';
+  $('s1-car').textContent=on?(n?'电子':'空穴'):'无沟道';
+  $('s1-cond').textContent=n?'Vgs > Vth ≈ +2 V':'Vgs < Vth ≈ −2 V';
+  $('s1-dir').textContent=on?(n?'D → S':'S → D'):'无电流';
+  chip($('s1-st'),on?'导通':'截止',on?'on':'off');
+  $('s1-note').textContent=s1N[s1.t+'_'+g];
+}
+seg('s1-t',v=>{s1.t=v;s1u();});
+seg('s1-g',v=>{s1.g=v;s1u();});
+s1u();
+
+/* 3. 低边与高边 */
+const s3={m:'a',vg:12},s3RL=12,s3VT=2;
+function mosI(K,vgs,vds){
+  if(vgs<=s3VT)return 0;const ov=vgs-s3VT;
+  return vds<ov?K*(2*ov*vds-vds*vds):K*ov*ov;
+}
+function bisect(f,lo,hi){for(let k=0;k<80;k++){const mid=(lo+hi)/2;if(f(lo)*f(mid)<=0)hi=mid;else lo=mid;}return (lo+hi)/2;}
+function s3u(){
+  const m=s3.m,vg=s3.vg;let vs,vgs,vds,i;
+  if(m==='a'){vs=0;vgs=vg;vds=bisect(x=>mosI(5,vgs,x)*s3RL+x-12,0,12);i=mosI(5,vgs,vds);}
+  else if(m==='b'){vs=12;vgs=vg-12;vds=bisect(x=>mosI(2,-vgs,x)*s3RL+x-12,0,12);i=mosI(2,-vgs,vds);}
+  else{vs=bisect(x=>mosI(5,vg-x,12-x)*s3RL-x,0,12);vgs=vg-vs;vds=12-vs;i=mosI(5,vgs,vds);}
+  if(i<1e-6){i=0;vds=12;if(m==='c'){vs=0;vgs=vg;}}
+  ['a','b','c'].forEach(k=>show($('s3-g-'+k),k===m));
+  $('s3-vg-'+m).textContent=vg+' V';setLv($('s3-vg-'+m),null,vg>0);
+  $('s3-load-'+m).classList.toggle('lit',i>0.1);
+  show($('s3-f-'+m),i>0.01);
+  $('s3-vs-c').textContent='Vs '+fmtV(vs,1);
+  $('s3-vs').textContent=fmtV(vs,m==='c'?2:0);
+  $('s3-vgs').textContent=fmtV(vgs,2);
+  $('s3-i').textContent=i>0?fmtA(i):'0';
+  $('s3-vds').textContent=vds>=1?fmtV(vds,2):(vds*1e3).toFixed(0)+' mV';
+  $('s3-p').textContent=fmtP(i*vds);
+  let note;
+  if(Math.abs(vgs)>20){chip($('s3-st'),'Vgs 超限','bad');
+    note='低边 NMOS 源极接地，Vg = 24 V 就是 Vgs = 24 V，超过了栅源最大电压 ±20 V，栅氧化层可能被击穿。自举升压只用在高边。';}
+  else if(i===0){chip($('s3-st'),'截止','off');
+    note=m==='b'?(vg===12?'栅极和源极都在 12 V，Vgs = 0，PMOS 关断。PMOS 的关断电压必须接近电源，所以 3.3 V 单片机不能直接驱动 12 V 的 PMOS，要加一级 NPN 或 NMOS 来拉栅极。':'栅极比源极高 12 V，对 PMOS 来说是反向栅压，管子关断。')
+      :'Vgs = '+fmtV(vgs,0)+'，低于阈值，NMOS 截止，负载断电。';}
+  else if(vds>0.5){chip($('s3-st'),'半导通，发热','warn');
+    note='源极跟着负载电压往上走，Vgs 越来越小，最后停在 Vs ≈ Vg − Vth − 过驱动电压的位置，这就是源极跟随器。负载只拿到 '+fmtV(vs,1)+'，MOS 上压着 '+fmtV(vds,1)+' 还流着 '+fmtA(i)+'，发热 '+fmtP(i*vds)+'。切到 24 V 看自举的效果。';}
+  else{chip($('s3-st'),'完全导通','on');
+    note=m==='a'?'源极接地，Vgs 就等于驱动电压 12 V，NMOS 进入可变电阻区，只剩约 10 mΩ 的导通电阻，管压降和发热都很小。'
+      :m==='b'?'源极接 12 V，栅极拉到地，Vgs = −12 V，PMOS 完全导通。同样的 |Vgs|，PMOS 的导通电阻比 NMOS 大，管压降和发热也更大。'
+      :'栅极被自举电路抬到 24 V，源极升到接近 12 V 时 Vgs 仍有约 12 V，NMOS 完全导通。半桥上管、高边驱动芯片都是这样工作的。';}
+  $('s3-note').textContent=note;
+}
+seg('s3-m',v=>{s3.m=v;s3u();});
+seg('s3-g',v=>{s3.vg=+v;s3u();});
+s3u();
+</script>
+</body>
+</html>

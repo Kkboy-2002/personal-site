@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>压敏电阻</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.dio{fill:currentColor;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round}
+.src{fill:var(--panel);stroke:currentColor;stroke-width:2}
+.lim{stroke:var(--danger);stroke-width:1.5;stroke-dasharray:5 4}
+.dim{opacity:.3}
+.hl{stroke-width:3.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#protect">保护电路</a><span class="sp"></span><span>04 / 08</span></nav>
+<header>
+  <span class="eyebrow">保护电路 · 浪涌吸收</span>
+  <h1>压敏电阻</h1>
+  <p class="lede">压敏电阻（MOV）平时像开路，电压一过门槛，电阻骤降几个数量级，把浪涌电流吸走。它通流能力大、便宜，是交流电源入口的标配。下面把它和 TVS、气体放电管放在一起比。</p>
+</header>
+
+<section id="vi">
+  <span class="eyebrow">非线性伏安特性 · 三种器件</span>
+  <h2>电压过了门槛，电阻骤降</h2>
+  <p>MOV 是氧化锌颗粒烧结成的陶瓷片。每两个晶粒之间有一层晶界，相当于一对背靠背的二极管，整片就是无数个这样的结串并联起来，所以它是双向的，也能做到很高的电压和很大的通流。</p>
+  <p>它的电流随电压按幂律变化，α 叫非线性系数，氧化锌 MOV 一般 20~50。α 越大，拐点越陡，钳位越硬。电流为 1 mA 时的电压叫压敏电压 V1mA，是它的标称值。</p>
+  <p class="eq">I = k·V^α　　V1mA：1 mA 时的电压　　钳位比 = VC / V1mA</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 322" role="img" aria-label="压敏电阻、TVS、气体放电管的伏安特性，横轴电流对数刻度，纵轴电压">
+        <g id="s1-grid"></g>
+        <path class="ax" d="M60,40 V280 H490"/>
+        <line class="ax dash" x1="60" y1="202" x2="490" y2="202"/>
+        <text x="486" y="196" text-anchor="end" class="tm">市电峰值 325 V</text>
+        <text x="64" y="30" class="tm">器件两端电压 / V</text>
+        <text x="490" y="316" text-anchor="end" class="tm">电流 / A（对数）</text>
+        <polyline id="s1-cg" class="real3" points="60,280"/>
+        <polyline id="s1-ct" class="real2" points="60,280"/>
+        <polyline id="s1-cm" class="real" points="60,280"/>
+        <line id="s1-cur" class="lim" x1="404" y1="40" x2="404" y2="280"/>
+        <circle id="s1-dm" class="dot" r="5" cx="0" cy="0" style="fill:var(--copper)"/>
+        <circle id="s1-dt" class="dot" r="5" cx="0" cy="0" style="fill:var(--low)"/>
+        <circle id="s1-dg" class="dot" r="5" cx="0" cy="0" style="fill:var(--flow)"/>
+        <text id="s1-lm" x="0" y="0" text-anchor="end" class="t" style="fill:var(--copper)">MOV</text>
+        <text id="s1-lt" x="0" y="0" class="t" style="fill:var(--low)">TVS，到 IPP 为止</text>
+        <text id="s1-lg1" x="0" y="0" class="t" style="fill:var(--flow)">GDT 辉光</text>
+        <text id="s1-lg2" x="0" y="0" text-anchor="end" class="t" style="fill:var(--flow)">GDT 弧光约 20 V</text>
+      </svg>
+      <figcaption>示意：三者都按 230 V 交流线选型。MOV 按 14D471K（V1mA 470 V，α 取 22，8/20 µs 单次 6 kA），TVS 按 1.5KE440CA（VBR 440 V，VC 602 V @ IPP 2.5 A），GDT 按直流击穿 470 V 的两极放电管。红虚线是当前电流，圆点是各器件在这个电流下的电压。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">重点看</span>
+        <div class="seg" id="s1-k"><button id="s1-k-mov" data-v="mov" aria-pressed="true">MOV</button><button id="s1-k-tvs" data-v="tvs" aria-pressed="false">TVS</button><button id="s1-k-gdt" data-v="gdt" aria-pressed="false">GDT</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-rng">浪涌电流</label>
+        <span class="rv" id="s1-rv">100 A</span>
+        <input type="range" id="s1-rng" min="0" max="7" step="1" value="5"></div>
+      <dl class="read">
+        <dt>MOV 电压</dt><dd id="s1-vm">793 V</dd>
+        <dt>TVS 电压</dt><dd id="s1-vt">—</dd>
+        <dt>GDT 电压</dt><dd id="s1-vg">≈ 25 V</dd>
+        <dt>响应时间</dt><dd id="s1-rt">ns 级</dd>
+        <dt>所选器件</dt><dd><span id="s1-st" class="chip on">在额定内</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="feat">
+  <span class="eyebrow">特点 · 优点和代价</span>
+  <h2>通流大、电容大、会老化</h2>
+  <p>MOV 的优点是便宜、通流能力大。体积差不多时，氧化锌陶瓷片能吞下的浪涌能量比硅 TVS 大得多，直径 14 mm 的片子单次能扛 6 kA（8/20 µs）。响应在 ns 级，对付雷击浪涌足够快。</p>
+  <p>代价有三个。一是钳位电压高，大电流时约为压敏电压的 1.6~2 倍（典型值），后级还要靠 TVS 精细钳位。二是结电容大，几百 pF 到几 nF，只能放在电源线上，不能放在高速信号线上。三是会老化：每次大浪涌都会损伤一部分晶界，压敏电压慢慢下降，漏电流变大，发热增加，严重时热失控起火。</p>
+  <p>所以 MOV 常放在交流电源入口，前面串保险丝或温度保险丝。MOV 老化短路或热失控时，由保险丝把它从电网上断开。内置温度保险丝的型号叫 TMOV。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>对比项</th><th>MOV 压敏电阻</th><th>TVS</th><th>GDT 气体放电管</th></tr></thead>
+    <tbody>
+      <tr><td>原理</td><td>氧化锌晶界，非线性电阻</td><td>硅 PN 结雪崩击穿</td><td>气体电离放电</td></tr>
+      <tr><td>响应速度</td><td>ns 级</td><td>ps 级（芯片本身）</td><td>百 ns 到 µs 级，电压上升越快击穿电压越高</td></tr>
+      <tr><td>动作后电压</td><td>钳位，约 1.6~2 倍压敏电压</td><td>钳位，约 1.3~1.4 倍 VBR</td><td>近似短路，弧光电压约 10~30 V</td></tr>
+      <tr><td>通流能力（8/20 µs）</td><td>kA 级</td><td>几 A 到几百 A，电压越低越大</td><td>5~20 kA 级</td></tr>
+      <tr><td>结电容</td><td>大，几百 pF 到几 nF</td><td>几 pF 到几 nF，有低容型号</td><td>很小，约 1 pF</td></tr>
+      <tr><td>续流</td><td>无</td><td>无</td><td>有，线路电压高于弧光电压时电弧不灭</td></tr>
+      <tr><td>老化</td><td>有，冲击后压敏电压下降</td><td>额定内基本不老化，过载短路</td><td>有，放电次数多了击穿电压漂移</td></tr>
+      <tr><td>典型位置</td><td>交流电源入口</td><td>直流电源、信号口的精保护</td><td>通信线、天线、户外线路的第一级</td></tr>
+    </tbody>
+  </table></div>
+  <p>MOV 的寿命按冲击次数算。规格书给出浪涌降额曲线：单次电流越大，允许的冲击次数越少。拖动下面两个滑块，看一只 14D471K 在不同工况下还剩多少寿命。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 300" role="img" aria-label="MOV 浪涌降额曲线：横轴单次浪涌电流，纵轴允许冲击次数，双对数坐标，圆点为当前工况">
+        <polygon id="s2-ok" class="zone-ok" points="60,250"/>
+        <g id="s2-grid"></g>
+        <path class="ax" d="M60,30 V250 H490"/>
+        <polyline id="s2-c" class="real" points="60,250"/>
+        <text id="s2-cl" x="0" y="0" class="t" style="fill:var(--copper)">允许次数 N</text>
+        <circle id="s2-pt" class="dot" r="6" cx="0" cy="0" style="fill:var(--danger)"/>
+        <text id="s2-ptl" x="0" y="0" class="t" style="fill:var(--danger)">当前</text>
+        <text x="64" y="22" class="tm">冲击次数（对数）</text>
+        <text x="490" y="292" text-anchor="end" class="tm">单次浪涌电流 / A，8/20 µs（对数）</text>
+      </svg>
+      <figcaption>示意：用规格书"单次 6 kA、两次 4.5 kA"两个点拟合 N = (6000 / I)^2.41。绿色区域是寿命以内的工况。压敏电压漂移按已用寿命线性估算，漂移超过 −10% 按行业惯例判为失效。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-i">单次浪涌电流</label>
+        <span class="rv" id="s2-iv">1000 A</span>
+        <input type="range" id="s2-i" min="0" max="6" step="1" value="2"></div>
+      <div class="ctl"><label class="ctl-l" for="s2-n">冲击次数</label>
+        <span class="rv" id="s2-nv">20 次</span>
+        <input type="range" id="s2-n" min="0" max="9" step="1" value="4"></div>
+      <dl class="read">
+        <dt>该电流下允许次数</dt><dd id="s2-nm">75 次</dd>
+        <dt>已用寿命</dt><dd id="s2-life">27%</dd>
+        <dt>压敏电压 V1mA</dt><dd id="s2-v1">457 V</dd>
+        <dt>状态</dt><dd><span id="s2-st" class="chip on">正常</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="multi">
+  <span class="eyebrow">多级防护 · 粗保护加精保护</span>
+  <h2>GDT 扛电流，TVS 管电压，中间靠退耦</h2>
+  <p>没有一种器件又快、又准、又能扛大电流。户外线路常用两级：第一级 GDT 或 MOV 泄放大部分浪涌电流，第二级 TVS 把电压钳准。两级之间串一个电阻或电感，叫退耦元件。</p>
+  <p>为什么非要退耦？TVS 快，浪涌一来它先导通，把线路钳在二十几伏。如果两级直接并在一起，GDT 两端也只有二十几伏，永远到不了它的击穿电压，全部电流都压在 TVS 上。串了退耦元件，GDT 两端电压 = TVS 电压 + 退耦元件上的压降，浪涌越大这个压降越大，很快把 GDT 推过击穿点。</p>
+  <p class="eq">V(GDT) = V(TVS) + I·Rd　或　V(TVS) + L·dI/dt</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 380" role="img" aria-label="浪涌源经 2 Ω 内阻到 GDT，再经退耦元件到 TVS 和接口芯片；下方是被保护端和 GDT 两端电压随时间的波形">
+        <circle class="src" cx="36" cy="86" r="16"/>
+        <text x="36" y="91" text-anchor="middle" class="t">浪涌</text>
+        <path class="w" d="M36,70 V40 H74 M118,40 H210 M260,40 H380 M36,102 V140 M22,140 H50 M27,145 H45 M32,150 H40"/>
+        <rect class="r" x="74" y="32" width="44" height="16" rx="2"/>
+        <text x="96" y="24" text-anchor="middle" class="v">Rs 2 Ω</text>
+        <g id="s3-gg">
+          <circle class="dot" cx="160" cy="40" r="3.5"/>
+          <path class="w" d="M160,40 V74 M160,102 V140 M146,140 H174 M151,145 H169 M156,150 H164 M160,74 V82 M152,82 H168 M160,102 V94 M152,94 H168"/>
+          <circle class="r" cx="160" cy="88" r="14" style="fill:none"/>
+          <circle class="dot" cx="166" cy="88" r="2"/>
+          <text x="140" y="84" text-anchor="end" class="t">GDT</text>
+          <text x="140" y="100" text-anchor="end" class="v">90 V</text>
+        </g>
+        <path id="s3-gw" class="w" d="M210,40 H260"/>
+        <g id="s3-gr">
+          <rect class="r" x="210" y="32" width="50" height="16" rx="2"/>
+        </g>
+        <path id="s3-gl" class="w" d="M210,40 a6.25,6.25 0 0 1 12.5,0 a6.25,6.25 0 0 1 12.5,0 a6.25,6.25 0 0 1 12.5,0 a6.25,6.25 0 0 1 12.5,0"/>
+        <text id="s3-dl" x="235" y="24" text-anchor="middle" class="v">Rd 10 Ω</text>
+        <g id="s3-gt">
+          <circle class="dot" cx="310" cy="40" r="3.5"/>
+          <path class="w" d="M310,40 V70 M310,106 V140 M296,140 H324 M301,145 H319 M306,150 H314"/>
+          <polygon class="dio" points="298,70 322,70 310,88"/>
+          <polygon class="dio" points="298,106 322,106 310,88"/>
+          <path class="w" style="stroke-width:2.5" d="M294,84 L298,88 H322 L326,92"/>
+          <text x="332" y="86" class="t">TVS</text>
+          <text x="332" y="102" class="v">双向 15 V</text>
+        </g>
+        <rect class="box" x="380" y="20" width="110" height="40" rx="4"/>
+        <text x="435" y="45" text-anchor="middle" class="t">接口芯片</text>
+        <text x="435" y="80" text-anchor="middle" class="tm">耐压 36 V</text>
+        <text id="s3-ct" x="435" y="98" text-anchor="middle" class="v">安全</text>
+        <path id="s3-fg" class="flow" d="M36,68 V40 H160 V138"/>
+        <path id="s3-ft" class="flow thin" d="M36,68 V40 H310 V138"/>
+        <g id="s3-ax"></g>
+        <path class="ax" d="M56,190 V340 H490"/>
+        <text x="60" y="182" class="tm">电压 / V</text>
+        <text x="56" y="356" text-anchor="middle" class="v">0</text>
+        <text x="200.7" y="356" text-anchor="middle" class="v">1</text>
+        <text x="345.3" y="356" text-anchor="middle" class="v">2</text>
+        <text x="490" y="356" text-anchor="end" class="v">3</text>
+        <text x="490" y="374" text-anchor="end" class="tm">时间 / µs</text>
+        <line id="s3-lim" class="lim" x1="56" y1="300" x2="490" y2="300"/>
+        <text id="s3-liml" x="486" y="294" text-anchor="end" class="tm">芯片耐压 36 V</text>
+        <line id="s3-fl" class="ax dash" x1="200" y1="190" x2="200" y2="340"/>
+        <text id="s3-flt" x="204" y="202" class="tm">GDT 击穿</text>
+        <polyline id="s3-vg" class="real2" points="56,340"/>
+        <polyline id="s3-vt" class="real" points="56,340"/>
+        <text id="s3-lg" x="0" y="0" class="t" style="fill:var(--low)">GDT 两端</text>
+        <text id="s3-lt" x="0" y="0" class="t hi">被保护端</text>
+      </svg>
+      <figcaption>绿色虚线是浪涌电流路径，粗细表示大小。示意：浪涌按 1.2/50 µs 开路电压、内阻 2 Ω；GDT 直流击穿 90 V、弧光 20 V，用等面积判据模拟击穿延迟；TVS 按 SMBJ15CA 分段线性近似，8/20 µs 下能扛的电流按 100 A 估。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">防护方案</span>
+        <div class="seg" id="s3-m"><button id="s3-m-tvs" data-v="tvs" aria-pressed="false">只有 TVS</button><button id="s3-m-gdt" data-v="gdt" aria-pressed="false">只有 GDT</button><button id="s3-m-two" data-v="two" aria-pressed="true">两级 + 退耦</button></div></div>
+      <div class="ctl"><span class="ctl-l">退耦元件</span>
+        <div class="seg" id="s3-d"><button id="s3-d-2" data-v="2.2" aria-pressed="false">2.2 Ω</button><button id="s3-d-10" data-v="10" aria-pressed="true">10 Ω</button><button id="s3-d-22" data-v="22" aria-pressed="false">22 Ω</button><button id="s3-d-l" data-v="L" aria-pressed="false">10 µH</button></div></div>
+      <div class="ctl"><span class="ctl-l">浪涌开路峰值</span>
+        <div class="seg" id="s3-v"><button id="s3-v-05" data-v="500" aria-pressed="false">500 V</button><button id="s3-v-1" data-v="1000" aria-pressed="true">1 kV</button><button id="s3-v-2" data-v="2000" aria-pressed="false">2 kV</button></div></div>
+      <dl class="read">
+        <dt>被保护端峰值</dt><dd id="s3-vp">—</dd>
+        <dt>TVS 峰值电流</dt><dd id="s3-ip">—</dd>
+        <dt>GDT</dt><dd id="s3-g">—</dd>
+        <dt>20 mA 信号在退耦元件上的压降</dt><dd id="s3-dv">—</dd>
+        <dt>TVS</dt><dd><span id="s3-tst" class="chip on">在额定内</span></dd>
+        <dt>接口芯片</dt><dd><span id="s3-cst" class="chip on">安全</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>压敏电阻的工作原理是什么？</summary>
+      <div class="ans"><p>压敏电阻是氧化锌陶瓷，晶粒之间的晶界相当于背靠背的二极管，所以伏安特性是双向、强非线性的，I = k·V^α，α 一般 20~50。正常电压下它近似开路，只有微安级漏电；电压超过压敏电压后电阻骤降几个数量级，把浪涌电流旁路掉，多余电压落在线路阻抗上。</p></div></details>
+    <details><summary>压敏电阻和 TVS 有什么区别？怎么选？</summary>
+      <div class="ans"><p>MOV 通流能力大，kA 级，便宜，但钳位电压高、结电容大、会老化，响应 ns 级。TVS 响应 ps 级，钳位准，但通流小。交流电源入口、大能量浪涌用 MOV；直流电源、信号口、需要精确钳位的地方用 TVS，两者也常配合使用。</p>
+      <p>MOV 选型：最大持续工作电压要高于电网最高电压，230 V 市电常选交流 275 V 或 300 V 档，对应压敏电压约 430~470 V；通流按浪涌等级选片径；钳位电压要低于后级耐压。</p></div></details>
+    <details><summary>压敏电阻为什么会老化？前面为什么要串保险丝？</summary>
+      <div class="ans"><p>每次大浪涌都会损伤一部分晶界，压敏电压逐渐下降，漏电流变大。漏电发热又加速劣化，严重时热失控，短路甚至起火。规格书用降额曲线规定不同电流下允许的冲击次数，压敏电压漂移超过 10% 一般判为失效。串保险丝或选带温度保险丝的 TMOV，是为了在它失效短路时把它从电网上断开。</p></div></details>
+    <details><summary>气体放电管有什么特点？为什么不能单独并在电源线上？</summary>
+      <div class="ans"><p>GDT 结电容约 1 pF，漏电极小，通流能力 10 kA 级，适合通信线和天线口的第一级。缺点是响应慢，百 ns 到 µs 级，击穿前会漏过一个很高的尖峰。而且它是短路式器件，导通后弧光电压只有十几到二十几伏，只要线路电压高于它，浪涌过去后电弧也不熄灭，这叫续流，会烧毁 GDT 或拉垮电源。电源线上要和 MOV 串联使用。</p></div></details>
+    <details><summary>多级防护为什么要加退耦电阻或电感？</summary>
+      <div class="ans"><p>TVS 比 GDT 快得多，两级直接并联时 TVS 先导通，把电压钳在二十几伏，GDT 永远达不到击穿电压，全部浪涌电流都压在 TVS 上把它烧掉。串入退耦元件后，GDT 两端电压等于 TVS 电压加退耦元件压降，浪涌电流一大就能把 GDT 推到击穿，由它泄放大电流。信号线常用几欧到几十欧电阻，电源线电流大，用电感。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="03-TVS与齐纳过压保护.html"><span>上一页</span>TVS与齐纳过压保护</a><a class="next" href="05-二极管防反接.html"><span>下一页</span>二极管防反接</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 三种器件的伏安特性：横轴 log10(I)，示意模型 */
+const X1=scale(-3,4,60,490),Y1=scale(0,1000,280,40);
+const vM=I=>470*Math.pow(I/1e-3,1/22)+0.05*I;
+const vT=I=>440+64.8*I;
+const GP=[[-3,470],[-2.8,150],[-0.6,150],[-0.1,20],[4,20]];
+const vG=I=>{const u=Math.log10(I);for(let k=1;k<GP.length;k++){if(u<=GP[k][0]){const [u0,v0]=GP[k-1],[u1,v1]=GP[k];return v0+(v1-v0)*(u-u0)/(u1-u0);}}return 20;};
+const fI=I=>I<1?(I*1000)+' mA':I>=1000?(I/1000)+' kA':I+' A';
+['1m','10m','0.1','1','10','100','1k','10k'].forEach((t,k)=>{const x=X1(k-3).toFixed(1);
+  if(k>0)$('s1-grid').append(svgEl('line',{class:'gl',x1:x,y1:40,x2:x,y2:280}));
+  $('s1-grid').append(svgEl('text',{x:x,y:298,'text-anchor':k===7?'end':'middle',class:'v'},t));});
+[0,200,400,600,800,1000].forEach(v=>{const y=Y1(v).toFixed(1);
+  if(v>0)$('s1-grid').append(svgEl('line',{class:'gl',x1:60,y1:y,x2:490,y2:y}));
+  $('s1-grid').append(svgEl('text',{x:54,y:(+y+4).toFixed(1),'text-anchor':'end',class:'v'},String(v)));});
+$('s1-cm').setAttribute('points',plot(u=>{const v=vM(Math.pow(10,u));return v>1000?NaN:v;},-3,Math.log10(6000),X1,Y1,240));
+$('s1-ct').setAttribute('points',plot(u=>vT(Math.pow(10,u)),-3,Math.log10(2.5),X1,Y1,120));
+$('s1-cg').setAttribute('points',GP.map(([u,v])=>X1(u).toFixed(1)+','+Y1(v).toFixed(1)).join(' '));
+[['s1-lm',414,Y1(vM(800))-10],['s1-lt',X1(Math.log10(2.5))+8,Y1(602)+4],['s1-lg1',X1(-2),Y1(150)-8],['s1-lg2',486,Y1(20)-8]].forEach(([id,x,y])=>{
+  $(id).setAttribute('x',x.toFixed(1));$(id).setAttribute('y',y.toFixed(1));});
+const s1I=[0.01,0.1,1,10,50,100,500,1000],s1={k:'mov'};
+const s1R={mov:'ns 级（规格书常标 < 25 ns）',tvs:'ps 级（芯片本身）',gdt:'百 ns 到 µs 级，看电压上升率'};
+function s1u(){
+  const I=s1I[+$('s1-rng').value],u=Math.log10(I),x=X1(u).toFixed(1),k=s1.k;
+  const vm=vM(I),tOK=I<=2.5,vt=vT(I),vg=vG(I),arc=I>=0.25;
+  $('s1-rv').textContent=fI(I);$('s1-rng').setAttribute('aria-valuetext',fI(I));
+  $('s1-cur').setAttribute('x1',x);$('s1-cur').setAttribute('x2',x);
+  [['s1-dm',vm,true],['s1-dt',vt,tOK],['s1-dg',vg,true]].forEach(([id,v,vis])=>{show($(id),vis);$(id).setAttribute('cx',x);$(id).setAttribute('cy',Y1(v).toFixed(1));});
+  [['mov','s1-cm',['s1-lm']],['tvs','s1-ct',['s1-lt']],['gdt','s1-cg',['s1-lg1','s1-lg2']]].forEach(([n,c,ls])=>{
+    $(c).classList.toggle('hl',n===k);$(c).classList.toggle('dim',n!==k);ls.forEach(l=>$(l).classList.toggle('dim',n!==k));});
+  $('s1-vm').textContent=vm.toFixed(0)+' V';
+  $('s1-vt').textContent=tOK?vt.toFixed(0)+' V':'超过 IPP，已损坏';
+  $('s1-vg').textContent='≈ '+vg.toFixed(0)+' V，'+(arc?'弧光':'辉光');
+  $('s1-rt').textContent=s1R[k];
+  let n;
+  if(k==='mov'){chip($('s1-st'),I>=500?'会加速老化':'在额定内',I>=500?'warn':'on');
+    n=`MOV 在 ${fI(I)} 时约 ${vm.toFixed(0)} V，是压敏电压 470 V 的 ${(vm/470).toFixed(2)} 倍，拐点比 TVS 软。它的长处是通流：这个 14 mm 的片子单次能扛 6 kA（8/20 µs）。`
+      +(I>=500?'电流到几百安以上，晶粒本身的电阻开始起作用，曲线进一步上翘；这么大的冲击每来一次都会消耗一部分寿命。':'');}
+  else if(k==='tvs'){chip($('s1-st'),tOK?'在额定内':'超过 IPP',tOK?'on':'bad');
+    n=tOK?`TVS 拐点最硬，${fI(I)} 时 ${vt.toFixed(0)} V，只比击穿电压 440 V 高 ${((vt/440-1)*100).toFixed(0)}%。它响应最快、钳位最准，适合做精保护。`
+      :`${fI(I)} 已超过这只 1500 W TVS 的 IPP 2.5 A（10/1000 µs）。即使换算到 8/20 µs 这种短波形，它也只能扛几十安以内，比 MOV 小两个数量级以上，大电流下会过热短路。`;}
+  else{chip($('s1-st'),arc?'弧光导通':'辉光区',arc?'on':'off');
+    n=arc?'电流一大，GDT 进入弧光放电，两端只剩约 20 V，几乎把线路短路到地，所以能泄放 10 kA 级电流。代价是线路电压高于弧光电压时，浪涌过后电弧也不熄灭，这叫续流，所以它不能单独并在电源线上。'
+      :'GDT 击穿前近似开路，电压要先升到击穿电压（直流 470 V，快速脉冲下更高）才开始放电，左端那个尖角就是这个过程。小电流时处在辉光区，约 150 V。';}
+  $('s1-note').textContent=n;
+}
+seg('s1-k',v=>{s1.k=v;s1u();});
+$('s1-rng').addEventListener('input',s1u);
+s1u();
+
+/* 2. 浪涌降额：N = (6000 / I)^2.41，双对数坐标 */
+const X2=scale(2,4,60,490),Y2=scale(0,5,250,30),LI=Math.log10(6000),Nof=I=>Math.pow(6000/I,2.41);
+[100,200,500,1000,2000,5000,10000].forEach((a,k)=>{const x=X2(Math.log10(a)).toFixed(1);
+  if(k>0)$('s2-grid').append(svgEl('line',{class:'gl',x1:x,y1:30,x2:x,y2:250}));
+  $('s2-grid').append(svgEl('text',{x:x,y:266,'text-anchor':k===6?'end':'middle',class:'v'},a>=1000?(a/1000)+'k':String(a)));});
+['1','10','100','1000','10⁴','10⁵'].forEach((t,k)=>{const y=Y2(k).toFixed(1);
+  if(k>0)$('s2-grid').append(svgEl('line',{class:'gl',x1:60,y1:y,x2:490,y2:y}));
+  $('s2-grid').append(svgEl('text',{x:54,y:(+y+4).toFixed(1),'text-anchor':'end',class:'v'},t));});
+const s2curve=plot(u=>2.41*(LI-u),2,LI,X2,Y2,120);
+$('s2-c').setAttribute('points',s2curve);
+$('s2-ok').setAttribute('points',s2curve+' 60,250');
+$('s2-cl').setAttribute('x','170');$('s2-cl').setAttribute('y',(Y2(2.41*(LI-2.5116))-12).toFixed(1));
+const s2I=[200,500,1000,2000,3000,4500,6000],s2N=[1,2,5,10,20,50,100,200,500,1000];
+function s2u(){
+  const I=s2I[+$('s2-i').value],n=s2N[+$('s2-n').value],Nm=Nof(I),life=n/Nm;
+  const px=X2(Math.log10(I)),py=Y2(Math.log10(n)),dr=Math.min(life,3)*10,V1=470*(1-dr/100);
+  $('s2-iv').textContent=I+' A';$('s2-i').setAttribute('aria-valuetext',I+' A');
+  $('s2-nv').textContent=n+' 次';$('s2-n').setAttribute('aria-valuetext',n+' 次');
+  $('s2-pt').setAttribute('cx',px.toFixed(1));$('s2-pt').setAttribute('cy',py.toFixed(1));
+  const pl=$('s2-ptl'),rt=px>400;
+  pl.setAttribute('x',(px+(rt?-10:10)).toFixed(1));pl.setAttribute('y',(py-10).toFixed(1));pl.setAttribute('text-anchor',rt?'end':'start');
+  $('s2-nm').textContent=(Nm<10?Nm.toFixed(1):Math.round(Nm))+' 次';
+  $('s2-life').textContent=life>9.99?'> 999%':(life*100).toFixed(0)+'%';
+  $('s2-v1').textContent=V1.toFixed(0)+' V（−'+dr.toFixed(dr<10?1:0)+'%'+(life>3?' 以上':'')+'）';
+  let n2;
+  if(life<=0.5){chip($('s2-st'),'正常','on');
+    n2=`${I} A 的浪涌，规格书允许约 ${Nm<10?Nm.toFixed(1):Math.round(Nm)} 次，现在用掉 ${(life*100).toFixed(0)}%。压敏电压约下降 ${dr.toFixed(1)}%，还能正常工作。电流减半，允许次数约多 5 倍，所以片径要按浪涌电流留足余量。`;}
+  else if(life<=1){chip($('s2-st'),'接近寿命','warn');
+    n2='已接近寿命。压敏电压下降后，同样的市电电压下漏电流变大、发热增加。设计时要按最恶劣的浪涌次数留余量，或者换片径更大的型号。';}
+  else{chip($('s2-st'),'已失效','bad');
+    n2='超过允许次数，压敏电压漂移超过 10%，按惯例判为失效。继续用下去，漏电和发热互相推高，最后热失控短路甚至起火。这就是 MOV 前面必须有保险丝或温度保险丝的原因。'
+      +(V1<360?'现在压敏电压已接近市电峰值 325 V，每个工频周期都会导通。':'');}
+  $('s2-note').textContent=n2;
+}
+$('s2-i').addEventListener('input',s2u);
+$('s2-n').addEventListener('input',s2u);
+s2u();
+
+/* 3. 多级防护：1.2/50 µs 浪涌，Rs 2 Ω；TVS V = 17.6 + 0.276·I；GDT 等面积判据 ∫(V − 90)dt ≥ 130 V·µs 后弧光 20 V */
+const W3=(()=>{let m=0;for(let k=1;k<=3000;k++){const t=k*0.001;m=Math.max(m,Math.exp(-t/68.2)-Math.exp(-t/0.405));}
+  return t=>t<=0?0:(Math.exp(-t/68.2)-Math.exp(-t/0.405))/m;})();
+const s3={m:'two',d:'10',v:1000},RD3=0.276,VB3=17.6;
+function s3sim(){
+  const m=s3.m,L=s3.d==='L',Rd=L?0:+s3.d,dt=0.002,vt=[],vg=[];
+  let I=0,A=0,fired=false,tf=0,vf=0,vp=0,ip=0,vgm=0;
+  for(let k=0;k<=1500;k++){const Vs=s3.v*W3(k*dt);let VG,VT,IT=0;
+    if(m==='tvs'){if(Vs>VB3){IT=(Vs-VB3)/(2+RD3);VT=VB3+RD3*IT;}else VT=Vs;VG=VT;}
+    else if(m==='gdt'){VG=fired?20:Vs;VT=VG;}
+    else if(!L){if(fired){VG=20;IT=(20-VB3)/(Rd+RD3);VT=VB3+RD3*IT;}
+      else{if(Vs>VB3){IT=(Vs-VB3)/(2+Rd+RD3);VT=VB3+RD3*IT;}else VT=Vs;VG=Vs-2*IT;}}
+    else{VG=fired?20:Vs-2*I;VT=I>0?VB3+RD3*I:Math.min(VG,VB3);IT=I;I=Math.max(0,I+(VG-VT)*dt/10);}
+    if(m!=='tvs'&&!fired){A+=Math.max(0,VG-90)*dt;if(A>=130){fired=true;tf=k*dt;vf=VG;}}
+    vt.push(VT);vg.push(VG);vp=Math.max(vp,VT);ip=Math.max(ip,IT);vgm=Math.max(vgm,VG);}
+  return {vt,vg,fired,tf,vf,vp,ip,vgm,dt};
+}
+const f1=v=>(v>=100?v.toFixed(0):v.toFixed(1))+' V';
+function s3u(){
+  const r=s3sim(),m=s3.m,two=m==='two',L=s3.d==='L',X=scale(0,3,56,490);
+  const ym=[60,120,300,600,1200,2400].find(v=>v>=r.vp*1.15)||2400,Y=scale(0,ym,340,190);
+  const g=$('s3-ax');g.replaceChildren();
+  for(let j=0;j<=4;j++){const y=Y(ym*j/4).toFixed(1);
+    if(j>0)g.append(svgEl('line',{class:'gl',x1:56,y1:y,x2:490,y2:y}));
+    g.append(svgEl('text',{x:50,y:(+y+4).toFixed(1),'text-anchor':'end',class:'v'},String(ym*j/4)));}
+  const pts=(a,c)=>a.filter((_,k)=>k%3===0).map((v,k)=>X(k*3*r.dt).toFixed(1)+','+Y(Math.min(v,c)).toFixed(1)).join(' ');
+  $('s3-vt').setAttribute('points',pts(r.vt,ym));$('s3-vg').setAttribute('points',pts(r.vg,ym));
+  show($('s3-vg'),two);show($('s3-lg'),two);
+  const yl=Y(36).toFixed(1);$('s3-lim').setAttribute('y1',yl);$('s3-lim').setAttribute('y2',yl);$('s3-liml').setAttribute('y',(yl-6).toFixed(1));
+  const xf=X(r.tf),lf=xf>330;show($('s3-fl'),r.fired);show($('s3-flt'),r.fired);
+  $('s3-fl').setAttribute('x1',xf.toFixed(1));$('s3-fl').setAttribute('x2',xf.toFixed(1));
+  [['s3-flt',202],['s3-lg',218]].forEach(([id,y])=>{const e=$(id);e.setAttribute('x',(xf+(lf?-6:6)).toFixed(1));e.setAttribute('y',y);e.setAttribute('text-anchor',lf?'end':'start');});
+  if(!r.fired){$('s3-lg').setAttribute('x',X(1.5).toFixed(1));$('s3-lg').setAttribute('y',(Y(Math.min(r.vg[750],ym))-8).toFixed(1));}
+  $('s3-lg').textContent='GDT 两端，峰值 '+r.vgm.toFixed(0)+' V'+(r.vgm>ym?'，超出坐标':'');
+  let ly=Y(r.vt[1300])-8;if(ly<200)ly+=24;
+  $('s3-lt').setAttribute('x',X(2.6).toFixed(1));$('s3-lt').setAttribute('y',ly.toFixed(1));
+  show($('s3-gg'),m!=='tvs');show($('s3-gt'),m!=='gdt');
+  show($('s3-gw'),!two);show($('s3-gr'),two&&!L);show($('s3-gl'),two&&L);show($('s3-dl'),two);
+  $('s3-dl').textContent=L?'L 10 µH':'Rd '+s3.d+' Ω';
+  const over=r.ip>100,bad=r.vp>36;
+  show($('s3-fg'),r.fired);show($('s3-ft'),r.ip>0);
+  $('s3-ft').classList.toggle('thin',two);$('s3-ft').classList.toggle('bad',over);
+  const ct=$('s3-ct');ct.textContent=bad?'过压':'安全';ct.style.fill=bad?'var(--danger)':'var(--flow)';
+  $('s3-vp').textContent=f1(r.vp);
+  $('s3-ip').textContent=m==='gdt'?'—，没有 TVS':fmtA(r.ip);
+  $('s3-g').textContent=m==='tvs'?'—，没有 GDT':r.fired?r.tf.toFixed(2)+' µs 击穿，此时 '+r.vf.toFixed(0)+' V':'未击穿';
+  $('s3-dv').textContent=!two?'—':L?'≈ 0，直流无压降':(0.02*s3.d).toFixed(2)+' V';
+  if(m==='gdt')chip($('s3-tst'),'未安装','off');else if(over)chip($('s3-tst'),'过载烧毁','bad');else if(r.ip>70)chip($('s3-tst'),'接近极限','warn');else chip($('s3-tst'),'在额定内','on');
+  chip($('s3-cst'),bad?'超过耐压':'安全',bad?'bad':'on');
+  let n3;
+  if(m==='tvs')n3=`只有 TVS 时，浪涌电流几乎全部从它走，峰值 ${fmtA(r.ip)}`+(over?`，远超它能扛的约 100 A，会过热短路。大电流在它内阻上的压降还把被保护端抬到 ${f1(r.vp)}`+(bad?'，超过芯片耐压':'')+'。TVS 只适合做精保护，大能量要交给前级。'
+    :`，还在它能扛的范围内，被保护端 ${f1(r.vp)}。浪涌再大就扛不住了。`);
+  else if(m==='gdt')n3=r.fired?`只有 GDT 时，击穿前它近似开路，被保护端跟着浪涌往上冲，${r.tf.toFixed(2)} µs 时升到 ${r.vf.toFixed(0)} V 才击穿，芯片早被打坏了。击穿后电压掉到约 20 V。GDT 扛电流没问题，但挡不住击穿前的尖峰。`
+    :'浪涌太小，GDT 没有击穿，电压全部加在芯片上。';
+  else if(!r.fired)n3=`浪涌不大，GDT 两端没攒够击穿条件，没有击穿，全部由 TVS 吸收，峰值 ${fmtA(r.ip)}`+(over?'，已经超出 TVS 能力。':'，在它能力之内，这也是正常的分工。');
+  else if(over||bad)n3=`退耦太弱，GDT 两端电压涨得慢，TVS 要扛到 ${fmtA(r.ip)} 才等到 GDT 在 ${r.tf.toFixed(2)} µs 击穿`+(over?'，TVS 已经过载':'')+(bad?`，被保护端也升到 ${f1(r.vp)}，超过耐压`:'')+'。要加大退耦电阻或改用电感。';
+  else n3=`TVS 先导通，把被保护端钳在 ${f1(r.vp)} 以内。电流在退耦元件上产生压降，把 GDT 两端推到 ${r.vf.toFixed(0)} V，${r.tf.toFixed(2)} µs 时 GDT 击穿，之后大电流从 GDT 走，TVS 只扛了 ${fmtA(r.ip)}。`
+    +(L?'电感在电流刚上升时 L·dI/dt 很大，GDT 两端电压几乎跟着浪涌走，所以击穿得早。电感对直流没有压降，电源线上用它。':'Rd 越大 TVS 越轻松，但正常信号在 Rd 上的压降和 RC 延迟也越大，一般取几欧到几十欧。');
+  $('s3-note').textContent=n3;
+}
+seg('s3-m',v=>{s3.m=v;s3u();});
+seg('s3-d',v=>{s3.d=v;s3u();});
+seg('s3-v',v=>{s3.v=+v;s3u();});
+s3u();
+</script>
+</body>
+</html>

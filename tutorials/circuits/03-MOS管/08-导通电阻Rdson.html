@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>导通电阻 Rds(on)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.hl{color:var(--copper)}
+.mk{fill:var(--copper);stroke:var(--panel);stroke-width:2}
+.mk2{fill:var(--low);stroke:var(--panel);stroke-width:2}
+.therm{fill:var(--chip);stroke:var(--line)}
+.tfill{fill:var(--copper);fill-opacity:.6}
+.tfill.bad{fill:var(--danger)}
+.hot{color:var(--danger)}
+figure svg+svg{margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#mos">MOS管</a><span class="sp"></span><span>08 / 09</span></nav>
+<header>
+  <span class="eyebrow">MOS管 · 导通电阻</span>
+  <h1>导通电阻 Rds(on)</h1>
+  <p class="lede">MOS 管完全导通时，D、S 之间就像一个小电阻，导通损耗 P = I²·Rds(on)。这个电阻不是常数：Vgs 越高越小，温度越高越大，耐压越高越大。下面逐个拖一拖。</p>
+</header>
+
+<section id="vgs">
+  <span class="eyebrow">Vgs · 沟道电阻</span>
+  <h2>Vgs 越高，沟道电阻越小，但有个底</h2>
+  <p>Rds(on) 其实是一串电阻相加：源极接触、沟道、JFET 区、漂移区、衬底，再加上封装的键合线。其中只有沟道这一段受 Vgs 控制。</p>
+  <p>Vgs 超过 Vth 后，栅极下方反型出沟道。Vgs 越高，沟道里的电子越多，沟道电阻大约按 1 / (Vgs − Vth) 下降。其余几段不随 Vgs 变，所以 Vgs 加到 10 V 左右以后 Rds(on) 就降不动了。再往上加只增加驱动损耗，还逼近 Vgs 的极限，一般是 ±20 V。</p>
+  <p class="eq">Rds(on) ≈ R固定 + k / (Vgs − Vth)</p>
+  <p>手册上的 Rds(on) 都标着测试条件，比如"Vgs = 10 V，Id = 20 A"。驱动电压低于这个值，实际电阻就比标称大。Vgs 太靠近 Vth 时管子甚至扛不住负载电流，会退到饱和区，见 <a href="03-阈值电压与转移特性.html">阈值电压与转移特性</a>。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 400 226" role="img" aria-label="12 V 经负载接 NMOS 漏极，源极接地，驱动器给栅极加 Vgs，标出漏源电压和导通电阻">
+        <text x="200" y="16" text-anchor="middle" class="v">12 V</text>
+        <path class="w" d="M188,24 H212 M200,24 V40"/>
+        <rect id="s1-load" class="box lit" x="182" y="40" width="36" height="44" rx="4"/>
+        <text x="200" y="67" text-anchor="middle" class="t">负载</text>
+        <path class="w" d="M200,84 V132 H178 M178,168 H200 M178,150 H200 V204 M120,150 H166 M186,204 H214 M191,209 H209 M196,214 H204"/>
+        <line class="bar" x1="166" y1="130" x2="166" y2="170"/>
+        <line class="bar" x1="178" y1="126" x2="178" y2="138"/>
+        <line class="bar" x1="178" y1="144" x2="178" y2="156"/>
+        <line class="bar" x1="178" y1="162" x2="178" y2="174"/>
+        <polygon class="ah" points="181,150 190,145 190,155"/>
+        <circle class="dot" cx="200" cy="168" r="3.5"/>
+        <text x="206" y="126" class="tm">D</text>
+        <text x="206" y="190" class="tm">S</text>
+        <rect class="box" x="64" y="130" width="56" height="40" rx="4"/>
+        <text x="92" y="155" text-anchor="middle" class="t">驱动</text>
+        <text id="s1-vgt" x="92" y="190" text-anchor="middle" class="v hi">Vgs 10 V</text>
+        <text x="226" y="74" class="v">Id 10 A</text>
+        <text id="s1-vdt" x="226" y="112" class="v lo">Vds 0.10 V</text>
+        <text id="s1-rt" x="226" y="156" class="t hi">Rds(on) 10 mΩ</text>
+        <path id="s1-f" class="flow" d="M200,26 V132 H182 V168 H200 V202"/>
+      </svg>
+      <svg viewBox="0 0 400 214" role="img" aria-label="Rds(on) 随 Vgs 变化的曲线：Vgs 刚过 Vth 时电阻很大，到 10 V 左右趋于平坦">
+        <line class="gl" x1="50" y1="20" x2="380" y2="20"/>
+        <line class="gl" x1="50" y1="70" x2="380" y2="70"/>
+        <line class="gl" x1="50" y1="120" x2="380" y2="120"/>
+        <path class="ax" d="M50,16 V170 H380"/>
+        <text x="44" y="24" text-anchor="end" class="v">60</text>
+        <text x="44" y="74" text-anchor="end" class="v">40</text>
+        <text x="44" y="124" text-anchor="end" class="v">20</text>
+        <text x="44" y="174" text-anchor="end" class="v">0</text>
+        <text x="80" y="27" class="tm">Rds(on) / mΩ</text>
+        <text x="50" y="186" text-anchor="middle" class="v">0</text>
+        <text x="132.5" y="186" text-anchor="middle" class="v">4</text>
+        <text x="215" y="186" text-anchor="middle" class="v">8</text>
+        <text x="297.5" y="186" text-anchor="middle" class="v">12</text>
+        <text x="380" y="186" text-anchor="end" class="v">16</text>
+        <text x="376" y="207" text-anchor="end" class="tm">Vgs / V</text>
+        <line class="leak dash" x1="111.9" y1="16" x2="111.9" y2="170" style="stroke-width:1.2"/>
+        <text x="106" y="40" text-anchor="end" class="tm" style="fill:var(--danger)">Vth 3 V</text>
+        <line class="ax dash" x1="50" y1="157.5" x2="380" y2="157.5"/>
+        <text x="376" y="152" text-anchor="end" class="tm">不随 Vgs 变的部分 5 mΩ</text>
+        <line class="ax dash" x1="256.3" y1="16" x2="256.3" y2="170"/>
+        <text x="262" y="40" class="tm">手册标称条件 10 V</text>
+        <polyline id="s1-c" class="real" points="50,170"/>
+        <circle id="s1-m" class="mk" cx="256.3" cy="145" r="6"/>
+      </svg>
+      <figcaption>上：低边开关，绿色虚线是电流。下：Rds(on) 随 Vgs 的变化，圆点是当前 Vgs。示意：60 V 级标准电平管，Vth = 3 V，Vgs = 10 V 时 Rds(on) = 10 mΩ，其中不随 Vgs 变的部分取 5 mΩ；Id = 10 A，结温 25 °C。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s1-vg">栅源电压 Vgs</label>
+        <span class="rv" id="s1-vgv">10 V</span>
+        <input type="range" id="s1-vg" min="4" max="15" step="0.5" value="10"></div>
+      <dl class="read">
+        <dt>沟道部分 k / (Vgs − Vth)</dt><dd id="s1-rch">5.0 mΩ</dd>
+        <dt>固定部分</dt><dd>5.0 mΩ</dd>
+        <dt>Rds(on)</dt><dd id="s1-r">10 mΩ</dd>
+        <dt>Vds = Id·Rds(on)</dt><dd id="s1-vd">0.10 V</dd>
+        <dt>导通损耗 I²·Rds(on)</dt><dd id="s1-p">1.00 W</dd>
+        <dt>状态</dt><dd><span id="s1-st" class="chip on">充分导通</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="temp">
+  <span class="eyebrow">正温度系数 · 并联均流</span>
+  <h2>温度越高电阻越大，所以 MOS 能直接并联</h2>
+  <p>温度升高，晶格振动加剧，电子迁移率下降，沟道和漂移区的电阻都变大。Rds(on) 是正温度系数，125 °C 时大约是 25 °C 时的 1.5~2 倍，耐压越高的管子涨得越多。算损耗一定要用工作结温下的值。</p>
+  <p class="eq">Rds(on)(T) ≈ Rds(on)(25 °C)·(T / 298)^1.9，T 用开尔文温度（示意拟合）</p>
+  <p>正温度系数的好处是自动均流：两个管子并联，哪个分到的电流多，它就更热，电阻变大，电流被推回另一个管子。二极管和三极管是负温度系数，热的那个压降更低、抢到更多电流、更热，最后热失控，所以它们并联要串均流电阻。</p>
+  <p>前提是管子充分导通。MOS 工作在线性区当恒流源用时，Vgs 低于温度补偿点，Vth 随温度下降的影响占上风，温度系数变成负的，并联反而会抢电流。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 250" role="img" aria-label="两颗 MOS 管或两颗二极管并联分担 20 A 总电流，显示各自的电流和结温">
+        <text x="220" y="16" text-anchor="middle" class="v">总电流 20 A</text>
+        <path class="w" d="M220,24 V60 M140,60 H300 M140,220 H300 M220,220 V232 M206,232 H234 M211,237 H229 M216,242 H224"/>
+        <circle class="dot" cx="220" cy="60" r="3.5"/>
+        <circle class="dot" cx="220" cy="220" r="3.5"/>
+        <g id="s2-gm">
+          <g id="s2-m1" transform="translate(-60,0)">
+            <path class="w" d="M200,60 V132 H178 M178,168 H200 M178,150 H200 V220 M130,150 H166"/>
+            <line class="bar" x1="166" y1="130" x2="166" y2="170"/>
+            <line class="bar" x1="178" y1="126" x2="178" y2="138"/>
+            <line class="bar" x1="178" y1="144" x2="178" y2="156"/>
+            <line class="bar" x1="178" y1="162" x2="178" y2="174"/>
+            <polygon class="ah" points="181,150 190,145 190,155"/>
+            <circle class="dot" cx="200" cy="168" r="3.5"/>
+            <text x="124" y="146" text-anchor="end" class="tm">G</text>
+          </g>
+          <g id="s2-m2" transform="translate(100,0)">
+            <path class="w" d="M200,60 V132 H178 M178,168 H200 M178,150 H200 V220 M130,150 H166"/>
+            <line class="bar" x1="166" y1="130" x2="166" y2="170"/>
+            <line class="bar" x1="178" y1="126" x2="178" y2="138"/>
+            <line class="bar" x1="178" y1="144" x2="178" y2="156"/>
+            <line class="bar" x1="178" y1="162" x2="178" y2="174"/>
+            <polygon class="ah" points="181,150 190,145 190,155"/>
+            <circle class="dot" cx="200" cy="168" r="3.5"/>
+            <text x="124" y="146" text-anchor="end" class="tm">G</text>
+          </g>
+        </g>
+        <g id="s2-gd" hidden>
+          <g id="s2-d1">
+            <path class="w" d="M140,60 V128 M140,152 V220 M128,152 H152"/>
+            <polygon class="ah" points="128,128 152,128 140,152"/>
+          </g>
+          <g id="s2-d2">
+            <path class="w" d="M300,60 V128 M300,152 V220 M288,152 H312"/>
+            <polygon class="ah" points="288,128 312,128 300,152"/>
+          </g>
+        </g>
+        <text id="s2-n1" x="148" y="100" class="t">Q1</text>
+        <text id="s2-n2" x="308" y="100" class="t">Q2</text>
+        <text id="s2-a1" x="16" y="190" class="v">I1 9.1 A</text>
+        <text id="s2-b1" x="16" y="206" class="v">Tj 49 °C</text>
+        <text id="s2-c1" x="16" y="222" class="v">R 10.6 mΩ</text>
+        <text id="s2-a2" x="320" y="190" class="v">I2 10.9 A</text>
+        <text id="s2-b2" x="320" y="206" class="v">Tj 50 °C</text>
+        <text id="s2-c2" x="320" y="222" class="v">R 8.9 mΩ</text>
+        <path id="s2-f1" class="flow" d="M220,24 V60 H140 V132 H122 V168 H140 V220 H218"/>
+        <path id="s2-f2" class="flow" d="M220,60 H300 V132 H282 V168 H300 V220 H222"/>
+      </svg>
+      <figcaption>绿色虚线是电流，粗细表示大小；两颗 MOS 的栅极接同一个驱动。器件 2 天生更容易导通（MOS 是 Rds(on) 更低，二极管是 VF 更低），看发热以后差距是缩小还是被放大。红色表示过热。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">并联的器件</span>
+        <div class="seg" id="s2-d"><button id="s2-d-m" data-v="m" aria-pressed="true">两颗 MOS</button><button id="s2-d-d" data-v="d" aria-pressed="false">两颗二极管</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s2-mm">器件 2 常温下多分的电流</label>
+        <span class="rv" id="s2-mmv">20 %</span>
+        <input type="range" id="s2-mm" min="0" max="30" step="5" value="20"></div>
+      <dl class="read">
+        <dt>器件 1 电流 / 结温</dt><dd id="s2-r1">9.1 A / 49 °C</dd>
+        <dt>器件 2 电流 / 结温</dt><dd id="s2-r2">10.9 A / 50 °C</dd>
+        <dt>电流比 I2 / I1</dt><dd id="s2-rt">1.19，常温时 1.20</dd>
+        <dt>结果</dt><dd><span id="s2-st" class="chip on">稳定，略有均流</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+      <p class="note">示意：总电流 20 A，环境 40 °C，每颗器件热阻 10 °C/W、各自散热。MOS 常温 Rds(on) 10 mΩ，随温度按上式变化。二极管功耗按 VF = 0.9 V 计；VF 约 −2 mV/°C，折算成同电压下电流每升高 1 °C 约增加 4.4%。</p>
+    </div>
+  </div>
+</section>
+<section id="loss">
+  <span class="eyebrow">导通损耗 · 温升</span>
+  <h2>电流、温度、Vgs 一起看</h2>
+  <p>导通损耗 P = I²·Rds(on)，电流翻倍，损耗变 4 倍。PWM 工作时要用电流有效值，比如 Buck 上管 Irms² ≈ D·Io²。</p>
+  <p class="eq">P导通 = Irms²·Rds(on)(Tj)　　Tj = Ta + Rθ·P</p>
+  <p>这里有个正反馈：损耗让结温升高，结温升高让 Rds(on) 变大，损耗再增加。散热够好时，它会收敛到一个稳态结温；电流太大、Vgs 不够或散热太差时，就收敛到一个过高的温度，甚至根本不收敛。所以设计时先估一个结温，查那个温度下的 Rds(on)，算出损耗再核对结温，来回迭代一两次。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 292" role="img" aria-label="导通损耗随电流变化的曲线，对比不考虑温升和考虑温升两种情况，右侧温度计显示稳态结温">
+        <line class="gl" x1="56" y1="30" x2="400" y2="30"/>
+        <line class="gl" x1="56" y1="85" x2="400" y2="85"/>
+        <line class="gl" x1="56" y1="140" x2="400" y2="140"/>
+        <line class="gl" x1="56" y1="195" x2="400" y2="195"/>
+        <line class="gl" x1="170.7" y1="26" x2="170.7" y2="250"/>
+        <line class="gl" x1="285.3" y1="26" x2="285.3" y2="250"/>
+        <path class="ax" d="M56,26 V250 H400"/>
+        <text x="50" y="34" text-anchor="end" class="v">20</text>
+        <text x="50" y="89" text-anchor="end" class="v">15</text>
+        <text x="50" y="144" text-anchor="end" class="v">10</text>
+        <text x="50" y="199" text-anchor="end" class="v">5</text>
+        <text x="50" y="254" text-anchor="end" class="v">0</text>
+        <text x="58" y="16" class="tm">导通损耗 P / W</text>
+        <text x="56" y="268" text-anchor="middle" class="v">0</text>
+        <text x="170.7" y="268" text-anchor="middle" class="v">10</text>
+        <text x="285.3" y="268" text-anchor="middle" class="v">20</text>
+        <text x="400" y="268" text-anchor="end" class="v">30</text>
+        <text x="398" y="288" text-anchor="end" class="tm">电流 I / A</text>
+        <polyline id="s3-c0" class="ideal" points="56,250"/>
+        <polyline id="s3-c1" class="real" points="56,250"/>
+        <text id="s3-l0" x="300" y="192" class="tm">不考虑温升</text>
+        <text id="s3-l1" x="240" y="120" class="t hi">考虑温升</text>
+        <circle id="s3-m" class="mk" cx="228" cy="220" r="6"/>
+        <text x="466" y="20" text-anchor="middle" class="tm">结温</text>
+        <rect class="therm" x="452" y="30" width="28" height="220" rx="4"/>
+        <rect id="s3-tf" class="tfill" x="452" y="180" width="28" height="26"/>
+        <line class="leak dash" x1="440" y1="85" x2="492" y2="85" style="stroke-width:1.2"/>
+        <text x="436" y="89" text-anchor="end" class="tm" style="fill:var(--danger)">150 °C</text>
+        <line id="s3-tal" class="ax" x1="444" y1="206" x2="488" y2="206"/>
+        <text id="s3-tat" x="436" y="210" text-anchor="end" class="tm">Ta</text>
+        <text id="s3-tjt" x="466" y="172" text-anchor="middle" class="v hi">62 °C</text>
+      </svg>
+      <figcaption>虚线是按 25 °C 的 Rds(on) 算的损耗，橙线是计入发热后的稳态损耗，橙线断掉的地方表示热平衡已无解。右侧温度计从环境温度 Ta 画到稳态结温。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s3-i">漏极电流 I</label>
+        <span class="rv" id="s3-iv">15 A</span>
+        <input type="range" id="s3-i" min="1" max="30" step="1" value="15"></div>
+      <div class="ctl"><label class="ctl-l" for="s3-ta">环境温度 Ta</label>
+        <span class="rv" id="s3-tav">40 °C</span>
+        <input type="range" id="s3-ta" min="25" max="100" step="5" value="40"></div>
+      <div class="ctl"><span class="ctl-l">驱动电压 Vgs</span>
+        <div class="seg" id="s3-vg"><button id="s3-vg-45" data-v="4.5" aria-pressed="false">4.5 V</button><button id="s3-vg-6" data-v="6" aria-pressed="false">6 V</button><button id="s3-vg-10" data-v="10" aria-pressed="true">10 V</button><button id="s3-vg-15" data-v="15" aria-pressed="false">15 V</button></div></div>
+      <dl class="read">
+        <dt>25 °C 时 Rds(on)</dt><dd id="s3-r25">10 mΩ</dd>
+        <dt>结温下 Rds(on)</dt><dd id="s3-rt">12.5 mΩ</dd>
+        <dt>导通损耗</dt><dd id="s3-p">2.81 W</dd>
+        <dt>稳态结温 Tj</dt><dd id="s3-tj">62 °C</dd>
+        <dt>管压降 Vds</dt><dd id="s3-vd">0.19 V</dd>
+        <dt>结论</dt><dd><span id="s3-st" class="chip on">安全</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+      <p class="note">示意：同一颗 60 V 管子，Rds(on) 随 Vgs 按第一节的模型、随温度按第二节的式子；TO-220 加小散热片，结到环境热阻取 8 °C/W。</p>
+    </div>
+  </div>
+</section>
+<section id="bv">
+  <span class="eyebrow">耐压 · 漂移区</span>
+  <h2>耐压越高，Rds(on) 越大</h2>
+  <p>MOS 关断时，D-S 电压主要由轻掺杂的 N− 漂移区承受。耐压越高，漂移区就要越厚、掺杂越淡，而它正好串在导通电流的路径上，电阻随之猛增。硅 MOS 的理论极限大约是单位面积电阻 ∝ BV^2.5：同样的芯片面积，耐压翻倍，电阻涨到约 5.7 倍。</p>
+  <p>所以低压管的电阻主要在沟道和封装，高压管的电阻几乎全在漂移区。超结 MOS 用 P、N 柱交替的漂移区打破了这个关系，接近线性；SiC、GaN 禁带宽、击穿场强高，同耐压下漂移区能做得很薄，电阻小得多。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>耐压等级</th><th>Rds(on)（TO-220、D2PAK 级，典型值）</th><th>电阻主要在哪</th><th>典型用途</th></tr></thead>
+    <tbody>
+      <tr><td class="n">30 V</td><td class="n">1~5 mΩ</td><td>沟道、封装</td><td>同步 Buck、负载开关</td></tr>
+      <tr><td class="n">60~100 V</td><td class="n">3~15 mΩ</td><td>沟道和漂移区相当</td><td>电机驱动、48 V 系统、同步整流</td></tr>
+      <tr><td class="n">200 V</td><td class="n">20~200 mΩ</td><td>漂移区为主</td><td>音频功放、中压 DC-DC</td></tr>
+      <tr><td class="n">600~650 V</td><td class="n">几十到几百 mΩ（超结）</td><td>几乎全在漂移区</td><td>PFC、反激、LLC</td></tr>
+    </tbody>
+  </table></div>
+  <p>面试时这样说：耐压按最高电压（含尖峰）留 20%~50% 余量就够，一味选高耐压，Rds(on)、Qg 和价格都会上去，得不偿失。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>Rds(on) 和哪些因素有关？</summary>
+      <div class="ans"><p>四个。Vgs 越高越小，但 10 V 左右以后基本不再下降；温度越高越大，125 °C 约为常温的 1.5~2 倍；耐压越高越大，因为漂移区更厚更淡；芯片面积越大越小。另外同尺寸下 NMOS 比 PMOS 小，因为电子迁移率高。</p></div></details>
+    <details><summary>MOS 为什么可以直接并联？二极管、三极管为什么不行？</summary>
+      <div class="ans"><p>MOS 充分导通时 Rds(on) 是正温度系数：分到电流多的管子更热，电阻变大，电流被推回别的管子，差距不会被放大。二极管和三极管是负温度系数，热的那个压降更低、电流更大、更热，最后一颗扛全部电流，所以要串均流电阻。MOS 并联也要注意：各自栅极串小电阻防振荡，布局对称；而且只在开关状态成立，线性区工作时不成立。</p></div></details>
+    <details><summary>选型时 Rds(on) 看哪个值？</summary>
+      <div class="ans"><p>看实际驱动电压下的值，4.5 V 驱动就不能看 10 V 的参数；看最大值而不是典型值；再按工作结温乘温度系数，100 °C 左右取约 1.5 倍，125 °C 取 1.7~2 倍。然后用 Irms²·R 算损耗，核算温升。</p></div></details>
+    <details><summary>导通损耗怎么算？PWM 时呢？</summary>
+      <div class="ans"><p>P = Irms²·Rds(on)(Tj)。直流就是 I²R；Buck 上管 Irms² ≈ D·Io²，下管 ≈ (1 − D)·Io²，电感纹波大时各乘上 (1 + ΔI² / (12·Io²)) 修正。Rds(on) 要取结温下的值，而结温又取决于损耗，所以要迭代一两次。</p></div></details>
+    <details><summary>耐压和 Rds(on) 什么关系？能不能选耐压很高的管子留余量？</summary>
+      <div class="ans"><p>耐压靠漂移区承受，耐压越高漂移区越厚、掺杂越淡，电阻越大。硅 MOS 单位面积电阻大约 ∝ BV^2.5，耐压翻倍电阻约变 5.7 倍。所以耐压按最高电压（含尖峰）留 20%~50% 余量即可，选得太高，Rds(on)、Qg 和成本都会上去。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="07-体二极管.html"><span>上一页</span>体二极管</a><a class="next" href="09-驱动功耗.html"><span>下一页</span>驱动功耗</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 共用模型（示意）：60 V 标准电平管 */
+const VTH=3,RFIX=5e-3,KCH=35e-3,rVg=v=>RFIX+KCH/(v-VTH),kT=T=>Math.pow((T+273)/298,1.9);
+
+/* 1. Vgs 与 Rds(on) */
+const XG=scale(0,16,50,380),YR=scale(0,60,170,20),ID1=10;
+$('s1-c').setAttribute('points',plot(v=>Math.min(60,rVg(v)*1e3),3.6,16,XG,YR,200));
+function s1u(){
+  const vg=+$('s1-vg').value,r=rVg(vg),rch=KCH/(vg-VTH),vd=ID1*r,p=ID1*ID1*r;
+  $('s1-vgv').textContent=vg+' V';$('s1-vg').setAttribute('aria-valuetext',vg+' V');$('s1-vgt').textContent='Vgs '+vg+' V';
+  $('s1-m').setAttribute('cx',XG(vg).toFixed(1));$('s1-m').setAttribute('cy',YR(Math.min(60,r*1e3)).toFixed(1));
+  $('s1-rch').textContent=fmtR(rch);$('s1-r').textContent=fmtR(r);$('s1-vd').textContent=fmtV(vd);$('s1-p').textContent=fmtP(p);
+  $('s1-rt').textContent='Rds(on) '+fmtR(r);$('s1-vdt').textContent='Vds '+fmtV(vd);
+  let st,cls,n;
+  if(vg<5.5){st='没开透';cls='bad';n='Vgs 只比 Vth 高 '+fmtV(vg-VTH,1)+'，沟道很薄，沟道电阻 '+fmtR(rch)+' 占了大头，Rds(on) 是标称值的 '+(r/0.01).toFixed(1)+' 倍，10 A 下发热 '+fmtP(p)+'。3.3 V、5 V 单片机直接驱动标准电平管就是这种情况，要换逻辑电平管或加驱动。';}
+  else if(vg<8){st='偏大';cls='warn';n='沟道电阻还有 '+fmtR(rch)+'，和固定部分相当。再提高 Vgs，电阻还能明显下降。';}
+  else if(vg<=12){st='充分导通';cls='on';n='沟道电阻只剩 '+fmtR(rch)+'，Rds(on) 主要由不随 Vgs 变的漂移区、衬底和封装决定。这就是手册在 10 V 下标 Rds(on) 的原因。';}
+  else{st='收益很小';cls='on';n='从 10 V 加到 '+vg+' V，Rds(on) 只少了 '+fmtR(rVg(10)-r)+'，驱动损耗 Qg·Vgs·f 却跟着增加，而且离 ±20 V 的栅极极限越来越近。一般驱动取 10~12 V。';}
+  chip($('s1-st'),st,cls);$('s1-note').textContent=n;
+}
+$('s1-vg').addEventListener('input',s1u);
+s1u();
+
+/* 2. 并联均流 */
+const s2={d:'m'},IT=20,TA2=40,RTH2=10,R02=0.01,VF2=0.9,A2=0.044;
+function s2solve(m,mos){
+  let T1=TA2,T2=TA2,I1=IT/2,I2=IT/2;
+  for(let k=0;k<400;k++){
+    const r1=R02*kT(T1),r2=R02/(1+m)*kT(T2);
+    const w1=mos?1/r1:Math.exp(A2*(T1-25)),w2=mos?1/r2:(1+m)*Math.exp(A2*(T2-25));
+    I1=IT*w1/(w1+w2);I2=IT-I1;
+    const p1=mos?I1*I1*r1:VF2*I1,p2=mos?I2*I2*r2:VF2*I2;
+    T1=0.5*T1+0.5*(TA2+RTH2*p1);T2=0.5*T2+0.5*(TA2+RTH2*p2);
+  }
+  return {I1,I2,T1,T2};
+}
+function s2u(){
+  const m=+$('s2-mm').value/100,mos=s2.d==='m',r=s2solve(m,mos),ratio=r.I2/r.I1,hot=Math.max(r.T1,r.T2)>150;
+  show($('s2-gm'),mos);show($('s2-gd'),!mos);
+  $('s2-n1').textContent=mos?'Q1':'D1';$('s2-n2').textContent=mos?'Q2':'D2';
+  $('s2-mmv').textContent=(m*100).toFixed(0)+' %';$('s2-mm').setAttribute('aria-valuetext',(m*100).toFixed(0)+' %');
+  $('s2-f1').setAttribute('d',mos?'M220,24 V60 H140 V132 H122 V168 H140 V220 H218':'M220,24 V60 H140 V220 H218');
+  $('s2-f2').setAttribute('d',mos?'M220,60 H300 V132 H282 V168 H300 V220 H222':'M220,60 H300 V220 H222');
+  $('s2-f1').style.strokeWidth=(1.5+r.I1/4).toFixed(1);$('s2-f2').style.strokeWidth=(1.5+r.I2/4).toFixed(1);
+  show($('s2-f1'),r.I1>0.2);show($('s2-f2'),r.I2>0.2);
+  ['1','2'].forEach(k=>{const I=r['I'+k],T=r['T'+k];
+    $('s2-a'+k).textContent='I'+k+' '+fmtA(I);$('s2-b'+k).textContent='Tj '+T.toFixed(0)+' °C';
+    $('s2-c'+k).textContent=mos?'R '+fmtR(R02/(k==='2'?1+m:1)*kT(T)):'VF ≈ 0.9 V';
+    $('s2-m'+k).classList.toggle('hot',T>150);$('s2-d'+k).classList.toggle('hot',T>150);
+    $('s2-b'+k).style.fill=T>150?'var(--danger)':'';});
+  $('s2-r1').textContent=fmtA(r.I1)+' / '+r.T1.toFixed(0)+' °C';$('s2-r2').textContent=fmtA(r.I2)+' / '+r.T2.toFixed(0)+' °C';
+  $('s2-rt').textContent=(ratio>50?'> 50':ratio.toFixed(2))+'，常温时 '+(1+m).toFixed(2);
+  let n;
+  if(mos){chip($('s2-st'),ratio<1+m-0.004?'稳定，略有均流':'稳定','on');
+    n=m===0?'两颗完全一样，各分一半。这个平衡是稳定的：哪颗偶然多分一点电流就更热，电阻变大，电流又被推回去。'
+      :'Q2 电阻低，一开始多分电流、更热；它的 Rds(on) 随温度涨，把一部分电流推回 Q1，稳态电流比从 '+(1+m).toFixed(2)+' 降到 '+ratio.toFixed(2)+'。正温度系数保证差距不会被放大；分得均不均，主要还看两颗管子的 Rds(on) 本来差多少。';}
+  else if(m===0){chip($('s2-st'),'临界，一碰就偏','warn');n='两颗完全一样时理论上各分一半，但这是不稳定的平衡：实际器件总有差异，一颗稍热一点，差距就被越放越大。把滑块往右拖一格试试。';}
+  else{chip($('s2-st'),hot?'一颗扛全部，过热':'严重偏流','bad');
+    n='D2 稍微多分一点电流就更热，更热压降就更低，于是抢到更多电流。正反馈到最后 D2 扛了 '+fmtA(r.I2)+'，结温 '+r.T2.toFixed(0)+' °C，D1 几乎不导通。这就是二极管、三极管不能直接并联的原因，要各串一个均流电阻。';}
+  $('s2-note').textContent=n;
+}
+seg('s2-d',v=>{s2.d=v;s2u();});
+$('s2-mm').addEventListener('input',s2u);
+s2u();
+/* 3. 损耗与温升 */
+const s3={vg:10},RTH3=8,XI=scale(0,30,56,400),YP=scale(0,20,250,30),YT=T=>250-Math.min(T,200)*1.1;
+function s3solve(I,ta,r25){let T=ta;for(let k=0;k<300;k++){const n=ta+RTH3*I*I*r25*kT(T);if(n>400)return null;if(Math.abs(n-T)<1e-3)return n;T=n;}return T;}
+function s3u(){
+  const I=+$('s3-i').value,ta=+$('s3-ta').value,vg=s3.vg,r25=rVg(vg),p25=I*I*r25,Tj=s3solve(I,ta,r25);
+  $('s3-iv').textContent=I+' A';$('s3-i').setAttribute('aria-valuetext',I+' A');
+  $('s3-tav').textContent=ta+' °C';$('s3-ta').setAttribute('aria-valuetext',ta+' °C');
+  $('s3-c0').setAttribute('points',plot(i=>Math.min(20,i*i*r25),0,30,XI,YP,120));
+  const pts=[];let li=0,lp=0;
+  for(let k=0;k<=120;k++){const i=30*k/120,T=s3solve(i,ta,r25);if(T===null)break;const p=i*i*r25*kT(T);if(p>20)break;pts.push(XI(i).toFixed(1)+','+YP(p).toFixed(1));li=i;lp=p;}
+  $('s3-c1').setAttribute('points',pts.join(' '));
+  const l0=$('s3-l0'),l1=$('s3-l1');
+  const y0=YP(Math.min(20,676*r25));
+  l0.setAttribute('x',Math.min(XI(26),410).toFixed(1));l0.setAttribute('y',(y0+15).toFixed(1));
+  if(y0>150)l0.setAttribute('y',(y0-7).toFixed(1));
+  l1.setAttribute('x',(XI(li*0.8)-8).toFixed(1));l1.setAttribute('y',(YP(Math.min(20,Math.pow(li*0.8,2)*r25*kT(s3solve(li*0.8,ta,r25)||ta)))-6).toFixed(1));l1.setAttribute('text-anchor','end');
+  const run=Tj===null,rt=run?null:r25*kT(Tj),p=run?null:I*I*rt;
+  show($('s3-m'),!run&&p<=20);if(!run){$('s3-m').setAttribute('cx',XI(I).toFixed(1));$('s3-m').setAttribute('cy',YP(Math.min(20,p)).toFixed(1));}
+  const tTop=run?200:Tj,tf=$('s3-tf');tf.setAttribute('y',YT(tTop).toFixed(1));tf.setAttribute('height',Math.max(1,YT(ta)-YT(tTop)).toFixed(1));
+  tf.classList.toggle('bad',run||Tj>150);
+  $('s3-tal').setAttribute('y1',YT(ta).toFixed(1));$('s3-tal').setAttribute('y2',YT(ta).toFixed(1));$('s3-tat').setAttribute('y',(YT(ta)+4).toFixed(1));
+  let yt=YT(tTop)+4;if(Math.abs(yt-(YT(ta)+4))<14)yt=YT(ta)-10;if(Math.abs(yt-89)<14)yt=yt<89?75:103;yt=Math.max(34,Math.min(246,yt));
+  const tt=$('s3-tjt');tt.setAttribute('x','436');tt.setAttribute('text-anchor','end');tt.setAttribute('y',yt.toFixed(1));
+  tt.textContent=run?'失控':'Tj '+Tj.toFixed(0)+' °C';tt.style.fill=run||Tj>150?'var(--danger)':'';
+  $('s3-r25').textContent=fmtR(r25);
+  $('s3-rt').textContent=run?'不断上升':fmtR(rt)+'，是常温的 '+kT(Tj).toFixed(2)+' 倍';
+  $('s3-p').textContent=run?'不断上升':fmtP(p);$('s3-tj').textContent=run?'无稳态':Tj.toFixed(0)+' °C';
+  $('s3-vd').textContent=run?'—':fmtV(I*rt);
+  let n;
+  if(run){chip($('s3-st'),'热失控','bad');
+    n='I = '+I+' A、Vgs = '+vg+' V 时，损耗随温度涨得比散热快，热平衡无解，结温会一直升到烧毁。'+(vg<10?'先把 Vgs 提到 10 V，Rds(on) 能降一大截。':'要么换 Rds(on) 更小的管子或两颗并联，要么加强散热。');}
+  else{
+    if(Tj>150)chip($('s3-st'),'超过结温上限','bad');else if(Tj>125)chip($('s3-st'),'偏热，余量不足','warn');else chip($('s3-st'),'安全','on');
+    n='按 25 °C 的 Rds(on) 算损耗只有 '+fmtP(p25)+'；计入发热后 Rds(on) 涨到 '+fmtR(rt)+'，实际损耗 '+fmtP(p)+'，多了 '+((p/p25-1)*100).toFixed(0)+'%。'
+      +(Tj>150?'结温已超过 150 °C 上限。':'')+(vg<6?'Vgs 只有 '+vg+' V，常温电阻就是 10 V 驱动时的 '+(r25/rVg(10)).toFixed(1)+' 倍。':'')+(I>=20&&Tj<=125?'电流再大一点试试：损耗按 I² 涨，结温上去后 Rds(on) 还会跟着涨。':'');}
+  $('s3-note').textContent=n;
+}
+seg('s3-vg',v=>{s3.vg=+v;s3u();});
+$('s3-i').addEventListener('input',s3u);$('s3-ta').addEventListener('input',s3u);
+s3u();
+</script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>轨到轨输出</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#opamp">运放</a><span class="sp"></span><span>11 / 12</span></nav>
+<header>
+  <span class="eyebrow">运放 · 摆幅与共模范围</span>
+  <h1>轨到轨输出</h1>
+  <p class="lede">电源轨就是运放的正负电源电压。普通运放的输出离电源轨还差 1~2 V，5 V 单电源下这一截损失很要命。轨到轨输出能摆到离电源轨几十 mV 以内；轨到轨输入则让输入电压也能从地一直用到电源。</p>
+</header>
+
+<section id="rro">
+  <span class="eyebrow">输出摆幅 · VOH 与 VOL</span>
+  <h2>普通运放为什么够不到电源轨</h2>
+  <p>普通运放的输出级是一对射极跟随器，上管从 V+ 往上拉，下管往 V− 拉。射极跟随器的输出比基极低一个 Vbe，驱动它的前级管子也要留饱和压降，所以输出最高只到 V+ 减 1~2 V，下边同理。</p>
+  <p>轨到轨输出把输出级换成共源或共射接法，输出取自管子的漏极或集电极。管子导通时只剩导通电阻上的压降，所以能摆到离电源轨几十 mV 以内。</p>
+  <p class="eq">摆幅余量 ≈ 固有余量 + 输出电流 × 输出级等效电阻</p>
+  <p>第二项说明"轨到轨"是有条件的：负载越重，输出电流越大，离电源轨就越远。数据手册里的 VOH、VOL 都注明了负载条件。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 200" role="img" aria-label="5 V 单电源同相放大器，增益 2，负载 RL 接到 2.5 V">
+        <text x="215" y="62" text-anchor="middle" class="v">+5 V</text>
+        <path class="w" d="M215,68 V85 M215,135 V150 M201,150 H229 M206,155 H224 M211,160 H219"/>
+        <path class="r" d="M170,60 L260,110 L170,160 Z"/>
+        <text x="177" y="90" class="t">−</text>
+        <text x="177" y="140" class="t">+</text>
+        <circle class="r" cx="40" cy="135" r="4"/>
+        <text x="40" y="122" text-anchor="middle" class="t">Vin</text>
+        <text id="r1-vint" x="40" y="158" text-anchor="middle" class="v hi">2.20 V</text>
+        <path class="w" d="M44,135 H170 M170,85 H130 V100 M130,140 V160 M118,160 H142 M123,165 H137 M128,170 H132"/>
+        <rect class="r" x="121" y="100" width="18" height="40" rx="2"/>
+        <text x="114" y="124" text-anchor="end" class="t">Rg 10 kΩ</text>
+        <circle class="dot" cx="130" cy="85" r="3.5"/>
+        <path class="w" d="M130,85 V30 H190 M240,30 H300 V110"/>
+        <rect class="r" x="190" y="22" width="50" height="16" rx="2"/>
+        <text x="215" y="15" text-anchor="middle" class="v">Rf 10 kΩ</text>
+        <circle class="dot" cx="300" cy="110" r="3.5"/>
+        <circle class="dot" cx="350" cy="110" r="3.5"/>
+        <path id="r1-ow" class="w s-hi" style="stroke-width:3" d="M260,110 H400"/>
+        <text x="400" y="100" text-anchor="end" class="t">Vo</text>
+        <text id="r1-vot" x="400" y="130" text-anchor="end" class="v hi">4.40 V</text>
+        <path class="w" d="M350,110 V140 M350,180 V188"/>
+        <rect class="r" x="341" y="140" width="18" height="40" rx="2"/>
+        <text id="r1-rlt" x="334" y="164" text-anchor="end" class="v">RL 10 kΩ</text>
+        <text x="350" y="198" text-anchor="middle" class="tm">接 2.5 V</text>
+        <path id="r1-flow" class="flow thin" d="M262,110 H350 V178"/>
+      </svg>
+      <svg viewBox="0 0 420 250" role="img" aria-label="输出电压随输入电压变化的传输特性：理想为 2 倍直线，实际在 VOH 和 VOL 处被削平">
+        <g id="r1-ax"></g>
+        <rect id="r1-zh" class="zone-sat" x="50" y="20" width="350" height="0"/>
+        <rect id="r1-zl" class="zone-sat" x="50" y="200" width="350" height="0"/>
+        <polyline id="r1-id" class="ideal" points=""/>
+        <polyline id="r1-oth" class="ideal" points=""/>
+        <polyline id="r1-cv" class="real" points=""/>
+        <line id="r1-vl" class="ax dash" x1="0" x2="0" y1="0" y2="200"/>
+        <circle id="r1-pt" cx="0" cy="0" r="4.5" style="fill:var(--copper)"/>
+        <text id="r1-ptt" x="0" y="0" class="v hi"></text>
+        <text id="r1-zht" x="56" y="0" class="tm">VOH 以上到不了</text>
+      </svg>
+      <figcaption>上：5 V 单电源、增益 2 的同相放大器，负载 RL 接到 2.5 V。绿色是输出电流：Vo 高于 2.5 V 时运放往外送电流，低于 2.5 V 时往里吸。下：传输特性，橙线为当前运放，灰虚线为理想 2 倍直线和另一种运放。输出级参数为示意值，这里先假设输入共模范围够用。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">运放输出级</span>
+        <div class="seg" id="r1-m"><button id="r1-m-0" data-v="0" aria-pressed="true">普通</button><button id="r1-m-1" data-v="1" aria-pressed="false">轨到轨输出</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="r1-in">输入电压 Vin</label>
+        <span class="rv" id="r1-inv">2.20 V</span>
+        <input type="range" id="r1-in" min="0" max="2.5" step="0.02" value="2.2"></div>
+      <div class="ctl"><label class="ctl-l" for="r1-rl">负载电阻 RL</label>
+        <span class="rv" id="r1-rlv">10 kΩ</span>
+        <input type="range" id="r1-rl" min="0" max="5" step="1" value="4"></div>
+      <dl class="read">
+        <dt>理想输出 2·Vin</dt><dd id="r1-ideal">4.40 V</dd>
+        <dt>输出上限 VOH</dt><dd id="r1-voh">—</dd>
+        <dt>输出下限 VOL</dt><dd id="r1-vol">—</dd>
+        <dt>实际输出</dt><dd id="r1-vo">—</dd>
+        <dt>输出电流</dt><dd id="r1-io">—</dd>
+        <dt>状态</dt><dd><span id="r1-st" class="chip bad">削顶</span></dd>
+      </dl>
+      <p class="note" id="r1-note"></p>
+    </div>
+  </div>
+</section>
+<section id="rri">
+  <span class="eyebrow">输入共模范围 · 互补差分对</span>
+  <h2>轨到轨输入：两对管子接力，交接处 Vos 会跳</h2>
+  <p>输入级也有同样的问题。普通运放的输入是一对 PNP（或 NPN）差分对，差分对和尾电流源本身要占掉一两伏。以常见的 PNP 输入为例，共模电压能用到地，上边只到 V+ 减 1.5 V 左右。超出这个范围运放就不正常工作，有的型号输出还会反相，叫相位反转。</p>
+  <p>轨到轨输入把一对 PNP 和一对 NPN 并在一起：共模电压低时 PNP 对工作，高时 NPN 对工作。两对管子的失调电压不一样，交接的地方 Vos 会跳一下，这段叫交越区，一般在 V+ 以下 1 V 多一点（典型值）。</p>
+  <p>交越区只影响共模电压会跟着信号变的电路，比如跟随器和同相放大器：信号扫过交越区时输出多出一个小台阶，产生失真。反相接法的共模电压固定不动，不受影响。也有用内部电荷泵、只用一对管子的"零交越"运放。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="上：PNP 与 NPN 输入差分对各自的工作范围；下：失调电压随输入共模电压的变化，交越区内跳变">
+        <text x="20" y="46" class="t">PNP 对</text>
+        <text x="20" y="76" class="t">NPN 对</text>
+        <rect id="r2-bp" x="70" y="34" width="0" height="16" rx="3" style="fill:var(--low);fill-opacity:.35"/>
+        <rect id="r2-bn" x="70" y="64" width="0" height="16" rx="3" style="fill:var(--copper);fill-opacity:.35"/>
+        <text id="r2-bnt" x="0" y="76" class="tm">不存在</text>
+        <rect id="r2-zx" class="zone-sat" x="70" y="110" width="0" height="140"/>
+        <rect id="r2-zb" class="zone-cut" x="70" y="110" width="0" height="140" style="fill:var(--danger);fill-opacity:.1"/>
+        <text id="r2-zt" x="0" y="126" text-anchor="middle" class="tm"></text>
+        <g id="r2-ax"></g>
+        <polyline id="r2-cv" class="real" points=""/>
+        <line id="r2-vl" class="ax dash" x1="0" x2="0" y1="30" y2="250"/>
+        <circle id="r2-pt" cx="0" cy="0" r="4.5" style="fill:var(--copper)"/>
+        <text id="r2-ptt" x="0" y="0" class="v hi"></text>
+      </svg>
+      <figcaption>5 V 单电源。上面两条色带是两对输入管各自能工作的共模电压范围，下面是失调电压 Vos 随共模电压 Vcm 的变化。PNP 对 Vos 取 +0.3 mV、NPN 对取 −0.5 mV，交越区取 3.6~4.0 V，均为示意值。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">输入级</span>
+        <div class="seg" id="r2-m"><button id="r2-m-0" data-v="0" aria-pressed="false">普通，单 PNP 对</button><button id="r2-m-1" data-v="1" aria-pressed="true">轨到轨输入，互补对</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="r2-v">输入共模电压 Vcm</label>
+        <span class="rv" id="r2-vv">3.80 V</span>
+        <input type="range" id="r2-v" min="0" max="5" step="0.05" value="3.8"></div>
+      <dl class="read">
+        <dt>工作的输入对</dt><dd id="r2-pair">—</dd>
+        <dt>该点 Vos</dt><dd id="r2-vos">—</dd>
+        <dt>比低端变化</dt><dd id="r2-dv">—</dd>
+        <dt>状态</dt><dd><span id="r2-st" class="chip warn">交越区</span></dd>
+      </dl>
+      <p class="note" id="r2-note"></p>
+    </div>
+  </div>
+</section>
+<section id="sel">
+  <span class="eyebrow">选型 · 看清是哪一种轨到轨</span>
+  <h2>输入轨到轨和输出轨到轨是两回事</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>类型</th><th>输入共模范围</th><th>输出摆幅</th><th>适用场合</th></tr></thead>
+    <tbody>
+      <tr><td>普通运放</td><td>至少一侧要离电源轨 1~2 V</td><td>两侧各差 1~2 V</td><td>±12 V、±15 V 双电源，损失的那一截占比小</td></tr>
+      <tr><td>轨到轨输出 RRO</td><td>和普通运放一样</td><td>轻载离轨几十 mV 以内</td><td>反相放大、驱动 ADC，输入共模固定的场合</td></tr>
+      <tr><td>轨到轨输入 RRI</td><td>可略超出两侧电源轨，约 0.1~0.3 V</td><td>看具体型号</td><td>跟随器、高边电流检测，共模电压贴近电源</td></tr>
+      <tr><td>轨到轨输入输出 RRIO</td><td>覆盖两轨</td><td>离轨几十 mV</td><td>3.3 V、5 V 低压单电源系统的首选</td></tr>
+    </tbody>
+  </table></div>
+  <p>"轨到轨"只是说能很接近电源轨，不是说能到达。单电源下输出要真正到 0 V，得给运放加一个负电源，或者接受离地几十 mV 的误差。设计时让信号离两侧电源轨各留 50~100 mV（典型值），并按实际负载电流核对数据手册里的 VOH、VOL。单电源下怎么安排信号范围，见 <a href="12-单电源供电.html">单电源供电</a>。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>什么是轨到轨运放？</summary>
+      <div class="ans"><p>电源轨就是运放的正负电源电压。轨到轨输出指输出能摆到离电源轨几十 mV 以内，靠的是共源或共射接法的输出级。轨到轨输入指输入共模范围覆盖两侧电源轨，靠的是 PNP 和 NPN 两对差分管并联。两者要分开看，只写"轨到轨"的型号可能只有一样。</p></div></details>
+    <details><summary>普通运放的输出为什么到不了电源轨？</summary>
+      <div class="ans"><p>输出级是射极跟随器，输出比基极低一个 Vbe，前级驱动管还要留饱和压降，所以离电源轨差 1~2 V。±15 V 供电时影响不大，5 V 单电源时摆幅就少了一半以上。</p></div></details>
+    <details><summary>轨到轨输出能输出 0 V 吗？</summary>
+      <div class="ans"><p>不能真正到 0 V。输出管导通时还有导通电阻，余量约等于固有余量加上输出电流乘以输出级电阻，轻载时几 mV 到几十 mV，负载越重越离不了轨。要到 0 V 就得加负电源。</p></div></details>
+    <details><summary>轨到轨输入的交越区是什么，有什么影响？</summary>
+      <div class="ans"><p>共模电压低时 PNP 对工作，高时 NPN 对工作。两对管子失调不同，交接处 Vos 跳变，这段叫交越区，一般在正电源以下 1 V 多。跟随器、同相放大器的共模电压跟着信号走，扫过交越区会产生失真。办法是让信号避开这一段、改用反相接法，或者选零交越运放。</p></div></details>
+    <details><summary>5 V 单电源系统选运放要看哪几项？</summary>
+      <div class="ans"><p>一看最低工作电压，有些老运放 5 V 下根本不工作。二看输入共模范围是否包含信号电压，尤其是地。三看在实际负载下的 VOH、VOL。四看交越区是否落在信号范围里。一般直接选 RRIO 的 CMOS 运放。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="10-CMRR与PSRR.html"><span>上一页</span>CMRR 与 PSRR</a><a class="next" href="12-单电源供电.html"><span>下一页</span>单电源供电</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+function axGrid(gid,o){
+  const g=$(gid);g.textContent='';
+  o.yt.forEach(([py,l])=>g.append(svgEl('line',{class:'gl',x1:o.x0,y1:py,x2:o.x1,y2:py}),svgEl('text',{x:o.x0-6,y:py+4,'text-anchor':'end',class:'v'},l)));
+  o.xt.forEach(([px,l],i)=>g.append(svgEl('line',{class:'gl',x1:px,y1:o.y0,x2:px,y2:o.y1}),svgEl('text',{x:px,y:o.y1+16,'text-anchor':i===o.xt.length-1&&px>=o.x1-2?'end':'middle',class:'v'},l)));
+  g.append(svgEl('path',{class:'ax',d:`M${o.x0},${o.y0} V${o.y1} H${o.x1}`}));
+  if(o.yn)g.append(svgEl('text',{x:o.x0+4,y:o.y0-6,class:'tm'},o.yn));
+  if(o.ynRight)g.append(svgEl('text',{x:o.x1,y:Math.min(o.y0+13,o.y1-6),'text-anchor':'end',class:'tm'},o.ynRight));
+  if(o.xn)g.append(svgEl('text',{x:o.x1,y:o.y1+32,'text-anchor':'end',class:'tm'},o.xn));
+}
+const VCC=5,VM=2.5,fmtD=d=>d>=1?d.toFixed(2)+' V':(d*1e3).toFixed(0)+' mV';
+
+/* 1. 输出摆幅：余量 = 固有余量 v0 + 输出电流 × ro，RL 接 2.5 V */
+const r1RL=[100,330,1e3,3.3e3,10e3,100e3],r1P=[{v0:1.3,ro:60},{v0:0.005,ro:40}],r1={m:0};
+const r1X=scale(0,2.5,50,400),r1Y=scale(0,5,200,20);
+axGrid('r1-ax',{x0:50,x1:400,y0:20,y1:200,xt:[0,.5,1,1.5,2,2.5].map(v=>[r1X(v),String(v)]),yt:[0,1,2,3,4,5].map(v=>[r1Y(v),String(v)]),xn:'Vin / V',ynRight:'Vo / V'});
+$('r1-id').setAttribute('points',plot(x=>2*x,0,2.5,r1X,r1Y,2));
+function swing(p,RL){const k=p.ro/RL;return{voh:(VCC-p.v0+VM*k)/(1+k),vol:(p.v0+VM*k)/(1+k)};}
+function r1u(){
+  const RL=r1RL[+$('r1-rl').value],vin=+$('r1-in').value,s=swing(r1P[r1.m],RL),so=swing(r1P[1-r1.m],RL);
+  const vi=2*vin,vo=Math.max(s.vol,Math.min(s.voh,vi)),io=(vo-VM)/RL;
+  $('r1-cv').setAttribute('points',plot(x=>Math.max(s.vol,Math.min(s.voh,2*x)),0,2.5,r1X,r1Y,250));
+  $('r1-oth').setAttribute('points',plot(x=>Math.max(so.vol,Math.min(so.voh,2*x)),0,2.5,r1X,r1Y,250));
+  const yh=r1Y(s.voh),yl=r1Y(s.vol);
+  $('r1-zh').setAttribute('height',(yh-20).toFixed(1));$('r1-zl').setAttribute('y',yl.toFixed(1));$('r1-zl').setAttribute('height',(200-yl).toFixed(1));
+  $('r1-zht').setAttribute('y',(20+Math.min(14,yh-20-3)).toFixed(1));show($('r1-zht'),yh-20>16);
+  const px=r1X(vin),py=r1Y(vo),t=$('r1-ptt'),rt=px>300;
+  $('r1-pt').setAttribute('cx',px.toFixed(1));$('r1-pt').setAttribute('cy',py.toFixed(1));
+  $('r1-vl').setAttribute('x1',px.toFixed(1));$('r1-vl').setAttribute('x2',px.toFixed(1));$('r1-vl').setAttribute('y1',py.toFixed(1));
+  t.textContent='Vo '+vo.toFixed(2)+' V';t.setAttribute('text-anchor',rt?'end':'start');
+  t.setAttribute('x',(px+(rt?-10:10)).toFixed(1));t.setAttribute('y',(py+(py<60?22:-10)).toFixed(1));
+  $('r1-inv').textContent=fmtV(vin);$('r1-in').setAttribute('aria-valuetext',fmtV(vin));
+  $('r1-rlv').textContent=fmtR(RL);$('r1-rl').setAttribute('aria-valuetext',fmtR(RL));$('r1-rlt').textContent='RL '+fmtR(RL);
+  $('r1-vint').textContent=fmtV(vin);$('r1-vot').textContent=fmtV(vo);setLv($('r1-vot'),$('r1-ow'),vo>=VM);
+  $('r1-ideal').textContent=fmtV(vi);
+  $('r1-voh').textContent=fmtV(s.voh)+'，离 5 V 差 '+fmtD(VCC-s.voh);
+  $('r1-vol').textContent=fmtV(s.vol)+'，离地 '+fmtD(s.vol);
+  $('r1-vo').textContent=fmtV(vo);
+  $('r1-io').textContent=Math.abs(io)<1e-7?'0':fmtA(Math.abs(io))+(io>0?'，流出运放':'，流进运放');
+  const f=$('r1-flow');show(f,Math.abs(io)>1e-6);f.classList.toggle('rev',io<0);
+  const hiC=vi>s.voh+1e-3,loC=vi<s.vol-1e-3,rro=r1.m===1;let n;
+  if(hiC||loC){chip($('r1-st'),hiC?'削顶':'削底','bad');
+    n=rro?'负载 '+fmtR(RL)+' 太重，输出电流 '+fmtA(Math.abs(io))+' 在输出级电阻上压掉一截，'+(hiC?'VOH 只到 '+fmtV(s.voh):'VOL 被抬到 '+fmtV(s.vol))+'。轨到轨也要看负载，RL 加大一点就能贴近电源轨。'
+      :'理想输出 '+fmtV(vi)+'，但普通运放的输出级'+(hiC?'最高只到 '+fmtV(s.voh)+'，离 5 V 还差 '+fmtD(VCC-s.voh)+'，顶部被削平':'最低只到 '+fmtV(s.vol)+'，底部被削平')+'。5 V 单电源下能用的只有 '+fmtV(s.vol)+' ~ '+fmtV(s.voh)+'，一半多的摆幅没了。';}
+  else{chip($('r1-st'),'线性','on');
+    n=rro?'轨到轨输出级能摆到 '+fmtV(s.vol)+' ~ '+fmtV(s.voh)+'，离两侧电源轨只差 '+fmtD(s.vol)+'。把 RL 调小，看余量怎么随输出电流变大。'
+      :'输出在 VOL 和 VOH 之间，按 2 倍线性放大。把 Vin 往上拖，看输出在哪里被削平。';}
+  $('r1-note').textContent=n;
+}
+seg('r1-m',v=>{r1.m=+v;r1u();});
+['r1-in','r1-rl'].forEach(id=>$(id).addEventListener('input',r1u));
+r1u();
+/* 2. 输入共模范围：单 PNP 对上限 3.5 V；互补对在 3.6~4.0 V 交接 */
+const r2X=scale(0,5,70,500),r2Y=scale(-1,1,250,110),r2={m:1},VP=0.3,VN=-0.5,XA=3.6,XB=4.0,LIM=3.5;
+axGrid('r2-ax',{x0:70,x1:500,y0:110,y1:250,xt:[0,1,2,3,4,5].map(v=>[r2X(v),String(v)]),
+  yt:[1,.5,0,-.5,-1].map(v=>[r2Y(v),String(v).replace('-','−')]),yn:'Vos / mV',xn:'共模电压 Vcm / V'});
+const r2V=(m,x)=>{if(!m)return x<=LIM?VP:NaN;const u=Math.max(0,Math.min(1,(x-XA)/(XB-XA))),w=u*u*(3-2*u);return VP*(1-w)+VN*w;};
+const fmtMv=v=>(v<0?'−':'+')+Math.abs(v).toFixed(2)+' mV';
+function r2u(){
+  const m=r2.m,x=+$('r2-v').value,v=r2V(m,x),ok=!isNaN(v);
+  $('r2-bp').setAttribute('width',(r2X(m?XB:LIM)-70).toFixed(1));
+  $('r2-bn').setAttribute('x',r2X(XA).toFixed(1));$('r2-bn').setAttribute('width',m?(500-r2X(XA)).toFixed(1):'0');
+  show($('r2-bnt'),!m);$('r2-bnt').setAttribute('x','74');
+  $('r2-zx').setAttribute('x',r2X(XA).toFixed(1));$('r2-zx').setAttribute('width',m?(r2X(XB)-r2X(XA)).toFixed(1):'0');
+  $('r2-zb').setAttribute('x',r2X(LIM).toFixed(1));$('r2-zb').setAttribute('width',m?'0':(500-r2X(LIM)).toFixed(1));
+  const zt=$('r2-zt');zt.textContent=m?'交越区':'超出共模范围';zt.setAttribute('x',(m?r2X((XA+XB)/2):r2X((LIM+5)/2)).toFixed(1));
+  $('r2-cv').setAttribute('points',plot(t=>r2V(m,t),0,5,r2X,r2Y,250));
+  const px=r2X(x),py=ok?r2Y(v):250,t=$('r2-ptt'),rt=px>400;
+  $('r2-vl').setAttribute('x1',px.toFixed(1));$('r2-vl').setAttribute('x2',px.toFixed(1));
+  $('r2-pt').setAttribute('cx',px.toFixed(1));$('r2-pt').setAttribute('cy',py.toFixed(1));show($('r2-pt'),ok);show(t,ok);
+  if(ok){t.textContent=fmtMv(v);t.setAttribute('text-anchor',rt?'end':'start');t.setAttribute('x',(px+(rt?-8:8)).toFixed(1));t.setAttribute('y',(py+(v>0?-10:20)).toFixed(1));}
+  $('r2-vv').textContent=fmtV(x);$('r2-v').setAttribute('aria-valuetext',fmtV(x));
+  let pair,n;
+  if(!m){pair=ok?'PNP 对':'没有，输入级关断';
+    if(ok){chip($('r2-st'),'正常','on');n='PNP 差分对和它的尾电流源挂在 V+ 一侧，要占掉 1 V 多，所以共模电压最高只能到 3.5 V 左右；往下能一直用到地，所以单电源运放常用 PNP 输入。';}
+    else{chip($('r2-st'),'超出共模范围','bad');n='Vcm = '+fmtV(x)+' 超过了上限 3.5 V，尾电流源没有足够的电压，输入级关断，输出不再跟随输入。有的运放这时输出会跳到反方向，叫相位反转。换轨到轨输入看看。';}}
+  else if(x<XA){pair='PNP 对';chip($('r2-st'),'正常','on');n='共模电压低，由 PNP 对工作，Vos = '+fmtMv(VP)+'。继续往上拖，过了 3.6 V 就进入交越区。';}
+  else if(x>XB){pair='NPN 对';chip($('r2-st'),'正常','on');n='共模电压贴近 V+，改由 NPN 对工作，Vos 变成 '+fmtMv(VN)+'。同一颗运放在不同共模电压下失调不一样，精密电路要让信号避开交越区。';}
+  else{pair='两对交接中';chip($('r2-st'),'交越区','warn');n='正处在交越区：PNP 对逐渐退出，NPN 对接手，Vos 从 '+fmtMv(VP)+' 变到 '+fmtMv(VN)+'。跟随器的输入扫过这里，输出就多出约 0.8 mV 的台阶，经后级放大就成了失真。';}
+  $('r2-pair').textContent=pair;
+  $('r2-vos').textContent=ok?fmtMv(v):'无意义';
+  $('r2-dv').textContent=ok?fmtMv(v-VP):'—';
+  $('r2-note').textContent=n;
+}
+seg('r2-m',v=>{r2.m=+v;r2u();});
+$('r2-v').addEventListener('input',r2u);
+r2u();
+</script>
+</body>
+</html>

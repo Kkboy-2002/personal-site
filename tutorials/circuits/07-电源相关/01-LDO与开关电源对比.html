@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>LDO与开关电源对比</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.heat{fill:var(--copper)}
+.bk-a{fill:var(--copper)}.bk-b{fill:var(--low)}
+.ta{fill:var(--copper)}.tb{fill:var(--low)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#power">电源相关</a><span class="sp"></span><span>01 / 08</span></nav>
+<header>
+  <span class="eyebrow">电源相关 · LDO · DC-DC</span>
+  <h1>LDO 与开关电源对比</h1>
+  <p class="lede">LDO 是一个自动调节的"可变电阻"，开关电源靠电感和开关搬运能量。这页先把 LDO 内部四个部件画清楚，再对比两者的效率、发热和噪声，最后给出选型规则。</p>
+</header>
+
+<section id="ldo">
+  <span class="eyebrow">LDO 内部 · 四个部件</span>
+  <h2>LDO 的结构：基准、误差放大器、调整管、分压反馈</h2>
+  <p>白板上按这个顺序画：输入到输出之间串一个 PMOS 调整管；输出经 R1、R2 分压得到 FB；FB 和基准 Vref 送进误差放大器 EA；EA 的输出去控制 PMOS 的栅极。闭环稳定时 FB = Vref，所以输出电压只由分压比决定。</p>
+  <p class="eq">Vout = Vref·(1 + R1 / R2)</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 290" role="img" aria-label="LDO 内部结构：Vin 经 PMOS 调整管到 Vout，Vout 经 R1 R2 分压得到 FB，FB 接误差放大器同相端，基准 Vref 接反相端，误差放大器输出驱动 PMOS 栅极，输出接电容和负载">
+        <rect id="l1-heat" class="heat" x="118" y="64" width="64" height="32" rx="6" fill-opacity="0.15"/>
+        <text id="l1-vin" x="46" y="22" text-anchor="middle" class="v">Vin 5.00 V</text>
+        <path class="w" d="M34,30 H58 M46,30 V60 H110"/>
+        <g transform="translate(150,80)">
+          <path class="w" d="M-40,-20 H-14 V0 M40,-20 H14 V0 M0,0 V-20 H-14 M-16,8 H16 M0,8 V30"/>
+          <line class="bar" x1="-18" y1="0" x2="-10" y2="0"/>
+          <line class="bar" x1="-4" y1="0" x2="4" y2="0"/>
+          <line class="bar" x1="10" y1="0" x2="18" y2="0"/>
+          <polygon class="ah" points="0,-13 -4,-5 4,-5"/>
+        </g>
+        <text x="150" y="40" text-anchor="middle" class="t">调整管 PMOS</text>
+        <text x="124" y="54" text-anchor="middle" class="tm">S</text>
+        <text x="176" y="54" text-anchor="middle" class="tm">D</text>
+        <text x="158" y="106" class="tm">G</text>
+        <path class="w" d="M190,60 H410"/>
+        <circle class="dot" cx="290" cy="60" r="3.5"/>
+        <circle class="dot" cx="350" cy="60" r="3.5"/>
+        <text id="l1-vo" x="380" y="48" text-anchor="middle" class="v hi">Vout 3.30 V</text>
+        <path class="w" d="M150,110 V200 H176"/>
+        <text id="l1-vg" x="142" y="160" text-anchor="end" class="v">Vg 3.10 V</text>
+        <polygon class="r" points="230,168 230,232 176,200"/>
+        <text x="206" y="205" text-anchor="middle" class="t">EA</text>
+        <text x="221" y="189" text-anchor="middle" class="tm">+</text>
+        <text x="221" y="221" text-anchor="middle" class="tm">−</text>
+        <text x="203" y="158" text-anchor="middle" class="t">误差放大器</text>
+        <path class="w" d="M290,60 V96 M290,136 V204 M290,244 V258 M230,184 H290 M276,258 H304 M281,263 H299 M286,268 H294"/>
+        <rect class="r" x="281" y="96" width="18" height="40" rx="2"/>
+        <rect class="r" x="281" y="204" width="18" height="40" rx="2"/>
+        <circle class="dot" cx="290" cy="184" r="3.5"/>
+        <text x="306" y="112" class="t">R1</text>
+        <text x="306" y="128" class="v">175 kΩ</text>
+        <text x="306" y="220" class="t">R2</text>
+        <text x="306" y="236" class="v">100 kΩ</text>
+        <text x="260" y="178" text-anchor="middle" class="tm">FB</text>
+        <text id="l1-fb" x="258" y="200" text-anchor="middle" class="v">1.20 V</text>
+        <path class="w" d="M230,216 H250 V244 M250,250 V272 M236,272 H264 M241,277 H259 M246,282 H254"/>
+        <path class="w" style="stroke-width:3" d="M238,244 H262 M244,250 H256"/>
+        <text x="232" y="252" text-anchor="end" class="t">基准 Vref</text>
+        <text x="232" y="268" text-anchor="end" class="v">1.2 V</text>
+        <path class="w" d="M350,60 V146 M350,154 V258 M336,258 H364 M341,263 H359 M346,268 H354"/>
+        <path class="w" style="stroke-width:3" d="M336,146 H364 M336,154 H364"/>
+        <text x="366" y="140" class="t">Cout</text>
+        <text x="366" y="172" class="v">1 µF</text>
+        <path class="w" d="M410,60 V120 M410,170 V258 M396,258 H424 M401,263 H419 M406,268 H414"/>
+        <rect id="l1-load" class="box" x="401" y="120" width="18" height="50" rx="2"/>
+        <text x="426" y="142" class="t">负载</text>
+        <text id="l1-io" x="426" y="160" class="v">0.50 A</text>
+        <path id="l1-flow" class="flow" d="M46,34 V60 H136 V80 H164 V60 H410 V256"/>
+        <path id="l1-fdiv" class="flow thin" d="M290,64 V94 M290,138 V256"/>
+      </svg>
+      <figcaption>绿色粗虚线是负载电流：从 Vin 经 PMOS 的源极、沟道、漏极流到负载。细虚线是分压电阻上 µA 级的反馈电流。调整管底下的橙色越深，表示管子发热越多。R1、R2 为示意取值。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="l1-vin-r">输入电压 Vin（输出设定 3.3 V）</label>
+        <span class="rv" id="l1-vin-v">5.00 V</span>
+        <input type="range" id="l1-vin-r" min="3" max="6" step="0.05" value="5"></div>
+      <div class="ctl"><label class="ctl-l" for="l1-io-r">负载电流 Iout</label>
+        <span class="rv" id="l1-io-v">0.50 A</span>
+        <input type="range" id="l1-io-r" min="0" max="1" step="0.05" value="0.5"></div>
+      <dl class="read">
+        <dt>状态</dt><dd><span id="l1-st" class="chip on">稳压</span></dd>
+        <dt>Vout</dt><dd id="l1-rvo">3.30 V</dd>
+        <dt>FB，稳压时 = Vref</dt><dd id="l1-rfb">1.20 V</dd>
+        <dt>EA 输出，即栅压 Vg</dt><dd id="l1-rvg">3.10 V</dd>
+        <dt>调整管压降 Vin − Vout</dt><dd id="l1-rdrop">1.70 V</dd>
+        <dt>此电流下的压差 Vdo</dt><dd id="l1-rvdo">0.22 V</dd>
+        <dt>调整管功耗</dt><dd id="l1-rp">0.85 W</dd>
+        <dt>效率 ≈ Vout / Vin</dt><dd id="l1-reff">66 %</dd>
+      </dl>
+      <p class="note" id="l1-note"></p>
+    </div>
+  </div>
+  <p class="note">PMOS 型 LDO 的 FB 要接 EA 的同相端：Vout 偏高 → FB 升高 → EA 输出升高 → PMOS 的 Vsg 变小 → 电流变小 → Vout 回落，这才是负反馈。调整管按平方律模型示意，参数不对应具体型号。</p>
+</section>
+
+<section id="eff">
+  <span class="eyebrow">效率 · 发热</span>
+  <h2>同样的输入输出，LDO 和开关电源谁更热</h2>
+  <p>LDO 的输入电流约等于输出电流，因为调整管是串在路上的，电流没有别的地方可去。所以效率只能是 Vout / Vin，多出来的电压全乘上电流变成热：P = (Vin − Vout)·Iout。开关电源不走这条路，它用电感按占空比"搬运"能量，效率典型 85%~95%，和压差关系不大。代价是开关纹波、尖峰噪声和 EMI。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 262" role="img" aria-label="柱状图：左边比较 LDO 与开关电源的效率，右边比较两者的损耗功率">
+        <text x="50" y="24" class="tm">效率 / %</text>
+        <text x="290" y="24" class="tm">损耗（发热）/ W</text>
+        <line class="gl" x1="50" y1="40" x2="220" y2="40"/><line class="gl" x1="50" y1="85" x2="220" y2="85"/>
+        <line class="gl" x1="50" y1="130" x2="220" y2="130"/><line class="gl" x1="50" y1="175" x2="220" y2="175"/>
+        <line class="gl" x1="290" y1="40" x2="460" y2="40"/><line class="gl" x1="290" y1="85" x2="460" y2="85"/>
+        <line class="gl" x1="290" y1="130" x2="460" y2="130"/><line class="gl" x1="290" y1="175" x2="460" y2="175"/>
+        <rect id="l2-be1" class="bk-a" x="78" y="100" width="44" height="120"/>
+        <rect id="l2-be2" class="bk-b" x="148" y="60" width="44" height="160"/>
+        <rect id="l2-bp1" class="bk-a" x="318" y="100" width="44" height="120"/>
+        <rect id="l2-bp2" class="bk-b" x="388" y="200" width="44" height="20"/>
+        <path class="ax" d="M50,40 V220 H220 M290,40 V220 H460"/>
+        <text x="44" y="44" text-anchor="end" class="v">100</text>
+        <text x="44" y="134" text-anchor="end" class="v">50</text>
+        <text x="44" y="224" text-anchor="end" class="v">0</text>
+        <text id="l2-t1" x="284" y="44" text-anchor="end" class="v">5</text>
+        <text id="l2-t2" x="284" y="134" text-anchor="end" class="v">2.5</text>
+        <text x="284" y="224" text-anchor="end" class="v">0</text>
+        <text id="l2-ve1" x="100" y="94" text-anchor="middle" class="v ta">28%</text>
+        <text id="l2-ve2" x="170" y="54" text-anchor="middle" class="v tb">90%</text>
+        <text id="l2-vp1" x="340" y="94" text-anchor="middle" class="v ta">4.35 W</text>
+        <text id="l2-vp2" x="410" y="194" text-anchor="middle" class="v tb">0.2 W</text>
+        <text x="100" y="240" text-anchor="middle" class="t ta">LDO</text>
+        <text x="170" y="240" text-anchor="middle" class="t tb">开关电源</text>
+        <text x="340" y="240" text-anchor="middle" class="t ta">LDO</text>
+        <text x="410" y="240" text-anchor="middle" class="t tb">开关电源</text>
+      </svg>
+      <figcaption>LDO 按 η = Vout / Vin、P = (Vin − Vout)·Iout 计算，忽略 µA 级静态电流。开关电源损耗按"固定损耗 + I²R + 开关损耗"的示意模型估算。结温按 SOT-223 封装 θJA ≈ 60 °C/W（典型值）、环境 25 °C 估算。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="l2-vin">输入电压 Vin</label>
+        <span class="rv" id="l2-vin-v">12.0 V</span>
+        <input type="range" id="l2-vin" min="3.5" max="24" step="0.5" value="12"></div>
+      <div class="ctl"><label class="ctl-l" for="l2-vo">输出电压 Vout</label>
+        <span class="rv" id="l2-vo-v">3.3 V</span>
+        <input type="range" id="l2-vo" min="1.2" max="5" step="0.1" value="3.3"></div>
+      <div class="ctl"><label class="ctl-l" for="l2-io">负载电流 Iout</label>
+        <span class="rv" id="l2-io-v">0.50 A</span>
+        <input type="range" id="l2-io" min="0.05" max="3" step="0.05" value="0.5"></div>
+      <dl class="read">
+        <dt>LDO 效率 / 损耗</dt><dd id="l2-rl">28% / 4.35 W</dd>
+        <dt>LDO 结温估算</dt><dd id="l2-tj">286 °C</dd>
+        <dt>开关电源效率 / 损耗</dt><dd id="l2-rs">90% / 0.20 W</dd>
+        <dt>建议</dt><dd><span id="l2-st" class="chip on">选开关电源</span></dd>
+      </dl>
+      <p class="note" id="l2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="pick">
+  <span class="eyebrow">选型 · 组合用法</span>
+  <h2>怎么选：看压差、电流和噪声</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>对比项</th><th>LDO</th><th>开关电源（以 Buck 为例）</th></tr></thead>
+    <tbody>
+      <tr><td>效率</td><td>≈ Vout / Vin，压差越大越低</td><td>典型 85%~95%，和压差关系不大；轻载会下降</td></tr>
+      <tr><td>噪声</td><td>没有开关动作，输出很干净</td><td>有开关频率的纹波和开关沿的尖峰，有 EMI</td></tr>
+      <tr><td>电压关系</td><td>只能降压，且要求 Vin ≥ Vout + Vdo</td><td>Buck 降压，Boost 升压，Buck-Boost 升降都行</td></tr>
+      <tr><td>外围与面积</td><td>两颗电容，小而便宜</td><td>电感、二极管或 MOS、电容，布局要求高</td></tr>
+      <tr><td>发热</td><td>全部压差变成热，集中在一颗芯片上</td><td>损耗小，分散在开关管、电感、二极管上</td></tr>
+      <tr><td>适合</td><td>小电流、小压差、噪声敏感：ADC 和基准、射频、PLL、传感器</td><td>大压差、大电流、电池供电要续航</td></tr>
+    </tbody>
+  </table></div>
+  <p>两者也可以串起来用：先用开关电源把 12 V 高效降到 3.6 V 左右，再用 LDO 从 3.6 V 降到 3.3 V。开关电源负责效率，LDO 负责把纹波滤干净。中间电压要比 Vout 高出 Vdo 再留一点余量，高得越多 LDO 越热。</p>
+  <p class="eq">总效率 ≈ η_buck·(Vout / V中间) ≈ 90%·(3.3 / 3.6) ≈ 82%</p>
+  <p class="note">LDO 抑制纹波的能力叫 PSRR。低频时常有 60~70 dB，到了几百 kHz 到 MHz 的开关频率附近往往只剩 20~40 dB（典型值）。所以后级 LDO 前面有时还要加 LC 或磁珠滤波。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>LDO 和 DC-DC 怎么选？</summary>
+      <div class="ans"><p>先算 LDO 的发热：P = (Vin − Vout)·Iout。压差小、电流小、对噪声敏感，选 LDO；压差大或电流大，发热扛不住，选开关电源。既要效率又要干净，就开关电源后面接一级 LDO。</p></div></details>
+    <details><summary>LDO 的效率为什么约等于 Vout / Vin？</summary>
+      <div class="ans"><p>因为调整管串在输入和输出之间，输入电流等于输出电流加上很小的静态电流。效率 = Vout·Iout / (Vin·Iin) ≈ Vout / Vin。12 V 转 3.3 V 时效率只有约 27%。</p></div></details>
+    <details><summary>什么是压差 dropout？调整管用 PMOS 和 NMOS 有什么区别？</summary>
+      <div class="ans"><p>压差是 LDO 还能维持稳压的最小 Vin − Vout，典型值是几十到几百 mV，随负载电流增大而增大。Vin 再低，调整管已经完全导通，输出就跟着 Vin 往下掉。</p><p>PMOS 的栅极可以拉到地，Vsg 能做得很大，所以压差低。NMOS 调整管要求栅极比输出还高一个 Vgs，通常需要电荷泵或者额外的偏置电源，但它做源极跟随，瞬态响应更好。</p></div></details>
+    <details><summary>开关电源后面为什么常接一级 LDO？</summary>
+      <div class="ans"><p>开关电源效率高但有纹波和尖峰，LDO 干净但压差大时太热。先用开关电源降到比目标高一点的电压，再用 LDO 降最后一小段，效率损失不大，又能利用 LDO 的 PSRR 滤掉纹波。给 ADC 基准、射频、PLL 供电常这样做。</p></div></details>
+    <details><summary>LDO 的输出电容能随便选吗？</summary>
+      <div class="ans"><p>不能。输出电容是 LDO 环路补偿的一部分。老式 LDO 要求电容有一定的 ESR 才稳定，直接换成 ESR 很小的陶瓷电容可能振荡。现在很多 LDO 标明"陶瓷电容稳定"，但容值仍要满足数据手册的最小值。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="next" href="02-Buck拓扑.html"><span>下一页</span>Buck 拓扑</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. LDO 结构 */
+const L1={vt:0.9,k:0.5,vset:3.3,vref:1.2,div:2.75};
+function l1u(){
+  const vin=+$('l1-vin-r').value,io=+$('l1-io-r').value;
+  let vdo=0;
+  for(let i=0;i<40;i++){const o=L1.vset+vdo-L1.vt;vdo=o-Math.sqrt(Math.max(o*o-io/L1.k,0));}
+  const vds=vin-L1.vset;let ov=Infinity;
+  if(vds>0)ov=vds>=Math.sqrt(io/L1.k)?Math.sqrt(io/L1.k):(io/L1.k+vds*vds)/(2*vds);
+  let vout,vsg,reg;
+  if(L1.vt+ov<=vin){reg=true;vout=L1.vset;vsg=L1.vt+ov;}
+  else{reg=false;vsg=vin;const o2=vin-L1.vt;vout=vin-(o2-Math.sqrt(o2*o2-io/L1.k));}
+  const vg=vin-vsg,fb=vout/L1.div,p=(vin-vout)*io;
+  $('l1-vin-v').textContent=fmtV(vin);$('l1-io-v').textContent=io.toFixed(2)+' A';
+  $('l1-vin-r').setAttribute('aria-valuetext',fmtV(vin));$('l1-io-r').setAttribute('aria-valuetext',io.toFixed(2)+' A');
+  $('l1-vin').textContent='Vin '+fmtV(vin);$('l1-vo').textContent='Vout '+fmtV(vout);
+  $('l1-io').textContent=io.toFixed(2)+' A';$('l1-vg').textContent='Vg '+fmtV(vg);$('l1-fb').textContent=fmtV(fb);
+  chip($('l1-st'),reg?'稳压':'压差不足，失去稳压',reg?'on':'bad');
+  $('l1-rvo').textContent=fmtV(vout);
+  $('l1-rfb').textContent=fmtV(fb)+(reg?'，等于 Vref':'，低于 Vref');
+  $('l1-rvg').textContent=fmtV(vg)+'，Vsg = '+fmtV(vsg);
+  $('l1-rdrop').textContent=fmtV(vin-vout);
+  $('l1-rvdo').textContent=io>0?fmtV(vdo)+'，需 Vin ≥ '+fmtV(L1.vset+vdo):'≈ 0';
+  $('l1-rp').textContent=fmtP(p);
+  $('l1-reff').textContent=io>0?(vout/vin*100).toFixed(0)+' %':'空载，无意义';
+  $('l1-heat').setAttribute('fill-opacity',Math.min(0.05+p*0.35,0.45).toFixed(2));
+  show($('l1-flow'),io>0);
+  $('l1-load').classList.toggle('lit',io>0);
+  let n;
+  if(!reg)n='Vin 低于 Vout + Vdo。FB 掉到 Vref 以下，EA 把栅极一路拉到地，PMOS 已经完全导通，只剩一个小电阻 Ron。输出变成 Vin − Iout·Ron，跟着 Vin 往下掉，LDO 失去稳压。';
+  else if(io===0)n='空载时调整管几乎关断，Vsg 只比阈值高一点点，EA 输出接近 Vin。只有分压电阻上几 µA 的电流。';
+  else n='稳压中：FB 被环路锁在 Vref。调整管相当于一个被 EA 自动调节的电阻，上面压着 '+fmtV(vin-vout)+'，以热的形式耗掉 '+fmtP(p)+'。把 Vin 往下拖，看它什么时候掉出稳压；把电流加大，压差 Vdo 也跟着变大。';
+  $('l1-note').textContent=n;
+}
+$('l1-vin-r').addEventListener('input',l1u);
+$('l1-io-r').addEventListener('input',l1u);
+l1u();
+
+/* 2. 效率与发热 */
+const l2Nice=[0.5,1,2,5,10,20,50,100];
+function l2u(){
+  const vin=+$('l2-vin').value,vo=+$('l2-vo').value,io=+$('l2-io').value,po=vo*io;
+  $('l2-vin-v').textContent=vin.toFixed(1)+' V';$('l2-vo-v').textContent=vo.toFixed(1)+' V';$('l2-io-v').textContent=io.toFixed(2)+' A';
+  $('l2-vin').setAttribute('aria-valuetext',vin.toFixed(1)+' V');$('l2-vo').setAttribute('aria-valuetext',vo.toFixed(1)+' V');$('l2-io').setAttribute('aria-valuetext',io.toFixed(2)+' A');
+  const lOk=vin>=vo+0.3,sOk=vin*0.9>=vo;
+  const pl=lOk?(vin-vo)*io:0,el=lOk?vo/vin:0;
+  const ps=sOk?0.05+0.15*io*io+0.008*vin*io:0,es=sOk?po/(po+ps):0;
+  const pm=l2Nice.find(x=>x>=Math.max(pl,ps,0.01)*1.08)||100;
+  $('l2-t1').textContent=pm;$('l2-t2').textContent=pm/2;
+  const bar=(id,v,max)=>{const h=Math.min(v/max,1)*180;$(id).setAttribute('y',(220-h).toFixed(1));$(id).setAttribute('height',h.toFixed(1));return 220-h;};
+  const y1=bar('l2-be1',el,1),y2=bar('l2-be2',es,1),y3=bar('l2-bp1',pl,pm),y4=bar('l2-bp2',ps,pm);
+  const lab=(id,y,t)=>{$(id).setAttribute('y',(y-6).toFixed(1));$(id).textContent=t;};
+  lab('l2-ve1',y1,lOk?(el*100).toFixed(0)+'%':'不能用');lab('l2-ve2',y2,sOk?(es*100).toFixed(0)+'%':'不能用');
+  lab('l2-vp1',y3,lOk?fmtP(pl):'—');lab('l2-vp2',y4,sOk?fmtP(ps):'—');
+  const tj=25+pl*60;
+  $('l2-rl').textContent=lOk?(el*100).toFixed(0)+'% / '+fmtP(pl):'压差不够，不能用';
+  $('l2-tj').textContent=!lOk?'—':tj<300?tj.toFixed(0)+' °C'+(tj>=125?'，超过结温上限':tj>=85?'，发烫':'，正常'):'> 300 °C，早就烧了';
+  $('l2-rs').textContent=sOk?(es*100).toFixed(0)+'% / '+fmtP(ps):'Buck 降不下来';
+  let c,cl,n;
+  if(!lOk&&!sOk){c='要升压拓扑';cl='warn';n='Vin 比 Vout 还低（或几乎一样），LDO 和 Buck 都只能降压。要用 Boost 或 Buck-Boost。';}
+  else if(!lOk){c='选开关电源';cl='on';n='压差小于 LDO 的最小压差，LDO 无法稳压。换更低压差的 LDO 并核对 Vdo，或者用开关电源。';}
+  else if(tj>=125){c='选开关电源';cl='bad';n='LDO 要把 '+fmtV(vin-vo)+' 的压差全部变成热，'+fmtP(pl)+' 让结温远超上限。这种大压差、大电流场合必须用开关电源。';}
+  else if(tj>=85){c='开关电源更稳妥';cl='warn';n='LDO 还能扛，但结温已经偏高，需要加大铜皮散热。效率差 '+((es-el)*100).toFixed(0)+' 个百分点，电池供电时这就是续航。';}
+  else if(el>=0.75||pl<0.15){c='LDO 就够了';cl='on';n='压差小或电流小，LDO 的损耗只有 '+fmtP(pl)+'。它输出干净、外围简单、便宜，这时没必要上开关电源。';}
+  else{c='看需求';cl='warn';n='LDO 不烫但效率只有 '+(el*100).toFixed(0)+'%。插电设备、噪声敏感就用 LDO；电池供电在意续航就用开关电源，或开关电源后接 LDO。';}
+  chip($('l2-st'),c,cl);$('l2-note').textContent=n;
+}
+['l2-vin','l2-vo','l2-io'].forEach(id=>$(id).addEventListener('input',l2u));
+l2u();
+</script>
+</body>
+</html>

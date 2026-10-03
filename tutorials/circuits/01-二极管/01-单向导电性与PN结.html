@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>单向导电性与PN结</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.pr{fill:var(--shade2);stroke:var(--line)}
+.nr{fill:var(--shade);stroke:var(--line)}
+.dep{fill:var(--panel);stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.hole{fill:var(--panel);stroke:var(--copper);stroke-width:1.5}
+.ele{fill:var(--low)}
+.ion{fill:none;stroke:var(--muted);stroke-width:1}
+.ionm{font:500 11px var(--mono);fill:var(--muted)}
+.dio{fill:currentColor;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#diode">二极管</a><span class="sp"></span><span>01 / 08</span></nav>
+<header>
+  <span class="eyebrow">二极管 · PN 结</span>
+  <h1>单向导电性与 PN 结</h1>
+  <p class="lede">二极管为什么只让电流单方向通过？答案全在 PN 结的耗尽层上：正偏时它变窄，多子大量通过；反偏时它变宽，只剩极小的漏电流。</p>
+</header>
+
+<section id="form">
+  <span class="eyebrow">形成过程 · 扩散与漂移</span>
+  <h2>PN 结是怎么形成的</h2>
+  <p>P 区空穴多，N 区电子多。两块一接触，浓度差让多子向对方扩散：空穴 P → N，电子 N → P。它们在界面附近复合，留下不能移动的离子：P 侧是负离子，N 侧是正离子。这一层没有可动载流子，叫耗尽层，也叫空间电荷区。</p>
+  <p>正负离子之间产生内建电场，方向从 N 指向 P。这个电场一边阻止多子继续扩散，一边把少子往回拉，叫漂移。扩散越多，电场越强，直到扩散和漂移相等，净电流为零，这就是动态平衡。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 262" role="img" aria-label="P 区和 N 区接触后，界面处形成耗尽层和从 N 指向 P 的内建电场，下方箭头比较扩散电流与漂移电流">
+        <rect class="pr" x="28" y="40" width="192" height="120"/>
+        <rect class="nr" x="220" y="40" width="192" height="120"/>
+        <rect id="s1-dep" class="dep" x="180" y="40" width="80" height="120"/>
+        <g id="s1-car"></g>
+        <text x="28" y="30" class="t">P 区：空穴多</text>
+        <text x="412" y="30" text-anchor="end" class="t">N 区：电子多</text>
+        <path id="s1-e" class="w" d="M260,188 H188"/>
+        <polygon id="s1-eh" class="ah" points="180,188 190,183 190,193"/>
+        <text id="s1-et" x="220" y="180" text-anchor="middle" class="tm">内建电场 E，N → P</text>
+        <text x="28" y="222" class="t">扩散电流</text>
+        <g id="s1-da"></g>
+        <text x="28" y="250" class="t">漂移电流</text>
+        <g id="s1-fa"></g>
+      </svg>
+      <figcaption>空心圆是空穴，实心点是电子，带 − 和 + 的圆圈是不能移动的离子，虚线框是耗尽层。下方两根箭头的长度按电流的对数画（示意）：扩散电流 P → N，漂移电流 N → P。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s1-rng">形成进度</label>
+        <span class="rv" id="s1-pv">100 %</span>
+        <input type="range" id="s1-rng" min="0" max="100" step="5" value="100"></div>
+      <dl class="read">
+        <dt>势垒电压</dt><dd id="s1-vb">0.70 V</dd>
+        <dt>耗尽层宽度 W</dt><dd id="s1-w">0.40 µm</dd>
+        <dt>扩散 / 漂移</dt><dd id="s1-ratio">1.0 倍</dd>
+        <dt>净电流</dt><dd id="s1-net">0</dd>
+        <dt>状态</dt><dd><span id="s1-state" class="chip on">动态平衡</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+      <p class="note">示意值：硅，内建电势取 0.7 V，平衡时 W 取 0.4 µm。扩散与漂移之比按 e^((0.7 − 势垒) / VT) 计算，VT ≈ 26 mV。</p>
+    </div>
+  </div>
+</section>
+
+<section id="bias">
+  <span class="eyebrow">外加电压 · 正偏与反偏</span>
+  <h2>正偏变窄，反偏变宽</h2>
+  <p>P 接正、N 接负叫正偏。外电场和内建电场方向相反，把势垒压低，耗尽层变窄，多子大量扩散过结，电流随电压指数增长。</p>
+  <p>P 接负、N 接正叫反偏。外电场和内建电场同向，势垒升高，耗尽层变宽，多子被拉离结区，扩散几乎停止。只剩少子漂移形成的反向饱和电流 Is，它很小，而且基本不随反向电压变化。</p>
+  <p class="eq">W ∝ √(Vbi − V)　　I = Is·(e^(V / VT) − 1)</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 300" role="img" aria-label="PN 结两端接电池，正偏时耗尽层变窄并有电流流过，反偏时耗尽层变宽几乎没有电流">
+        <g id="s2-arr"></g>
+        <rect class="pr" x="28" y="40" width="192" height="120"/>
+        <rect class="nr" x="220" y="40" width="192" height="120"/>
+        <rect id="s2-dep" class="dep" x="180" y="40" width="80" height="120"/>
+        <g id="s2-car"></g>
+        <text x="28" y="182" class="t">P 区</text>
+        <text x="412" y="182" text-anchor="end" class="t">N 区</text>
+        <path id="s2-e" class="w" d="M260,190 H188"/>
+        <polygon id="s2-eh" class="ah" points="180,190 190,185 190,195"/>
+        <path class="w" d="M28,100 H12 V250 H212 M412,100 H428 V250 H228"/>
+        <line id="s2-pl" class="w" x1="212" y1="236" x2="212" y2="264"/>
+        <line id="s2-pr" class="w" x1="228" y1="242" x2="228" y2="258" style="stroke-width:4"/>
+        <text id="s2-plus" x="200" y="236" text-anchor="middle" class="v">+</text>
+        <text id="s2-minus" x="240" y="236" text-anchor="middle" class="v">−</text>
+        <text id="s2-vt" x="220" y="286" text-anchor="middle" class="v">V = 0.60 V</text>
+        <path id="s2-f1" class="flow" d="M210,250 H12 V100 H26"/>
+        <path id="s2-f2" class="flow" d="M414,100 H428 V250 H230"/>
+      </svg>
+      <figcaption>绿色虚线是电流方向：从电池正极（长板）流进 P 区，穿过结，从 N 区流回负极。电子在外电路里正好反着走。上方箭头是多子在结附近的运动方向。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">偏置方式</span>
+        <div class="seg" id="s2-m"><button id="s2-m-f" data-v="f" aria-pressed="true">正偏</button><button id="s2-m-r" data-v="r" aria-pressed="false">反偏</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s2-rng">外加电压大小</label>
+        <span class="rv" id="s2-mag">0.60 V</span>
+        <input type="range" id="s2-rng" min="0" max="0.7" step="0.01" value="0.6"></div>
+      <dl class="read">
+        <dt>外电场</dt><dd id="s2-ef">与内建电场相反</dd>
+        <dt>势垒 Vbi − V</dt><dd id="s2-vb">0.10 V</dd>
+        <dt>耗尽层宽度 W</dt><dd id="s2-w">0.15 µm</dd>
+        <dt>电流 I</dt><dd id="s2-i">12 mA</dd>
+        <dt>载流子方向</dt><dd id="s2-dir">电子 N → P，电流 P → N</dd>
+        <dt>状态</dt><dd><span id="s2-state" class="chip on">导通</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+      <p class="note">示意值：Is 取 1 pA，n = 1。实际二极管反偏还有耗尽层里的产生电流，漏电是 nA 级。</p>
+    </div>
+  </div>
+</section>
+
+<section id="sym">
+  <span class="eyebrow">符号 · 方向</span>
+  <h2>P 是阳极，N 是阴极</h2>
+  <p>二极管符号的三角形指向就是正向电流方向：从阳极 A（P 区）流向阴极 K（N 区）。电子带负电，所以电子实际是从 K 流向 A，和电流方向相反。面试画图时把这两句话说出来，方向就不会错。</p>
+  <figure style="max-width:620px">
+    <svg viewBox="0 0 520 140" role="img" aria-label="P 区对应阳极 A，N 区对应阴极 K；电流从 A 流向 K，电子从 K 流向 A">
+      <rect class="pr" x="30" y="40" width="90" height="50"/>
+      <rect class="nr" x="120" y="40" width="90" height="50"/>
+      <text x="75" y="70" text-anchor="middle" class="t">P</text>
+      <text x="165" y="70" text-anchor="middle" class="t">N</text>
+      <text x="75" y="110" text-anchor="middle" class="tm">阳极 A</text>
+      <text x="165" y="110" text-anchor="middle" class="tm">阴极 K</text>
+      <text x="255" y="70" text-anchor="middle" class="tm">对应</text>
+      <path class="w" d="M300,65 H380 M400,65 H480"/>
+      <polygon class="dio" points="380,53 380,77 400,65"/>
+      <path class="w" style="stroke-width:3" d="M400,52 V78"/>
+      <text x="300" y="55" class="tm">A</text>
+      <text x="480" y="55" text-anchor="end" class="tm">K</text>
+      <path class="w s-hi" d="M320,28 H452"/>
+      <polygon class="hi" points="462,28 452,23 452,33"/>
+      <text x="390" y="18" text-anchor="middle" class="t hi">电流 I：A → K</text>
+      <path class="w s-lo" d="M460,100 H328"/>
+      <polygon class="lo" points="318,100 328,95 328,105"/>
+      <text x="390" y="126" text-anchor="middle" class="t lo">电子：K → A</text>
+    </svg>
+    <figcaption>符号上的三角形顺着电流方向，竖线一侧是阴极，实物上通常用色环标出。</figcaption>
+  </figure>
+  <div class="tbl"><table>
+    <thead><tr><th>项目</th><th>正偏（P 接正）</th><th>反偏（P 接负）</th></tr></thead>
+    <tbody>
+      <tr><td>外电场与内建电场</td><td>方向相反，互相削弱</td><td>方向相同，互相加强</td></tr>
+      <tr><td>势垒高度</td><td>降低为 Vbi − V</td><td>升高为 Vbi + |V|</td></tr>
+      <tr><td>耗尽层</td><td>变窄</td><td>变宽</td></tr>
+      <tr><td>主要电流</td><td>多子扩散</td><td>少子漂移</td></tr>
+      <tr><td>电流大小</td><td>mA 到 A 级，随电压指数增长</td><td>nA 到 µA 级，基本不随电压变</td></tr>
+      <tr><td>温度影响</td><td>同电流下 VF 约 −2 mV/°C</td><td>漏电约每 10 °C 翻一倍</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>二极管为什么单向导电？</summary>
+      <div class="ans"><p>因为 PN 结有耗尽层和内建电场。正偏时外电场抵消内建电场，耗尽层变窄，多子大量扩散，电流大。反偏时外电场加强内建电场，耗尽层变宽，多子过不去，只剩少子漂移的微小电流。所以正向导通、反向截止。</p></div></details>
+    <details><summary>内建电场是什么方向？它有什么作用？</summary>
+      <div class="ans"><p>从 N 区的正离子指向 P 区的负离子，也就是 N → P。它阻止多子继续扩散，同时推动少子漂移。两者相等时 PN 结达到动态平衡，净电流为零。</p></div></details>
+    <details><summary>正偏时电子和电流分别往哪边走？</summary>
+      <div class="ans"><p>电流从 P 流向 N，也就是阳极到阴极，和符号三角形的指向一致。电子带负电，方向相反，从 N 流向 P。在外电路里，电子从电源负极流进 N 区。</p></div></details>
+    <details><summary>反偏时为什么还有一点电流？和什么有关？</summary>
+      <div class="ans"><p>反偏时少子仍会被电场拉过结，形成反向饱和电流 Is，再加上耗尽层里热激发的产生电流。它的大小由少子数量决定，和反向电压关系不大，但对温度很敏感，大约每升高 10 °C 翻一倍。</p></div></details>
+    <details><summary>PN 结有电容吗？</summary>
+      <div class="ans"><p>有两种。势垒电容来自耗尽层两侧的离子电荷，反偏电压越大耗尽层越宽，电容越小，变容二极管就利用这一点。扩散电容来自正偏时存储在结两侧的少子，它决定了二极管关断时的反向恢复，见本组第 7 页。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="next" href="02-伏安特性与正向压降.html"><span>下一页</span>伏安特性与正向压降</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+const VT=0.02585,VBI=0.7,W0=0.4,PXU=200;
+function fmtI(a){return Math.abs(a)<1e-9?(a<0?'−':'')+(Math.abs(a)*1e12).toFixed(1)+' pA':fmtA(a);}
+/* 画载流子：耗尽层内画离子，外面画空穴或电子；h 是耗尽层半宽（px） */
+function pnDraw(g,y0,h){
+  g.replaceChildren();
+  for(let r=0;r<5;r++){const y=y0+16+r*22;
+    for(let k=0;k<12;k++){
+      [[212-16*k,'p'],[228+16*k,'n']].forEach(([x,s])=>{
+        if(Math.abs(x-220)<h-0.5){
+          g.append(svgEl('circle',{class:'ion',cx:x,cy:y,r:6}));
+          g.append(svgEl('text',{class:'ionm',x:x,y:y+4,'text-anchor':'middle'},s==='p'?'−':'+'));
+        }else if(s==='p')g.append(svgEl('circle',{class:'hole',cx:x,cy:y,r:4.5}));
+        else g.append(svgEl('circle',{class:'ele',cx:x,cy:y,r:3.5}));
+      });
+    }}
+}
+/* 水平箭头：从 x1 指向 x2 */
+function arrowH(g,x1,x2,y,cls){
+  const d=x2>x1?1:-1;
+  g.append(svgEl('path',{class:'w '+(cls==='hi'?'s-hi':'s-lo'),d:`M${x1},${y} H${x2-d*8}`}));
+  g.append(svgEl('polygon',{class:cls,points:`${x2},${y} ${x2-d*10},${y-5} ${x2-d*10},${y+5}`}));
+}
+function setDep(pre,h,ey){
+  $(pre+'-dep').setAttribute('x',(220-h).toFixed(1));$(pre+'-dep').setAttribute('width',(2*h).toFixed(1));
+  const L=220-h,R=220+h,on=h>8;
+  show($(pre+'-e'),on);show($(pre+'-eh'),on);
+  if(on){$(pre+'-e').setAttribute('d',`M${R.toFixed(1)},${ey} H${(L+8).toFixed(1)}`);
+    $(pre+'-eh').setAttribute('points',`${L.toFixed(1)},${ey} ${(L+10).toFixed(1)},${ey-5} ${(L+10).toFixed(1)},${ey+5}`);}
+}
+function fmtX(x){if(x<10)return x.toFixed(1)+' 倍';const e=Math.floor(Math.log10(x));return (x/Math.pow(10,e)).toFixed(1)+'×10^'+e+' 倍';}
+
+/* 1. 形成过程 */
+function s1u(){
+  const p=+$('s1-rng').value/100,vb=VBI*p,W=W0*Math.sqrt(p),h=W*PXU/2;
+  $('s1-pv').textContent=Math.round(p*100)+' %';$('s1-rng').setAttribute('aria-valuetext',Math.round(p*100)+' %');
+  setDep('s1',h,188);show($('s1-et'),h>8);
+  pnDraw($('s1-car'),40,h);
+  const ratio=Math.exp((VBI-vb)/VT),ld=36+4.5*Math.log(ratio);
+  const da=$('s1-da'),fa=$('s1-fa');da.replaceChildren();fa.replaceChildren();
+  arrowH(da,110,110+Math.min(ld,300),217,'hi');
+  arrowH(fa,146,110,245,'lo');
+  $('s1-vb').textContent=fmtV(vb);
+  $('s1-w').textContent=W.toFixed(2)+' µm';
+  $('s1-ratio').textContent=fmtX(ratio);
+  const bal=p>=1;
+  $('s1-net').textContent=bal?'0，扩散 = 漂移':'P → N，扩散占优';
+  chip($('s1-state'),bal?'动态平衡':(p===0?'刚接触':'扩散占优'),bal?'on':'warn');
+  $('s1-note').textContent=p===0?'刚接触的瞬间还没有离子层，也没有电场。浓度差让空穴涌向 N 区、电子涌向 P 区，扩散电流极大。'
+    :bal?'内建电场强到让扩散和漂移正好相等，净电流为零，耗尽层宽度稳定下来。以后外加电压改变的就是这层势垒的高低。'
+    :'扩散走掉的多子留下离子，离子越多电场越强，势垒越高，扩散越难。耗尽层还在变宽，扩散电流仍大于漂移电流。';
+}
+$('s1-rng').addEventListener('input',s1u);
+s1u();
+
+/* 2. 正偏与反偏 */
+const s2={fw:true};
+function s2u(){
+  const mag=+$('s2-rng').value,V=s2.fw?mag:-mag,W=W0*Math.sqrt((VBI-V)/VBI),h=W*PXU/2;
+  const I=1e-12*(Math.exp(V/VT)-1);
+  setDep('s2',h,190);pnDraw($('s2-car'),40,h);
+  $('s2-mag').textContent=fmtV(mag);$('s2-rng').setAttribute('aria-valuetext',fmtV(mag));
+  $('s2-vt').textContent='V = '+fmtV(V);
+  /* 电池：长板是正极 */
+  const L=$('s2-pl'),R=$('s2-pr'),longL=s2.fw;
+  L.setAttribute('y1',longL?236:242);L.setAttribute('y2',longL?264:258);L.style.strokeWidth=longL?2:4;
+  R.setAttribute('y1',longL?242:236);R.setAttribute('y2',longL?258:264);R.style.strokeWidth=longL?4:2;
+  $('s2-plus').setAttribute('x',longL?200:240);$('s2-minus').setAttribute('x',longL?240:200);
+  /* 多子运动方向 */
+  const g=$('s2-arr');g.replaceChildren();
+  if(mag>0){
+    if(s2.fw){arrowH(g,130,196,20,'hi');arrowH(g,310,244,20,'lo');}
+    else{arrowH(g,196,130,20,'hi');arrowH(g,244,310,20,'lo');}
+    g.append(svgEl('text',{x:122,y:24,'text-anchor':'end',class:'t hi'},'空穴'));
+    g.append(svgEl('text',{x:318,y:24,class:'t lo'},'电子'));
+  }
+  const on=s2.fw&&I>=1e-4;
+  [$('s2-f1'),$('s2-f2')].forEach(f=>{show(f,on);f.classList.toggle('thin',I<1e-3);});
+  $('s2-ef').textContent=mag===0?'无':(s2.fw?'与内建电场相反':'与内建电场相同');
+  $('s2-vb').textContent=fmtV(VBI-V);
+  $('s2-w').textContent=W.toFixed(2)+' µm';
+  $('s2-i').textContent=mag===0?'0':fmtI(I);
+  $('s2-dir').textContent=mag===0?'扩散与漂移抵消':(s2.fw?'电子 N → P，电流 P → N':'多子离开结区，只剩少子漂移');
+  let note;
+  if(mag===0){chip($('s2-state'),'零偏','off');note='没有外加电压，PN 结处于动态平衡，和上一张图最后的状态一样。';}
+  else if(!s2.fw){chip($('s2-state'),'截止','off');note='反偏把势垒加高到 '+fmtV(VBI-V)+'，耗尽层变宽。电流只有 −Is，约 −1 pA，反向电压再加大它也几乎不变，直到击穿。';}
+  else if(I<1e-4){chip($('s2-state'),'微导通','warn');note='电压还不够，势垒只降了一点，电流是 µA 级甚至更小。这一段就是伏安特性上的死区。';}
+  else{chip($('s2-state'),'导通','on');note='势垒被压到 '+fmtV(VBI-V)+'，耗尽层很窄，多子大量扩散过结。电压每加 60 mV 电流约增大 10 倍，所以实际电路必须串电阻限流。';}
+  $('s2-note').textContent=note;
+}
+seg('s2-m',v=>{s2.fw=v==='f';const r=$('s2-rng');
+  if(s2.fw){r.setAttribute('max','0.7');r.setAttribute('step','0.01');r.value=0.6;}
+  else{r.setAttribute('max','10');r.setAttribute('step','0.5');r.value=5;}
+  s2u();});
+$('s2-rng').addEventListener('input',s2u);
+s2u();
+</script>
+</body>
+</html>

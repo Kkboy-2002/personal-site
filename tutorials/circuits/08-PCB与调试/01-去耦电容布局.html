@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>去耦电容布局</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.gp{fill:var(--low);fill-opacity:.07;stroke:var(--low);stroke-width:1;stroke-dasharray:5 4}
+.ic{fill:var(--chip);stroke:currentColor;stroke-width:1.5}
+.pad{fill:var(--copper);fill-opacity:.85}
+.pad2{fill:var(--copper);fill-opacity:.35}
+.trk{fill:none;stroke:var(--copper);stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.via{fill:var(--panel);stroke:var(--copper);stroke-width:3}
+.silk{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:3 2}
+.mk{stroke:var(--danger);stroke-width:1.2;stroke-dasharray:3 3}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#pcb">PCB与调试</a><span class="sp"></span><span>01 / 08</span></nav>
+<header>
+  <span class="eyebrow">PCB与调试 · 去耦电容</span>
+  <h1>去耦电容布局</h1>
+  <p class="lede">去耦电容的作用是在芯片电流突变的瞬间就近供电。它能不能起作用，看的不只是容值，更是它和芯片之间那一圈回路有多大。</p>
+</header>
+
+<section id="loop">
+  <span class="eyebrow">回流环路 · 寄生电感</span>
+  <h2>电容离引脚越近，环路电感越小</h2>
+  <p>芯片翻转时，电流在 1 ns 左右的时间里突然变大。这股电流先从去耦电容取，走的路径是：电容正端、走线、芯片 VCC 引脚、芯片内部、GND 引脚、过孔、地平面、过孔、电容负端。这一圈就是去耦环路。</p>
+  <p>环路有面积就有电感。电感上的压降是 L·di/dt，所以同样的电流跳变，环路电感越大，芯片引脚上的电源跌落越深。因为 di/dt 非常大，零点几 nH 的差别都看得出来。</p>
+  <p class="eq">环路电感 L ≈ ESL + 走线长度 × 0.5 nH/mm + 过孔数 × 0.3 nH（估算，示意）</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 250" role="img" aria-label="PCB 俯视图：芯片左侧有 VCC 和 GND 引脚，100 nF 去耦电容的位置和过孔随布局切换，绿色虚线是去耦电流环路">
+        <rect class="gp" x="8" y="8" width="424" height="216" rx="6"/>
+        <text x="16" y="242" class="tm">蓝色虚框：L2 整层地平面。铜色是顶层焊盘和走线，空心圆是过孔。</text>
+        <rect class="ic" x="300" y="40" width="110" height="160" rx="4"/>
+        <text x="370" y="124" text-anchor="middle" class="t">IC</text>
+        <rect class="pad2" x="280" y="65" width="22" height="10"/>
+        <rect class="pad" x="280" y="95" width="22" height="10"/>
+        <rect class="pad" x="280" y="125" width="22" height="10"/>
+        <rect class="pad2" x="280" y="155" width="22" height="10"/>
+        <rect class="pad2" x="280" y="185" width="22" height="10"/>
+        <text x="308" y="104" class="tm">VCC</text>
+        <text x="308" y="134" class="tm">GND</text>
+        <path class="trk" d="M282,130 H270"/>
+        <circle class="via" cx="266" cy="130" r="5"/>
+
+        <g id="s1-ga">
+          <path class="trk" d="M245,100 H282 M238,100 H245 M252,137 V142"/>
+          <rect class="pad" x="245" y="93" width="14" height="14"/>
+          <rect class="pad" x="245" y="123" width="14" height="14"/>
+          <rect class="silk" x="242" y="90" width="20" height="50"/>
+          <circle class="via" cx="234" cy="100" r="5"/>
+          <circle class="via" cx="252" cy="147" r="5"/>
+          <text x="236" y="80" text-anchor="middle" class="t">C1 100 nF</text>
+        </g>
+        <g id="s1-gb" hidden>
+          <path class="trk" d="M245,100 H282 M238,100 H245 M252,137 V200"/>
+          <rect class="pad" x="245" y="93" width="14" height="14"/>
+          <rect class="pad" x="245" y="123" width="14" height="14"/>
+          <rect class="silk" x="242" y="90" width="20" height="50"/>
+          <circle class="via" cx="234" cy="100" r="5"/>
+          <circle class="via" cx="252" cy="205" r="5"/>
+          <text x="236" y="80" text-anchor="middle" class="t">C1 100 nF</text>
+          <text x="244" y="186" text-anchor="end" class="tm">细线拉远再打孔</text>
+        </g>
+        <g id="s1-gc" hidden>
+          <path class="trk" d="M83,100 H282 M76,100 H83 M90,137 V142"/>
+          <rect class="pad" x="83" y="93" width="14" height="14"/>
+          <rect class="pad" x="83" y="123" width="14" height="14"/>
+          <rect class="silk" x="80" y="90" width="20" height="50"/>
+          <circle class="via" cx="72" cy="100" r="5"/>
+          <circle class="via" cx="90" cy="147" r="5"/>
+          <text x="90" y="80" text-anchor="middle" class="t">C1 100 nF</text>
+          <text x="180" y="88" text-anchor="middle" class="tm">长走线 ≈ 9 mm</text>
+        </g>
+        <path id="s1-flow" class="flow" d="M252,100 H290 V130 H266"/>
+        <path id="s1-fgnd" class="flow thin" d="M266,130 L252,147 V130"/>
+      </svg>
+      <svg viewBox="0 0 440 196" role="img" aria-label="芯片 VCC 引脚处的电压波形：电流跳变时电压跌落并振铃，虚线为正负 5% 容限">
+        <rect id="s1-zi" class="zone-sat" x="0" y="20" width="0" height="140"/>
+        <line class="gl" x1="50" y1="90" x2="420" y2="90"/>
+        <line class="ax dash" x1="50" y1="51.5" x2="420" y2="51.5"/>
+        <line class="ax dash" x1="50" y1="128.5" x2="420" y2="128.5"/>
+        <path class="ax" d="M50,20 V160 H420"/>
+        <text x="44" y="24" text-anchor="end" class="v">3.6</text>
+        <text x="44" y="94" text-anchor="end" class="v">3.3</text>
+        <text x="44" y="164" text-anchor="end" class="v">3.0</text>
+        <text x="416" y="46" text-anchor="end" class="tm">+5%</text>
+        <text x="416" y="144" text-anchor="end" class="tm">−5%</text>
+        <text x="50" y="176" text-anchor="middle" class="v">0</text>
+        <text x="173" y="176" text-anchor="middle" class="v">20</text>
+        <text x="297" y="176" text-anchor="middle" class="v">40</text>
+        <text x="420" y="176" text-anchor="end" class="v">60</text>
+        <text x="420" y="192" text-anchor="end" class="tm">时间 ns</text>
+        <text x="56" y="14" class="tm">VCC 引脚电压 / V</text>
+        <text x="143" y="34" text-anchor="middle" class="tm">IC 电流 +80 mA</text>
+        <polyline id="s1-wave" class="real" points="50,90 420,90"/>
+      </svg>
+      <figcaption>示意模型：IC 在 5~25 ns 之间多拉 80 mA，电流边沿 1 ns；芯片内部等效电容取 1 nF，环路电阻取 0.3 Ω（含 ESR 和芯片内阻）。橙线是 VCC 引脚上的电压，阴影是电流跳变区间。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">布局</span>
+        <div class="seg" id="s1-m"><button id="s1-m-a" data-v="a" aria-pressed="true">紧贴引脚</button><button id="s1-m-b" data-v="b" aria-pressed="false">过孔拉远</button><button id="s1-m-c" data-v="c" aria-pressed="false">电容放远</button></div></div>
+      <dl class="read">
+        <dt>环路走线总长</dt><dd id="s1-len">—</dd>
+        <dt>环路里的过孔</dt><dd id="s1-via">—</dd>
+        <dt>环路面积（俯视）</dt><dd id="s1-area">—</dd>
+        <dt>环路电感 L</dt><dd id="s1-l">—</dd>
+        <dt>振铃频率</dt><dd id="s1-f">—</dd>
+        <dt>最大跌落</dt><dd id="s1-dv">—</dd>
+        <dt>电源轨</dt><dd><span id="s1-st" class="chip on">达标</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="via">
+  <span class="eyebrow">过孔位置</span>
+  <h2>过孔打在哪里</h2>
+  <p>过孔本身也是一段电感：穿透 1.6 mm 板厚的通孔大约 1 nH，只走到相邻层的那一小段零点几 nH（典型值）。所以过孔要短、要紧挨焊盘。电源从平面上来，应该先经过电容焊盘再去引脚，这样电容夹在电源和芯片之间，芯片要的高频电流首先由电容提供。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>做法</th><th>评价</th><th>原因</th></tr></thead>
+    <tbody>
+      <tr><td>电容地焊盘旁边直接打孔到地平面，芯片 GND 引脚也就近打孔</td><td>推荐</td><td>环路最短，回流经地平面直接回到电容</td></tr>
+      <tr><td>过孔打在焊盘里（盘中孔）</td><td>电感最小，成本高</td><td>需要树脂塞孔加电镀盖帽，否则焊锡会顺着孔流走</td></tr>
+      <tr><td>电源过孔 → 电容焊盘 → 短线 → 芯片引脚</td><td>推荐</td><td>电源先经电容再到芯片，电容是离芯片最近的"水库"</td></tr>
+      <tr><td>电容焊盘用一根细长线拉出去再打孔</td><td>避免</td><td>多出来的这段线整段串进环路，抵消了电容的作用</td></tr>
+      <tr><td>几个电容共用一个地过孔</td><td>避免</td><td>过孔电感被几个电容共享，相当于串进每一个环路</td></tr>
+    </tbody>
+  </table></div>
+  <p>BGA 或引脚很密的芯片，电容常放在背面，正对着电源引脚的过孔。多一个过孔的代价，比把电容放远一厘米小得多。</p>
+</section>
+
+<section id="multi">
+  <span class="eyebrow">大小电容组合 · 自谐振</span>
+  <h2>为什么要 10 µF + 100 nF + 小容值</h2>
+  <p>实际电容是 ESR、ESL、C 三者串联。低频时它是电容，阻抗随频率下降；过了自谐振频率，ESL 占上风，它就变成电感，阻抗随频率上升。谷底在自谐振频率处，谷底的高度等于 ESR。</p>
+  <p class="eq">自谐振频率 f = 1 / (2π·√(ESL·C))</p>
+  <p>ESL 主要由封装和安装方式决定，同封装的电容 ESL 差不多，所以容值越小，谐振频率越高。一种容值只管一段频率，几种并联起来，才能在更宽的频带里压低阻抗：大电容管低频，100 nF 管几 MHz 到几十 MHz，小容值再往上补一截，更高的频段靠电源地平面电容和芯片内部电容。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 272" role="img" aria-label="去耦电容组合的阻抗频率曲线，双对数坐标，每个电容在自谐振频率处出现一个谷">
+        <line class="gl" x1="56" y1="64" x2="440" y2="64"/>
+        <line class="gl" x1="56" y1="104" x2="440" y2="104"/>
+        <line class="gl" x1="56" y1="184" x2="440" y2="184"/>
+        <line class="gl" x1="152" y1="24" x2="152" y2="224"/>
+        <line class="gl" x1="248" y1="24" x2="248" y2="224"/>
+        <line class="gl" x1="344" y1="24" x2="344" y2="224"/>
+        <line class="ax dash" x1="56" y1="144" x2="440" y2="144"/>
+        <text x="436" y="138" text-anchor="end" class="tm">目标阻抗 0.1 Ω（示意）</text>
+        <path class="ax" d="M56,24 V224 H440"/>
+        <text x="50" y="28" text-anchor="end" class="v">100</text>
+        <text x="50" y="68" text-anchor="end" class="v">10</text>
+        <text x="50" y="108" text-anchor="end" class="v">1</text>
+        <text x="50" y="148" text-anchor="end" class="v">0.1</text>
+        <text x="50" y="188" text-anchor="end" class="v">10m</text>
+        <text x="50" y="228" text-anchor="end" class="v">1m</text>
+        <text x="60" y="16" class="tm">|Z| / Ω</text>
+        <text x="56" y="242" text-anchor="middle" class="v">100k</text>
+        <text x="152" y="242" text-anchor="middle" class="v">1M</text>
+        <text x="248" y="242" text-anchor="middle" class="v">10M</text>
+        <text x="344" y="242" text-anchor="middle" class="v">100M</text>
+        <text x="440" y="242" text-anchor="end" class="v">1G</text>
+        <text x="440" y="262" text-anchor="end" class="tm">频率 Hz</text>
+        <g id="s3-each"></g>
+        <polyline id="s3-tot" class="real" points="56,24 440,24"/>
+        <line id="s3-mk" class="mk" x1="200" y1="24" x2="200" y2="224"/>
+        <circle id="s3-dot" class="dot" cx="200" cy="100" r="4"/>
+      </svg>
+      <figcaption>虚线是单个电容，橙线是并联后的总阻抗，红竖线是观察频率。参数取典型值：10 µF 0805（ESL 1.2 nH，ESR 5 mΩ），100 nF 0402（0.5 nH，15 mΩ），1 nF 0402（0.4 nH，80 mΩ），ESL 含安装电感。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">电容组合</span>
+        <div class="seg" id="s3-m"><button id="s3-m-1" data-v="1" aria-pressed="false">只有 100 nF</button><button id="s3-m-2" data-v="2" aria-pressed="true">10 µF + 100 nF</button><button id="s3-m-3" data-v="3" aria-pressed="false">再加 1 nF</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s3-f">观察频率</label>
+        <span class="rv" id="s3-fv">20 MHz</span>
+        <input type="range" id="s3-f" min="0" max="400" step="1" value="230"></div>
+      <dl class="read">
+        <dt>10 µF 阻抗</dt><dd id="s3-z0">—</dd>
+        <dt>100 nF 阻抗</dt><dd id="s3-z1">—</dd>
+        <dt>1 nF 阻抗</dt><dd id="s3-z2">—</dd>
+        <dt>并联总阻抗</dt><dd id="s3-zt">—</dd>
+        <dt>对比目标</dt><dd><span id="s3-st" class="chip on">低于目标</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>去耦电容为什么要靠近芯片电源引脚？</summary>
+      <div class="ans"><p>因为芯片的瞬态电流要从电容出发，经走线、引脚、地过孔再回到电容，绕一圈。这一圈的面积决定寄生电感，压降是 L·di/dt。电容放远了，环路电感变大，高频电流被电感挡住，电容就起不了作用，电源上出现跌落和振铃。</p></div></details>
+    <details><summary>为什么常用 10 µF 和 100 nF 搭配，而不是一个大电容？</summary>
+      <div class="ans"><p>电容有 ESL，过了自谐振频率 f = 1/(2π·√(ESL·C)) 就变成电感。同封装 ESL 差不多，容值越小谐振频率越高。大电容管低频储能，100 nF 管几 MHz 到几十 MHz，并联起来覆盖更宽的频带。</p></div></details>
+    <details><summary>大小电容并联会有什么问题？</summary>
+      <div class="ans"><p>两个谐振谷之间会出现反谐振峰：这时大电容已经呈感性，小电容还呈容性，两者形成并联谐振，阻抗反而抬高。办法是容值跨度别太大、多放几个同值电容降低总 ESL，或者借助 ESR 阻尼。</p></div></details>
+    <details><summary>去耦电容的过孔怎么打？</summary>
+      <div class="ans"><p>电容地焊盘紧挨着打孔到地平面，芯片地引脚也就近打孔，不要用细线拉出去再打孔。电源过孔先接电容焊盘再到芯片引脚。不要几个电容共用一个过孔。条件允许用盘中孔，或者把电容放在背面正对引脚。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="next" href="02-地平面与电源平面.html"><span>下一页</span>地平面与电源平面</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 去耦环路 */
+const s1D={
+  a:{g:'s1-ga',tr:[[259,100,282,100],[282,130,270,130],[252,137,252,142]],vias:2,
+     top:'M252,100 H290 V130 H266',gnd:'M266,130 L252,147 V130',poly:[[252,100],[290,100],[290,130],[266,130],[252,147]],
+     note:'电容紧贴 VCC 引脚，地焊盘旁边直接打孔。环路只有几平方毫米，电感主要来自电容本身的 ESL 和两个过孔，电源跌落在容限以内。'},
+  b:{g:'s1-gb',tr:[[259,100,282,100],[282,130,270,130],[252,137,252,200]],vias:2,
+     top:'M252,100 H290 V130 H266',gnd:'M266,130 L252,205 V130',poly:[[252,100],[290,100],[290,130],[266,130],[252,205]],
+     note:'电容位置没变，只是地焊盘用细线拉出约 3 mm 再打孔。这段线整段串进环路，电感几乎翻倍，跌落明显变深。'},
+  c:{g:'s1-gc',tr:[[97,100,282,100],[282,130,270,130],[90,137,90,142]],vias:2,
+     top:'M90,100 H290 V130 H266',gnd:'M266,130 L90,147 V130',poly:[[90,100],[290,100],[290,130],[266,130],[90,147]],
+     note:'电容离芯片约 9 mm，VCC 长走线整段都在环路里。高频电流被这段电感挡住，电容来不及补电，引脚电压跌出 −5% 并持续振铃。'}
+};
+const s1={m:'a'};
+const s1X=scale(0,60,50,420),s1Y=scale(3.0,3.6,160,20);
+function s1Sim(L){
+  const Cd=1e-9,C=100e-9,R=0.3,dI=0.08,dt=0.02e-9,pts=[];let iL=0,vC=3.3,vp=3.3,mn=3.3;
+  for(let k=0;k<=3000;k++){const ns=k*dt*1e9;
+    const ii=ns<5?0:ns<6?dI*(ns-5):ns<25?dI:ns<26?dI*(26-ns):0;
+    if(k%10===0)pts.push(s1X(ns).toFixed(1)+','+s1Y(Math.max(3.0,Math.min(3.6,vp))).toFixed(1));
+    iL+=(vC-R*iL-vp)/L*dt;vC-=iL/C*dt;vp+=(iL-ii)/Cd*dt;mn=Math.min(mn,vp);}
+  return {pts:pts.join(' '),dv:3.3-mn};
+}
+function s1u(){
+  const d=s1D[s1.m];
+  ['a','b','c'].forEach(k=>show($(s1D[k].g),k===s1.m));
+  const len=d.tr.reduce((s,q)=>s+Math.hypot(q[2]-q[0],q[3]-q[1]),0)/20;
+  let A=0;d.poly.forEach((p,i)=>{const q=d.poly[(i+1)%d.poly.length];A+=p[0]*q[1]-q[0]*p[1];});A=Math.abs(A)/2/400;
+  const L=(0.4+0.5*len+0.3*d.vias)*1e-9,f=1/(2*Math.PI*Math.sqrt(L*1e-9)),r=s1Sim(L);
+  $('s1-flow').setAttribute('d',d.top);$('s1-fgnd').setAttribute('d',d.gnd);
+  $('s1-wave').setAttribute('points',r.pts);
+  $('s1-zi').setAttribute('x',s1X(5).toFixed(1));$('s1-zi').setAttribute('width',(s1X(25)-s1X(5)).toFixed(1));
+  $('s1-len').textContent=len.toFixed(1)+' mm';
+  $('s1-via').textContent=d.vias+' 个';
+  $('s1-area').textContent=A.toFixed(1)+' mm²';
+  $('s1-l').textContent=(L*1e9).toFixed(2)+' nH';
+  $('s1-f').textContent=fmtF(f);
+  const pct=r.dv/3.3*100;
+  $('s1-dv').textContent=(r.dv*1e3).toFixed(0)+' mV，'+pct.toFixed(1)+'%';
+  if(pct>5)chip($('s1-st'),'超出 −5%','bad');else if(pct>4)chip($('s1-st'),'余量很小','warn');else chip($('s1-st'),'达标','on');
+  $('s1-note').textContent=d.note+' 振铃频率由环路电感和芯片内部电容决定：f = 1/(2π·√(L·C芯片))。';
+}
+seg('s1-m',v=>{s1.m=v;s1u();});
+s1u();
+
+/* 3. 阻抗曲线 */
+const s3C=[{c:10e-6,l:1.2e-9,r:0.005,n:'10 µF'},{c:100e-9,l:0.5e-9,r:0.015,n:'100 nF'},{c:1e-9,l:0.4e-9,r:0.08,n:'1 nF'}];
+const s3Use={1:[1],2:[0,1],3:[0,1,2]};
+const s3={m:2};
+const s3X=f=>56+(Math.log10(f)-5)*96,s3Y=z=>24+(2-Math.log10(Math.max(1e-3,Math.min(100,z))))*40;
+const s3Lx=lg=>56+(lg-5)*96,s3Id=y=>y;
+function s3Zc(c,f){const w=2*Math.PI*f;return [c.r,w*c.l-1/(w*c.c)];}
+function s3Tot(ids,f){let gr=0,gi=0;ids.forEach(i=>{const z=s3Zc(s3C[i],f),m=z[0]*z[0]+z[1]*z[1];gr+=z[0]/m;gi-=z[1]/m;});
+  return 1/Math.hypot(gr,gi);}
+const s3Z=z=>z>=1?z.toFixed(z>=10?1:2)+' Ω':(z*1e3).toFixed(z>=0.01?0:1)+' mΩ';
+function s3u(){
+  const ids=s3Use[s3.m],f=1e5*Math.pow(10,+$('s3-f').value/100),g=$('s3-each');
+  g.replaceChildren();
+  ids.forEach(i=>{const c=s3C[i];
+    g.append(svgEl('polyline',{class:'ideal',points:plot(lg=>{const z=s3Zc(c,Math.pow(10,lg));return s3Y(Math.hypot(z[0],z[1]));},5,9,s3Lx,s3Id,240)}));
+    const srf=1/(2*Math.PI*Math.sqrt(c.l*c.c));
+    g.append(svgEl('text',{x:s3X(srf).toFixed(1),y:(s3Y(c.r)+15).toFixed(1),'text-anchor':'middle',class:'tm'},c.n));});
+  $('s3-tot').setAttribute('points',plot(lg=>s3Y(s3Tot(ids,Math.pow(10,lg))),5,9,s3Lx,s3Id,300));
+  const zt=s3Tot(ids,f),xf=s3X(f).toFixed(1);
+  $('s3-mk').setAttribute('x1',xf);$('s3-mk').setAttribute('x2',xf);
+  $('s3-dot').setAttribute('cx',xf);$('s3-dot').setAttribute('cy',s3Y(zt).toFixed(1));
+  $('s3-fv').textContent=fmtF(f);$('s3-f').setAttribute('aria-valuetext',fmtF(f));
+  let dom=ids[0],best=1e9;
+  s3C.forEach((c,i)=>{const z=s3Zc(c,f),m=Math.hypot(z[0],z[1]);
+    $('s3-z'+i).textContent=ids.includes(i)?s3Z(m)+(z[1]<0?'，容性':'，感性'):'未安装';
+    if(ids.includes(i)&&m<best){best=m;dom=i;}});
+  $('s3-zt').textContent=s3Z(zt);
+  chip($('s3-st'),zt<=0.1?'低于目标':'高于目标',zt<=0.1?'on':'bad');
+  const c=s3C[dom],srf=1/(2*Math.PI*Math.sqrt(c.l*c.c)),zd=s3Zc(c,f);
+  let note='这个频率下阻抗最低的是 '+c.n+'（自谐振 '+fmtF(srf)+'），电流主要从它走。';
+  note+=zd[1]<0?'它还没到自谐振，呈容性。':'它已经过了自谐振，呈感性，阻抗随频率上升，只能靠 ESL 更小的电容接力。';
+  if(ids.length>1&&zt>best*1.3)note+='并联后的总阻抗反而比单个电容还高：这是反谐振，一个呈感性、一个呈容性，两者形成并联谐振。';
+  else if(zt>0.1)note+='这一段没有电容能把阻抗压到目标以下，要靠别的容值或更低的 ESL 来补。';
+  $('s3-note').textContent=note;
+}
+seg('s3-m',v=>{s3.m=+v;s3u();});
+$('s3-f').addEventListener('input',s3u);
+s3u();
+</script>
+</body>
+</html>

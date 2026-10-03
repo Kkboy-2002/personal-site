@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 11 课 读懂时序图:SDRAM 初始化</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="11" data-root="../">
+
+<aside class="side">
+  <a class="brand" href="../index.html">Verilog 十二课<span>FPGA RTL 实训</span></a>
+  <ol></ol>
+  <div class="foot">
+    <button class="themer" type="button">主题</button>
+    <p>iverilog + GTKWave<br>Vivado / Quartus 可选</p>
+  </div>
+</aside>
+
+<main>
+<div class="ruler"></div>
+
+<p class="eyebrow">Lesson 11 <em>／ 加餐:外挂存储器</em></p>
+<h1>读懂时序图:SDRAM 初始化</h1>
+<p class="lede">前十一课的接口都是你自己定的。一旦要接一颗<strong>别人家的芯片</strong>,规则就由对方的数据手册说了算 —— 而手册说话的方式就是时序图。这一课拿 Micron 512Mb SDR SDRAM 的上电初始化当例子,把一张时序图从标签认起,一直读到能写出状态机、并让一个"假芯片"来判你对错。</p>
+
+<dl class="goals">
+  <dt>学完这一课你能</dt>
+  <dd>认出时序图上七类标签,说清 <code>tCK</code>、<code>tCH</code>、<code>tCMS</code>、<code>tRP</code> 各自约束什么</dd>
+  <dd>解释手册为什么必须画波浪线,以及你自己该怎么画不带波浪线的全量图</dd>
+  <dd>把手册的 ns 值正确换算成时钟拍数(并且知道为什么只能向上取整)</dd>
+  <dd>写出初始化状态机,用行为模型验证命令序列和时序都合法</dd>
+</dl>
+
+<nav class="toc"><h2>本课路线</h2><ol></ol></nav>
+
+<h2 id="s1">时序图上的七类标签</h2>
+<p>一张手册时序图看着密,其实上面的东西只有七类。认清类别,剩下的就是查表。</p>
+<div class="tw">
+<table>
+  <caption>Figure 31 上出现的所有标签</caption>
+  <thead><tr><th>类别</th><th>例子</th><th>是什么</th></tr></thead>
+  <tbody>
+    <tr><td><strong>① 信号名</strong>(最左列)</td><td><code>CK</code> <code>CKE</code> <code>COMMAND</code> <code>DQM</code> <code>A0–A9</code> <code>A10</code> <code>BA0,BA1</code> <code>DQ</code></td><td>芯片的引脚。<code>COMMAND</code> 不是真引脚,是 <code>CS#/RAS#/CAS#/WE#</code> 四根线的<em>组合</em>的简写</td></tr>
+    <tr><td><strong>② 时刻标号</strong>(最上排)</td><td><code>T0</code> <code>T1</code> <code>Tn+1</code> <code>To+1</code> <code>Tp+1</code></td><td>第几个时钟上升沿。<code>n</code>/<code>o</code>/<code>p</code> 是<strong>没写死的数</strong> —— 因为中间省略了很多拍</td></tr>
+    <tr><td><strong>③ 时钟自身参数</strong></td><td><code>tCK</code> <code>tCH</code> <code>tCL</code></td><td>周期 / 高电平宽度 / 低电平宽度。约束的是<strong>你的时钟源</strong></td></tr>
+    <tr><td><strong>④ 建立与保持</strong>(成对出现)</td><td><code>tCKS/tCKH</code> <code>tCMS/tCMH</code> <code>tAS/tAH</code></td><td>某根线相对时钟沿要提前多久稳定、之后要保持多久。约束的是<strong>你的输出</strong></td></tr>
+    <tr><td><strong>⑤ 命令间隔</strong>(图下方长箭头)</td><td><code>tRP</code> <code>tRFC</code> <code>tMRD</code></td><td>两条命令之间至少要隔多少时间。约束的是<strong>你的状态机</strong></td></tr>
+    <tr><td><strong>⑥ 命令名</strong>(框里的字)</td><td><code>NOP</code> <code>PRECHARGE</code> <code>AUTO REFRESH</code> <code>LOAD MODE REGISTER</code> <code>ACTIVE</code></td><td>那一拍发的是哪条命令</td></tr>
+    <tr><td><strong>⑦ 图案与状态</strong>(右下图例)</td><td>斜线 = DON'T CARE,网格 = UNDEFINED,<code>High-Z</code></td><td>斜线:这段随你给。网格:芯片输出不确定,别采。High-Z:总线没人驱动</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="box tip">
+  <b>一个能立刻用上的分类法</b>
+  <p>把标签按"<strong>约束谁</strong>"分三堆,一切就清楚了:③ 约束时钟源(选晶振/配 PLL);④ 约束你的输出(写 XDC 约束);⑤ 约束你的状态机(数拍子)。<strong>只有第 ⑤ 类会变成 Verilog 代码</strong>,前两类是别的环节的事。</p>
+</div>
+
+<h2 id="s2">③④ 两类:一个时钟沿上的全部参数</h2>
+<p>这四个参数全都挤在同一个上升沿附近,画大了就一目了然。</p>
+
+<figure class="dia">
+<svg viewBox="0 0 560 215" role="img" aria-label="放大到一个时钟周期:tCK 是周期,tCH 是高电平宽度,tCL 是低电平宽度;命令线必须在上升沿之前 tCMS 就稳定,之后再保持 tCMH">
+  <line class="w-mark" x1="340" y1="24" x2="340" y2="190"/>
+
+  <line class="w-axis" x1="140" y1="34" x2="340" y2="34"/>
+  <line class="w-axis" x1="140" y1="30" x2="140" y2="38"/>
+  <line class="w-axis" x1="340" y1="30" x2="340" y2="38"/>
+  <text class="w-lbl" x="240" y="26" text-anchor="middle">tCK</text>
+
+  <text class="w-lbl" x="100" y="82" text-anchor="end">CK</text>
+  <polyline class="w-clk" points="108,92 140,92 140,62 240,62 240,92 340,92 340,62 440,62 440,92 500,92"/>
+
+  <line class="w-axis" x1="140" y1="106" x2="240" y2="106"/>
+  <line class="w-axis" x1="140" y1="102" x2="140" y2="110"/>
+  <line class="w-axis" x1="240" y1="102" x2="240" y2="110"/>
+  <text class="w-lbl" x="190" y="122" text-anchor="middle">tCH</text>
+  <line class="w-axis" x1="240" y1="106" x2="340" y2="106"/>
+  <line class="w-axis" x1="340" y1="102" x2="340" y2="110"/>
+  <text class="w-lbl" x="290" y="122" text-anchor="middle">tCL</text>
+
+  <line class="w-mark" x1="280" y1="140" x2="340" y2="140"/>
+  <line class="w-mark" x1="280" y1="136" x2="280" y2="144"/>
+  <text class="w-marktxt" x="310" y="134" text-anchor="middle">tCMS</text>
+  <line class="w-mark" x1="340" y1="140" x2="405" y2="140"/>
+  <line class="w-mark" x1="405" y1="136" x2="405" y2="144"/>
+  <text class="w-marktxt" x="372" y="134" text-anchor="middle">tCMH</text>
+
+  <text class="w-lbl" x="100" y="170" text-anchor="end">COMMAND</text>
+  <line class="w-sig" x1="108" y1="152" x2="500" y2="152"/>
+  <line class="w-sig" x1="108" y1="180" x2="500" y2="180"/>
+  <rect class="w-cell" x="280" y="153" width="125" height="26"/>
+  <text class="w-cmd" x="342" y="170">PRECHARGE</text>
+
+  <text class="w-note" x="340" y="204" text-anchor="middle">SDRAM 在这个上升沿采样命令</text>
+</svg>
+<figcaption><b>③ 管时钟,④ 管你的输出。</b><code>tCK</code>/<code>tCH</code>/<code>tCL</code> 说的是"时钟本身要长这样",这是选晶振和配 PLL 的事。<code>tCMS</code>/<code>tCMH</code> 说的是"命令线必须在采样沿<em>之前</em> tCMS 就稳定下来、<em>之后</em>还要保持 tCMH 不变" —— 这是你的 FPGA 输出加上 PCB 走线延迟必须满足的条件,最终写进 XDC 的 <code>set_output_delay</code>。地址线的 <code>tAS</code>/<code>tAH</code> 是同一回事,换根线而已。</figcaption>
+</figure>
+
+<div class="box pit">
+  <b>建立/保持不是"代码里等几拍"</b>
+  <p>初学最容易把 ④ 和 ⑤ 混为一谈。<code>tCMS = 1.5ns</code> <strong>不是</strong>让你在代码里等 1.5ns —— 你在 Verilog 里什么也做不了。它的意思是:当你的寄存器在某个沿输出命令、SDRAM 在<em>下一个</em>沿采样它时,这中间的一整个时钟周期减去 FPGA 的输出延迟、减去 PCB 走线延迟,剩下的余量必须还大于 1.5ns。<strong>这是时序约束和 PCB 的事,不是 RTL 的事。</strong></p>
+  <p>你在 RTL 里唯一要做对的,是<strong>把输出寄存起来</strong>(不要用组合逻辑直接驱动引脚),这样工具才有确定的起点去算这条路径。</p>
+</div>
+
+<h2 id="s3">那些波浪线:手册不得不省略</h2>
+<p>Figure 31 上每一列都有一对波浪线(<code>≈</code>),那是<strong>时间被剪断了</strong>的记号。为什么必须剪:</p>
+<div class="tw">
+<table>
+  <caption>如果按真实比例画会有多长</caption>
+  <thead><tr><th>阶段</th><th>手册值</th><th class="num">100MHz 下的拍数</th></tr></thead>
+  <tbody>
+    <tr><td>上电等待</td><td>100 µs</td><td class="num">10 000</td></tr>
+    <tr><td>tRP</td><td>20 ns</td><td class="num">2</td></tr>
+    <tr><td>tRFC</td><td>66 ns</td><td class="num">7</td></tr>
+    <tr><td>tMRD</td><td>2 个时钟</td><td class="num">2</td></tr>
+  </tbody>
+</table>
+</div>
+<p>一万拍画不下,所以手册用波浪线把它压掉,时刻标号也只能写成 <code>Tn+1</code>、<code>To+1</code> 这种带未知数的形式 —— <strong><code>n</code>、<code>o</code>、<code>p</code> 到底是几,取决于你的时钟频率</strong>,手册没法替你填。</p>
+<div class="box tip">
+  <b>你自己画图时该怎么办:把参数压小</b>
+  <p>这正是第 04 课那个技巧的又一次登场 —— <strong>把时间相关的量全做成参数,画图和仿真时压到个位数</strong>。序列的<em>形状</em>一个字都不变,只是每段短了。下面这张图就是这么来的:上电等待压成 4 拍、tRP 压成 2 拍、tRFC 压成 3 拍、tMRD 压成 2 拍 —— 于是整个初始化 15 拍跑完,<strong>每一个时钟周期都能完整画出来,一根波浪线都不需要</strong>。</p>
+</div>
+
+<h2 id="s4">全量时序图:15 拍,零省略</h2>
+<p>横向可以滚动。每一根竖线就是一个真实的时钟上升沿,T0 到 T14 一拍不漏。</p>
+
+<figure class="dia">
+<div class="scrollx">
+<svg viewBox="0 0 880 420" role="img" aria-label="SDRAM 初始化的全量时序图,15 个时钟周期全部画出没有省略:T0 到 T3 是上电等待期间只发空命令,CKE 在 T1 拉高,T4 发 PRECHARGE ALL 且 A10 为 1,T6 和 T9 各发一次 AUTO REFRESH,T12 发 LOAD MODE REGISTER 且地址线送配置码,T14 发 ACTIVE 开始正常读写">
+  <defs>
+    <pattern id="dc11" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line class="w-hatch" x1="0" y1="0" x2="0" y2="7"/>
+    </pattern>
+  </defs>
+
+  <line class="w-grid" x1="118" y1="30" x2="118" y2="340"/>
+  <line class="w-grid" x1="166" y1="30" x2="166" y2="340"/>
+  <line class="w-grid" x1="214" y1="30" x2="214" y2="340"/>
+  <line class="w-grid" x1="262" y1="30" x2="262" y2="340"/>
+  <line class="w-grid" x1="310" y1="30" x2="310" y2="340"/>
+  <line class="w-grid" x1="358" y1="30" x2="358" y2="340"/>
+  <line class="w-grid" x1="406" y1="30" x2="406" y2="340"/>
+  <line class="w-grid" x1="454" y1="30" x2="454" y2="340"/>
+  <line class="w-grid" x1="502" y1="30" x2="502" y2="340"/>
+  <line class="w-grid" x1="550" y1="30" x2="550" y2="340"/>
+  <line class="w-grid" x1="598" y1="30" x2="598" y2="340"/>
+  <line class="w-grid" x1="646" y1="30" x2="646" y2="340"/>
+  <line class="w-grid" x1="694" y1="30" x2="694" y2="340"/>
+  <line class="w-grid" x1="742" y1="30" x2="742" y2="340"/>
+  <line class="w-grid" x1="790" y1="30" x2="790" y2="340"/>
+
+  <text class="w-tick" x="118" y="20">T0</text>
+  <text class="w-tick" x="166" y="20">T1</text>
+  <text class="w-tick" x="214" y="20">T2</text>
+  <text class="w-tick" x="262" y="20">T3</text>
+  <text class="w-tick" x="310" y="20">T4</text>
+  <text class="w-tick" x="358" y="20">T5</text>
+  <text class="w-tick" x="406" y="20">T6</text>
+  <text class="w-tick" x="454" y="20">T7</text>
+  <text class="w-tick" x="502" y="20">T8</text>
+  <text class="w-tick" x="550" y="20">T9</text>
+  <text class="w-tick" x="598" y="20">T10</text>
+  <text class="w-tick" x="646" y="20">T11</text>
+  <text class="w-tick" x="694" y="20">T12</text>
+  <text class="w-tick" x="742" y="20">T13</text>
+  <text class="w-tick" x="790" y="20">T14</text>
+
+  <text class="w-lbl" x="108" y="56" text-anchor="end">CK</text>
+  <polyline class="w-clk" points="100,62 118,62 118,40 142,40 142,62 166,62 166,40 190,40 190,62 214,62 214,40 238,40 238,62 262,62 262,40 286,40 286,62 310,62 310,40 334,40 334,62 358,62 358,40 382,40 382,62 406,62 406,40 430,40 430,62 454,62 454,40 478,40 478,62 502,62 502,40 526,40 526,62 550,62 550,40 574,40 574,62 598,62 598,40 622,40 622,62 646,62 646,40 670,40 670,62 694,62 694,40 718,40 718,62 742,62 742,40 766,40 766,62 790,62 790,40 814,40 814,62 838,62"/>
+
+  <text class="w-lbl" x="108" y="98" text-anchor="end">CKE</text>
+  <polyline class="w-ink" points="100,104 166,104 166,82 838,82"/>
+  <text class="w-marktxt" x="170" y="76" text-anchor="start">T1 拉高</text>
+
+  <text class="w-lbl" x="108" y="141" text-anchor="end">COMMAND</text>
+  <rect x="313" y="125" width="42" height="24" class="w-cell-hl"/>
+  <rect x="409" y="125" width="42" height="24" class="w-cell"/>
+  <rect x="553" y="125" width="42" height="24" class="w-cell"/>
+  <rect x="697" y="125" width="42" height="24" class="w-cell"/>
+  <rect x="793" y="125" width="42" height="24" class="w-cell"/>
+  <line class="w-sig" x1="100" y1="124" x2="838" y2="124"/>
+  <line class="w-sig" x1="100" y1="150" x2="838" y2="150"/>
+  <text class="w-nop" x="142" y="141">NOP</text>
+  <text class="w-nop" x="190" y="141">NOP</text>
+  <text class="w-nop" x="238" y="141">NOP</text>
+  <text class="w-nop" x="286" y="141">NOP</text>
+  <text class="w-cmd" x="334" y="141">PALL</text>
+  <text class="w-nop" x="382" y="141">NOP</text>
+  <text class="w-cmd" x="430" y="141">REF</text>
+  <text class="w-nop" x="478" y="141">NOP</text>
+  <text class="w-nop" x="526" y="141">NOP</text>
+  <text class="w-cmd" x="574" y="141">REF</text>
+  <text class="w-nop" x="622" y="141">NOP</text>
+  <text class="w-nop" x="670" y="141">NOP</text>
+  <text class="w-cmd" x="718" y="141">LMR</text>
+  <text class="w-nop" x="766" y="141">NOP</text>
+  <text class="w-cmd" x="814" y="141">ACT</text>
+
+  <text class="w-lbl" x="108" y="182" text-anchor="end">A0–A9</text>
+  <text class="w-lbl" x="108" y="196" text-anchor="end">A11, A12</text>
+  <rect x="100" y="171" width="738" height="24" fill="url(#dc11)" stroke="none"/>
+  <rect x="697" y="171" width="42" height="24" class="w-cell"/>
+  <rect x="793" y="171" width="42" height="24" class="w-cell"/>
+  <line class="w-sig" x1="100" y1="170" x2="838" y2="170"/>
+  <line class="w-sig" x1="100" y1="196" x2="838" y2="196"/>
+  <text class="w-cmd" x="718" y="187">CODE</text>
+  <text class="w-cmd" x="814" y="187">ROW</text>
+
+  <text class="w-lbl" x="108" y="233" text-anchor="end">A10</text>
+  <rect x="100" y="217" width="738" height="24" fill="url(#dc11)" stroke="none"/>
+  <rect x="313" y="217" width="42" height="24" class="w-cell-hl"/>
+  <rect x="697" y="217" width="42" height="24" class="w-cell"/>
+  <rect x="793" y="217" width="42" height="24" class="w-cell"/>
+  <line class="w-sig" x1="100" y1="216" x2="838" y2="216"/>
+  <line class="w-sig" x1="100" y1="242" x2="838" y2="242"/>
+  <text class="w-cmd" x="334" y="233">1=ALL</text>
+  <text class="w-cmd" x="718" y="233">CODE</text>
+  <text class="w-cmd" x="814" y="233">ROW</text>
+
+  <text class="w-lbl" x="108" y="279" text-anchor="end">BA0, BA1</text>
+  <rect x="100" y="263" width="738" height="24" fill="url(#dc11)" stroke="none"/>
+  <rect x="313" y="263" width="42" height="24" class="w-cell"/>
+  <rect x="697" y="263" width="42" height="24" class="w-cell"/>
+  <rect x="793" y="263" width="42" height="24" class="w-cell"/>
+  <line class="w-sig" x1="100" y1="262" x2="838" y2="262"/>
+  <line class="w-sig" x1="100" y1="288" x2="838" y2="288"/>
+  <text class="w-cmd" x="334" y="279">无关</text>
+  <text class="w-cmd" x="718" y="279">00</text>
+  <text class="w-cmd" x="814" y="279">BANK</text>
+
+  <text class="w-lbl" x="108" y="325" text-anchor="end">DQ</text>
+  <line class="w-ink" x1="100" y1="321" x2="838" y2="321"/>
+  <text class="w-note" x="150" y="315" text-anchor="start">High-Z(初始化全程没有读写)</text>
+
+  <line class="w-axis" x1="118" y1="356" x2="310" y2="356"/>
+  <line class="w-axis" x1="118" y1="352" x2="118" y2="360"/>
+  <line class="w-axis" x1="310" y1="352" x2="310" y2="360"/>
+  <text class="w-lbl" x="214" y="348" text-anchor="middle">上电等待 4 拍</text>
+  <text class="w-note" x="214" y="374" text-anchor="middle">手册步 1–5</text>
+
+  <line class="w-axis" x1="310" y1="356" x2="406" y2="356"/>
+  <line class="w-axis" x1="406" y1="352" x2="406" y2="360"/>
+  <text class="w-lbl" x="358" y="348" text-anchor="middle">tRP=2</text>
+  <text class="w-note" x="358" y="374" text-anchor="middle">步 6–7</text>
+
+  <line class="w-axis" x1="406" y1="356" x2="550" y2="356"/>
+  <line class="w-axis" x1="550" y1="352" x2="550" y2="360"/>
+  <text class="w-lbl" x="478" y="348" text-anchor="middle">tRFC=3</text>
+  <text class="w-note" x="478" y="374" text-anchor="middle">步 8–9</text>
+
+  <line class="w-axis" x1="550" y1="356" x2="694" y2="356"/>
+  <line class="w-axis" x1="694" y1="352" x2="694" y2="360"/>
+  <text class="w-lbl" x="622" y="348" text-anchor="middle">tRFC=3</text>
+  <text class="w-note" x="622" y="374" text-anchor="middle">步 10–11</text>
+
+  <line class="w-axis" x1="694" y1="356" x2="790" y2="356"/>
+  <line class="w-axis" x1="790" y1="352" x2="790" y2="360"/>
+  <text class="w-lbl" x="742" y="348" text-anchor="middle">tMRD=2</text>
+  <text class="w-note" x="742" y="374" text-anchor="middle">步 12–13</text>
+
+  <text class="w-note" x="20" y="401" text-anchor="start">命令在每个上升沿被采样。15 拍全部画出,没有任何省略。</text>
+  <rect x="618" y="392" width="20" height="12" fill="url(#dc11)" stroke="none"/>
+  <text class="w-note" x="644" y="401" text-anchor="start">= DON'T CARE(随你给)</text>
+</svg>
+</div>
+<figcaption><b>和手册那张图形状完全一致,只是每段被压短了。</b>命令缩写:<code>PALL</code> = PRECHARGE ALL,<code>REF</code> = AUTO REFRESH,<code>LMR</code> = LOAD MODE REGISTER,<code>ACT</code> = ACTIVE。三处值得盯:<strong>T1 的 CKE</strong> 从这一拍起才拉高(之前芯片完全不看时钟);<strong>T4 的 A10 = 1</strong>,这一位就是"ALL BANKS"标志,同一拍 <code>BA0/BA1</code> 因此无关;<strong>T12 的 CODE</strong> 是 mode register 的内容,借地址线传进去,所以那一拍 <code>A10</code> 也变成配置位而不是控制位。手册里 CKE 那一行画的是斜线阴影,这里为了看清跳变点画成了实信号。</figcaption>
+</figure>
+
+<h2 id="s5">逐拍读一遍</h2>
+<div class="tw">
+<table>
+  <caption>T0 – T14 每一拍在干什么</caption>
+  <thead><tr><th class="num">拍</th><th>命令</th><th>关键信号</th><th>为什么</th></tr></thead>
+  <tbody>
+    <tr><td class="num">T0</td><td>NOP</td><td><code>CKE=0</code></td><td>时钟已稳定但 CKE 还压着 —— 芯片完全不看时钟,上电毛刺进不来</td></tr>
+    <tr><td class="num">T1</td><td>NOP</td><td><code>CKE=1</code> ↑</td><td>把时钟放进内部。此后必须持续发空命令</td></tr>
+    <tr><td class="num">T2–T3</td><td>NOP</td><td>—</td><td>凑满上电等待。真实设计这里是 10 000 拍</td></tr>
+    <tr><td class="num">T4</td><td><strong>PRECHARGE ALL</strong></td><td><code>A10=1</code></td><td>上电后各 bank 行状态未知,一条命令全部推到 idle</td></tr>
+    <tr><td class="num">T5</td><td>NOP</td><td>—</td><td>凑满 tRP。所有 bank 完成 precharge</td></tr>
+    <tr><td class="num">T6</td><td><strong>AUTO REFRESH</strong></td><td>—</td><td>第 1 次。此时所有 bank 必须 idle,T4 已保证</td></tr>
+    <tr><td class="num">T7–T8</td><td>NOP</td><td>—</td><td>凑满 tRFC</td></tr>
+    <tr><td class="num">T9</td><td><strong>AUTO REFRESH</strong></td><td>—</td><td>第 2 次。手册要求至少两次,预热刷新计数器</td></tr>
+    <tr><td class="num">T10–T11</td><td>NOP</td><td>—</td><td>凑满 tRFC</td></tr>
+    <tr><td class="num">T12</td><td><strong>LOAD MODE REG</strong></td><td><code>A=CODE</code><br><code>BA=00</code></td><td>写 CL / 突发长度 / 突发类型。配置借地址线传进去</td></tr>
+    <tr><td class="num">T13</td><td>NOP</td><td>—</td><td>凑满 tMRD,让配置生效</td></tr>
+    <tr><td class="num">T14</td><td><strong>ACTIVE</strong></td><td><code>A=ROW</code><br><code>BA=bank</code></td><td>初始化结束,第一条真正的操作命令</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="box tip">
+  <b>手册的三条 Notes 里有两条是干货</b>
+  <ul>
+    <li><strong>Note 1:</strong>mode register 可以提前到两次 AUTO REFRESH <em>之前</em>加载。所以这个顺序不是唯一解,手册给了余地。</li>
+    <li><strong>Note 2:</strong><code>CS#</code> 在时钟高电平时为高,则一律当 NOP。所以状态机里"什么都不做"最省事的写法就是 <strong><code>cs_n = 1</code></strong>,其余三根线随便。</li>
+    <li><strong>Note 3:</strong>tMRD —— Micron 自己写 2 个时钟,但 <strong>JEDEC 和 PC100 规范要求 3 个</strong>。保险起见按 3 拍写,多等一拍不花钱。</li>
+  </ul>
+</div>
+
+<h2 id="s6">mode register 里到底装了什么</h2>
+<p>T12 那一拍送进地址线的 <code>CODE</code>,13 位每一段管一件事:</p>
+<figure class="file">
+  <figcaption><span class="path">mode register 位域</span><span class="note">以手册的 Mode Register Definition 表为准</span></figcaption>
+  <div class="body"><pre>  A12 A11 │ A10 A9 │ A8 A7 │ A6 A5 A4 │  A3  │ A2 A1 A0
+  ────────┼────────┼───────┼──────────┼──────┼─────────
+   保留   │  写突发 │ 操作码 │    CL    │ 突发 │ 突发长度
+          │  模式   │ (00)  │          │ 类型 │
+                              010 = 2         000 = 1
+                              011 = 3         001 = 2
+                                              010 = 4
+                                              011 = 8
+
+  例:13'b000_0_00_010_0_000  →  CL=2,顺序突发,长度 1</pre></div>
+</figure>
+<p>为什么用地址线传:因为 <code>LMR</code> 这条命令<strong>不需要地址</strong> —— 十几根地址线正好空着,拿来当配置总线用,省下十几个专用引脚。和 <code>A10</code> 在 <code>PRECHARGE</code> 里兼作 ALL 标志是<em>同一个设计思路</em>:命令用不上的引脚就复用。</p>
+<div class="box pit">
+  <b>读手册的位域表时,先确认位序</b>
+  <p><code>A6 A5 A4</code> 装 CL,写成 <code>010</code> 表示 2。但"<code>010</code> 里哪一位是 A6"必须看清 —— 手册的表是 <strong>A6 在左</strong>。你在 Verilog 里写 <code>addr[6:4] = 3'b010;</code> 才对得上。反过来写就是 CL 配错,读数据全错位,而且编译和仿真都不报错。</p>
+</div>
+
+<h2 id="s7">从时序图到状态机</h2>
+<p>整套序列的形状是"<strong>发一条命令 → 等一段时间 → 再发下一条</strong>",这就是第 07 课交通灯的模式 —— 只是等待时长换成了手册里那几个 t 参数。</p>
+<figure class="file">
+  <figcaption><span class="path">code/lesson11/sdram_init.v</span><span class="note">可综合 · 时序参数全部参数化成"拍数"</span></figcaption>
+  <div class="body"><pre><code>module sdram_init #(
+    parameter CYC_POWERUP = 4,      // 上电等待。真实值 100µs,100MHz 下是 10000
+    parameter CYC_RP      = 2,      // tRP  :PRECHARGE → 下一条命令
+    parameter CYC_RFC     = 3,      // tRFC :AUTO REFRESH → 下一条命令
+    parameter CYC_MRD     = 2,      // tMRD :LOAD MODE REGISTER → 下一条命令
+    parameter REFRESH_CNT = 2,      // 初始化要做几次 AUTO REFRESH(手册要求 ≥2)
+    parameter MODE_REG    = 13'b000_0_00_010_0_000   // CL=2,顺序突发,长度 1
+)(
+    input  wire        clk,
+    input  wire        rst_n,
+    output reg         cke,
+    output reg  [3:0]  cmd,         // {cs_n, ras_n, cas_n, we_n}
+    output reg  [12:0] addr,
+    output reg  [1:0]  ba,
+    output reg         done
+);
+
+    // 名字我起的,数值抄手册的 Command Truth Table
+    localparam CMD_INHIBIT = 4'b1000,   // CS# 高,芯片一律当 NOP
+               CMD_NOP     = 4'b0111,
+               CMD_PRE     = 4'b0010,
+               CMD_REF     = 4'b0001,
+               CMD_LMR     = 4'b0000;
+
+    localparam S_POWERUP = 3'd0, S_PRE = 3'd1, S_REF = 3'd2,
+               S_LMR     = 3'd3, S_DONE = 3'd4;
+
+    reg [2:0]  state, next_state;
+    reg [15:0] timer;
+    reg [3:0]  ref_cnt;
+
+    // 每个状态该待多少拍 —— 就是那几个 t 参数
+    reg [15:0] limit;
+    always @(*) begin
+        case (state)
+            S_POWERUP: limit = CYC_POWERUP - 1;
+            S_PRE:     limit = CYC_RP      - 1;
+            S_REF:     limit = CYC_RFC     - 1;
+            S_LMR:     limit = CYC_MRD     - 1;
+            default:   limit = 16'd0;
+        endcase
+    end
+
+    wire timeout = (timer == limit);
+    wire first   = (timer == 16'd0);   // 本状态第一拍 → 就在这一拍发命令
+
+    // ---------- 第一段 ----------
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) state &lt;= S_POWERUP;
+        else        state &lt;= next_state;
+    end
+
+    // ---------- 计时器:换状态或计满都清零 ----------
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)                              timer &lt;= 16'd0;
+        else if (timeout || state != next_state) timer &lt;= 16'd0;
+        else                                     timer &lt;= timer + 1'b1;
+    end
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)                         ref_cnt &lt;= 4'd0;
+        else if (state == S_REF &amp;&amp; timeout) ref_cnt &lt;= ref_cnt + 1'b1;
+    end
+
+    // ---------- 第二段 ----------
+    always @(*) begin
+        next_state = state;
+        case (state)
+            S_POWERUP: if (timeout) next_state = S_PRE;
+            S_PRE:     if (timeout) next_state = S_REF;
+            S_REF:     if (timeout) next_state = (ref_cnt + 1 &gt;= REFRESH_CNT) ? S_LMR : S_REF;
+            S_LMR:     if (timeout) next_state = S_DONE;
+            S_DONE:                 next_state = S_DONE;
+            default:                next_state = S_POWERUP;
+        endcase
+    end
+
+    // ---------- 第三段:默认全是空命令,和交通灯的"默认全红"一个道理 ----------
+    always @(*) begin
+        cke  = 1'b1;
+        cmd  = CMD_NOP;
+        addr = 13'd0;
+        ba   = 2'd0;
+        done = 1'b0;
+
+        case (state)
+            S_POWERUP: begin
+                cke = ~first;               // 第一拍 CKE 还压着,之后拉高
+                cmd = CMD_INHIBIT;
+            end
+            S_PRE: if (first) begin
+                cmd      = CMD_PRE;
+                addr[10] = 1'b1;            // A10 = 1 → ALL BANKS
+            end
+            S_REF: if (first) cmd = CMD_REF;
+            S_LMR: if (first) begin
+                cmd  = CMD_LMR;
+                addr = MODE_REG;
+                ba   = 2'b00;               // 手册要求 BA1 = BA0 = 0
+            end
+            S_DONE: done = 1'b1;
+            default: ;
+        endcase
+    end
+
+endmodule</code></pre></div>
+</figure>
+<p>三个值得注意的设计选择:</p>
+<ul>
+  <li><code>timeout || state != next_state</code> 一起清计时器 —— 因为 <code>S_REF</code> 会<strong>自己跳回自己</strong>做第二次刷新,光判"换状态"清不掉。</li>
+  <li><code>first = (timer == 0)</code> 让命令只在每个状态的<strong>第一拍</strong>发出,其余拍自动落回默认的 NOP。这样"发命令 + 等 t 参数"就压缩成一个状态,不用给每段等待再单独建状态。</li>
+  <li><code>limit</code> 用一个组合 <code>case</code> 在几个 t 参数间选,比给每个状态各配一个计数器省得多 —— 和第 07 课交通灯选 <code>T_GREEN</code>/<code>T_YELLOW</code> 是同一招。</li>
+</ul>
+<div class="box pit">
+  <b>这个模块的输出是组合逻辑 —— 真上板必须改</b>
+  <p>为了让代码和上面那张时序图<strong>一拍对一拍</strong>,第三段写成了 <code>always @(*)</code>。但组合输出带毛刺,直接接到芯片引脚上,SDRAM 可能把毛刺采成命令。真实设计里这些输出<strong>必须寄存一拍</strong>,时序工具才有确定的起点去算 <code>tCMS</code>/<code>tCMH</code>。这是练习四。</p>
+</div>
+
+<h2 id="s8">没有开发板,让"假芯片"判你对错</h2>
+<p>前十一课的 Testbench 都是拿期望值比对输出。但初始化序列没有"输出"可比 —— 它的正确性在于<strong>命令的顺序和间隔</strong>。所以这一课换个打法:写一个<strong>行为模型</strong>,让它扮演 SDRAM,盯着命令流找违规。</p>
+<figure class="file">
+  <figcaption><span class="path">code/lesson11/sdram_model.v</span><span class="note">仅仿真 · 只做检查,不存数据</span></figcaption>
+  <div class="body"><pre><code>    // CS# 高 或 CKE 低 → 芯片一律当空命令(手册 Note 2)
+    function [3:0] eff;
+        input [3:0] raw;
+        input       en;
+        begin
+            eff = (!en || raw[3]) ? CMD_NOP : raw;
+        end
+    endfunction
+
+    // 距上一条同类命令还差几拍就发了新命令 → 违规
+    task chk_gap;
+        input integer t_last;
+        input integer need;
+        input [12*8:1] what;
+        begin
+            if (t_last &gt;= 0 &amp;&amp; (cyc - t_last) &lt; need) begin
+                $display("[模型] 第 %0d 拍  违规:距上一条 %0s 只过了 %0d 拍,至少要 %0d 拍",
+                         cyc, what, cyc - t_last, need);
+                errors = errors + 1;
+            end
+        end
+    endtask</code></pre></div>
+</figure>
+<p>它检查五件事,每一件都对应手册的一条规定:</p>
+<div class="tw">
+<table>
+  <caption>行为模型的五项检查</caption>
+  <thead><tr><th>检查</th><th>对应手册哪一条</th></tr></thead>
+  <tbody>
+    <tr><td>上电等待期内只许空命令</td><td>步 4:"Wait at least 100µs prior to issuing any command other than COMMAND INHIBIT or NOP"</td></tr>
+    <tr><td><code>PRECHARGE</code> 后 tRP 内不许发别的命令</td><td>步 7</td></tr>
+    <tr><td><code>AUTO REFRESH</code> 后 tRFC 内不许发别的命令</td><td>步 9、步 11</td></tr>
+    <tr><td><code>LMR</code> 后 tMRD 内不许发别的命令</td><td>步 13</td></tr>
+    <tr><td>刷新不够 2 次、或 mode register 没写,就发 <code>ACTIVE</code>/<code>READ</code>/<code>WRITE</code></td><td>步 12 的"prior to applying any operational command"</td></tr>
+  </tbody>
+</table>
+</div>
+<p>另外还查两条结构性的:<code>AUTO REFRESH</code> 时是否真的所有 bank 都 idle、<code>LMR</code> 时 <code>BA</code> 是否为 <code>00</code>。</p>
+
+<div class="term"><pre><span class="cmd">.\sim.bat lesson11 sdram_init_tb</span>
+[TB] 参数(拍):上电=4  tRP=2  tRFC=3  tMRD=2  刷新=2 次
+[TB] 期望命令落在:第 4 拍 PRECHARGE ALL,第 6/9 拍 REFRESH,第 12 拍 LMR,第 14 拍 done
+[模型] 第 4 拍  PRECHARGE ALL   (A10=1,BA 无关)
+[模型] 第 6 拍  AUTO REFRESH   (第 1 次)
+[模型] 第 9 拍  AUTO REFRESH   (第 2 次)
+[模型] 第 12 拍  LOAD MODE REGISTER  CODE=0000000100000  (CL=2, BL=1)
+[TB] done 在第 14 拍拉高 —— 和时序图一致
+[结果] 初始化序列合法,时序全部满足 —— 通过</pre></div>
+<p>打印出来的拍号 <strong>4 / 6 / 9 / 12 / 14</strong>,和上面那张全量时序图上的 T4 / T6 / T9 / T12 / T14 完全对得上 —— <em>图、代码、仿真三者一致</em>,这才算读懂了一张时序图。</p>
+<div class="box tip">
+  <b>行为模型是外设开发的标准做法</b>
+  <p>接任何一颗外部芯片(SDRAM、Flash、ADC、以太网 PHY),第一件事都不是写控制器,而是<strong>先写一个能挑错的行为模型</strong>。理由很实际:上板之后你只能看到"不工作",看不到"第 5 拍违反了 tRP"。厂家有时会提供官方的仿真模型(Micron 就提供 SDRAM 的 Verilog model),没有就自己写一个精简版 —— 哪怕只检查时序间隔,也能省掉几天的示波器时间。</p>
+</div>
+
+<h2 id="ex">练习</h2>
+<ol class="tasks">
+<li>
+  <h3>把时序参数改错,看模型抓不抓得住<span class="lv">热身</span></h3>
+  <p>把 <code>sdram_init_tb.v</code> 里传给 <strong>DUT</strong> 的 <code>CYC_RFC</code> 改成 2(模型那边仍然传 3),重跑。模型报什么?再把 DUT 的 <code>REFRESH_CNT</code> 改成 1 试试。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p><code>CYC_RFC=2</code> 时,状态机会在刷新后只等 2 拍就发下一条命令,模型立刻报:</p>
+    <pre>[模型] 第 8 拍  违规:距上一条 AUTO REFRESH 只过了 2 拍,至少要 3 拍</pre>
+    <p><code>REFRESH_CNT=1</code> 时,只刷一次就去写 mode register,然后发 <code>ACTIVE</code>:</p>
+    <pre>[模型] 第 N 拍  违规:初始化没做完就发操作命令(刷新 1 次,mode 已写)</pre>
+    <p>这道题的意义在于确认<strong>测试真的有牙齿</strong>。写完检查器一定要故意破坏一次被检查的东西 —— 否则你不知道它是在放行还是压根没在看。这和第 06 课"把稳定时间改短,验证 key_down 不出现"是同一个动作。</p>
+  </div></details>
+</li>
+<li>
+  <h3>把 ns 换算成拍数<span class="lv">动手</span></h3>
+  <p>假设你用 <code>-75</code> 速度等级的片子,手册给 <code>tRP = 20ns</code>、<code>tRFC = 66ns</code>、<code>tMRD = 2 个时钟</code>,上电等待 <code>100µs</code>。分别算出 <strong>100MHz</strong> 和 <strong>133MHz</strong> 下该传什么参数,并写成能自动换算的形式。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <div class="tw"><table>
+      <thead><tr><th>参数</th><th>手册值</th><th class="num">100MHz(10ns)</th><th class="num">133MHz(7.5ns)</th></tr></thead>
+      <tbody>
+        <tr><td>上电等待</td><td>100 µs</td><td class="num">10 000</td><td class="num">13 334</td></tr>
+        <tr><td>tRP</td><td>20 ns</td><td class="num">2</td><td class="num">3</td></tr>
+        <tr><td>tRFC</td><td>66 ns</td><td class="num">7</td><td class="num">9</td></tr>
+        <tr><td>tMRD</td><td>2 个时钟</td><td class="num">2</td><td class="num">3 ①</td></tr>
+      </tbody>
+    </table></div>
+    <p>① tMRD 手册写 2,但 JEDEC/PC100 要求 3 —— 按 3 填。</p>
+    <p>133MHz 下 <code>tRP</code> 是 <code>ceil(20/7.5) = ceil(2.67) = 3</code>,<strong>不是 2</strong>。这就是"只能向上取整"的具体样子。</p>
+    <p>写成自动换算,换频率不用重算:</p>
+    <pre>module sdram_init #(
+    parameter CLK_MHZ    = 100,
+    parameter T_RP_NS    = 20,
+    parameter T_RFC_NS   = 66,
+    parameter T_POWER_NS = 100_000,
+    // 整数向上取整:(a*b + 999) / 1000
+    parameter CYC_RP      = (T_RP_NS    * CLK_MHZ + 999) / 1000,
+    parameter CYC_RFC     = (T_RFC_NS   * CLK_MHZ + 999) / 1000,
+    parameter CYC_POWERUP = (T_POWER_NS * CLK_MHZ + 999) / 1000,
+    parameter CYC_MRD     = 3
+)(…);</pre>
+    <p>Verilog 里没有可综合的 <code>ceil</code>,<code>(x + 999) / 1000</code> 就是整数向上取整的标准写法。以后只改 <code>CLK_MHZ</code>,拍数自动跟着变。</p>
+  </div></details>
+</li>
+<li>
+  <h3>加上周期性自动刷新<span class="lv">动手</span></h3>
+  <p>初始化只是开头。SDRAM 的电容会漏电,必须<strong>每隔一段时间刷新一次</strong>,否则数据丢失。手册给的是 <code>64ms / 8192 次</code>。写一个 <code>sdram_refresh.v</code>:<code>done</code> 之后开始计时,每到期就请求一次刷新。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>先算间隔:8192 行要在 64ms 内全部刷完,所以<strong>平均每 7.8125µs 必须发一次</strong> <code>AUTO REFRESH</code>。100MHz 下 = 781 拍。</p>
+    <pre>module sdram_refresh #(
+    parameter CYC_REFI = 781        // 平均刷新间隔(拍)
+)(
+    input  wire clk,
+    input  wire rst_n,
+    input  wire init_done,
+    input  wire ref_ack,            // 主状态机:这次刷新我受理了
+    output reg  ref_req             // 到期了,请安排一次刷新
+);
+    reg [15:0] cnt;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            cnt     &lt;= 16'd0;
+            ref_req &lt;= 1'b0;
+        end else if (!init_done) begin
+            cnt     &lt;= 16'd0;
+        end else begin
+            if (ref_ack)                   ref_req &lt;= 1'b0;   // 受理了就撤请求
+            if (cnt == CYC_REFI - 1) begin
+                cnt     &lt;= 16'd0;
+                ref_req &lt;= 1'b1;                              // 到期,举手
+            end else begin
+                cnt &lt;= cnt + 1'b1;
+            end
+        end
+    end
+endmodule</pre>
+    <p>两个关键设计:</p>
+    <ul>
+      <li><strong>用请求/受理(req/ack)握手,而不是直接发命令。</strong>因为刷新到期时主状态机可能正在读写中间 —— 它得先把当前突发做完、把所有 bank <code>PRECHARGE</code> 掉,才能腾出手来刷新。第 06 课那个"事件用脉冲传、用寄存器记住"的模式,这里换成了 req 一直举着手直到 ack。</li>
+      <li><strong>计时器不因为 ack 晚来而重置。</strong>只要平均间隔守住就行 —— 手册允许你把几次刷新攒起来突发做掉,只要 64ms 内总数够 8192 次。</li>
+    </ul>
+    <p>顺带体会一下刷新的成本:每 781 拍就要中断一次正常访问,期间所有已打开的行全被关掉。这就是为什么 DRAM 的<em>实际</em>可用带宽总比标称值低几个百分点。</p>
+  </div></details>
+</li>
+<li>
+  <h3>把输出寄存起来<span class="lv">想清楚 + 动手</span></h3>
+  <p>把 <code>sdram_init.v</code> 的第三段从 <code>always @(*)</code> 改成时序块,让 <code>cke/cmd/addr/ba</code> 都寄存一拍。改完重跑,模型报的拍号会怎么变?为什么真实设计非改不可?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>改法:把第三段的 <code>=</code> 换成 <code>&lt;=</code>、敏感列表换成时钟,并且判断条件要用 <code>next_state</code> 而不是 <code>state</code>(否则输出会比状态晚一拍,这是第 07 课第三段那个坑):</p>
+    <pre>always @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+        cke &lt;= 1'b0;  cmd &lt;= CMD_INHIBIT;
+        addr &lt;= 13'd0; ba &lt;= 2'd0; done &lt;= 1'b0;
+    end else begin
+        cke &lt;= 1'b1;  cmd &lt;= CMD_NOP;
+        addr &lt;= 13'd0; ba &lt;= 2'd0; done &lt;= 1'b0;
+        // 用"下一拍会不会是某状态的第一拍"来决定这一拍输出什么
+        …
+    end
+end</pre>
+    <p>所有命令的拍号会<strong>整体后移一拍</strong>(4/6/9/12 → 5/7/10/13),但<em>相对间隔完全不变</em>,所以模型的时序检查照样全过 —— 只有 TB 里那句"done 应在第 14 拍"要跟着改成 15。这本身是个好观察:<strong>时序约束管的是间隔,不是绝对时刻。</strong></p>
+    <p><strong>为什么非改不可</strong>,三条理由:</p>
+    <ul>
+      <li><strong>组合逻辑有毛刺。</strong><code>cmd</code> 由 <code>state</code> 和 <code>timer</code> 译码而来,这些位不会同时到达,中间态可能短暂译出<em>别的命令</em>。芯片如果在那一瞬间采样,就执行了一条你没打算发的命令。</li>
+      <li><strong>时序分析需要确定的起点。</strong><code>tCMS</code>/<code>tCMH</code> 是从"寄存器输出到 SDRAM 采样沿"算的。输出如果挂在一长串组合逻辑后面,这条路径的延迟由逻辑深度决定 —— 换个综合版本就变,根本没法约束。</li>
+      <li><strong>寄存的位置还要再往外推一层。</strong>真正上板时,这些信号还应该走 FPGA 的 <strong>IOB 寄存器</strong>(Vivado 里 <code>set_property IOB TRUE</code>),让触发器就坐在引脚旁边,输出延迟才最小、最确定。</li>
+    </ul>
+    <p>一句话:<strong>凡是要出芯片的信号,一律寄存,而且尽量寄存在 IOB 里。</strong>这条规矩对所有外部接口都成立,不只是 SDRAM。</p>
+  </div></details>
+</li>
+</ol>
+
+<nav class="pager"></nav>
+</main>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

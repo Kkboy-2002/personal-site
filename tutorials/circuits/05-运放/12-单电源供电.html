@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>单电源供电</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#opamp">运放</a><span class="sp"></span><span>12 / 12</span></nav>
+<header>
+  <span class="eyebrow">运放 · 单电源设计</span>
+  <h1>单电源供电</h1>
+  <p class="lede">只有 5 V 和地，没有负电源，运放输出就不可能低于 0 V。交流信号有正有负，所以要先把工作点抬到 Vcc/2，让信号围着它上下摆，再用电容把直流隔开。</p>
+</header>
+
+<section id="bias">
+  <span class="eyebrow">偏置 · Vcc/2 与交流耦合</span>
+  <h2>不抬偏置，负半周直接被削掉</h2>
+  <p>双电源时，地在正负电源中间，输出能往两边摆。单电源时，地变成了最低的那条电源轨，输出最低只到地附近。</p>
+  <p>下面是一个 5 V 供电、增益 −2 的反相放大器。同相端接地时，输出的直流电平就是 0 V，本该往下摆的那半周无处可去，全被削平。把同相端接到 2.5 V，由于虚短，反相端也是 2.5 V，输出的直流电平也变成 2.5 V，上下各有约 2.5 V 的余量。</p>
+  <p class="eq">Vo = Vref − (Rf / Rin)·Vin，Vref = Vcc/2 = 2.5 V</p>
+  <p>输入端的 Cin 必不可少。反相端现在是 2.5 V，信号源的直流一般是 0 V，没有 Cin 就会有直流电流流过 Rin，被放大 2 倍叠到输出上。Cin 只让交流过去，这叫交流耦合。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 255" role="img" aria-label="5 V 单电源反相放大器：Vin 经 Cin、Rin 进反相端，Rf 反馈；同相端接 R1、R2 分压加旁路电容 Cb 得到的 2.5 V，或直接接地">
+        <text x="265" y="64" text-anchor="middle" class="v">+5 V</text>
+        <path class="w" d="M265,70 V92 M265,148 V160 M251,160 H279 M256,165 H274 M261,170 H269"/>
+        <path class="r" d="M220,70 L310,120 L220,170 Z"/>
+        <text x="227" y="100" class="t">−</text>
+        <text x="227" y="150" class="t">+</text>
+        <circle class="r" cx="30" cy="125" r="14"/>
+        <text x="30" y="130" text-anchor="middle" class="t">~</text>
+        <text x="50" y="140" class="t">Vin</text>
+        <path class="w" d="M30,111 V95 H60 M70,95 H90 M140,95 H220 M30,139 V150 M18,150 H42 M23,155 H37 M28,160 H32"/>
+        <path class="w" style="stroke-width:2.5" d="M60,83 V107 M70,83 V107"/>
+        <text x="65" y="76" text-anchor="middle" class="v">Cin</text>
+        <rect class="r" x="90" y="87" width="50" height="16" rx="2"/>
+        <text x="115" y="80" text-anchor="middle" class="v">Rin 10 kΩ</text>
+        <circle class="dot" cx="180" cy="95" r="3.5"/>
+        <text id="s1-vnt" x="176" y="116" text-anchor="end" class="tm">虚地 0 V</text>
+        <path class="w" d="M180,95 V35 H235 M285,35 H350 V120"/>
+        <rect class="r" x="235" y="27" width="50" height="16" rx="2"/>
+        <text x="260" y="20" text-anchor="middle" class="v">Rf 20 kΩ</text>
+        <circle class="dot" cx="350" cy="120" r="3.5"/>
+        <path id="s1-ow" class="w s-lo" style="stroke-width:3" d="M310,120 H420"/>
+        <text x="420" y="110" text-anchor="end" class="t">Vo</text>
+        <text id="s1-vot" x="420" y="140" text-anchor="end" class="v lo">直流 0 V</text>
+        <g id="s1-g-b" hidden>
+          <text x="36" y="205" text-anchor="end" class="v">+5 V</text>
+          <path class="w" d="M40,200 H60 M110,200 H170 M220,200 H240 V210 M228,210 H252 M233,215 H247 M238,220 H242 M150,200 V145 H220 M150,200 V222 M150,230 V238 M138,238 H162 M143,243 H157 M148,248 H152"/>
+          <path class="w" style="stroke-width:2.5" d="M138,222 H162 M138,230 H162"/>
+          <rect class="r" x="60" y="192" width="50" height="16" rx="2"/>
+          <rect class="r" x="170" y="192" width="50" height="16" rx="2"/>
+          <text x="85" y="186" text-anchor="middle" class="v">R1 100 kΩ</text>
+          <text x="195" y="186" text-anchor="middle" class="v">R2 100 kΩ</text>
+          <text x="170" y="234" class="v">Cb 10 µF</text>
+          <circle class="dot" cx="150" cy="200" r="3.5"/>
+          <text x="156" y="139" class="v hi">2.5 V</text>
+        </g>
+        <g id="s1-g-n">
+          <path class="w" d="M220,145 H190 V160 M178,160 H202 M183,165 H197 M188,170 H192"/>
+          <text x="186" y="188" text-anchor="middle" class="tm">同相端接地</text>
+        </g>
+      </svg>
+      <svg viewBox="0 0 420 290" role="img" aria-label="上：交流输入信号；下：单电源下的输出波形，灰色区域是输出到不了的电压范围">
+        <g id="s1-axi"></g>
+        <polyline id="s1-vin" class="real2" points=""/>
+        <text x="398" y="18" text-anchor="end" class="tm">输入，直流 0 V</text>
+        <g id="s1-axo"></g>
+        <rect class="zone-sat" x="44" y="110" width="356" height="15.6"/>
+        <rect class="zone-sat" x="44" y="203.3" width="356" height="46.7"/>
+        <text x="396" y="122" text-anchor="end" class="tm">高于 5 V，到不了</text>
+        <text x="396" y="242" text-anchor="end" class="tm">低于地，到不了</text>
+        <line id="s1-dc" class="ax dash" x1="44" x2="400" y1="0" y2="0"/>
+        <text id="s1-dct" x="48" y="0" class="tm">直流电平</text>
+        <polyline id="s1-id" class="ideal" points=""/>
+        <polyline id="s1-vo" class="real" points=""/>
+      </svg>
+      <figcaption>上：5 V 单电源、增益 −2 的反相放大器，运放按轨到轨输入输出处理，输出离电源轨 50 mV（示意）。下：1 kHz 正弦输入（蓝）和运放输出（橙），灰虚线是不受电源限制时应有的输出。Cin 和 Cb 取得足够大，只看稳态。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">同相端</span>
+        <div class="seg" id="s1-b"><button id="s1-b-0" data-v="0" aria-pressed="true">不加偏置，接地</button><button id="s1-b-1" data-v="1" aria-pressed="false">加 Vcc/2 偏置</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-a">输入幅度（峰值）</label>
+        <span class="rv" id="s1-av">1.00 V</span>
+        <input type="range" id="s1-a" min="0.1" max="1.5" step="0.05" value="1"></div>
+      <dl class="read">
+        <dt>同相端 Vref</dt><dd id="s1-vref">0 V</dd>
+        <dt>输出直流电平</dt><dd id="s1-dcv">0 V</dd>
+        <dt>应有输出范围</dt><dd id="s1-rng">−2.00 ~ +2.00 V</dd>
+        <dt>实际能摆的范围</dt><dd>0.05 ~ 4.95 V</dd>
+        <dt>最大不失真峰值</dt><dd id="s1-max">—</dd>
+        <dt>输出</dt><dd><span id="s1-st" class="chip bad">负半周被削</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+<section id="vgnd">
+  <span class="eyebrow">虚拟地 · 分压加旁路电容</span>
+  <h2>2.5 V 从哪来：两个电阻加一个电容</h2>
+  <p>最省事的办法是两个等值电阻从 5 V 分压，取几十到几百 kΩ 省电。问题是分压点把电源纹波也分了一半过来，而同相端上的任何波动，都会按噪声增益 1 + Rf/Rin 放大到输出。</p>
+  <p>在下面的电阻上并一个电容 Cb，它和 R1 ∥ R2 组成低通，把纹波旁路到地。对交流来说这个点就接在地上，所以叫虚拟地。</p>
+  <p class="eq">fc = 1 / (2π·(R1 ∥ R2)·Cb)　　输出纹波 ≈ 电源纹波 × 1/2 × 低通衰减 × (1 + Rf/Rin)</p>
+  <p>分压点内阻有 50 kΩ，只能接运放同相端这种几乎不取电流的地方。要给别的电路当参考，就在后面加一个电压跟随器，或者直接用基准电压芯片。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 170" role="img" aria-label="带纹波的 5 V 经 R1、R2 分压得到 2.5 V，R2 上可并旁路电容 Cb，分压点接运放同相端">
+        <text x="60" y="18" text-anchor="middle" class="v">+5 V 带纹波</text>
+        <path class="w" d="M60,26 V30 M60,70 V100 M60,140 V150 M48,150 H72 M53,155 H67 M58,160 H62 M60,90 H225 V120 H240"/>
+        <rect class="r" x="51" y="30" width="18" height="40" rx="2"/>
+        <rect class="r" x="51" y="100" width="18" height="40" rx="2"/>
+        <text x="44" y="54" text-anchor="end" class="v">R1</text><text x="74" y="54" class="tm">100 kΩ</text>
+        <text x="44" y="124" text-anchor="end" class="v">R2</text><text x="74" y="124" class="tm">100 kΩ</text>
+        
+        
+        <circle class="dot" cx="60" cy="90" r="3.5"/>
+        <g id="s2-g-cb">
+          <path class="w" d="M110,90 V112 M110,120 V150 M98,150 H122 M103,155 H117 M108,160 H112"/>
+          <path class="w" style="stroke-width:2.5" d="M98,112 H122 M98,120 H122"/>
+          <text id="s2-cbt" x="128" y="121" class="v">Cb 10 µF</text>
+          <circle class="dot" cx="110" cy="90" r="3.5"/>
+        </g>
+        <text id="s2-vbt" x="124" y="106" class="v hi">2.5 V + 纹波</text>
+        <path class="r" d="M240,60 L320,100 L240,140 Z"/>
+        <text x="246" y="85" class="t">−</text>
+        <text x="246" y="125" class="t">+</text>
+        <path class="w" d="M240,80 H222"/>
+        <text x="218" y="64" text-anchor="end" class="tm">接 Rin、Rf</text>
+        <text x="218" y="78" text-anchor="end" class="tm">噪声增益 3</text>
+        <path class="w s-hi" style="stroke-width:3" d="M320,100 H400"/>
+        <text x="400" y="90" text-anchor="end" class="t">Vo</text>
+        <text id="s2-vot" x="400" y="120" text-anchor="end" class="v hi"></text>
+      </svg>
+      <svg viewBox="0 0 420 250" role="img" aria-label="电源纹波传到运放输出的比例随频率变化，横轴对数频率，纵轴分贝，四条曲线对应不同的旁路电容">
+        <g id="s2-ax"></g>
+        <polyline id="s2-c0" class="ideal" points=""/>
+        <polyline id="s2-c1" class="ideal" points=""/>
+        <polyline id="s2-c2" class="ideal" points=""/>
+        <polyline id="s2-c3" class="ideal" points=""/>
+        <text id="s2-l0" x="0" y="0" class="tm">不加 Cb</text>
+        <text id="s2-l1" x="0" y="0" class="tm">0.1 µF</text>
+        <text id="s2-l2" x="0" y="0" class="tm">1 µF</text>
+        <text id="s2-l3" x="0" y="0" class="tm">10 µF</text>
+        <line id="s2-vl" class="ax dash" x1="0" x2="0" y1="20" y2="200"/>
+        <circle id="s2-pt" cx="0" cy="0" r="4.5" style="fill:var(--copper)"/>
+      </svg>
+      <figcaption>上：分压式虚拟地，接上一张图的反相放大器，同相端到输出的噪声增益 1 + Rf/Rin = 3。下：输出纹波 ÷ 电源纹波，橙线为当前选择。电源纹波取 50 mV 峰峰值，电容按理想电容算，未计 ESR。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">旁路电容 Cb</span>
+        <div class="seg" id="s2-c"><button id="s2-c-0" data-v="0" aria-pressed="true">不加</button><button id="s2-c-1" data-v="1" aria-pressed="false">0.1 µF</button><button id="s2-c-2" data-v="2" aria-pressed="false">1 µF</button><button id="s2-c-3" data-v="3" aria-pressed="false">10 µF</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s2-f">纹波频率</label>
+        <span class="rv" id="s2-fv">100 Hz</span>
+        <input type="range" id="s2-f" min="0" max="4" step="1" value="1"></div>
+      <dl class="read">
+        <dt>分压点内阻 R1 ∥ R2</dt><dd>50 kΩ</dd>
+        <dt>转折频率 fc</dt><dd id="s2-fc">—</dd>
+        <dt>分压点纹波</dt><dd id="s2-vb">—</dd>
+        <dt>输出纹波 ×3</dt><dd id="s2-vo">—</dd>
+        <dt>评价</dt><dd><span id="s2-st" class="chip bad">纹波明显</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+<section id="check">
+  <span class="eyebrow">设计清单 · 共模范围与摆幅</span>
+  <h2>单电源电路逐项核对</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>检查项</th><th>要求</th><th>原因</th></tr></thead>
+    <tbody>
+      <tr><td>偏置点</td><td>取 Vcc/2，信号围着它上下摆</td><td>上下余量相等，不失真摆幅最大</td></tr>
+      <tr><td>输入共模范围</td><td>偏置点加上信号摆动，都要落在范围内</td><td>反相接法两输入端固定在 2.5 V，容易满足；同相放大、跟随器要按信号峰值核对</td></tr>
+      <tr><td>输出摆幅</td><td>输出峰值不超过实际负载下的 VOH、VOL</td><td>普通运放 5 V 下只有约 1.3~3.7 V 可用，见 <a href="11-轨到轨输出.html">轨到轨输出</a></td></tr>
+      <tr><td>输入耦合电容</td><td>fc = 1/(2π·Rin·Cin) 低于信号最低频率</td><td>Cin 和 Rin 组成高通，太小会削弱低频</td></tr>
+      <tr><td>输出耦合</td><td>负载要求直流为 0 时，输出串电容</td><td>运放输出本身带着 2.5 V 直流</td></tr>
+      <tr><td>虚拟地</td><td>分压加旁路电容，要带负载就加跟随器</td><td>纹波按噪声增益放大；分压点内阻太大</td></tr>
+    </tbody>
+  </table></div>
+  <p>同相放大器的单电源接法：信号经 Cin 进同相端，同相端用两个电阻偏置到 2.5 V；Rg 下面串一个电容 Cg 再接地，直流时 Cg 开路，增益为 1，输出直流仍是 2.5 V；交流时 Cg 短路，增益恢复成 1 + Rf/Rg。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>单电源运放放大交流信号，要怎么处理？</summary>
+      <div class="ans"><p>把工作点抬到 Vcc/2。用两个等值电阻分压得到 Vcc/2 接同相端，并一个旁路电容做成虚拟地；输入用电容耦合，隔开前级的直流；需要时输出也串电容。这样信号围着 Vcc/2 上下摆，正负半周都不会被电源轨削掉。</p></div></details>
+    <details><summary>为什么偏置点选 Vcc/2？</summary>
+      <div class="ans"><p>输出只能在两条电源轨之间摆，偏置在正中间，上下余量相等，能输出的不失真幅度最大。偏向一边，那一边会先削顶。</p></div></details>
+    <details><summary>分压得到的 Vcc/2 为什么要加电容？</summary>
+      <div class="ans"><p>分压点会把电源纹波分一半过来，同相端的波动又按噪声增益 1 + Rf/Rin 放大到输出。并一个电容和分压电阻组成低通，把纹波旁路到地。转折频率 1/(2π·(R1 ∥ R2)·Cb) 要远低于纹波频率。</p></div></details>
+    <details><summary>分压点能直接给别的电路当参考电压吗？</summary>
+      <div class="ans"><p>不行。分压点内阻就是 R1 ∥ R2，几十 kΩ，一取电流电压就变。它只适合接运放同相端这种不取电流的地方。要带负载，就在后面接一个电压跟随器，或者用基准电压芯片。</p></div></details>
+    <details><summary>输入耦合电容怎么选？</summary>
+      <div class="ans"><p>它和输入电阻组成高通。反相放大时 fc = 1/(2π·Rin·Cin)，让 fc 比信号最低频率低 5~10 倍。例如 Rin = 10 kΩ、信号低到 20 Hz，fc 取 2~4 Hz，Cin 要 4~8 µF，常用 4.7 µF 或 10 µF。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="11-轨到轨输出.html"><span>上一页</span>轨到轨输出</a><a class="next" href="../index.html#opamp"><span>下一页</span>返回目录</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+function axGrid(gid,o){
+  const g=$(gid);g.textContent='';
+  o.yt.forEach(([py,l])=>g.append(svgEl('line',{class:'gl',x1:o.x0,y1:py,x2:o.x1,y2:py}),svgEl('text',{x:o.x0-6,y:py+4,'text-anchor':'end',class:'v'},l)));
+  o.xt.forEach(([px,l],i)=>g.append(svgEl('line',{class:'gl',x1:px,y1:o.y0,x2:px,y2:o.y1}),svgEl('text',{x:px,y:o.y1+16,'text-anchor':i===o.xt.length-1&&px>=o.x1-2?'end':'middle',class:'v'},l)));
+  g.append(svgEl('path',{class:'ax',d:`M${o.x0},${o.y0} V${o.y1} H${o.x1}`}));
+  if(o.yn)g.append(svgEl('text',{x:o.x0+4,y:o.y0-6,class:'tm'},o.yn));
+  if(o.xn)g.append(svgEl('text',{x:o.x1,y:o.y1+32,'text-anchor':'end',class:'tm'},o.xn));
+}
+const VCC=5,HR=0.05,G=2;
+
+/* 1. 偏置与削波：Vo = Vref − 2·Vin，输出限制在 0.05 ~ 4.95 V */
+const s1={b:0},s1X=scale(0,2,44,400),s1Yi=scale(-1.6,1.6,78,28),s1Y=scale(-3,6,250,110),s1Q=[0,.5,1,1.5,2];
+axGrid('s1-axi',{x0:44,x1:400,y0:28,y1:78,xt:s1Q.map(q=>[s1X(q),'']),yt:[[s1Yi(1.5),'1.5'],[s1Yi(0),'0'],[s1Yi(-1.5),'−1.5']],yn:'Vin / V'});
+axGrid('s1-axo',{x0:44,x1:400,y0:110,y1:250,xt:s1Q.map(q=>[s1X(q),q?String(q):'0']),yt:[[s1Y(5),'5'],[s1Y(2.5),'2.5'],[s1Y(0),'0'],[s1Y(-3),'−3']],yn:'Vo / V',xn:'时间 ms'});
+function s1u(){
+  const b=s1.b===1,a=+$('s1-a').value,vr=b?VCC/2:0,lo=HR,hi=VCC-HR;
+  const vi=x=>a*Math.sin(2*Math.PI*x),id=x=>vr-G*vi(x),vo=x=>Math.max(lo,Math.min(hi,id(x)));
+  $('s1-vin').setAttribute('points',plot(vi,0,2,s1X,s1Yi,200));
+  $('s1-id').setAttribute('points',plot(id,0,2,s1X,s1Y,200));
+  $('s1-vo').setAttribute('points',plot(vo,0,2,s1X,s1Y,400));
+  const yd=s1Y(vr);$('s1-dc').setAttribute('y1',yd.toFixed(1));$('s1-dc').setAttribute('y2',yd.toFixed(1));
+  $('s1-dct').setAttribute('y',(yd-5).toFixed(1));$('s1-dct').textContent='直流电平 '+vr+' V';
+  show($('s1-g-b'),b);show($('s1-g-n'),!b);
+  $('s1-vnt').textContent=b?'虚短 2.5 V':'虚地 0 V';
+  $('s1-vot').textContent='直流 '+vr+' V';setLv($('s1-vot'),$('s1-ow'),b);
+  const al=a.toFixed(2)+' V';$('s1-av').textContent=al;$('s1-a').setAttribute('aria-valuetext',al);
+  $('s1-vref').textContent=b?'2.5 V，R1、R2 分压':'0 V，接地';
+  $('s1-dcv').textContent=vr+' V';
+  $('s1-rng').textContent=fmtV(vr-G*a)+' ~ '+fmtV(vr+G*a);
+  $('s1-max').textContent=b?'±2.45 V，对应输入 1.23 V':'只有往上的一半，最高 4.95 V';
+  const loC=vr-G*a<lo,hiC=vr+G*a>hi;let n;
+  if(!b){chip($('s1-st'),'负半周被削','bad');
+    n='同相端接地，虚短让反相端也是 0 V，输出的直流电平就是 0 V。输入正半周时输出本该往下走到 '+fmtV(-G*a)+'，可单电源下输出最低只到 0.05 V，这半周全被削平，只剩一半波形。';}
+  else if(loC||hiC){chip($('s1-st'),'两边都削','warn');
+    n='偏置已经在正中间，但 ±'+fmtV(G*a)+' 超过了 2.45 V 的余量，上下同时削顶。5 V 单电源、增益 2 时，输入峰值最多约 1.2 V。';}
+  else{chip($('s1-st'),'不失真','on');
+    n='同相端 2.5 V，虚短让反相端也是 2.5 V，输出围着 2.5 V 上下摆 ±'+fmtV(G*a)+'，两边都没碰到电源轨。Cin 隔开了信号源的 0 V 直流，只让交流通过。';}
+  $('s1-note').textContent=n;
+}
+seg('s1-b',v=>{s1.b=+v;s1u();});
+$('s1-a').addEventListener('input',s1u);
+s1u();
+/* 2. 虚拟地纹波：分压点 = 纹波 × 1/2 × RC 低通，再乘噪声增益 3 */
+const s2C=[0,0.1e-6,1e-6,10e-6],s2F=[50,100,1e3,1e4,1e5],RP=50e3,NG=3,RIP=0.05,s2={c:0};
+const fmtVy=v=>v>=1e-3?+(v*1e3).toFixed(v>=0.01?1:2)+' mV':+(v*1e6).toFixed(v>=1e-5?0:1)+' µV';
+const fmtCap=c=>+(c*1e6).toFixed(2)+' µF';
+const s2H=(c,f)=>0.5*NG/(c?Math.hypot(1,2*Math.PI*f*RP*c):1);
+const s2X=scale(1,6,56,400),s2Y=scale(-120,20,200,20);
+axGrid('s2-ax',{x0:56,x1:400,y0:20,y1:200,xt:[1,2,3,4,5,6].map(d=>[s2X(d),['10','100','1k','10k','100k','1M'][d-1]]),
+  yt:[20,0,-40,-80,-120].map(v=>[s2Y(v),String(v).replace('-','−')]),yn:'输出纹波 ÷ 电源纹波，dB',xn:'纹波频率 Hz（对数）'});
+s2C.forEach((c,i)=>{const fn=x=>20*Math.log10(s2H(c,10**x)),l=$('s2-l'+i);
+  $('s2-c'+i).setAttribute('points',plot(x=>{const v=fn(x);return v<-120?NaN:v;},1,6,s2X,s2Y,120));
+  if(!i){l.setAttribute('x','396');l.setAttribute('y',(s2Y(fn(1))+15).toFixed(1));l.setAttribute('text-anchor','end');return;}
+  /* 下降段斜率 −20 dB/十倍频，在图上约 20.5°，标签沿线放 */
+  const px=s2X(3.5),py=s2Y(fn(3.5))-5;
+  l.setAttribute('x',px.toFixed(1));l.setAttribute('y',py.toFixed(1));l.setAttribute('transform',`rotate(20.5 ${px.toFixed(1)} ${py.toFixed(1)})`);});
+function s2u(){
+  const c=s2C[s2.c],f=s2F[+$('s2-f').value],h=s2H(c,f),vo=RIP*h,vb=vo/NG,db=20*Math.log10(h);
+  s2C.forEach((_,i)=>{$('s2-c'+i).setAttribute('class',i===s2.c?'real':'ideal');$('s2-l'+i).setAttribute('class',i===s2.c?'t hi':'tm');});
+  const px=s2X(Math.log10(f)),py=s2Y(Math.max(-120,db));
+  $('s2-pt').setAttribute('cx',px.toFixed(1));$('s2-pt').setAttribute('cy',py.toFixed(1));
+  $('s2-vl').setAttribute('x1',px.toFixed(1));$('s2-vl').setAttribute('x2',px.toFixed(1));$('s2-vl').setAttribute('y1',py.toFixed(1));
+  show($('s2-g-cb'),c>0);if(c)$('s2-cbt').textContent='Cb '+fmtCap(c);
+  $('s2-vbt').textContent='2.5 V + 纹波 '+fmtVy(vb);$('s2-vot').textContent='纹波 '+fmtVy(vo);
+  $('s2-fv').textContent=fmtF(f);$('s2-f').setAttribute('aria-valuetext',fmtF(f));
+  const fc=c?1/(2*Math.PI*RP*c):0;
+  $('s2-fc').textContent=c?fmtF(fc):'没有电容，不滤波';
+  $('s2-vb').textContent=fmtVy(vb)+' 峰峰';$('s2-vo').textContent=fmtVy(vo)+' 峰峰';
+  chip($('s2-st'),vo<1e-3?'干净':vo<1e-2?'可接受':'纹波明显',vo<1e-3?'on':vo<1e-2?'warn':'bad');
+  $('s2-note').textContent=!c
+    ?'没有电容，分压点把 50 mV 纹波分了一半，'+fmtVy(vb)+' 叠在 2.5 V 上，再被放大 3 倍，输出纹波 '+fmtVy(vo)+'。放在音频电路里，就是喇叭里清清楚楚的哼声。'
+    :'Cb 和 50 kΩ 组成低通，转折频率 '+fmtF(fc)+'，'+fmtF(f)+' 的纹波被衰减到约 1/'+Math.round(Math.hypot(1,f/fc))+'，分压点只剩 '+fmtVy(vb)+'，输出 '+fmtVy(vo)+'。'
+      +(f>=1e4?'这是按理想电容算的。实际电解电容有 ESR 和引线电感，高频衰减会到底，要再并一个 0.1 µF 陶瓷电容。':'频率越低越难滤，工频纹波要靠大电容或者更大的分压电阻。');
+}
+seg('s2-c',v=>{s2.c=+v;s2u();});
+$('s2-f').addEventListener('input',s2u);
+s2u();
+</script>
+</body>
+</html>

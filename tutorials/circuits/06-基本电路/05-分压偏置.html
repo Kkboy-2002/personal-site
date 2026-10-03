@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>分压偏置</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#basic">基本电路</a><span class="sp"></span><span>05 / 07</span></nav>
+<header>
+  <span class="eyebrow">基本电路 · 偏置</span>
+  <h1>分压式偏置</h1>
+  <p class="lede">三极管放大电路最常用的偏置：R1、R2 把基极电压钉住，Re 把发射极电流钉住。结果是 Q 点几乎不随 β 和温度变化。</p>
+</header>
+
+<section id="q">
+  <span class="eyebrow">Q 点 · β 与温度</span>
+  <h2>拖 β 和温度，对比两种偏置的 Ic</h2>
+  <p>分压电流远大于基极电流时，基极电压只由分压决定：</p>
+  <p class="eq">VB ≈ Vcc·R2 / (R1 + R2)　　IE ≈ (VB − 0.7) / Re　　Ic ≈ IE</p>
+  <p>式子里没有 β，所以换管子、β 变了，Ic 基本不变。温度升高时 Ic 想变大，Re 上的压降跟着变大，发射极电位抬高，Ube 被压小，Ib 自动减小，把 Ic 拉回来。这是直流电流负反馈。固定偏置只有一个基极电阻 RB，Ib 被定死，Ic = β·Ib，β 变多少 Ic 就变多少。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 310" role="img" aria-label="分压式偏置共射电路：R1、R2 分压给基极，集电极电阻 Rc，发射极电阻 Re 并旁路电容 Ce；可切换为固定偏置">
+        <text x="190" y="18" text-anchor="middle" class="v">Vcc 12 V</text>
+        <path class="w" d="M100,30 H222 M100,30 V50 M100,90 V150 H200 M222,30 V60 M222,100 V126 M100,280 H280 M178,280 V292 M166,292 H190 M170,297 H186 M174,302 H182"/>
+        <rect class="r" x="91" y="50" width="18" height="40" rx="2"/>
+        <text id="s1-r1t" x="84" y="68" text-anchor="end" class="t">R1</text><text id="s1-r1v" x="84" y="85" text-anchor="end" class="v">33 kΩ</text>
+        <rect class="r" x="213" y="60" width="18" height="40" rx="2"/>
+        <text x="238" y="78" class="t">Rc</text><text x="238" y="95" class="v">2.2 kΩ</text>
+        <line class="bar" x1="200" y1="132" x2="200" y2="168"/>
+        <path class="w" d="M200,140 L222,126 M200,160 L222,174"/>
+        <polygon class="ah" points="219,172 210,171 214,164"/>
+        <text x="236" y="146" class="t">NPN</text>
+        <circle class="dot" cx="100" cy="150" r="3.5"/>
+        <text id="s1-vbt" x="150" y="142" text-anchor="middle" class="v hi">VB 2.6 V</text>
+        <g id="s1-gdiv">
+          <path class="w" d="M100,150 V190 M100,230 V280 M222,174 V200 M222,240 V280 M222,190 H280 V222 M280,234 V280"/>
+          <rect class="r" x="91" y="190" width="18" height="40" rx="2"/>
+          <text x="84" y="208" text-anchor="end" class="t">R2</text><text x="84" y="225" text-anchor="end" class="v">10 kΩ</text>
+          <rect class="r" x="213" y="200" width="18" height="40" rx="2"/>
+          <text x="238" y="252" class="t">Re 1 kΩ</text>
+          <line class="bar" x1="266" y1="222" x2="294" y2="222"/><line class="bar" x1="266" y1="234" x2="294" y2="234"/>
+          <text x="300" y="226" class="t">Ce</text><text x="300" y="243" class="tm">交流旁路</text>
+          <circle class="dot" cx="222" cy="190" r="3.5"/><circle class="dot" cx="222" cy="280" r="3.5"/><circle class="dot" cx="100" cy="280" r="3.5"/>
+          <text id="s1-vet" x="160" y="200" text-anchor="middle" class="v">VE 1.9 V</text>
+          <path id="s1-fdv" class="flow thin" d="M100,34 V276"/>
+        </g>
+        <g id="s1-gfix"><path class="w" d="M222,174 V280"/></g>
+        <path id="s1-fb" class="flow thin" d="M104,150 H196"/>
+        <path id="s1-fc" class="flow" d="M222,34 V126 L204,138 V162 L222,174 V276"/>
+        <text id="s1-ict" x="232" y="120" class="v">Ic</text>
+      </svg>
+      <figcaption>粗绿线是集电极电流，线宽随 Ic 变化；细线分别是分压电流和基极电流。Ce 对直流是开路，不影响 Q 点。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">偏置方式（左图）</span>
+        <div class="seg" id="s1-m"><button id="s1-m-div" data-v="div" aria-pressed="true">分压 + Re</button><button id="s1-m-fix" data-v="fix" aria-pressed="false">固定偏置 RB</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-b">β</label><span class="rv" id="s1-bv">100</span>
+        <input type="range" id="s1-b" min="50" max="300" step="10" value="100"></div>
+      <div class="ctl"><label class="ctl-l" for="s1-t">温度</label><span class="rv" id="s1-tv">25 °C</span>
+        <input type="range" id="s1-t" min="-20" max="100" step="5" value="25"></div>
+      <dl class="read">
+        <dt>Ube</dt><dd id="s1-vbe">—</dd>
+        <dt>分压偏置 Ic</dt><dd id="s1-icd">—</dd>
+        <dt>固定偏置 Ic</dt><dd id="s1-icf">—</dd>
+        <dt>左图 Uce</dt><dd id="s1-vce">—</dd>
+        <dt>左图状态</dt><dd><span id="s1-st" class="chip on">—</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+      <p class="note">示意：Ube 按 −2 mV/°C 变化，β 按每度 +0.5% 变化。固定偏置的 RB 取成与分压偏置在 β = 100、25 °C 时 Ic 相同。</p>
+    </div>
+  </div>
+</section>
+
+<section id="curve">
+  <span class="eyebrow">曲线 · 对 β 的敏感度</span>
+  <h2>Ic 随 β 变化的两条线</h2>
+  <p>精确一点，把 R1、R2 等效成戴维南电源 Vth、Rth，得到 Ic = β·(Vth − Ube) / (Rth + (1 + β)·Re)。只要 (1 + β)·Re 远大于 Rth，分母里的 β 和分子里的 β 就抵消了。工程上常取 R2 上的电流为 Ib 的 10 倍左右，VB 取 Vcc 的 1/5 ~ 1/3（经验值）。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 270" role="img" aria-label="集电极电流随 β 变化：固定偏置成正比上升直到饱和，分压偏置几乎水平">
+        <g id="s2-grid"></g>
+        <path class="ax" d="M50,20 V230 H480"/>
+        <text x="54" y="14" class="tm">Ic / mA</text>
+        <text x="480" y="264" text-anchor="end" class="tm">β</text>
+        <polyline id="s2-fix" class="real" points=""/>
+        <polyline id="s2-div" class="real3" points=""/>
+        <text id="s2-fixt" x="300" y="60" text-anchor="end" class="t" style="fill:var(--copper)">固定偏置</text>
+        <text id="s2-divt" x="476" y="150" text-anchor="end" class="t" style="fill:var(--flow)">分压偏置</text>
+        <line id="s2-sat" class="ax dash" x1="50" x2="480" y1="40" y2="40"/>
+        <text id="s2-satt" x="56" y="36" class="tm">饱和上限</text>
+      </svg>
+      <figcaption>条件同上一节：Vcc 12 V，R1 33 kΩ，R2 10 kΩ，Rc 2.2 kΩ，Re 1 kΩ。固定偏置管子没有 Re，饱和上限更高。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">温度</span>
+        <div class="seg" id="s2-t"><button id="s2-t-m20" data-v="-20" aria-pressed="false">−20 °C</button><button id="s2-t-25" data-v="25" aria-pressed="true">25 °C</button><button id="s2-t-85" data-v="85" aria-pressed="false">85 °C</button></div></div>
+      <dl class="read">
+        <dt>β 从 50 到 300</dt><dd></dd>
+        <dt>分压偏置 Ic</dt><dd id="s2-rd">—</dd>
+        <dt>固定偏置 Ic</dt><dd id="s2-rf">—</dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="ce">
+  <span class="eyebrow">旁路电容 Ce · 交流增益</span>
+  <h2>Re 稳住了 Q 点，也吃掉了增益：Ce 把增益还回来</h2>
+  <p>Re 对交流信号同样是负反馈，没有 Ce 时电压增益只有 Av ≈ −Rc / Re。Ce 对直流开路，不影响 Q 点；对交流短路，把发射极交流接地，增益恢复到 Av = −β·Rc / rbe。rbe ≈ rbb' + (1 + β)·26 mV / IE。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 270" role="img" aria-label="共射放大电路电压增益随频率变化：无 Ce 时增益低而平，有 Ce 时低频段增益下降、高于转折频率后增益恢复">
+        <g id="s3-grid"></g>
+        <path class="ax" d="M50,20 V230 H480"/>
+        <text x="54" y="14" class="tm">|Av| / dB</text>
+        <text x="480" y="264" text-anchor="end" class="tm">频率 / Hz</text>
+        <polyline id="s3-no" class="real2" points=""/>
+        <polyline id="s3-yes" class="real" points=""/>
+        <text x="476" y="190" text-anchor="end" class="t" style="fill:var(--low)">无 Ce：≈ −Rc / Re</text>
+        <text id="s3-yt" x="476" y="36" text-anchor="end" class="t" style="fill:var(--copper)">有 Ce</text>
+        <line id="s3-mk" class="ax dash" x1="200" x2="200" y1="20" y2="230"/>
+        <circle id="s3-pt" class="dot" cx="200" cy="40" r="5" style="fill:var(--flow)"/>
+      </svg>
+      <figcaption>只考虑 Ce 的影响，不计耦合电容和管子高频特性。β = 100，25 °C，rbb' 取 300 Ω（典型值），不接负载。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">旁路电容 Ce</span>
+        <div class="seg" id="s3-c"><button id="s3-c-10" data-v="10" aria-pressed="false">10 µF</button><button id="s3-c-100" data-v="100" aria-pressed="true">100 µF</button><button id="s3-c-470" data-v="470" aria-pressed="false">470 µF</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s3-f">信号频率</label><span class="rv" id="s3-fv">1 kHz</span>
+        <input type="range" id="s3-f" min="0" max="40" step="1" value="20"></div>
+      <dl class="read">
+        <dt>rbe</dt><dd id="s3-rbe">—</dd>
+        <dt>无 Ce 增益</dt><dd id="s3-a0">—</dd>
+        <dt>有 Ce 增益</dt><dd id="s3-a1">—</dd>
+        <dt>Ce 容抗</dt><dd id="s3-xc">—</dd>
+        <dt>转折频率约</dt><dd id="s3-fl">—</dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>分压式偏置为什么能稳定 Q 点？</summary>
+      <div class="ans"><p>两点。一是 R1、R2 分压电流远大于 Ib，VB 由分压决定，基本不随管子变。二是 Re 引入直流电流负反馈：温度升高 → Ic 增大 → VE = IE·Re 升高 → Ube = VB − VE 减小 → Ib 减小 → Ic 回落。于是 IE ≈ (VB − 0.7) / Re，和 β 几乎无关。</p></div></details>
+    <details><summary>Re 越大越稳定，为什么不无限加大？</summary>
+      <div class="ans"><p>Re 大了会吃掉电源电压：Uce = Vcc − Ic·(Rc + Re)，留给输出摆幅的空间变小。同时 Re 让交流增益降到约 Rc / Re。一般让 VE 取 1~2 V 或 Vcc 的 10%~20% 左右（经验值），交流增益交给 Ce 恢复。</p></div></details>
+    <details><summary>发射极旁路电容 Ce 起什么作用？</summary>
+      <div class="ans"><p>隔直通交。直流下 Ce 开路，Re 照常稳定 Q 点；交流下 Ce 把发射极短路到地，消除 Re 的交流负反馈，增益从约 −Rc / Re 恢复到 −β·Rc / rbe。代价是增益对 β 和温度更敏感、线性变差，所以也常把 Re 拆成两段，只旁路其中一段。</p></div></details>
+    <details><summary>分压电阻为什么不能取得太大？</summary>
+      <div class="ans"><p>因为要保证流过 R2 的电流远大于 Ib，一般取 5~10 倍以上（经验值），否则 VB 会被基极电流拉低，β 又重新出现在公式里。但也不能太小，太小会增加功耗，还会降低放大电路的输入电阻（输入电阻里并着 R1 // R2）。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="04-稳压电路齐纳LDO开关.html"><span>上一页</span>稳压电路齐纳LDO开关</a><a class="next" href="06-负反馈四种组态.html"><span>下一页</span>负反馈四种组态</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 电路参数与模型 */
+const VCC=12,R1=33e3,R2=10e3,RC=2.2e3,RE=1e3,VTH=VCC*R2/(R1+R2),RTH=R1*R2/(R1+R2);
+const vbeT=T=>0.7-0.002*(T-25),betaT=(b,T)=>b*(1+0.005*(T-25));
+function qDiv(b,T){const be=betaT(b,T),vbe=vbeT(T);let ib=(VTH-vbe)/(RTH+(be+1)*RE),ic=be*ib,ie=ic+ib,vce=VCC-ic*RC-ie*RE,sat=false;
+  if(vce<0.2){sat=true;ic=(VCC-0.2)/(RC+RE);vce=0.2;}return {ic,vce,sat,vb:VTH-ib*RTH,ve:(ic+ib)*RE,vbe};}
+const IC0=qDiv(100,25).ic,RB=(VCC-0.7)*100/IC0;
+function qFix(b,T){const be=betaT(b,T),vbe=vbeT(T);let ib=(VCC-vbe)/RB,ic=be*ib,vce=VCC-ic*RC,sat=false;
+  if(vce<0.2){sat=true;ic=(VCC-0.2)/RC;vce=0.2;}return {ic,vce,sat,vb:vbe,ve:0,vbe};}
+const pct=ic=>{const d=(ic/IC0-1)*100;return (d>=0?'+':'−')+Math.abs(d).toFixed(0)+'%';};
+
+/* 1. Q 点 */
+const s1={m:'div'};
+function s1u(){
+  const b=+$('s1-b').value,T=+$('s1-t').value,d=qDiv(b,T),f=qFix(b,T),cur=s1.m==='div'?d:f;
+  $('s1-bv').textContent=b;$('s1-b').setAttribute('aria-valuetext',String(b));
+  $('s1-tv').textContent=T+' °C';$('s1-t').setAttribute('aria-valuetext',T+' °C');
+  show($('s1-gdiv'),s1.m==='div');show($('s1-gfix'),s1.m==='fix');
+  $('s1-r1t').textContent=s1.m==='div'?'R1':'RB';$('s1-r1v').textContent=s1.m==='div'?'33 kΩ':fmtR(Math.round(RB/1e3)*1e3);
+  $('s1-vbt').textContent='VB '+fmtV(cur.vb,2);$('s1-vet').textContent='VE '+fmtV(d.ve,2);
+  $('s1-ict').textContent='Ic '+fmtA(cur.ic);
+  $('s1-fc').style.strokeWidth=(2+cur.ic*1e3*1.2).toFixed(1);
+  $('s1-vbe').textContent=fmtV(d.vbe,3);
+  $('s1-icd').textContent=fmtA(d.ic)+'，'+pct(d.ic)+(d.sat?'，饱和':'');
+  $('s1-icf').textContent=fmtA(f.ic)+'，'+pct(f.ic)+(f.sat?'，饱和':'');
+  $('s1-vce').textContent=fmtV(cur.vce,2);
+  chip($('s1-st'),cur.sat?'饱和':'放大区',cur.sat?'bad':'on');
+  $('s1-note').textContent=s1.m==='div'
+    ?'β = '+b+'、'+T+' °C 时分压偏置的 Ic 只偏离标称 '+pct(d.ic)+'。VB 被分压钉在约 '+fmtV(d.vb,2)+'，IE ≈ (VB − Ube) / Re，β 只通过很小的基极电流影响 VB。'
+    :'固定偏置下 Ib = (Vcc − Ube) / RB 基本定死，Ic = β·Ib，β 翻倍 Ic 就翻倍。'+(f.sat?'现在 Ic 已大到 Rc 上压降把 Uce 吃光，管子饱和，放大电路失效。':'当前偏离标称 '+pct(f.ic)+'。');
+}
+seg('s1-m',v=>{s1.m=v;s1u();});
+$('s1-b').addEventListener('input',s1u);$('s1-t').addEventListener('input',s1u);
+s1u();
+
+/* 2. Ic-β 曲线 */
+const s2X=scale(50,300,50,480),s2Y=scale(0,6,230,20),s2={T:25};
+(function(){const g=$('s2-grid');
+  [0,2,4,6].forEach(v=>{const y=s2Y(v);g.append(svgEl('line',{class:'gl',x1:50,x2:480,y1:y,y2:y}),svgEl('text',{x:44,y:y+4,'text-anchor':'end',class:'v'},v));});
+  [50,100,150,200,250,300].forEach(v=>g.append(svgEl('text',{x:s2X(v),y:246,'text-anchor':v===300?'end':'middle',class:'v'},v)));})();
+function s2u(){
+  const T=s2.T;
+  $('s2-fix').setAttribute('points',plot(b=>qFix(b,T).ic*1e3,50,300,s2X,s2Y,250));
+  $('s2-div').setAttribute('points',plot(b=>qDiv(b,T).ic*1e3,50,300,s2X,s2Y,250));
+  const ys=s2Y((VCC-0.2)/RC*1e3).toFixed(1);$('s2-sat').setAttribute('y1',ys);$('s2-sat').setAttribute('y2',ys);$('s2-satt').setAttribute('y',(+ys-5).toFixed(1));
+  $('s2-divt').setAttribute('y',(s2Y(qDiv(300,T).ic*1e3)+18).toFixed(1));
+  const d1=qDiv(50,T).ic,d2=qDiv(300,T).ic,f1=qFix(50,T).ic,f2=qFix(300,T).ic;
+  const bx=[50,100,150,200,250,300].find(b=>qFix(b,T).sat);
+  $('s2-fixt').setAttribute('x',(s2X(130)-10).toFixed(1));$('s2-fixt').setAttribute('y',(s2Y(qFix(130,T).ic*1e3)-6).toFixed(1));
+  $('s2-rd').textContent=fmtA(d1)+' → '+fmtA(d2)+'，×'+(d2/d1).toFixed(2);
+  $('s2-rf').textContent=fmtA(f1)+' → '+fmtA(f2)+'，×'+(f2/f1).toFixed(2);
+  $('s2-note').textContent='β 变了 6 倍，分压偏置的 Ic 只变了 '+((d2/d1-1)*100).toFixed(0)+'%；固定偏置跟着 β 成正比上升，'+(bx?'β 到 '+bx+' 左右就撞上饱和。':'在这个范围内还没饱和。')+(T!==25?' 温度改成 '+T+' °C 后，Ube 和 β 一起变，固定偏置的整条线被抬高或压低，分压偏置那条几乎不动。':'');
+}
+seg('s2-t',v=>{s2.T=+v;s2u();});
+s2u();
+
+/* 3. 旁路电容 */
+const s3X=v=>50+Math.log10(v/10)*430/4,s3Y=scale(0,50,230,20),s3={C:100e-6};
+const IE0=IC0*1.01,RBE=300+101*0.026/IE0;
+(function(){const g=$('s3-grid');
+  [0,10,20,30,40,50].forEach(v=>{const y=s3Y(v);g.append(svgEl('line',{class:'gl',x1:50,x2:480,y1:y,y2:y}),svgEl('text',{x:44,y:y+4,'text-anchor':'end',class:'v'},v));});
+  ['10','100','1k','10k','100k'].forEach((t,i)=>{const x=50+i*107.5;g.append(svgEl('line',{class:'gl',x1:x,x2:x,y1:20,y2:230}),svgEl('text',{x,y:246,'text-anchor':i===4?'end':'middle',class:'v'},t));});})();
+function av(f,C){const w=2*Math.PI*f;let zr=RE,zi=0;
+  if(C){const den=1+Math.pow(w*RE*C,2);zr=RE/den;zi=-w*RE*RE*C/den;}
+  const dr=RBE+101*zr,di=101*zi;return 100*RC/Math.hypot(dr,di);}
+const db=x=>20*Math.log10(x);
+function s3u(){
+  const f=Math.pow(10,1+(+$('s3-f').value)/10),C=s3.C,a0=av(f,0),a1=av(f,C);
+  $('s3-fv').textContent=fmtF(f);$('s3-f').setAttribute('aria-valuetext',fmtF(f));
+  $('s3-no').setAttribute('points',plot(lf=>db(av(Math.pow(10,lf),0)),1,5,lf=>s3X(Math.pow(10,lf)),s3Y,200));
+  $('s3-yes').setAttribute('points',plot(lf=>db(av(Math.pow(10,lf),C)),1,5,lf=>s3X(Math.pow(10,lf)),s3Y,200));
+  const x=s3X(f).toFixed(1);$('s3-mk').setAttribute('x1',x);$('s3-mk').setAttribute('x2',x);
+  $('s3-pt').setAttribute('cx',x);$('s3-pt').setAttribute('cy',s3Y(db(a1)).toFixed(1));
+  const req=RBE/101,fl=1/(2*Math.PI*C*req);
+  $('s3-rbe').textContent=fmtR(RBE);
+  $('s3-a0').textContent='−'+a0.toFixed(2)+'（'+db(a0).toFixed(1)+' dB）';
+  $('s3-a1').textContent='−'+a1.toFixed(1)+'（'+db(a1).toFixed(1)+' dB）';
+  $('s3-xc').textContent=fmtR(1/(2*Math.PI*f*C));
+  $('s3-fl').textContent=fmtF(fl);
+  $('s3-note').textContent=a1>0.7*av(1e6,C)
+    ?'这个频率下 Ce 的容抗 '+fmtR(1/(2*Math.PI*f*C))+' 远小于从发射极看进去的电阻 rbe / (1 + β) ≈ '+fmtR(req)+'，发射极交流接地，增益接近 β·Rc / rbe ≈ '+(100*RC/RBE).toFixed(0)+' 倍。'
+    :'频率太低，Ce 的容抗 '+fmtR(1/(2*Math.PI*f*C))+' 还不够小，没能把 Re 旁路掉，增益被压低。转折频率由 Ce 和 rbe / (1 + β) 决定，Ce 要选得很大才能让低频也有增益。';
+}
+seg('s3-c',v=>{s3.C=+v*1e-6;s3u();});
+$('s3-f').addEventListener('input',s3u);
+s3u();
+</script>
+</body>
+</html>

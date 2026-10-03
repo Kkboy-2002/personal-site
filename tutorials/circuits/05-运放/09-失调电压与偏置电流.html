@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>失调与偏置电流</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#opamp">运放</a><span class="sp"></span><span>09 / 12</span></nav>
+<header>
+  <span class="eyebrow">运放 · 直流误差</span>
+  <h1>失调电压与偏置电流</h1>
+  <p class="lede">输入接地，理想运放输出应该是 0，实际输出却有一个直流偏差。原因有两个：输入端等效有一个小电压源 Vos，输入引脚还要流过一点偏置电流 Ib。</p>
+</header>
+
+<section id="vos">
+  <span class="eyebrow">失调电压 · Vos</span>
+  <h2>Vos：串在输入端的小电压源</h2>
+  <p>运放输入差分对的两只管子不可能完全一样，要让输出为 0，两个输入端之间得先差一个小电压。把它画在运放外面，就是串在同相端的电压源 Vos。通用运放是 mV 级，精密运放是 µV 级（典型值）。</p>
+  <p>因为 Vos 在同相端，所以它按噪声增益放大。不管电路是同相还是反相接法，都是这个公式：</p>
+  <p class="eq">输出误差 = Vos · (1 + Rf/Rg)</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 370" role="img" aria-label="同相放大电路，Vos 等效为串在同相输入端的电压源；下方是输出波形，实际输出比理想输出整体偏移">
+        <polygon class="r" points="250,50 250,130 320,90"/>
+        <text x="256" y="75" class="t">−</text>
+        <text x="256" y="116" class="t">+</text>
+        <path class="w" d="M250,70 H210 M160,70 H140 V86 M128,86 H152 M133,91 H147 M138,96 H142 M230,70 V30 H275 M325,30 H360 V90 M320,90 H420 M40,110 H86 M114,110 H250"/>
+        <circle class="dot" cx="230" cy="70" r="3.5"/>
+        <circle class="dot" cx="360" cy="90" r="3.5"/>
+        <rect class="r" x="160" y="62" width="50" height="16" rx="2"/>
+        <text x="185" y="56" text-anchor="middle" class="v">Rg 1 kΩ</text>
+        <rect class="r" x="275" y="22" width="50" height="16" rx="2"/>
+        <text id="a-rf" x="300" y="14" text-anchor="middle" class="v">Rf 99 kΩ</text>
+        <circle class="r" cx="100" cy="110" r="14" style="stroke:var(--danger)"/>
+        <text x="90" y="114" class="tm">−</text>
+        <text x="103" y="115" class="tm">+</text>
+        <text id="a-vost" x="100" y="142" text-anchor="middle" class="t" style="fill:var(--danger)">Vos 2 mV</text>
+        <text x="36" y="115" text-anchor="end" class="t">Vin</text>
+        <text x="426" y="95" class="t">Vo</text>
+        <text id="a-vo" x="418" y="110" text-anchor="end" class="v hi">+0.20 V</text>
+        <g id="a-ax"></g>
+        <g id="a-rails"><line id="a-r1" class="ax dash" x1="56" x2="500" y1="0" y2="0"/><line id="a-r2" class="ax dash" x1="56" x2="500" y1="0" y2="0"/>
+          <text id="a-rt" x="496" y="0" text-anchor="end" class="tm">±13.5 V 饱和</text></g>
+        <polyline id="a-id" class="ideal" points=""/>
+        <polyline id="a-re" class="real" points=""/>
+        <text id="a-ret" x="0" y="0" text-anchor="middle" class="t hi">实际</text>
+        <text id="a-idt" x="0" y="0" text-anchor="middle" class="tm">理想</text>
+      </svg>
+      <figcaption>Vin 是峰值 10 mV 的正弦，电源 ±15 V，输出最多到 ±13.5 V（示意）。虚线是没有 Vos 时的理想输出，橙线是实际输出。纵轴随幅度自动缩放。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="a-g">增益 1 + Rf/Rg</label>
+        <span class="rv" id="a-gv">100 倍</span>
+        <input type="range" id="a-g" min="0" max="9" step="1" value="6"></div>
+      <div class="ctl"><label class="ctl-l" for="a-v">失调电压 Vos</label>
+        <span class="rv" id="a-vv">2.0 mV</span>
+        <input type="range" id="a-v" min="0" max="5" step="0.1" value="2"></div>
+      <dl class="read">
+        <dt>输出直流偏移 G·Vos</dt><dd id="a-off">0.20 V</dd>
+        <dt>有用信号峰值</dt><dd id="a-sig">1.00 V</dd>
+        <dt>偏移 / 信号</dt><dd id="a-rat">20 %</dd>
+        <dt>状态</dt><dd><span id="a-chip" class="chip warn">偏移明显</span></dd>
+      </dl>
+      <p class="note" id="a-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="ib">
+  <span class="eyebrow">偏置电流 · 平衡电阻</span>
+  <h2>Ib 流过电阻也会变成误差</h2>
+  <p>运放输入引脚要流过一点直流电流，叫偏置电流 Ib。双极型输入在 nA 级，JFET 和 CMOS 输入在 pA 级（常温典型值）。两个引脚的偏置电流不完全相等，差值叫失调电流 Ios = |Ib+ − Ib−|，通常比 Ib 小一个数量级。</p>
+  <p>Ib 流过外接电阻就产生压降。以反相放大器为例，把输入接地，输出误差是三项之和：</p>
+  <p class="eq">Vo = Vos·(1 + Rf/Rin) + Ib−·Rf − Ib+·Rp·(1 + Rf/Rin)</p>
+  <p>取 Rp = Rin ∥ Rf 时，后两项里 Ib 的主要部分正好抵消，只剩 Ios·Rf。因为两个输入端看出去的直流电阻相等了，同样的电流在两边产生同样的压降。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 384" role="img" aria-label="反相放大器，输入接地，同相端可串平衡电阻 Rp；下方条形图显示 Vos、Ib−、Ib+ 三项对输出误差的贡献">
+        <polygon class="r" points="250,60 250,140 320,100"/>
+        <text x="256" y="85" class="t">−</text>
+        <text x="256" y="126" class="t">+</text>
+        <path class="w" d="M200,80 H250 M150,80 H110 V96 M98,96 H122 M103,101 H117 M108,106 H112 M225,80 V40 H265 M315,40 H360 V100 M320,100 H420 M250,120 H225 M213,196 H237 M218,201 H232 M223,206 H227"/>
+        <circle class="dot" cx="225" cy="80" r="3.5"/>
+        <circle class="dot" cx="360" cy="100" r="3.5"/>
+        <rect class="r" x="150" y="72" width="50" height="16" rx="2"/>
+        <text id="b-rint" x="175" y="64" text-anchor="middle" class="v">Rin 100 kΩ</text>
+        <rect class="r" x="265" y="32" width="50" height="16" rx="2"/>
+        <text id="b-rft" x="290" y="24" text-anchor="middle" class="v">Rf 1 MΩ</text>
+        <text x="110" y="124" text-anchor="middle" class="tm">Vin = 0</text>
+        <text x="426" y="105" class="t">Vo</text>
+        <g id="b-g-rp" hidden>
+          <path class="w" d="M225,120 V140 M225,180 V196"/>
+          <rect class="r" x="216" y="140" width="18" height="40" rx="2"/>
+          <text id="b-rpt" x="208" y="172" text-anchor="end" class="v">Rp 90.9 kΩ</text>
+        </g>
+        <path id="b-g-nrp" class="w" d="M225,120 V196"/>
+        <polygon class="ah" points="247,80 238,75.5 238,84.5"/>
+        <polygon class="ah" points="247,120 238,115.5 238,124.5"/>
+        <text x="238" y="98" text-anchor="middle" class="tm">Ib−</text>
+        <text x="218" y="136" text-anchor="end" class="tm">Ib+</text>
+        <path id="b-f1" class="flow thin" d="M225,194 V120 H236"/>
+        <path id="b-f2" class="flow thin" d="M358,100 V40 H227 V80 H236"/>
+        <path id="b-f3" class="flow thin" d="M110,94 V80 H222" hidden/>
+        <line class="gl" x1="8" y1="326" x2="512" y2="326"/>
+        <path class="ax" d="M290,236 V362"/>
+        <text x="8" y="255" class="t">Vos 项</text>
+        <text x="8" y="283" class="t">Ib− 项</text>
+        <text x="8" y="311" class="t">Ib+ 项</text>
+        <text x="8" y="349" class="t">合计</text>
+        <path id="b-b0" class="real" style="stroke-width:12;stroke-linecap:butt" d="M290,250 H290"/>
+        <path id="b-b1" class="real2" style="stroke-width:12;stroke-linecap:butt" d="M290,278 H290"/>
+        <path id="b-b2" class="real3" style="stroke-width:12;stroke-linecap:butt" d="M290,306 H290"/>
+        <path id="b-b3" class="cv" style="stroke-width:12;stroke-linecap:butt" d="M290,344 H290"/>
+        <text id="b-t0" x="512" y="255" text-anchor="end" class="v"></text>
+        <text id="b-t1" x="512" y="283" text-anchor="end" class="v"></text>
+        <text id="b-t2" x="512" y="311" text-anchor="end" class="v"></text>
+        <text id="b-t3" x="512" y="349" text-anchor="end" class="v"></text>
+        <text x="290" y="378" text-anchor="middle" class="tm">0</text>
+        <text id="b-fs" x="410" y="378" text-anchor="middle" class="tm"></text>
+        <text id="b-fsn" x="170" y="378" text-anchor="middle" class="tm"></text>
+      </svg>
+      <figcaption>按 NPN 输入级画，偏置电流流进引脚，PNP 输入级方向相反。Ib+ 取 0.95·Ib，Ib− 取 1.05·Ib，即 Ios = 10% Ib，示意。条形图横轴随数值自动缩放。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">同相端</span>
+        <div class="seg" id="b-rp"><button id="b-rp-0" data-v="0" aria-pressed="true">直接接地</button><button id="b-rp-1" data-v="1" aria-pressed="false">串 Rp = Rin ∥ Rf</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="b-g">增益 Rf / Rin</label>
+        <span class="rv" id="b-gv">10</span>
+        <input type="range" id="b-g" min="0" max="6" step="1" value="3"></div>
+      <div class="ctl"><label class="ctl-l" for="b-r">Rin（含信号源内阻）</label>
+        <span class="rv" id="b-rv">100 kΩ</span>
+        <input type="range" id="b-r" min="0" max="3" step="1" value="2"></div>
+      <div class="ctl"><label class="ctl-l" for="b-v">失调电压 Vos</label>
+        <span class="rv" id="b-vv">1.0 mV</span>
+        <input type="range" id="b-v" min="0" max="5" step="0.1" value="1"></div>
+      <div class="ctl"><label class="ctl-l" for="b-i">偏置电流 Ib</label>
+        <span class="rv" id="b-iv">100 nA</span>
+        <input type="range" id="b-i" min="0" max="6" step="1" value="5"></div>
+      <dl class="read">
+        <dt>失调电流 Ios</dt><dd id="b-ios">10 nA</dd>
+        <dt>输出总误差</dt><dd id="b-tot">0.12 V</dd>
+        <dt>主要来源</dt><dd><span id="b-chip" class="chip warn">Ib</span></dd>
+      </dl>
+      <p class="note" id="b-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="drift">
+  <span class="eyebrow">温漂 · 调零</span>
+  <h2>调零只能调一个温度点</h2>
+  <p>Vos 会随温度变化，叫失调温漂，单位 µV/°C。外接电位器调零或者软件校准，只能把校准那个温度下的误差消掉。温度一变，温漂又把误差带回来。</p>
+  <p>所以高精度场合不能只靠调零，要选低温漂的精密运放或零漂移（斩波）运放。另外 JFET 和 CMOS 输入的 Ib 大约每升高 10 °C 翻一倍，高温下也要重新核算。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 260" role="img" aria-label="增益 100 时，输出误差随温度变化的直线，可选择是否在 25 摄氏度调零">
+        <rect id="c-lsb" class="zone-ok" x="56" y="0" width="444" height="0"/>
+        <g id="c-ax"></g>
+        <line id="c-cal" class="ax dash" x1="0" x2="0" y1="30" y2="210"/>
+        <polyline id="c-ln" class="real" points=""/>
+        <circle id="c-pt" cx="0" cy="0" r="4.5" style="fill:var(--copper)"/>
+        <text id="c-ptt" x="0" y="0" class="v hi"></text>
+        <text id="c-lsbt" x="62" y="0" class="tm">±1 LSB 带</text>
+      </svg>
+      <figcaption>增益固定 100。绿色带是 12 位、3.3 V 满量程 ADC 的 ±1 LSB（约 ±0.81 mV）。Vos 和温漂取典型值示意，实际以数据手册为准。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">运放类型</span>
+        <div class="seg" id="c-t"><button id="c-t-0" data-v="0" aria-pressed="true">通用</button><button id="c-t-1" data-v="1" aria-pressed="false">精密</button><button id="c-t-2" data-v="2" aria-pressed="false">零漂移</button></div></div>
+      <div class="ctl"><span class="ctl-l">25 °C 调零</span>
+        <div class="seg" id="c-z"><button id="c-z-0" data-v="0" aria-pressed="false">不调</button><button id="c-z-1" data-v="1" aria-pressed="true">调零</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="c-tt">工作温度</label>
+        <span class="rv" id="c-tv">85 °C</span>
+        <input type="range" id="c-tt" min="-40" max="85" step="5" value="85"></div>
+      <dl class="read">
+        <dt>Vos（25 °C）</dt><dd id="c-vos">2 mV</dd>
+        <dt>温漂</dt><dd id="c-tc">7 µV/°C</dd>
+        <dt>该温度输出误差</dt><dd id="c-err">42 mV</dd>
+        <dt>折合 ADC</dt><dd id="c-lsbn">52 LSB</dd>
+        <dt>结论</dt><dd><span id="c-chip" class="chip bad">不够精确</span></dd>
+      </dl>
+      <p class="note" id="c-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>什么是输入失调电压，它对输出有什么影响？</summary>
+      <div class="ans"><p>输入差分对不完全对称，要让输出为 0，输入端之间得先加一个小电压，这就是 Vos。可以把它看成串在同相端的电压源，按噪声增益 1 + Rf/Rg 放大到输出。增益 1000 倍时，1 mV 的 Vos 就会产生 1 V 的输出偏移。</p></div></details>
+    <details><summary>平衡电阻为什么取 Rin ∥ Rf？</summary>
+      <div class="ans"><p>输入接地时，反相端看出去的直流电阻是 Rin 和 Rf 并联。同相端也串一个同样大小的电阻，两个偏置电流在两边产生差不多的压降，互相抵消，误差从 Ib·Rf 降到 Ios·Rf，一般能小一个数量级。</p></div></details>
+    <details><summary>什么情况下不用加平衡电阻？</summary>
+      <div class="ans"><p>JFET、CMOS 输入的运放，Ib 只有 pA 级，产生的误差远小于 Vos，加电阻反而多了热噪声。内部带偏置电流补偿的双极型运放，Ib+ 和 Ib− 不再相关，平衡电阻作用也不大，要看数据手册。</p></div></details>
+    <details><summary>调零以后是不是就没有失调误差了？</summary>
+      <div class="ans"><p>不是。调零只能消掉校准温度下的 Vos，温度变化后有温漂，时间长了还有老化漂移。高精度应用要选低温漂或零漂移运放，或者定期做软件校准。</p></div></details>
+    <details><summary>怎么测一个运放的 Vos？</summary>
+      <div class="ans"><p>把它接成高增益同相放大器，例如 1 + Rf/Rg = 1000，输入接地，用万用表测输出直流电压，再除以 1000。电阻不要太大，否则偏置电流的误差会混进来。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="08-压摆率SR.html"><span>上一页</span>压摆率 SR</a><a class="next" href="10-CMRR与PSRR.html"><span>下一页</span>CMRR 与 PSRR</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+function axGrid(gid,o){
+  const g=$(gid);g.textContent='';
+  o.yt.forEach(([py,l])=>g.append(svgEl('line',{class:'gl',x1:o.x0,y1:py,x2:o.x1,y2:py}),svgEl('text',{x:o.x0-6,y:py+4,'text-anchor':'end',class:'v'},l)));
+  o.xt.forEach(([px,l],i)=>g.append(svgEl('line',{class:'gl',x1:px,y1:o.y0,x2:px,y2:o.y1}),svgEl('text',{x:px,y:o.y1+16,'text-anchor':i===o.xt.length-1&&px>=o.x1-2?'end':'middle',class:'v'},l)));
+  g.append(svgEl('path',{class:'ax',d:`M${o.x0},${o.y0} V${o.y1} H${o.x1}`}));
+  if(o.yn)g.append(svgEl('text',{x:o.x0+4,y:o.y0-6,class:'tm'},o.yn));
+  if(o.xn)g.append(svgEl('text',{x:o.x1,y:o.y1+32,'text-anchor':'end',class:'tm'},o.xn));
+}
+/* 带单位的电压，保留有效位 */
+const fmtVx=v=>{const s=v<0?'−':(v>0?'+':'');v=Math.abs(v);
+  if(v>=1)return s+v.toFixed(2)+' V';if(v>=1e-3)return s+(v*1e3).toFixed(v>=0.1?0:(v>=0.01?1:2))+' mV';if(v>=1e-6)return s+(v*1e6).toFixed(1)+' µV';return v===0?'0':s+(v*1e9).toFixed(1)+' nV';};
+const niceFS=m=>[2e-5,5e-5,1e-4,2e-4,5e-4,1e-3,2e-3,5e-3,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,15,20,50].find(x=>x>=m)||100;
+
+/* a. Vos */
+const aG=[1,2,5,10,20,50,100,200,500,1000];
+const aX=scale(0,2,56,500);
+/* 纵轴刻度只写数字，单位放进轴名，避免 "−2.00 V" 这种长标签超出左边 */
+const yTk=FS=>{const [d,u]=FS>=1?[1,'V']:[1e-3,'mV'];
+  return {u,f:v=>{const x=v/d,a=Math.abs(x);return String(a>=10?+x.toFixed(0):a>=1?+x.toFixed(1):+x.toFixed(2)).replace('-','−');}};};
+function aU(){
+  const G=aG[+$('a-g').value],vos=+$('a-v').value*1e-3,A=0.01,sat=13.5;
+  const FS=Math.min(15,niceFS(1.1*Math.max(G*(A+vos),G*A))),Y=scale(-FS,FS,330,180),TK=yTk(FS);
+  axGrid('a-ax',{x0:56,x1:500,y0:180,y1:330,xt:[0,.5,1,1.5,2].map(k=>[aX(k),k?k+' 周期':'0']),
+    yt:[-1,-.5,0,.5,1].map(k=>[Y(k*FS),k?TK.f(k*FS):'0']),yn:'输出电压 / '+TK.u});
+  const idf=x=>G*A*Math.sin(2*Math.PI*x),ref=x=>Math.max(-sat,Math.min(sat,G*(A*Math.sin(2*Math.PI*x)+vos)));
+  $('a-id').setAttribute('points',plot(idf,0,2,aX,Y,240));
+  $('a-re').setAttribute('points',plot(ref,0,2,aX,Y,240));
+  const rails=FS>sat;show($('a-rails'),rails);
+  if(rails){$('a-r1').setAttribute('y1',Y(sat));$('a-r1').setAttribute('y2',Y(sat));$('a-r2').setAttribute('y1',Y(-sat));$('a-r2').setAttribute('y2',Y(-sat));$('a-rt').setAttribute('y',(Y(-sat)-4).toFixed(1));}
+  $('a-ret').setAttribute('x',aX(0.25).toFixed(1));$('a-ret').setAttribute('y',(Y(ref(0.25))-8).toFixed(1));
+  $('a-idt').setAttribute('x',aX(0.75).toFixed(1));$('a-idt').setAttribute('y',Math.min(326,Y(idf(0.75))+16).toFixed(1));
+  const off=G*vos,sig=G*A,satd=G*(A+vos)>sat;
+  $('a-gv').textContent=G+' 倍';$('a-g').setAttribute('aria-valuetext',G+' 倍');
+  $('a-vv').textContent=(vos*1e3).toFixed(1)+' mV';$('a-v').setAttribute('aria-valuetext',(vos*1e3).toFixed(1)+' mV');
+  $('a-rf').textContent='Rf '+fmtR((G-1)*1e3);
+  $('a-vost').textContent='Vos '+(vos*1e3).toFixed(1)+' mV';
+  $('a-vo').textContent='直流 '+fmtVx(Math.min(off,sat));
+  $('a-off').textContent=fmtVx(off).replace('+','');$('a-sig').textContent=fmtVx(sig).replace('+','');
+  $('a-rat').textContent=(off/sig*100).toFixed(0)+' %';
+  let note;
+  if(satd){chip($('a-chip'),'顶部饱和','bad');note='偏移 '+fmtVx(off)+' 加上信号峰值 '+fmtVx(sig)+' 超过了 13.5 V，正半周被削平。高增益直流放大时，Vos 能直接把运放推进饱和。';}
+  else if(off/sig>0.1){chip($('a-chip'),'偏移明显','warn');note='Vos 和信号一起被放大 '+G+' 倍，整条波形被抬高 '+fmtVx(off).replace('+','')+'。交流放大可以用隔直电容去掉，直流测量就是实打实的误差。';}
+  else{chip($('a-chip'),'可接受','on');note=vos===0?'Vos 为 0，实际输出和理想输出重合。':'偏移只占信号的 '+(off/sig*100).toFixed(0)+'%。注意 Vos 和信号的比例与增益无关，增益只决定会不会饱和。';}
+  $('a-note').textContent=note;
+}
+$('a-g').addEventListener('input',aU);$('a-v').addEventListener('input',aU);
+aU();
+
+/* b. Ib 与平衡电阻 */
+const bG=[1,2,5,10,20,50,100],bR=[1e3,1e4,1e5,1e6],bI=[1e-12,1e-11,1e-10,1e-9,1e-8,1e-7,1e-6];
+const b={rp:false};
+function bU(){
+  const g=bG[+$('b-g').value],Rin=bR[+$('b-r').value],Rf=g*Rin,vos=+$('b-v').value*1e-3,Ib=bI[+$('b-i').value];
+  const ibm=1.05*Ib,ibp=0.95*Ib,Rp=b.rp?Rin*Rf/(Rin+Rf):0;
+  const t=[vos*(1+g),ibm*Rf,-ibp*Rp*(1+g)],tot=t[0]+t[1]+t[2];t.push(tot);
+  const FS=niceFS(1.05*Math.max(...t.map(Math.abs),1e-6)),k=120/FS;
+  t.forEach((v,i)=>{$('b-b'+i).setAttribute('d','M290,'+[250,278,306,344][i]+' H'+(290+v*k).toFixed(1));$('b-t'+i).textContent=fmtVx(v);});
+  $('b-fs').textContent=fmtVx(FS).replace('+','');$('b-fsn').textContent=fmtVx(-FS);
+  show($('b-g-rp'),b.rp);show($('b-g-nrp'),!b.rp);show($('b-f3'),b.rp);
+  $('b-rint').textContent='Rin '+fmtR(Rin);$('b-rft').textContent='Rf '+fmtR(Rf);$('b-rpt').textContent='Rp '+fmtR(Rp);
+  $('b-gv').textContent=String(g);$('b-g').setAttribute('aria-valuetext',String(g));
+  $('b-rv').textContent=fmtR(Rin);$('b-r').setAttribute('aria-valuetext',fmtR(Rin));
+  $('b-vv').textContent=(vos*1e3).toFixed(1)+' mV';$('b-v').setAttribute('aria-valuetext',(vos*1e3).toFixed(1)+' mV');
+  $('b-iv').textContent=fmtA(Ib).replace('.0 nA',' nA');$('b-i').setAttribute('aria-valuetext',fmtA(Ib));
+  $('b-ios').textContent=fmtA(ibm-ibp);
+  $('b-tot').textContent=fmtVx(tot)+(Math.abs(tot)>13.5?'，已饱和':'');
+  const ibPart=Math.abs(t[1]+t[2]),vosPart=Math.abs(t[0]);
+  if(Math.abs(tot)>13.5)chip($('b-chip'),'输出饱和','bad');
+  else chip($('b-chip'),ibPart>vosPart?'偏置电流':'失调电压',ibPart>vosPart?'warn':'on');
+  $('b-note').textContent=!b.rp
+    ?(ibPart>vosPart?'同相端直接接地，Ib− 全部从 Rf 流过，误差 Ib−·Rf = '+fmtVx(t[1])+'，比 Vos 项还大。试试串上 Rp。':'Ib 太小或电阻不大，Ib·Rf 远小于 Vos 项，这时加不加平衡电阻差别不大。把 Rin 或 Ib 调大看看。')
+    :'Rp = '+fmtR(Rp)+'，Ib+ 在 Rp 上的压降被放大后，正好抵消 Ib− 在 Rf 上的压降。两项相加只剩 Ios·Rf ≈ '+fmtVx(t[1]+t[2]).replace('+','')+'。'+(ibPart<vosPart?'剩下的误差主要来自 Vos，平衡电阻管不了它。':'');
+}
+seg('b-rp',v=>{b.rp=v==='1';bU();});
+['b-g','b-r','b-v','b-i'].forEach(id=>$(id).addEventListener('input',bU));
+bU();
+
+/* c. 温漂与调零 */
+const cT=[{vos:2e-3,tc:7e-6},{vos:60e-6,tc:0.5e-6},{vos:5e-6,tc:0.02e-6}];
+const c={t:0,z:true},cX=scale(-40,85,56,500),LSB=3.3/4096;
+function cU(){
+  const p=cT[c.t],G=100,T=+$('c-tt').value;
+  const err=x=>G*((c.z?0:p.vos)+p.tc*(x-25));
+  const m=Math.max(Math.abs(err(-40)),Math.abs(err(85))),FS=niceFS(1.1*Math.max(m,LSB*0.6)),Y=scale(-FS,FS,210,30),TK=yTk(FS);
+  axGrid('c-ax',{x0:56,x1:500,y0:30,y1:210,xt:[-40,-20,0,25,50,85].map(v=>[cX(v),String(v).replace('-','−')]),
+    yt:[-1,-.5,0,.5,1].map(k=>[Y(k*FS),k?TK.f(k*FS):'0']),yn:'输出误差 / '+TK.u,xn:'温度 °C'});
+  const top=Math.max(30,Y(LSB)),bot=Math.min(210,Y(-LSB));
+  $('c-lsb').setAttribute('y',top.toFixed(1));$('c-lsb').setAttribute('height',Math.max(0,bot-top).toFixed(1));
+  $('c-lsbt').setAttribute('y',(top+13).toFixed(1));show($('c-lsbt'),bot-top>16);
+  $('c-cal').setAttribute('x1',cX(25));$('c-cal').setAttribute('x2',cX(25));show($('c-cal'),c.z);
+  $('c-ln').setAttribute('points',plot(err,-40,85,cX,Y,2));
+  const e=err(T),px=cX(T),py=Y(e);
+  $('c-pt').setAttribute('cx',px.toFixed(1));$('c-pt').setAttribute('cy',py.toFixed(1));
+  const tt=$('c-ptt');tt.textContent=fmtVx(e);tt.setAttribute('text-anchor',px>400?'end':'start');
+  tt.setAttribute('x',(px+(px>400?-8:8)).toFixed(1));tt.setAttribute('y',(py>60?py-10:py+20).toFixed(1));
+  $('c-tv').textContent=T+' °C';$('c-tt').setAttribute('aria-valuetext',T+' °C');
+  $('c-vos').textContent=fmtVx(p.vos).replace('+','')+(c.z?'，已调掉':'');
+  $('c-tc').textContent=(+(p.tc*1e6).toFixed(2))+' µV/°C';
+  $('c-err').textContent=fmtVx(e);
+  const n=Math.abs(e)/LSB;$('c-lsbn').textContent=(n<0.1?'< 0.1':n.toFixed(n<10?1:0))+' LSB';
+  chip($('c-chip'),n<=1?'够精确':(n<=4?'勉强':'不够精确'),n<=1?'on':(n<=4?'warn':'bad'));
+  const dT=T-25;
+  $('c-note').textContent=(c.z?'25 °C 下误差被调到 0，但温度偏离 '+Math.abs(dT)+' °C 后，温漂贡献 '+(+(p.tc*1e6).toFixed(2))+' µV/°C × '+Math.abs(dT)+' °C × 100 = '+fmtVx(Math.abs(G*p.tc*dT)).replace('+','')+'。'
+    :'没有调零，25 °C 时就有 '+fmtVx(G*p.vos).replace('+','')+' 的误差，温度变化再叠加温漂。')
+    +(c.t===0?' 通用运放调零后也挡不住温漂，宽温场合要换精密或零漂移运放。':c.t===2?' 零漂移运放内部不断自校准，Vos 和温漂都极小，基本不用调零。':' 精密运放温漂小一个数量级以上，配合调零能满足大多数场合。');
+}
+seg('c-t',v=>{c.t=+v;cU();});seg('c-z',v=>{c.z=v==='1';cU();});
+$('c-tt').addEventListener('input',cU);
+cU();
+</script>
+</body>
+</html>

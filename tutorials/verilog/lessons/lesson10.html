@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 10 课 综合项目:UART 收发器</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="10" data-root="../">
+
+<aside class="side">
+  <a class="brand" href="../index.html">Verilog 十二课<span>FPGA RTL 实训</span></a>
+  <ol></ol>
+  <div class="foot">
+    <button class="themer" type="button">主题</button>
+    <p>iverilog + GTKWave<br>Vivado / Quartus 可选</p>
+  </div>
+</aside>
+
+<main>
+<div class="ruler"></div>
+
+<p class="eyebrow">Lesson 10 <em>／ 综合项目 ／ 最后一课</em></p>
+<h1>综合项目:UART 收发器</h1>
+<p class="lede">前面九课的东西在这一课里全部上场:计数器分频、状态机、移位寄存器、异步输入同步、边沿检测、参数化。UART 是最值得亲手写一遍的协议 —— 简单到能完全想清楚,又真实到能插上电脑就用。</p>
+
+<dl class="goals">
+  <dt>学完这一课你能</dt>
+  <dd>说清一帧 UART 数据的每一位是什么,以及为什么低位先发</dd>
+  <dd>把波特率换算成分频比,并判断误差能不能接受</dd>
+  <dd>写出发送器和接收器,解释接收端为什么要在每一位的中点采样</dd>
+  <dd>用回环 Testbench 自己验证自己,包括故意注入一帧坏数据</dd>
+</dl>
+
+<nav class="toc"><h2>本课路线</h2><ol></ol></nav>
+
+<h2 id="s1">一帧长什么样</h2>
+<p>UART 没有时钟线,两边只靠“事先约好的波特率”对齐。所以一帧的格式必须严格固定:<strong>空闲时线是高电平</strong>,一个下降沿宣布数据开始。</p>
+
+<figure class="dia">
+<svg viewBox="0 0 660 180" role="img" aria-label="一帧 UART 数据的波形:空闲高电平之后是一位低电平起始位,接着八个数据位低位先发,最后一位高电平停止位;接收端在每一位的中点采样">
+  <defs>
+    <marker id="ar-10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon class="d-mk-hl" points="0,1 10,5 0,9"/>
+    </marker>
+  </defs>
+
+  <line class="w-grid" x1="110" y1="40" x2="110" y2="112"/>
+  <line class="w-grid" x1="162" y1="40" x2="162" y2="112"/>
+  <line class="w-grid" x1="214" y1="40" x2="214" y2="112"/>
+  <line class="w-grid" x1="266" y1="40" x2="266" y2="112"/>
+  <line class="w-grid" x1="318" y1="40" x2="318" y2="112"/>
+  <line class="w-grid" x1="370" y1="40" x2="370" y2="112"/>
+  <line class="w-grid" x1="422" y1="40" x2="422" y2="112"/>
+  <line class="w-grid" x1="474" y1="40" x2="474" y2="112"/>
+  <line class="w-grid" x1="526" y1="40" x2="526" y2="112"/>
+  <line class="w-grid" x1="578" y1="40" x2="578" y2="112"/>
+  <line class="w-grid" x1="630" y1="40" x2="630" y2="112"/>
+
+  <text class="w-marktxt" x="370" y="20" text-anchor="middle">接收端在每一位的中点采样</text>
+  <line class="d-arw-hl" x1="136" y1="28" x2="136" y2="44" marker-end="url(#ar-10)"/>
+  <line class="d-arw-hl" x1="188" y1="28" x2="188" y2="44" marker-end="url(#ar-10)"/>
+  <line class="d-arw-hl" x1="240" y1="28" x2="240" y2="44" marker-end="url(#ar-10)"/>
+  <line class="d-arw-hl" x1="292" y1="28" x2="292" y2="44" marker-end="url(#ar-10)"/>
+  <line class="d-arw-hl" x1="344" y1="28" x2="344" y2="44" marker-end="url(#ar-10)"/>
+  <line class="d-arw-hl" x1="396" y1="28" x2="396" y2="44" marker-end="url(#ar-10)"/>
+  <line class="d-arw-hl" x1="448" y1="28" x2="448" y2="44" marker-end="url(#ar-10)"/>
+  <line class="d-arw-hl" x1="500" y1="28" x2="500" y2="44" marker-end="url(#ar-10)"/>
+  <line class="d-arw-hl" x1="552" y1="28" x2="552" y2="44" marker-end="url(#ar-10)"/>
+  <line class="d-arw-hl" x1="604" y1="28" x2="604" y2="44" marker-end="url(#ar-10)"/>
+
+  <polyline class="w-sig" points="40,50 110,50 110,78 162,78 162,50 214,50 214,78 266,78 266,50 318,50 318,78 370,78 370,50 422,50 422,78 474,78 474,50 526,50 526,78 578,78 578,50 650,50"/>
+  <text class="w-note" x="75" y="44" text-anchor="middle">空闲</text>
+
+  <text class="d-sub" x="136" y="126" text-anchor="middle">起始</text>
+  <text class="d-sub" x="188" y="126" text-anchor="middle">D0</text>
+  <text class="d-sub" x="240" y="126" text-anchor="middle">D1</text>
+  <text class="d-sub" x="292" y="126" text-anchor="middle">D2</text>
+  <text class="d-sub" x="344" y="126" text-anchor="middle">D3</text>
+  <text class="d-sub" x="396" y="126" text-anchor="middle">D4</text>
+  <text class="d-sub" x="448" y="126" text-anchor="middle">D5</text>
+  <text class="d-sub" x="500" y="126" text-anchor="middle">D6</text>
+  <text class="d-sub" x="552" y="126" text-anchor="middle">D7</text>
+  <text class="d-sub" x="604" y="126" text-anchor="middle">停止</text>
+
+  <line class="w-mark" x1="110" y1="138" x2="162" y2="138"/>
+  <line class="w-mark" x1="110" y1="134" x2="110" y2="142"/>
+  <line class="w-mark" x1="162" y1="134" x2="162" y2="142"/>
+  <text class="w-marktxt" x="170" y="142" text-anchor="start">一位宽 = DIV 个时钟 = 1 / 波特率</text>
+
+  <text class="w-note" x="40" y="168" text-anchor="start">此帧字节 = 0x55 —— 数据位低位先发,所以线上依次是 1 0 1 0 1 0 1 0</text>
+</svg>
+<figcaption><b>十位,固定顺序。</b>一个低电平起始位、八个数据位(<strong>D0 也就是最低位先发</strong>)、一个高电平停止位。停止位存在的意义是保证下一帧的起始位一定有一个真正的下降沿可用。图中那十个箭头是接收端的采样时刻 —— 全部落在每一位的正中间,这是本课后半部分的重点。</figcaption>
+</figure>
+
+<h2 id="s2">波特率就是一个分频比</h2>
+<p>波特率 9600 的意思是每秒 9600 位,也就是每位 1/9600 秒。在 50MHz 时钟下,一位需要数多少个时钟?<code>DIV = 时钟频率 / 波特率</code>,就这么简单。</p>
+<div class="tw">
+<table>
+  <caption>50MHz 时钟下的分频比</caption>
+  <thead><tr><th class="num">波特率</th><th class="num">DIV(取整)</th><th class="num">每位时长</th><th class="num">取整误差</th></tr></thead>
+  <tbody>
+    <tr><td class="num">9600</td><td class="num">5208</td><td class="num">104.2 µs</td><td class="num">0.006%</td></tr>
+    <tr><td class="num">19200</td><td class="num">2604</td><td class="num">52.1 µs</td><td class="num">0.006%</td></tr>
+    <tr><td class="num">115200</td><td class="num">434</td><td class="num">8.68 µs</td><td class="num">0.008%</td></tr>
+    <tr><td class="num">921600</td><td class="num">54</td><td class="num">1.085 µs</td><td class="num">0.46%</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="box tip">
+  <b>误差能容忍多少</b>
+  <p>接收端在起始位的中点对齐,之后每隔一位采样一次。到最后的停止位时,已经过去了 <strong>9.5 个位宽</strong>。要让采样点还留在那一位里面,累计偏移必须小于半个位宽:</p>
+  <pre>9.5 × 每位误差 &lt; 0.5   →   每位误差 &lt; 5.3%</pre>
+  <p>这是理论上限。实际上对方的时钟也有误差,双方各分一半,再留点余量 —— <strong>工程上按 ±2% 以内</strong>来要求。表里最差的 0.46% 完全没问题。</p>
+</div>
+
+<h2 id="s3">发送器</h2>
+<p>发送端不需要采样,只要按节拍把十位依次推到线上。用一个 <code>bit_idx</code> 记录“现在发第几位”,一个分频计数器决定“什么时候该换下一位”。</p>
+<figure class="file">
+  <figcaption><span class="path">code/lesson10/uart_tx.v</span><span class="note">可综合 · 两状态 FSM + 移位寄存器</span></figcaption>
+  <div class="body"><pre><code>    localparam IDLE = 1'b0,
+               XMIT = 1'b1;
+
+    reg       state;
+    reg [3:0] bit_idx;                   // 0=起始位, 1..8=数据位, 9=停止位
+    reg [7:0] shifter;
+    reg [$clog2(DIV)-1:0] div_cnt;
+
+    wire bit_done = (div_cnt == DIV - 1); // 当前这一位的时间到了
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state   &lt;= IDLE;
+            tx      &lt;= 1'b1;             // 空闲线是高电平
+            busy    &lt;= 1'b0;
+            bit_idx &lt;= 4'd0;
+            shifter &lt;= 8'd0;
+            div_cnt &lt;= 0;
+        end else begin
+            case (state)
+
+            IDLE: begin
+                tx   &lt;= 1'b1;
+                busy &lt;= 1'b0;
+                if (start) begin
+                    shifter &lt;= data;
+                    state   &lt;= XMIT;
+                    busy    &lt;= 1'b1;
+                    bit_idx &lt;= 4'd0;
+                    div_cnt &lt;= 0;
+                    tx      &lt;= 1'b0;     // 起始位:立刻拉低
+                end
+            end
+
+            XMIT: begin
+                if (bit_done) begin
+                    div_cnt &lt;= 0;
+                    if (bit_idx == 4'd9) begin       // 停止位也发完了
+                        state &lt;= IDLE;
+                        busy  &lt;= 1'b0;
+                        tx    &lt;= 1'b1;
+                    end else begin
+                        bit_idx &lt;= bit_idx + 1'b1;
+                        if (bit_idx &lt;= 4'd7) begin
+                            tx      &lt;= shifter[0];               // LSB 先发
+                            shifter &lt;= {1'b0, shifter[7:1]};
+                        end else begin
+                            tx &lt;= 1'b1;                          // 停止位
+                        end
+                    end
+                end else begin
+                    div_cnt &lt;= div_cnt + 1'b1;
+                end
+            end
+
+            endcase
+        end
+    end</code></pre></div>
+</figure>
+<ul>
+  <li><strong>复位时 <code>tx &lt;= 1'b1</code></strong>。这是必须的:空闲电平是高,复位时给成 0 相当于在线上放了一个永久的起始位,对方会一直收到乱码。</li>
+  <li><code>shifter[0]</code> 配合右移,天然实现“低位先发”。这就是第 03 课练习二那个移位寄存器。</li>
+  <li><code>busy</code> 让上层知道“现在不能给新数据”。<strong>接口一定要有这个信号</strong>,否则上层只能靠数时钟猜。</li>
+</ul>
+
+<h2 id="s4">接收器:为什么非要在中点采样</h2>
+<p>接收端唯一的时间基准是那个起始位的下降沿。如果检测到下降沿就立刻开始每隔 <code>DIV</code> 个时钟采一次,采样点会正好落在<strong>每一位的边界上</strong> —— 那是信号正在跳变、最不确定的地方,而且只要两边波特率有一点点误差,立刻采错。</p>
+<p>解法只有一句:<strong>先等半个位宽</strong>。之后每隔一整位采一次,采样点就永远落在每一位的正中间,左右各有半个位宽的容错余量 —— 这正是上面那 5.3% 误差预算的来源。</p>
+<figure class="file">
+  <figcaption><span class="path">code/lesson10/uart_rx.v</span><span class="note">可综合 · 同步链 + 中点采样</span></figcaption>
+  <div class="body"><pre><code>    // ---- 第 06 课的功课:异步输入先打两拍,再打一拍取沿 ----
+    reg rx_d0, rx_d1, rx_d2;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            rx_d0 &lt;= 1'b1;
+            rx_d1 &lt;= 1'b1;
+            rx_d2 &lt;= 1'b1;
+        end else begin
+            rx_d0 &lt;= rx;
+            rx_d1 &lt;= rx_d0;
+            rx_d2 &lt;= rx_d1;
+        end
+    end
+    wire start_edge = rx_d2 &amp; ~rx_d1;    // 下降沿 = 起始位来了
+
+    // 起始位只等半个位宽,把采样点挪到每一位的中间;之后每次等整个位宽
+    wire [$clog2(DIV)-1:0] wait_to = (bit_idx == 4'd0) ? (DIV/2 - 1) : (DIV - 1);
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            …
+        end else begin
+            valid     &lt;= 1'b0;           // 两个输出默认只高一拍
+            frame_err &lt;= 1'b0;
+
+            case (state)
+
+            IDLE: begin
+                if (start_edge) begin
+                    state   &lt;= RECV;
+                    bit_idx &lt;= 4'd0;
+                    div_cnt &lt;= 0;
+                end
+            end
+
+            RECV: begin
+                if (div_cnt == wait_to) begin
+                    div_cnt &lt;= 0;
+                    case (bit_idx)
+
+                    4'd0: begin
+                        // 半个位宽之后,线应该还在起始位的低电平上
+                        if (rx_d1) state   &lt;= IDLE;      // 是个毛刺,放弃这一帧
+                        else       bit_idx &lt;= 4'd1;
+                    end
+
+                    4'd9: begin
+                        state &lt;= IDLE;                   // 停止位
+                        if (rx_d1) begin
+                            data  &lt;= shifter;            // 停止位正确,交货
+                            valid &lt;= 1'b1;
+                        end else begin
+                            frame_err &lt;= 1'b1;           // 停止位是 0 → 帧错误
+                        end
+                    end
+
+                    default: begin
+                        shifter &lt;= {rx_d1, shifter[7:1]};  // LSB 先到,从高位挤进来
+                        bit_idx &lt;= bit_idx + 1'b1;
+                    end
+
+                    endcase
+                end else begin
+                    div_cnt &lt;= div_cnt + 1'b1;
+                end
+            end
+
+            endcase
+        end
+    end</code></pre></div>
+</figure>
+<div class="tw">
+<table>
+  <caption>接收器里的四个设计决定</caption>
+  <thead><tr><th>做法</th><th>为什么</th></tr></thead>
+  <tbody>
+    <tr><td>采样用 <code>rx_d1</code> 而不是 <code>rx</code></td><td><code>rx</code> 是异步的,直接采会有亚稳态风险(第 06 课)。<code>rx_d1</code> 已经同步过两拍</td></tr>
+    <tr><td>起始位中点<strong>再确认一次</strong>低电平</td><td>线上的一个窄毛刺也会产生下降沿。中点还是低才算真的起始位,这一步挡掉了大部分干扰</td></tr>
+    <tr><td>停止位不对时报 <code>frame_err</code></td><td>说明波特率不匹配或线上有干扰。<em>不要把这一帧当好数据交出去</em></td></tr>
+    <tr><td><code>valid</code> / <code>frame_err</code> 在块开头置 0</td><td>第 06 课练习三那个技巧:默认值加某分支拉高,自动就是单周期脉冲</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="box pit">
+  <b>同步链的延迟会吃掉一点余量</b>
+  <p>三级触发器让检测到的下降沿比真实沿晚 2–3 个时钟,采样点也就整体右移了 2–3 个时钟。<code>DIV = 434</code> 时这可以忽略;但如果你把 <code>DIV</code> 压到 4,固定偏移已经接近半个位宽,采样点会贴到每一位的末尾。</p>
+  <p>所以仿真时压缩 <code>DIV</code> 要留分寸:<strong><code>DIV ≥ 16</code></strong> 既能让仿真跑得快,又保留了足够的中点余量。本课的 TB 用的就是 16。</p>
+</div>
+
+<h2 id="s5">回环测试:让它自己验自己</h2>
+<p>把 <code>tx</code> 直接接到 <code>rx</code>,发出去的字节应该原样收回来。这种回环测试的好处是<strong>不需要写参考模型</strong> —— 发的就是期望值。</p>
+<figure class="file">
+  <figcaption><span class="path">code/lesson10/uart_loop_tb.v</span><span class="note">仅仿真 · 带坏帧注入</span></figcaption>
+  <div class="body"><pre><code>    // 可以强行接管这根线,用来注入坏帧
+    reg  force_en  = 1'b0;
+    reg  force_val = 1'b1;
+    wire line = force_en ? force_val : tx_line;
+
+    uart_tx #(.DIV(DIV)) u_tx (… .tx(tx_line), .busy(tx_busy));
+    uart_rx #(.DIV(DIV)) u_rx (… .rx(line),   .data(rx_data), …);
+
+    // 手工造一帧,停止位故意给成 0
+    task send_bad_frame(input [7:0] v);
+        begin
+            force_en  &lt;= 1'b1;
+            force_val &lt;= 1'b0;                        // 起始位
+            repeat (DIV) @(posedge clk);
+            for (k = 0; k &lt; 8; k = k + 1) begin
+                force_val &lt;= v[k];                    // LSB 先发
+                repeat (DIV) @(posedge clk);
+            end
+            force_val &lt;= 1'b0;                        // 停止位:错的
+            repeat (DIV) @(posedge clk);
+            force_val &lt;= 1'b1;                        // 回到空闲
+            repeat (DIV * 2) @(posedge clk);
+            force_en  &lt;= 1'b0;
+        end
+    endtask</code></pre></div>
+</figure>
+<p>测试向量选的是 <code>55 AA 00 FF</code> —— 交替、反交替、全零、全一。这四个能抓出绝大多数位序错误和边界问题:如果你把 LSB/MSB 搞反了,<code>55</code> 收回来会变成 <code>AA</code>;如果多算或少算了一位,<code>00</code> 和 <code>FF</code> 会立刻露馅。</p>
+
+<div class="term"><pre><span class="cmd">.\sim.bat lesson10 uart_loop_tb</span>
+[TB] DIV=16,回环发送 4 个字节:55 AA 00 FF
+[TB] 3270 ns 第 0 字节收到 55  [PASS]
+[TB] 6830 ns 第 1 字节收到 aa  [PASS]
+[TB] 10390 ns 第 2 字节收到 00  [PASS]
+[TB] 13950 ns 第 3 字节收到 ff  [PASS]
+[TB] 注入一帧停止位错误的数据,应该报 frame_err 而不是 valid
+[TB] 17470 ns 正确检出帧错误  [PASS]
+[结果] UART 回环与帧错误检测全部通过</pre></div>
+<p>(时间戳取决于 <code>DIV</code> 和帧间空隙,你跑出来的数值会不同,重要的是四个 PASS 和最后那个帧错误。)</p>
+
+<div class="box tip">
+  <b>波形上该看哪三行</b>
+  <p><code>line</code>(串口线)、<code>u_rx.bit_idx</code>、<code>u_rx.shifter</code>。把 <code>line</code> 拉宽到能看清十位,然后对着 <code>bit_idx</code> 数:它应该从 0 走到 9,并且每次变化都发生在 <code>line</code> 上某一位的<em>中间</em>而不是边界。<strong>这是确认中点采样真的生效的唯一办法</strong>,看输出对不对是不够的 —— 采样点贴在边界上时,理想仿真里照样能收对。</p>
+</div>
+
+<h2 id="s6">上板之前的六件事</h2>
+<ol class="steps">
+  <li><strong>电平</strong>。FPGA 引脚是 3.3V LVCMOS,常见的 USB-TTL 串口模块也是 3.3V,可以直连。<em>不要直接接 DB9 的 RS-232</em> —— 那是 ±12V,会烧掉引脚,必须过 MAX3232 之类的电平转换。</li>
+  <li><strong>接线交叉</strong>。你的 <code>tx</code> 接对方的 RX,你的 <code>rx</code> 接对方的 TX。两边 TX 接一起是最常见的“完全没反应”原因。</li>
+  <li><strong>共地</strong>。GND 必须连,否则电平没有参考点,现象是收到随机乱码。</li>
+  <li><strong>参数一致</strong>。上位机(串口助手 / PuTTY)的波特率、8 位数据、1 位停止位、无校验,四项都要和你的设计对上。</li>
+  <li><strong>把 DIV 改回真值</strong>。仿真用的 16 留在代码里,上板后波特率会是 3Mbps 以上,对方完全收不到。这是最容易忘的一步。</li>
+  <li><strong>引脚约束</strong>。Vivado 写 XDC(<code>set_property PACKAGE_PIN … [get_ports tx]</code>),Quartus 写 QSF 或用 Pin Planner。约束错了编译照样通过,只是信号出现在别的引脚上。</li>
+</ol>
+<div class="box tip">
+  <b>第一次上板的调试顺序</b>
+  <p>先只做发送:每秒往外发一个固定字节,用串口助手看能不能收到。收到了,说明时钟频率、DIV、引脚、电平、接线全部正确 —— <strong>一次验证掉五件事</strong>。然后再做接收。</p>
+  <p>反过来先做接收会很难查:收不到时你分不清是自己的接收器错了,还是线接错了,还是波特率不对。<strong>永远先让最简单的那条通路跑通。</strong></p>
+</div>
+
+<h2 id="ex">练习</h2>
+<ol class="tasks">
+<li>
+  <h3>把 DIV 压到 8 和 4<span class="lv">热身</span></h3>
+  <p>把 <code>uart_loop_tb.v</code> 的 <code>DIV</code> 依次改成 8 和 4 重跑。数据还对吗?打开波形,量一量 <code>u_rx</code> 采样的那一刻落在每一位的什么位置。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>两种情况下数据大概率仍然全对 —— 但这正是这道题的陷阱:<strong>结果对不代表设计健康</strong>。</p>
+    <p>量一下采样点:<code>DIV=16</code> 时落在每一位偏后一点的位置,离两边都还有五六个时钟;<code>DIV=8</code> 时挪到接近后 1/4;<code>DIV=4</code> 时几乎贴在每一位的<em>最后一个时钟</em>上。偏移量是固定的 2–3 个时钟(同步链的延迟),<code>DIV</code> 越小,它占的比例越大。</p>
+    <p>在理想的仿真回环里,贴边也能采对,因为线上没有任何抖动、两边分频比一模一样。真实链路上有传输延迟、上升沿斜率、双方晶振误差 —— 贴边就等于随机出错。</p>
+    <p><strong>教训:仿真通过不等于设计有余量。</strong>压缩参数加速仿真时,要清楚自己压掉的是什么;像这里,压掉的就是采样余量。</p>
+  </div></details>
+</li>
+<li>
+  <h3>加上奇偶校验位<span class="lv">动手</span></h3>
+  <p>给 <code>uart_tx</code> 和 <code>uart_rx</code> 各加一个参数 <code>PARITY</code>(0=无, 1=奇, 2=偶)。有校验时一帧变成 11 位,接收端校验不过要输出 <code>parity_err</code>。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>发送端把 <code>bit_idx</code> 的上限从 9 改成 10,在数据位之后插入校验位:</p>
+    <pre>localparam LAST = (PARITY == 0) ? 4'd9 : 4'd10;
+wire par_bit = (PARITY == 1) ? ~(^data)     // 奇校验:凑成奇数个 1
+                             :  (^data);    // 偶校验:凑成偶数个 1
+
+// XMIT 里改成:
+if (bit_idx == LAST) begin … 回到 IDLE … end
+else begin
+    bit_idx &lt;= bit_idx + 1'b1;
+    if (bit_idx &lt;= 4'd7)                    tx &lt;= shifter[0];
+    else if (bit_idx == 4'd8 &amp;&amp; PARITY != 0) tx &lt;= par_bit;
+    else                                     tx &lt;= 1'b1;   // 停止位
+end</pre>
+    <p>接收端在 <code>bit_idx</code> 走到校验位时把收到的位存下来,和自己算的比对:</p>
+    <pre>4'd9: if (PARITY != 0) begin
+          par_rx  &lt;= rx_d1;
+          bit_idx &lt;= 4'd10;
+      end else begin … 当停止位处理 … end
+
+4'd10: begin
+    state &lt;= IDLE;
+    if (!rx_d1)                       frame_err  &lt;= 1'b1;
+    else if (par_rx != exp_parity)    parity_err &lt;= 1'b1;
+    else begin data &lt;= shifter; valid &lt;= 1'b1; end
+end</pre>
+    <p>其中 <code>exp_parity</code> 用 <code>^shifter</code> 算(第 02 课练习一的归约异或)。</p>
+    <p>注意 <code>PARITY == 0</code> 那些分支:用参数做的判断在综合时就定了,不会留下多余电路 —— 这正是第 08 课的 <code>generate if</code> 思路,只不过这里写在 <code>always</code> 里,工具照样能常量折叠掉。</p>
+  </div></details>
+</li>
+<li>
+  <h3>给发送端加一个 FIFO<span class="lv">动手</span></h3>
+  <p>把第 09 课的 <code>sync_fifo.v</code> 拷到 <code>lesson10/</code>,写一个 <code>uart_tx_fifo.v</code>:上层往 FIFO 里连续塞字节,模块自己一个一个发出去。上层只需要看 <code>fifo_full</code>。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <pre>module uart_tx_fifo #(
+    parameter DIV   = 434,
+    parameter DEPTH = 16
+)(
+    input  wire       clk,
+    input  wire       rst_n,
+    input  wire       wr_en,          // 上层写入一个字节
+    input  wire [7:0] wr_data,
+    output wire       fifo_full,
+    output wire       tx
+);
+    wire       empty, tx_busy;
+    wire [7:0] fifo_dout;
+
+    // FIFO 里有货、发送器又空闲 → 取一个出来发
+    wire pop = ~empty &amp; ~tx_busy;
+
+    sync_fifo #(.W(8), .DEPTH(DEPTH)) u_fifo (
+        .clk(clk), .rst_n(rst_n),
+        .wr_en(wr_en), .din(wr_data),
+        .rd_en(pop),   .dout(fifo_dout),
+        .full(fifo_full), .empty(empty), .count()
+    );
+
+    uart_tx #(.DIV(DIV)) u_tx (
+        .clk(clk), .rst_n(rst_n),
+        .start(pop), .data(fifo_dout),
+        .tx(tx), .busy(tx_busy)
+    );
+endmodule</pre>
+    <p><code>pop</code> 同时当 FIFO 的 <code>rd_en</code> 和发送器的 <code>start</code>,这一点值得想清楚:在 <code>pop</code> 为高的那个时钟沿,发送器锁存 <code>fifo_dout</code>(组合读,正是队头),FIFO 的读指针同时前移。下一拍 <code>tx_busy</code> 变高,<code>pop</code> 自动落下 —— <strong>一个信号既是握手也是脉冲,不需要额外状态机</strong>。</p>
+    <p>加了 FIFO 之后上层就自由了:一次塞十几个字节走人,不用再盯着 <code>busy</code> 一个一个喂。这是所有串行外设的标准做法。</p>
+  </div></details>
+</li>
+<li>
+  <h3>对方波特率偏 3%,先坏哪一位<span class="lv">想清楚</span></h3>
+  <p>假设你的接收器分频比准确,但对方的发送波特率偏高 3%。第几位数据最先采错?如果双方各偏 3%(方向相反)呢?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>接收端在起始位中点对齐,之后第 <code>n</code> 次采样落在距起始沿 <code>(n + 0.5)</code> 个<em>接收端</em>位宽处。误差 <code>e</code> 让这个位置相对发送端偏移 <code>(n + 0.5) × e</code> 个位宽。采样点要留在那一位里,就得满足:</p>
+    <pre>(n + 0.5) × e &lt; 0.5</pre>
+    <p><code>n</code> 最大是 9(停止位),所以<strong>最先出错的一定是停止位</strong> —— 它离对齐点最远,累计偏移最大。这也解释了为什么 <code>frame_err</code> 是波特率不匹配最灵敏的症状:数据可能全对,停止位先崩。</p>
+    <ul>
+      <li><strong>单边 3%</strong>:<code>9.5 × 3% = 0.285</code> 个位宽 &lt; 0.5,还能收对,但余量只剩 21%。</li>
+      <li><strong>双方各偏 3%、方向相反</strong>:相对误差 6%,<code>9.5 × 6% = 0.57</code> &gt; 0.5 —— 停止位采到了下一位的位置,<code>frame_err</code> 报错。数据位 D7 的偏移是 <code>8.5 × 6% = 0.51</code>,也已经出界,所以实际上最后两位一起坏。</li>
+    </ul>
+    <p>这就是 ±2% 这条工程经验的来历:给双方各留 2%,相对误差 4%,最坏偏移 <code>9.5 × 4% = 0.38</code> 个位宽,再扣掉同步链偏移和线上抖动,刚好还有余量。</p>
+  </div></details>
+</li>
+</ol>
+
+<h2 id="next">往后走</h2>
+<p>到这里,同步数字设计的基本功已经齐了:组合与时序、状态机、存储、跨时钟同步、参数化复用,以及最重要的那件事 —— <strong>写完就仿真,看波形而不是猜</strong>。</p>
+<p>紧接着有一节加餐:<a href="lesson11.html"><strong>第 11 课 · 读懂时序图</strong></a> —— 前十一课的接口都是你自己定的,那一课教你怎么读别人家芯片的数据手册,并把一张 SDRAM 时序图翻译成状态机。再往后这几条路都值得走:</p>
+<ul>
+  <li><strong>时序约束与收敛</strong>。学会写 XDC/SDC,读时序报告,理解建立/保持时间、时钟偏斜、多周期路径。这是从“功能对”到“能跑在 200MHz”的分水岭。</li>
+  <li><strong>跨时钟域进阶</strong>。异步 FIFO、握手协议、格雷码指针 —— 第 06 课和第 09 课已经埋好了全部零件。</li>
+  <li><strong>标准接口</strong>。AXI4-Stream 是 FPGA 世界的通用语言,而它本质上就是 <code>valid / ready</code> 两根线的握手。学会它,厂商 IP 就都能接起来。</li>
+  <li><strong>SystemVerilog 与验证</strong>。<code>logic</code>、<code>always_ff</code>、<code>typedef enum</code> 先用起来;再往后是断言(SVA)和约束随机验证。</li>
+  <li><strong>买一块板子</strong>。前十课不需要板子,但“代码变成会亮的灯”这件事对坚持下去的帮助超出想象。</li>
+</ul>
+<div class="box tip">
+  <b>最后一条建议</b>
+  <p>把这门课的 <code>code/</code> 目录留着。以后写新模块时,<code>counter.v</code>、<code>edge_det.v</code>、<code>key_debounce.v</code>、<code>sync_fifo.v</code> 这几个会被反复拷过去用 —— <strong>它们不是练习题,是你自己的第一批库</strong>。</p>
+</div>
+
+<nav class="pager"></nav>
+</main>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

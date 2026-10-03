@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>稳压二极管应用</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.dio{fill:currentColor;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round}
+.track{fill:var(--chip);stroke:var(--line)}
+.mk{fill:var(--copper);stroke:var(--panel);stroke-width:2}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#diode">二极管</a><span class="sp"></span><span>06 / 08</span></nav>
+<header>
+  <span class="eyebrow">二极管 · 齐纳稳压</span>
+  <h1>稳压二极管应用</h1>
+  <p class="lede">一个限流电阻加一个反接的稳压管，就是最简单的稳压电路。它能不能稳住，只看一件事：稳压管电流 Iz 是否始终落在 Izmin 和 Izmax 之间。</p>
+</header>
+
+<section id="basic">
+  <span class="eyebrow">工作原理 · 电流分配</span>
+  <h2>多出来的电流让稳压管吃掉</h2>
+  <p>稳压管反接，工作在击穿区，两端电压基本等于 Vz。电阻 R 上的电流 IR = (Vin − Vz) / R，这份电流分成两路：负载拿走 IL，剩下的 Iz 流过稳压管。</p>
+  <p>输入升高或负载变轻，多出来的电流由 Iz 吸收，输出几乎不变。反过来 Iz 被挤到接近零，稳压管退出击穿区，输出就跟着掉下去。Iz 太大则稳压管功耗超标，会热击穿。</p>
+  <p class="eq">IR = (Vin − Vz) / R = Iz + IL</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 290" role="img" aria-label="输入经限流电阻 R 接到输出，输出并联稳压管和负载，下方是稳压管电流在允许区间中的位置">
+        <text id="s1-vin" x="40" y="18" text-anchor="middle" class="v">Vin 12 V</text>
+        <path class="w" d="M28,26 H52 M40,26 V60 H100 M160,60 H360"/>
+        <rect class="r" x="100" y="52" width="60" height="16" rx="2"/>
+        <text id="s1-rl" x="130" y="44" text-anchor="middle" class="v">R 220 Ω</text>
+        <text id="s1-irt" x="130" y="88" text-anchor="middle" class="v">IR 31.7 mA</text>
+        <circle class="dot" cx="220" cy="60" r="3.5"/>
+        <circle class="dot" cx="320" cy="60" r="3.5"/>
+        <path class="w" d="M220,60 V100 M220,124 V166 M206,166 H234 M211,171 H229 M216,176 H224"/>
+        <polygon class="dio" points="208,124 232,124 220,100"/>
+        <path class="w" style="stroke-width:2.5" d="M204,96 L208,100 H232 L236,104"/>
+        <text x="242" y="110" class="t">Dz</text>
+        <text x="242" y="127" class="v">5.1 V</text>
+        <text id="s1-izt" x="212" y="152" text-anchor="end" class="v">Iz 11.8 mA</text>
+        <path class="w" d="M320,60 V92 M320,142 V166 M306,166 H334 M311,171 H329 M316,176 H324"/>
+        <rect id="s1-load" class="box" x="302" y="92" width="36" height="50" rx="4"/>
+        <text x="320" y="122" text-anchor="middle" class="t">负载</text>
+        <text id="s1-ilt" x="344" y="152" class="v">IL 20 mA</text>
+        <text x="366" y="64" class="t">Vo</text>
+        <text id="s1-vot" x="366" y="82" class="v hi">5.02 V</text>
+        <path id="s1-fr" class="flow" d="M40,30 V60 H218"/>
+        <path id="s1-fz" class="flow thin" d="M220,64 V164"/>
+        <path id="s1-fl" class="flow thin" d="M224,60 H320 V90 M320,144 V164"/>
+        <rect class="zone-ok" x="55" y="214" width="294" height="20"/>
+        <rect class="track" x="40" y="214" width="360" height="20" rx="3" style="fill-opacity:.4"/>
+        <line class="ax" x1="55" y1="206" x2="55" y2="242"/>
+        <line class="ax" x1="334" y1="206" x2="334" y2="242"/>
+        <text x="55" y="202" class="tm">Izmin 5 mA</text>
+        <text x="334" y="202" text-anchor="end" class="tm">Izmax 98 mA</text>
+        <text x="40" y="256" class="v">0</text>
+        <text x="160" y="256" text-anchor="middle" class="v">40</text>
+        <text x="280" y="256" text-anchor="middle" class="v">80</text>
+        <text x="400" y="256" text-anchor="end" class="v">120 mA</text>
+        <polygon id="s1-mk" class="mk" points="75,212 69,200 81,200"/>
+        <text x="220" y="280" text-anchor="middle" class="tm">稳压管电流 Iz 的位置，绿色区间内才能稳压</text>
+      </svg>
+      <figcaption>绿色虚线是电流，粗细表示大小。示意器件：5.1 V、500 mW 稳压管，动态电阻 rz 取 5 Ω；Izmin 取 5 mA 作为设计下限，Izmax = Pmax / Vz ≈ 98 mA。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s1-vi">输入电压 Vin</label>
+        <span class="rv" id="s1-viv">12 V</span>
+        <input type="range" id="s1-vi" min="4" max="20" step="0.5" value="12"></div>
+      <div class="ctl"><label class="ctl-l" for="s1-il">负载电流 IL</label>
+        <span class="rv" id="s1-ilv">20 mA</span>
+        <input type="range" id="s1-il" min="0" max="60" step="1" value="20"></div>
+      <div class="ctl"><span class="ctl-l">限流电阻 R</span>
+        <div class="seg" id="s1-r"><button id="s1-r-150" data-v="150" aria-pressed="false">150 Ω</button><button id="s1-r-220" data-v="220" aria-pressed="true">220 Ω</button><button id="s1-r-330" data-v="330" aria-pressed="false">330 Ω</button></div></div>
+      <dl class="read">
+        <dt>输出 Vo</dt><dd id="s1-vo">5.02 V</dd>
+        <dt>稳压管电流 Iz</dt><dd id="s1-iz">11.8 mA</dd>
+        <dt>稳压管功耗</dt><dd id="s1-pz">59 mW</dd>
+        <dt>电阻功耗</dt><dd id="s1-pr">221 mW</dd>
+        <dt>状态</dt><dd><span id="s1-state" class="chip on">稳压</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="design">
+  <span class="eyebrow">限流电阻 · 按最坏情况算</span>
+  <h2>限流电阻怎么算</h2>
+  <p>基本公式是 R = (Vin − Vz) / (Iz + IL)。但 Vin 和 IL 都会变，要取两个最坏情况，得到一个允许区间：</p>
+  <ul>
+    <li>R 不能太大：输入最低、负载最重时，Iz 仍要 ≥ Izmin。Rmax = (Vin_min − Vz) / (Izmin + IL_max)</li>
+    <li>R 不能太小：输入最高、负载最轻（常按空载算）时，Iz 仍要 ≤ Izmax。Rmin = (Vin_max − Vz) / (Izmax + IL_min)</li>
+  </ul>
+  <p>Rmin &lt; Rmax 才有解，再从中挑一个标准阻值，并核算电阻功耗 (Vin_max − Vz)² / R。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 170" role="img" aria-label="限流电阻的数轴，标出 Rmin 和 Rmax 围成的允许区间以及选定的标准阻值">
+        <line class="gl" x1="40" y1="60" x2="400" y2="60"/>
+        <rect id="s2-win" class="zone-ok" x="120" y="44" width="80" height="32"/>
+        <path class="ax" d="M40,60 H400"/>
+        <line id="s2-lmin" class="ax" x1="120" y1="36" x2="120" y2="84"/>
+        <line id="s2-lmax" class="ax" x1="200" y1="36" x2="200" y2="84"/>
+        <text id="s2-tmin" x="116" y="30" text-anchor="end" class="v">Rmin 91 Ω</text>
+        <text id="s2-tmax" x="204" y="16" class="v">Rmax 140 Ω</text>
+        <polygon id="s2-mk" class="mk" points="150,58 144,46 156,46"/>
+        <text id="s2-mkt" x="150" y="104" text-anchor="middle" class="t hi">选 120 Ω</text>
+        <text x="40" y="126" class="v">0</text>
+        <text x="130" y="126" text-anchor="middle" class="v">100</text>
+        <text x="220" y="126" text-anchor="middle" class="v">200</text>
+        <text x="310" y="126" text-anchor="middle" class="v">300</text>
+        <text x="400" y="126" text-anchor="end" class="v">400</text>
+        <text x="400" y="146" text-anchor="end" class="tm">R / Ω</text>
+        <text x="40" y="160" class="tm">稳压管：5.1 V，Izmin 5 mA，Izmax 98 mA</text>
+      </svg>
+      <figcaption>绿色区间是允许的阻值，三角是从 E24 系列里挑的标准值（取最接近区间中点的一个）。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-vmin">最低输入 Vin_min</label>
+        <span class="rv" id="s2-vminv">10 V</span>
+        <input type="range" id="s2-vmin" min="6" max="15" step="0.5" value="10"></div>
+      <div class="ctl"><label class="ctl-l" for="s2-vmax">最高输入 Vin_max</label>
+        <span class="rv" id="s2-vmaxv">14 V</span>
+        <input type="range" id="s2-vmax" min="6" max="24" step="0.5" value="14"></div>
+      <div class="ctl"><label class="ctl-l" for="s2-ilm">最大负载电流 IL_max</label>
+        <span class="rv" id="s2-ilmv">30 mA</span>
+        <input type="range" id="s2-ilm" min="0" max="100" step="5" value="30"></div>
+      <dl class="read">
+        <dt>Rmax</dt><dd id="s2-rmax">140 Ω</dd>
+        <dt>Rmin（空载）</dt><dd id="s2-rmin">91 Ω</dd>
+        <dt>选用</dt><dd id="s2-rs">120 Ω</dd>
+        <dt>电阻最大功耗</dt><dd id="s2-pr">0.66 W</dd>
+        <dt>结论</dt><dd><span id="s2-state" class="chip on">有解</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="rz">
+  <span class="eyebrow">动态电阻 · 稳压效果</span>
+  <h2>动态电阻决定稳得有多好</h2>
+  <p>击穿区的曲线不是绝对竖直的，斜率的倒数叫动态电阻 rz，典型几欧到几十欧。它和 R 构成分压，所以输入变化会按 rz / (R + rz) 漏到输出；负载变化相当于 R 和 rz 并联后的内阻。</p>
+  <p class="eq">ΔVo / ΔVin = rz / (R + rz)　　ΔVo / ΔIL = −(R ∥ rz)</p>
+  <p>rz 在小电流时更大（拐点附近很软），5~8 V 的管子 rz 最小。所以 Iz 不能取得太小。这种电路效率低，只适合几十 mA 以内的小电流或做基准。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="输出电压随输入电压变化的曲线，稳压管导通后曲线变平，斜率由动态电阻决定">
+        <line class="gl" x1="50" y1="50" x2="470" y2="50"/>
+        <line class="gl" x1="50" y1="100" x2="470" y2="100"/>
+        <line class="gl" x1="50" y1="150" x2="470" y2="150"/>
+        <line class="gl" x1="50" y1="200" x2="470" y2="200"/>
+        <line class="gl" x1="155" y1="40" x2="155" y2="250"/>
+        <line class="gl" x1="260" y1="40" x2="260" y2="250"/>
+        <line class="gl" x1="365" y1="40" x2="365" y2="250"/>
+        <path class="ax" d="M50,40 V250 H470"/>
+        <text x="44" y="54" text-anchor="end" class="v">8</text>
+        <text x="44" y="104" text-anchor="end" class="v">6</text>
+        <text x="44" y="154" text-anchor="end" class="v">4</text>
+        <text x="44" y="204" text-anchor="end" class="v">2</text>
+        <text x="44" y="254" text-anchor="end" class="v">0</text>
+        <text x="50" y="268" text-anchor="middle" class="v">0</text>
+        <text x="155" y="268" text-anchor="middle" class="v">5</text>
+        <text x="260" y="268" text-anchor="middle" class="v">10</text>
+        <text x="365" y="268" text-anchor="middle" class="v">15</text>
+        <text x="470" y="268" text-anchor="end" class="v">20</text>
+        <text x="56" y="34" class="tm">Vo / V</text>
+        <text x="470" y="284" text-anchor="end" class="tm">Vin / V</text>
+        <line id="s3-st" class="ax dash" x1="200" y1="40" x2="200" y2="250"/>
+        <text id="s3-stt" x="204" y="236" class="tm">Iz = Izmin</text>
+        <polyline id="s3-id" class="ideal" points="50,250"/>
+        <polyline id="s3-c" class="real" points="50,250"/>
+        <text id="s3-cl" x="466" y="100" text-anchor="end" class="t hi">rz = 10 Ω</text>
+      </svg>
+      <figcaption>R 固定 220 Ω。虚线是 rz = 0 的理想稳压管，橙线是实际。竖虚线右边 Iz 已大于 5 mA，才算真正稳住。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">动态电阻 rz</span>
+        <div class="seg" id="s3-r"><button id="s3-r-2" data-v="2" aria-pressed="false">2 Ω</button><button id="s3-r-10" data-v="10" aria-pressed="true">10 Ω</button><button id="s3-r-40" data-v="40" aria-pressed="false">40 Ω</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s3-il">负载电流 IL</label>
+        <span class="rv" id="s3-ilv">10 mA</span>
+        <input type="range" id="s3-il" min="0" max="40" step="1" value="10"></div>
+      <dl class="read">
+        <dt>线性调整 ΔVo / ΔVin</dt><dd id="s3-li">43 mV/V</dd>
+        <dt>负载调整 ΔVo / ΔIL</dt><dd id="s3-lo">−9.6 mV/mA</dd>
+        <dt>起稳输入电压</dt><dd id="s3-vs">8.4 V</dd>
+        <dt>评价</dt><dd><span id="s3-state" class="chip on">一般</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>稳压二极管稳压电路的原理是什么？</summary>
+      <div class="ans"><p>稳压管反接工作在击穿区，电流在很大范围内变化时两端电压基本不变。限流电阻把输入和输出之间的压差吃掉，电阻电流 = 稳压管电流 + 负载电流。输入升高或负载变轻时，多出来的电流由稳压管吸收，输出保持在 Vz。</p></div></details>
+    <details><summary>限流电阻怎么选？</summary>
+      <div class="ans"><p>按两个最坏情况定区间。输入最低、负载最重时稳压管电流不能低于 Izmin，得到 Rmax = (Vin_min − Vz) / (Izmin + IL_max)；输入最高、负载最轻时不能超过 Izmax，得到 Rmin = (Vin_max − Vz) / (Izmax + IL_min)。在两者之间选标准值，再核算电阻功耗。</p></div></details>
+    <details><summary>为什么不能去掉限流电阻？</summary>
+      <div class="ans"><p>稳压管击穿后动态电阻只有几欧，直接接到电源上，电流只受这几欧限制，瞬间超过 Izmax，热击穿烧毁。限流电阻既限流，又承担输入输出的压差，是电路能稳压的前提。</p></div></details>
+    <details><summary>稳压管稳压有什么缺点？什么时候用？</summary>
+      <div class="ans"><p>效率低，为了让空载时也有 Izmin，稳压管一直在耗电；输出电流小，一般几十 mA 以内；稳压精度受动态电阻和温度系数影响。适合做小电流的偏置、基准、过压钳位。需要更大电流就用 LDO 或开关电源。</p></div></details>
+    <details><summary>负载突然断开会怎样？</summary>
+      <div class="ans"><p>原来给负载的电流全部转到稳压管上，Iz 最大。如果设计时没按空载核算 Rmin，稳压管可能超功耗。所以 Rmin 一般按 IL_min = 0 来算。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="05-钳位电路.html"><span>上一页</span>钳位电路</a><a class="next" href="07-反向恢复时间.html"><span>下一页</span>反向恢复时间</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+const VZ=5.1,IZT=0.02,IZMIN=5e-3,PMAX=0.5,IZMAX=PMAX/VZ;
+/* 稳压管等效：Vo ≥ Vk 时 Iz = (Vo − Vk) / rz，Vk = Vz − IZT·rz；负载按恒流处理 */
+function solve(vin,R,il,rz){
+  const vk=VZ-IZT*rz;
+  if(rz===0){const vo0=vin-R*il;if(vo0>=VZ)return {vo:VZ,iz:(vin-VZ)/R-il};return {vo:Math.max(0,vo0),iz:0};}
+  let vo=(vin/R-il+vk/rz)/(1/R+1/rz),iz=(vo-vk)/rz;
+  if(iz<0){iz=0;vo=Math.max(0,vin-R*il);}
+  return {vo,iz};
+}
+/* 1. 基本电路 */
+const s1={R:220},RZ1=5;
+function s1u(){
+  const vin=+$('s1-vi').value,il=+$('s1-il').value/1000,R=s1.R;
+  const r=solve(vin,R,il,RZ1),vo=r.vo,iz=r.iz,ilr=vo>0||il===0?il:0,ir=(vin-vo)/R,pz=vo*iz,pr=ir*ir*R;
+  $('s1-viv').textContent=vin+' V';$('s1-vi').setAttribute('aria-valuetext',vin+' V');
+  $('s1-ilv').textContent=(il*1e3).toFixed(0)+' mA';$('s1-il').setAttribute('aria-valuetext',(il*1e3).toFixed(0)+' mA');
+  $('s1-vin').textContent='Vin '+vin+' V';$('s1-rl').textContent='R '+R+' Ω';
+  $('s1-irt').textContent='IR '+fmtA(ir);$('s1-izt').textContent='Iz '+(iz>0?fmtA(iz):'0');$('s1-ilt').textContent='IL '+(il>0?fmtA(ilr):'0');
+  $('s1-vot').textContent=fmtV(vo);
+  show($('s1-fr'),ir>1e-4);show($('s1-fz'),iz>1e-4);show($('s1-fl'),il>0&&vo>0);
+  $('s1-fz').classList.toggle('thin',iz<0.03);$('s1-fl').classList.toggle('thin',il<0.03);$('s1-fr').classList.toggle('thin',ir<0.03);
+  const x=40+Math.min(120,iz*1e3)*3;$('s1-mk').setAttribute('points',`${x.toFixed(1)},212 ${(x-6).toFixed(1)},200 ${(x+6).toFixed(1)},200`);
+  $('s1-vo').textContent=fmtV(vo);$('s1-iz').textContent=iz>0?fmtA(iz):'0，没击穿';
+  $('s1-pz').textContent=fmtP(pz);$('s1-pr').textContent=fmtP(pr);
+  let note,st,cls;
+  if(pz>PMAX){st='稳压管过功耗';cls='bad';note='Iz 超过 Izmax，稳压管功耗 '+fmtP(pz)+' 已超过 500 mW，会热击穿。输入太高或负载太轻，要加大 R。';}
+  else if(iz<=0){st='没稳住';cls='bad';note='R 上的压降太大，输出只有 '+fmtV(vo)+'，不到 Vz，稳压管根本没击穿。这时输出 = Vin − R·IL，跟着输入和负载一起变。';}
+  else if(iz<IZMIN){st='临界';cls='warn';note='稳压管刚进入击穿区，Iz 只有 '+fmtA(iz)+'，拐点附近动态电阻大，负载再重一点或输入再低一点就掉出去。';}
+  else{st='稳压';cls='on';note='Iz 在允许区间内，输出稳定在约 '+fmtV(vo)+'。拖动 Vin 看：Vo 几乎不动，变化的是 Iz。';}
+  if(pr>0.25&&cls!=='bad')note+=' 另外电阻功耗 '+fmtP(pr)+'，0.25 W 的电阻已经不够。';
+  chip($('s1-state'),st,cls);$('s1-note').textContent=note;
+  setLv($('s1-vot'),null,vo>2);
+}
+seg('s1-r',v=>{s1.R=+v;s1u();});
+$('s1-vi').addEventListener('input',s1u);$('s1-il').addEventListener('input',s1u);
+s1u();
+
+/* 2. 限流电阻设计 */
+const E24=[10,11,12,13,15,16,18,20,22,24,27,30,33,36,39,43,47,51,56,62,68,75,82,91];
+function e24list(){const a=[];[1,10,100].forEach(m=>E24.forEach(v=>a.push(v*m)));return a;}
+const RE=e24list(),XR=r=>40+Math.min(r,400)*0.9;
+function s2u(){
+  let vmin=+$('s2-vmin').value,vmax=+$('s2-vmax').value;const ilm=+$('s2-ilm').value/1000;
+  if(vmax<vmin){vmax=vmin;$('s2-vmax').value=vmin;}
+  $('s2-vminv').textContent=vmin+' V';$('s2-vmaxv').textContent=vmax+' V';$('s2-ilmv').textContent=(ilm*1e3).toFixed(0)+' mA';
+  $('s2-vmin').setAttribute('aria-valuetext',vmin+' V');$('s2-vmax').setAttribute('aria-valuetext',vmax+' V');$('s2-ilm').setAttribute('aria-valuetext',(ilm*1e3).toFixed(0)+' mA');
+  const rmax=(vmin-VZ)/(IZMIN+ilm),rmin=(vmax-VZ)/IZMAX,ok=rmax>0&&rmin<rmax;
+  $('s2-rmax').textContent=rmax>0?fmtR(rmax):'无（Vin_min 低于 Vz）';$('s2-rmin').textContent=fmtR(rmin);
+  const x0=XR(Math.max(0,rmin)),x1=XR(Math.max(0,rmax));
+  $('s2-lmin').setAttribute('x1',x0.toFixed(1));$('s2-lmin').setAttribute('x2',x0.toFixed(1));
+  $('s2-lmax').setAttribute('x1',x1.toFixed(1));$('s2-lmax').setAttribute('x2',x1.toFixed(1));
+  const tn=$('s2-tmin'),tx=$('s2-tmax');
+  if(x0<124){tn.setAttribute('x',(x0+4).toFixed(1));tn.setAttribute('text-anchor','start');}else{tn.setAttribute('x',(x0-4).toFixed(1));tn.setAttribute('text-anchor','end');}
+  if(x1>350){tx.setAttribute('x',(x1-4).toFixed(1));tx.setAttribute('text-anchor','end');}else{tx.setAttribute('x',(x1+4).toFixed(1));tx.setAttribute('text-anchor','start');}
+  $('s2-tmin').textContent='Rmin '+fmtR(rmin);$('s2-tmax').textContent='Rmax '+(rmax>0?fmtR(rmax):'—');
+  const win=$('s2-win');show(win,ok);if(ok){win.setAttribute('x',x0.toFixed(1));win.setAttribute('width',Math.max(1,x1-x0).toFixed(1));}
+  let pick=null;
+  if(ok){const mid=(rmin+rmax)/2;RE.filter(r=>r>=rmin&&r<=rmax).forEach(r=>{if(pick===null||Math.abs(r-mid)<Math.abs(pick-mid))pick=r;});}
+  const mk=$('s2-mk'),mkt=$('s2-mkt');show(mk,pick!==null);show(mkt,pick!==null);
+  if(pick!==null){const x=XR(pick);mk.setAttribute('points',`${x.toFixed(1)},58 ${(x-6).toFixed(1)},46 ${(x+6).toFixed(1)},46`);
+    mkt.setAttribute('x',Math.min(380,Math.max(60,x)).toFixed(1));mkt.textContent='选 '+fmtR(pick);}
+  $('s2-rs').textContent=pick!==null?fmtR(pick):'—';
+  $('s2-pr').textContent=pick!==null?fmtP((vmax-VZ)*(vmax-VZ)/pick):'—';
+  let note;
+  if(!ok){chip($('s2-state'),'无解','bad');
+    note=rmax<=0?'最低输入已经低于稳压值，任何电阻都稳不住。':'Rmin 大于 Rmax：输入变化范围太宽或负载电流太大，同一个电阻顾不了两头。可以换功率更大的稳压管（Izmax 更大），或者改用 LDO。';}
+  else if(pick===null){chip($('s2-state'),'区间太窄','warn');note='理论上有解，但区间里没有 E24 标准值，实际还要考虑电阻精度，不建议这样设计。';}
+  else{const pr=(vmax-VZ)*(vmax-VZ)/pick;chip($('s2-state'),'有解','on');
+    note='在 '+fmtR(rmin)+' 到 '+fmtR(rmax)+' 之间选 '+fmtR(pick)+'。最坏情况电阻功耗 '+fmtP(pr)+'，'+(pr>0.25?'要用 '+(pr>0.5?'1 W 或更大':'0.5 W')+' 的电阻。':'0.25 W 电阻够用。');}
+  $('s2-note').textContent=note;
+}
+['s2-vmin','s2-vmax','s2-ilm'].forEach(id=>$(id).addEventListener('input',s2u));
+s2u();
+
+/* 3. 动态电阻 */
+const s3={rz:10},R3=220;
+const X3=v=>50+v*21,Y3=v=>250-v*25;
+function curve(rz,il){const p=[];for(let k=0;k<=200;k++){const vin=20*k/200,r=solve(vin,R3,il,rz);p.push(X3(vin).toFixed(1)+','+Y3(r.vo).toFixed(1));}return p.join(' ');}
+function s3u(){
+  const rz=s3.rz,il=+$('s3-il').value/1000;
+  $('s3-ilv').textContent=(il*1e3).toFixed(0)+' mA';$('s3-il').setAttribute('aria-valuetext',(il*1e3).toFixed(0)+' mA');
+  $('s3-id').setAttribute('points',curve(0,il));$('s3-c').setAttribute('points',curve(rz,il));
+  const vk=VZ-IZT*rz,vs=vk+rz*IZMIN+R3*(IZMIN+il),xs=X3(Math.min(vs,20));
+  $('s3-st').setAttribute('x1',xs.toFixed(1));$('s3-st').setAttribute('x2',xs.toFixed(1));
+  $('s3-stt').setAttribute('x',(xs+4).toFixed(1));show($('s3-st'),vs<=20);show($('s3-stt'),vs<=17);
+  const r20=solve(20,R3,il,rz);
+  $('s3-cl').textContent='rz = '+rz+' Ω';$('s3-cl').setAttribute('y',(Y3(r20.vo)-10).toFixed(1));
+  const li=rz/(R3+rz),lo=R3*rz/(R3+rz);
+  $('s3-li').textContent=(li*1e3).toFixed(0)+' mV/V';
+  $('s3-lo').textContent='−'+lo.toFixed(1)+' mV/mA';
+  $('s3-vs').textContent=vs<=20?fmtV(vs,1):'超过 20 V';
+  const g=rz<=2?'好':rz<=10?'一般':'差';
+  chip($('s3-state'),g,rz<=2?'on':rz<=10?'warn':'bad');
+  $('s3-note').textContent='输入每变 1 V，输出变 '+(li*1e3).toFixed(0)+' mV；负载每多拉 1 mA，输出掉 '+lo.toFixed(1)+' mV。'
+    +(rz>=40?'rz 大的管子（通常是低压或小电流工作的管子）拐点很软，稳压效果明显变差。':rz<=2?'rz 小，平台几乎水平，接近理想稳压管。':'')
+    +' 负载越重，起稳需要的输入电压越高。';
+}
+seg('s3-r',v=>{s3.rz=+v;s3u();});
+$('s3-il').addEventListener('input',s3u);
+s3u();
+</script>
+</body>
+</html>

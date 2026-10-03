@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>接线实验台 · 拖拽连线互动</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .dev-rect{cursor:move;}
+  .pin-dot{cursor:crosshair;}
+  .wire-hit{cursor:pointer;}
+  .dev-del{cursor:pointer;}
+  #labResult div{margin:3px 0;}
+  .ok{color:#4ade80;} .bad{color:#ff6b6b;} .warn{color:#fbbf24;} .info{color:#8fa0c0;}
+  #hintBox{display:none; margin-top:12px;}
+  #hintBox.show{display:block;}
+  kbd{background:#0a0f1c; border:1px solid #2a3654; border-radius:5px; padding:1px 7px; font-size:.85em; color:#4cc9f0;}
+  .toolbar{
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+    padding:10px 14px; margin-bottom:12px; font-size:.9rem;
+  }
+  .toolbar label{color:var(--muted);}
+  select,input[type=text]{
+    background:#0a0f1c; color:var(--ink); border:1px solid var(--line);
+    border-radius:7px; padding:6px 10px; font-family:inherit; font-size:.9rem;
+  }
+  select:focus,input:focus{outline:1px solid var(--accent);}
+  #customForm{display:none; margin-top:10px;}
+  #customForm.show{display:flex;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔌 接线<span>实验台</span></h1>
+  <p>器件库自由添加 · 拖拽摆位 · 引脚连线 · 通电测试 · 支持自定义器件</p>
+</header>
+
+<nav>
+  <a href="index.html" class="home">🏠 协议总览</a>
+  <a href="uart.html">UART</a>
+  <a href="rs485.html">RS-485</a>
+  <a href="can.html">CAN</a>
+  <a href="spi.html">SPI</a>
+  <a href="i2c.html">I²C</a>
+</nav>
+
+<main>
+
+<section>
+  <h2><span class="num">玩</span>搭一块自己的开发板</h2>
+  <p class="desc">
+    操作:<kbd>器件库选型 → ➕ 添加</kbd> 把器件放上画布(右上角 ✕ 可移除) →
+    <kbd>拖动器件</kbd> 摆位 → <kbd>点击引脚①</kbd> 再 <kbd>点击引脚②</kbd> 连一根线 →
+    <kbd>点击导线</kbd> 删除 → <b>⚡ 通电测试</b>。<br>
+    判定是真实的:串口要交叉、I²C 可多挂但<b>地址不能冲突</b>、SPI 每从机要独立片选、
+    RS-485/CAN 需要收发器桥接、CAN 总线还要<b>数终端电阻</b>。
+  </p>
+
+  <div class="toolbar">
+    <label>器件库:</label>
+    <select id="libSel"></select>
+    <button id="btnAdd">➕ 添加器件</button>
+    <button id="btnCustom" class="ghost">🛠 自定义器件</button>
+    <span style="color:var(--muted);font-size:.82rem" id="libDesc"></span>
+  </div>
+
+  <div class="toolbar" id="customForm">
+    <label>名称</label><input type="text" id="cfName" size="10" value="我的传感器">
+    <label>类别</label>
+    <select id="cfCat">
+      <option value="uart">UART 设备</option>
+      <option value="i2c" selected>I²C 从机</option>
+      <option value="spi">SPI 从机</option>
+      <option value="485s">RS-485 从机</option>
+      <option value="can">CAN 节点</option>
+    </select>
+    <label id="cfAddrLab">地址</label><input type="text" id="cfAddr" size="5" value="0x77">
+    <label>通电效果</label><input type="text" id="cfMsg" size="22" placeholder="留空则自动生成">
+    <button id="cfOk">创建并放入画布</button>
+  </div>
+
+  <div class="stage">
+    <svg id="lab" viewBox="0 0 1000 680" width="1000" height="680">
+      <g id="wireLayer"></g>
+      <g id="devLayer"></g>
+      <g id="fxLayer"></g>
+    </svg>
+  </div>
+  <div class="controls">
+    <button id="btnTest">⚡ 通电测试</button>
+    <button id="btnAuto" class="ghost">🪄 自动接线示范</button>
+    <button id="btnClearW" class="ghost">🧹 清空接线</button>
+    <button id="btnReset" class="ghost">↺ 恢复默认场景</button>
+    <button id="btnHint" class="ghost">💡 接线提示</button>
+  </div>
+  <div class="status" id="labStatus">默认场景已加载。也可以从器件库添加 CAN 收发器 + ECU + 120Ω 电阻,搭一条 CAN 总线!</div>
+  <div class="field-info" id="labResult">测试结果会显示在这里。</div>
+  <div id="hintBox" class="field-info">
+    <b>正确接法提示</b><br>
+    ▸ <b>UART 设备</b>(CH340/GPS/蓝牙):交叉接 —— 设备.TX→MCU.RXn,设备.RX→MCU.TXn;一个 UART 口只能接一台。<br>
+    ▸ <b>I²C 从机</b>:所有 SDA 并到 MCU.SDA,所有 SCL 并到 MCU.SCL(可菊花链);同地址的两片会冲突。<br>
+    ▸ <b>SPI 从机</b>:SCK/MOSI/MISO 同名共享,每片的 CS 单独接一个 MCU.CSn。<br>
+    ▸ <b>RS-485</b>:MCU.TXn→MAX485.DI、MAX485.RO→MCU.RXn;差分侧 A 接 A、B 接 B,可挂多台从机。<br>
+    ▸ <b>CAN</b>:MCU.CTX→TJA1050.TXD、TJA1050.RXD→MCU.CRX;各节点 CANH 连一起、CANL 连一起;
+    再拿 120Ω 电阻两脚跨接 H 和 L,<b>标准是两端各一颗、共 2 颗</b>。
+  </div>
+  <div class="cards">
+    <div class="card"><b>为什么串口要交叉?</b><br>TX 是嘴、RX 是耳朵,嘴要对耳朵;而 MOSI、A/B、CANH/L 描述的是"整根线"的角色,同名直连。</div>
+    <div class="card"><b>试试制造故障</b><br>添加两块 OLED(同地址 0x3C)→ 地址冲突;两片 SPI 从机接同一个 CS → 应答打架;CAN 不接电阻 → 反射错误帧。</div>
+    <div class="card"><b>自定义器件</b><br>用 🛠 创建自己的器件:选类别、填 I²C/485 地址,通电成功后会显示你写的效果文案。</div>
+  </div>
+</section>
+
+</main>
+<footer>接线实验台 · <a href="index.html" style="color:var(--accent)">返回协议总览</a></footer>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const SVGNS="http://www.w3.org/2000/svg";
+function el(t,a,p){const e=document.createElementNS(SVGNS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+
+const svg=$("lab"), wireLayer=$("wireLayer"), devLayer=$("devLayer"), fxLayer=$("fxLayer");
+const stEl=$("labStatus"), resEl=$("labResult");
+
+/* ═════════ 器件模板库 ═════════ */
+/* cat: uart | i2c | spi | 485s | can | b485(485收发器) | bcan(CAN收发器) | res(终端电阻) */
+const LIB=[
+ {t:"ch340", cat:"uart",name:"USB 转串口",sub:"CH340",ok:"💻 CH340:电脑串口助手打印「Hello World!」",def:1,
+  desc:"接 PC 的调试串口,占一个 UART 口"},
+ {t:"gps",   cat:"uart",name:"GPS 模块",sub:"ATGM336H",ok:"🛰 GPS:输出 $GNGGA…定位 31.23°N 121.47°E",
+  desc:"NMEA 语句从 TX 源源不断吐出"},
+ {t:"bt",    cat:"uart",name:"蓝牙串口",sub:"HC-05",ok:"📱 蓝牙:手机 App 收到透传数据",
+  desc:"经典蓝牙透传,占一个 UART 口"},
+ {t:"oled",  cat:"i2c",name:"OLED 屏",sub:"SSD1306",addr:0x3C,ok:"🖥 OLED:点亮,显示「温度 25.6℃」",def:1,
+  desc:"I²C 地址 0x3C"},
+ {t:"aht20", cat:"i2c",name:"温湿度传感器",sub:"AHT20",addr:0x38,ok:"🌡 AHT20:上报 25.6℃ / 48%RH",def:1,
+  desc:"I²C 地址 0x38"},
+ {t:"eep",   cat:"i2c",name:"EEPROM",sub:"AT24C02",addr:0x50,ok:"💾 EEPROM:写入 0xA5 并回读成功",
+  desc:"I²C 地址 0x50,掉电不丢配置"},
+ {t:"rtc",   cat:"i2c",name:"实时时钟",sub:"DS3231",addr:0x68,ok:"⏰ RTC:当前时间 12:30:05,秒针在走",
+  desc:"I²C 地址 0x68,高精度时钟"},
+ {t:"bmp",   cat:"i2c",name:"气压计",sub:"BMP280",addr:0x76,ok:"⛰ 气压计:101.3kPa,海拔约 12m",
+  desc:"I²C 地址 0x76"},
+ {t:"w25",   cat:"spi",name:"SPI Flash",sub:"W25Q64",ok:"💾 Flash:JEDEC ID = EF 40 17,读写正常",def:1,
+  desc:"需要独立片选 CS"},
+ {t:"nrf",   cat:"spi",name:"无线模块",sub:"nRF24L01",ok:"📡 nRF24:2.4G 测试包发送成功",
+  desc:"需要独立片选 CS"},
+ {t:"tf",    cat:"spi",name:"TF 卡座",sub:"SPI 模式",ok:"🗂 TF 卡:FAT32 挂载成功,读出 log.txt",
+  desc:"需要独立片选 CS"},
+ {t:"m485",  cat:"b485",name:"RS-485 收发器",sub:"MAX485",ok:"",def:1,
+  desc:"桥接器件:UART ↔ A/B 差分总线"},
+ {t:"meter", cat:"485s",name:"智能电表",sub:"485 从机",addr:1,ok:"⚡ 电表:回抄 220.1V · 1.53kW",def:1,
+  desc:"485 地址 01,挂 A/B 总线"},
+ {t:"thermo",cat:"485s",name:"温控器",sub:"485 从机",addr:2,ok:"🌡 温控器:设定 26.0℃,当前 25.4℃",
+  desc:"485 地址 02"},
+ {t:"vfd",   cat:"485s",name:"变频器",sub:"485 从机",addr:3,ok:"⚙ 变频器:反馈输出频率 45.0Hz",
+  desc:"485 地址 03"},
+ {t:"tja",   cat:"bcan",name:"CAN 收发器",sub:"TJA1050",ok:"",
+  desc:"桥接器件:CAN 控制器 ↔ CANH/CANL"},
+ {t:"lamp",  cat:"can",name:"车灯 ECU",sub:"CAN 节点",ok:"💡 车灯 ECU:收到 ID=0x321 开灯报文,大灯点亮",
+  desc:"挂 CANH/CANL 总线"},
+ {t:"motor", cat:"can",name:"电机 ECU",sub:"CAN 节点",ok:"⚙ 电机 ECU:广播转速 3000rpm(ID=0x100)",
+  desc:"挂 CANH/CANL 总线"},
+ {t:"dash",  cat:"can",name:"仪表 ECU",sub:"CAN 节点",ok:"📟 仪表 ECU:表盘指针跳到 3000rpm",
+  desc:"挂 CANH/CANL 总线"},
+ {t:"r120",  cat:"res",name:"120Ω 电阻",sub:"终端电阻",ok:"",
+  desc:"两脚跨接 CANH-CANL,总线两端各一颗"},
+];
+
+/* 各类别的外形与引脚模板 */
+const SHAPE={
+ uart:{w:170,h:100,pins:[{id:"TX",dx:170,dy:42,side:"R",cls:"utx",color:"#4cc9f0"},
+                         {id:"RX",dx:170,dy:77,side:"R",cls:"urx",color:"#4ade80"}]},
+ i2c:{w:180,h:95,pins:[{id:"SDA",dx:0,dy:40,side:"L",cls:"sda",color:"#a78bfa"},
+                       {id:"SCL",dx:0,dy:74,side:"L",cls:"scl",color:"#fbbf24"}]},
+ spi:{w:180,h:150,pins:[{id:"SCK",dx:0,dy:45,side:"L",cls:"sck",color:"#fbbf24"},
+                        {id:"MOSI",dx:0,dy:78,side:"L",cls:"mosi",color:"#4cc9f0"},
+                        {id:"MISO",dx:0,dy:111,side:"L",cls:"miso",color:"#4ade80"},
+                        {id:"CS",dx:0,dy:144,side:"L",cls:"cs",color:"#ff6b6b"}]},
+ "485s":{w:170,h:90,pins:[{id:"A",dx:45,dy:0,side:"T",cls:"a",color:"#4cc9f0"},
+                          {id:"B",dx:115,dy:0,side:"T",cls:"b",color:"#f0a04c"}]},
+ b485:{w:170,h:115,pins:[{id:"DI",dx:170,dy:40,side:"R",cls:"urx",color:"#4cc9f0"},
+                         {id:"RO",dx:170,dy:75,side:"R",cls:"utx",color:"#4ade80"},
+                         {id:"A",dx:45,dy:115,side:"B",cls:"a",color:"#4cc9f0"},
+                         {id:"B",dx:115,dy:115,side:"B",cls:"b",color:"#f0a04c"}]},
+ bcan:{w:180,h:110,pins:[{id:"TXD",dx:50,dy:0,side:"T",cls:"urx",color:"#4cc9f0"},
+                         {id:"RXD",dx:130,dy:0,side:"T",cls:"utx",color:"#4ade80"},
+                         {id:"CANH",dx:50,dy:110,side:"B",cls:"h",color:"#4cc9f0"},
+                         {id:"CANL",dx:130,dy:110,side:"B",cls:"l",color:"#f0a04c"}]},
+ can:{w:170,h:90,pins:[{id:"CANH",dx:45,dy:0,side:"T",cls:"h",color:"#4cc9f0"},
+                       {id:"CANL",dx:115,dy:0,side:"T",cls:"l",color:"#f0a04c"}]},
+ res:{w:96,h:66,pins:[{id:"P1",dx:26,dy:0,side:"T",cls:"r",color:"#8fa0c0"},
+                      {id:"P2",dx:70,dy:0,side:"T",cls:"r",color:"#8fa0c0"}]},
+};
+
+/* MCU(固定,不可删除) */
+const MCU_DEF={
+ id:"mcu",name:"主控 MCU",sub:"STM32",x:405,y:130,w:210,h:300,fixed:true,cat:"mcu",
+ pins:[
+  {id:"TX", dx:0,dy:60, side:"L",cls:"utx",color:"#4cc9f0"},
+  {id:"RX", dx:0,dy:90, side:"L",cls:"urx",color:"#4ade80"},
+  {id:"TX2",dx:0,dy:145,side:"L",cls:"utx",color:"#4cc9f0"},
+  {id:"RX2",dx:0,dy:175,side:"L",cls:"urx",color:"#4ade80"},
+  {id:"SDA",dx:210,dy:60, side:"R",cls:"sda",color:"#a78bfa"},
+  {id:"SCL",dx:210,dy:90, side:"R",cls:"scl",color:"#fbbf24"},
+  {id:"SCK",dx:210,dy:145,side:"R",cls:"sck",color:"#fbbf24"},
+  {id:"MOSI",dx:210,dy:175,side:"R",cls:"mosi",color:"#4cc9f0"},
+  {id:"MISO",dx:210,dy:205,side:"R",cls:"miso",color:"#4ade80"},
+  {id:"CS1",dx:210,dy:240,side:"R",cls:"cs",color:"#ff6b6b"},
+  {id:"CS2",dx:210,dy:270,side:"R",cls:"cs",color:"#ff6b6b"},
+  {id:"CTX",dx:70, dy:300,side:"B",cls:"utx",color:"#4cc9f0"},
+  {id:"CRX",dx:140,dy:300,side:"B",cls:"urx",color:"#4ade80"},
+ ],
+ notes:[["UART1",14,50],["UART2",14,135],["I2C1",158,50],["SPI1",158,135],["CAN",96,288]]
+};
+const UART_PORTS=[{name:"UART1",tx:"mcu.TX",rx:"mcu.RX"},{name:"UART2",tx:"mcu.TX2",rx:"mcu.RX2"}];
+const CS_PORTS=["mcu.CS1","mcu.CS2"];
+
+/* ═════════ 场景状态 ═════════ */
+let devices=[], wires=[], pinMap={}, seq=0;
+let selPin=null, selRing=null, fxToken=0;
+
+/* 摆放槽位 */
+const SLOTS={
+ L:[[55,30],[55,165],[55,300],[55,435],[55,565]],
+ R:[[805,30],[805,160],[805,290],[805,420],[805,555]],
+ B:[[240,565],[625,565],[430,585]],
+ TR1:[[410,500]],
+ RS:[[330,600],[560,600],[130,610],[700,610]],
+};
+const CATSLOT={uart:"L",b485:"L","485s":"L",i2c:"R",spi:"R",can:"B",res:"RS",bcan:"TR1"};
+function overlap(x,y,w,h){
+  return devices.some(d=>!(x>d.x+d.w+12||x+w+12<d.x||y>d.y+d.h+12||y+h+12<d.y));
+}
+function findSpot(cat,w,h){
+  const order=[...(SLOTS[CATSLOT[cat]]||[]),...SLOTS.L,...SLOTS.R,...SLOTS.B,...SLOTS.RS];
+  for(const [x,y] of order)
+    if(x+w<1000&&y+h<680&&!overlap(x,y,w,h))return[x,y];
+  for(let y=25;y<680-h;y+=40)for(let x=30;x<1000-w;x+=50)
+    if(!overlap(x,y,w,h))return[x,y];
+  return[30,30];
+}
+
+/* ═════════ 渲染 ═════════ */
+function renderDevice(d){
+  const g=el("g",{transform:`translate(${d.x},${d.y})`},devLayer);
+  d.g=g;
+  d.rect=el("rect",{class:"dev-rect",x:0,y:0,width:d.w,height:d.h,rx:12,
+    fill:"#1b2440",stroke:"#2a3654","stroke-width":2},g);
+  const t=el("text",{x:d.w/2,y:d.h>70?26:24,"font-size":d.w<120?12:14.5,"text-anchor":"middle",
+    fill:"#e8edf7","font-weight":"bold","pointer-events":"none"},g);
+  t.textContent=d.name;
+  const t2=el("text",{x:d.w/2,y:d.h>70?44:40,"font-size":10,"text-anchor":"middle",
+    fill:"#5b6b8c","pointer-events":"none"},g);
+  t2.textContent=d.sub+(d.addr!=null?(d.cat==="i2c"?" · 0x"+d.addr.toString(16).toUpperCase():" · 地址"+String(d.addr).padStart(2,"0")):"");
+  (d.notes||[]).forEach(n=>{
+    const nt=el("text",{x:n[1],y:n[2],"font-size":10,fill:"#3f4f78","pointer-events":"none"},g);
+    nt.textContent=n[0];
+  });
+  if(!d.fixed){
+    const dl=el("text",{class:"dev-del",x:d.w-14,y:17,"font-size":13,fill:"#ff6b6b","font-weight":"bold"},g);
+    dl.textContent="✕";
+    dl.addEventListener("click",ev=>{ev.stopPropagation();removeDevice(d);});
+  }
+  d.pins.forEach(p=>{
+    p.key=d.id+"."+p.id; p.dev=d; pinMap[p.key]=p;
+    p.el=el("circle",{class:"pin-dot",cx:p.dx,cy:p.dy,r:7,
+      fill:p.color,stroke:"#0d1220","stroke-width":2},g);
+    const hit=el("circle",{class:"pin-dot",cx:p.dx,cy:p.dy,r:14,fill:"transparent"},g);
+    hit.addEventListener("click",ev=>{ev.stopPropagation();pinClick(p);});
+    p.el.addEventListener("click",ev=>{ev.stopPropagation();pinClick(p);});
+    const lab=el("text",{"font-size":11,fill:"#cfd9ec","pointer-events":"none","font-weight":"bold"},g);
+    lab.textContent=p.id;
+    if(p.side==="L"){lab.setAttribute("x",p.dx+13);lab.setAttribute("y",p.dy+4);}
+    else if(p.side==="R"){lab.setAttribute("x",p.dx-13);lab.setAttribute("y",p.dy+4);lab.setAttribute("text-anchor","end");}
+    else if(p.side==="B"){lab.setAttribute("x",p.dx);lab.setAttribute("y",p.dy-11);lab.setAttribute("text-anchor","middle");}
+    else{lab.setAttribute("x",p.dx);lab.setAttribute("y",p.dy+20);lab.setAttribute("text-anchor","middle");}
+  });
+  d.rect.addEventListener("pointerdown",e=>{
+    const pt=svgPt(e);
+    dragState={d,ox:pt.x-d.x,oy:pt.y-d.y};
+    d.rect.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+}
+function addDevice(tpl,custom){
+  const shape=SHAPE[tpl.cat];
+  const [x,y]=findSpot(tpl.cat,shape.w,shape.h);
+  seq++;
+  const d={id:tpl.t+seq,tpl:tpl.t,cat:tpl.cat,name:tpl.name,sub:tpl.sub,
+    addr:tpl.addr,ok:tpl.ok,x,y,w:shape.w,h:shape.h,
+    pins:shape.pins.map(p=>({...p}))};
+  if(custom)Object.assign(d,custom);
+  devices.push(d);
+  renderDevice(d);
+  return d;
+}
+function removeDevice(d){
+  fxToken++;
+  [...wires].forEach(w=>{if(w.a.dev===d||w.b.dev===d)removeWire(w,true);});
+  d.pins.forEach(p=>delete pinMap[p.key]);
+  d.g.remove();
+  devices=devices.filter(x=>x!==d);
+  clearSel();
+  stEl.textContent=`已移除 ${d.name}(及其连线)。`;
+}
+
+/* ═════════ 拖拽 ═════════ */
+function svgPt(e){
+  const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+let dragState=null;
+svg.addEventListener("pointermove",e=>{
+  if(!dragState)return;
+  const p=svgPt(e),d=dragState.d;
+  d.x=Math.max(0,Math.min(1000-d.w,p.x-dragState.ox));
+  d.y=Math.max(0,Math.min(680-d.h,p.y-dragState.oy));
+  d.g.setAttribute("transform",`translate(${d.x},${d.y})`);
+  redrawWires();
+});
+svg.addEventListener("pointerup",()=>dragState=null);
+
+/* ═════════ 连线 ═════════ */
+const pinXY=p=>({x:p.dev.x+p.dx,y:p.dev.y+p.dy});
+const fname=p=>`${p.dev.name}.${p.id}`;
+function wirePath(a,b){
+  const p1=pinXY(a),p2=pinXY(b);
+  const dx=Math.abs(p1.x-p2.x)*.4+Math.abs(p1.y-p2.y)*.15+25;
+  const c=(p,side)=>({
+    x:p.x+(side==="L"?-dx:side==="R"?dx:0),
+    y:p.y+(side==="B"?dx:side==="T"?-dx:0)});
+  const c1=c(p1,a.side),c2=c(p2,b.side);
+  return `M ${p1.x} ${p1.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${p2.x} ${p2.y}`;
+}
+function addWire(a,b,quiet){
+  if(a===b)return;
+  if(wires.some(w=>(w.a===a&&w.b===b)||(w.a===b&&w.b===a))){
+    if(!quiet)stEl.textContent="这两个引脚之间已经有线了。";return;
+  }
+  const path=el("path",{d:wirePath(a,b),fill:"none",stroke:a.color,"stroke-width":3,opacity:.9},wireLayer);
+  const hit=el("path",{class:"wire-hit",d:wirePath(a,b),fill:"none",stroke:"transparent","stroke-width":14},wireLayer);
+  const w={a,b,path,hit};
+  hit.addEventListener("click",ev=>{ev.stopPropagation();removeWire(w);});
+  wires.push(w);
+  if(!quiet)stEl.textContent=`已连接:${fname(a)} ↔ ${fname(b)}(共 ${wires.length} 根)。点击导线可删除。`;
+}
+function removeWire(w,quiet){
+  w.path.remove();w.hit.remove();
+  wires=wires.filter(x=>x!==w);
+  if(!quiet)stEl.textContent=`已删除 ${fname(w.a)} ↔ ${fname(w.b)},剩 ${wires.length} 根线。`;
+}
+function redrawWires(){
+  wires.forEach(w=>{
+    const d=wirePath(w.a,w.b);
+    w.path.setAttribute("d",d);w.hit.setAttribute("d",d);
+  });
+}
+function clearSel(){if(selRing){selRing.remove();selRing=null;}selPin=null;}
+function pinClick(p){
+  if(!selPin){
+    selPin=p;
+    const xy=pinXY(p);
+    selRing=el("circle",{cx:xy.x,cy:xy.y,r:12,fill:"none",stroke:"#fbbf24","stroke-width":2.5,"pointer-events":"none"},fxLayer);
+    stEl.textContent=`已选中 ${fname(p)},再点另一个引脚完成连线(再点它自己取消)。`;
+  }else if(selPin===p){clearSel();stEl.textContent="已取消选择。";}
+  else{addWire(selPin,p);clearSel();}
+}
+svg.addEventListener("click",()=>{if(selPin){clearSel();stEl.textContent="已取消选择。";}});
+
+/* ═════════ 通电测试 ═════════ */
+const COMPAT={ utx:["urx"],urx:["utx"],sda:["sda"],scl:["scl"],sck:["sck"],
+  mosi:["mosi"],miso:["miso"],cs:["cs"],a:["a"],b:["b"],h:["h","r"],l:["l","r"],r:["h","l"] };
+function wrongMsg(a,b){
+  const s=new Set([a.id.replace(/[0-9]/g,""),b.id.replace(/[0-9]/g,"")]);
+  const c=new Set([a.cls,b.cls]);
+  if(c.has("utx")&&!c.has("urx"))return "串口类信号必须交叉:TX 是嘴、RX 是耳朵,两张嘴(TX-TX)互喊谁也听不见。";
+  if(c.has("urx")&&!c.has("utx"))return "两个都是接收端(RX-RX),没人发数据,线上永远安静。";
+  if(s.has("A")&&s.has("B"))return "RS-485 同名直连:A 接 A、B 接 B。交叉会把差分电压极性弄反。";
+  if(c.has("mosi")&&c.has("miso"))return "SPI 不交叉:MOSI 整根线就叫「主出从入」,两端都接 MOSI。";
+  if(c.has("sda")&&c.has("scl"))return "把数据线 SDA 和时钟线 SCL 接在一起了,I²C 时序全乱。";
+  if(c.has("h")&&c.has("l"))return "CANH 和 CANL 接反/短接了,差分信号被破坏。";
+  if(c.has("r"))return "终端电阻只应跨接在 CANH 和 CANL 之间。";
+  return "这两个引脚不属于同一种信号,不能相连。";
+}
+function find(fa,x){while(fa[x]!==x)x=fa[x]=fa[fa[x]];return x;}
+function animateWire(w,token,delay){
+  const path=w.path;path.setAttribute("stroke-width",4);
+  const L=path.getTotalLength();
+  const dot=el("circle",{r:5,fill:"#fff",opacity:0},fxLayer);
+  const t0=performance.now()+delay,cycle=1100,life=5200;
+  (function step(now){
+    if(token!==fxToken){dot.remove();path.setAttribute("stroke-width",3);return;}
+    if(now>=t0){
+      const t=((now-t0)%cycle)/cycle;
+      const pt=path.getPointAtLength(L*t);
+      dot.setAttribute("cx",pt.x);dot.setAttribute("cy",pt.y);dot.setAttribute("opacity",1);
+      if(now-t0>life){dot.remove();path.setAttribute("stroke-width",3);return;}
+    }
+    requestAnimationFrame(step);
+  })(performance.now());
+}
+function flashWrong(w,token){
+  w.path.setAttribute("stroke","#ff2d55");w.path.setAttribute("stroke-dasharray","7 5");
+  setTimeout(()=>{if(token!==fxToken)return;
+    w.path.setAttribute("stroke",w.a.color);w.path.removeAttribute("stroke-dasharray");},5200);
+}
+
+$("btnTest").onclick=()=>{
+  fxToken++;const token=fxToken;
+  const keys=Object.keys(pinMap);
+  const fa={};keys.forEach(k=>fa[k]=k);
+  const goodWires=[],wrongs=[];
+  wires.forEach(w=>{
+    if(COMPAT[w.a.cls]?.includes(w.b.cls)){goodWires.push(w);fa[find(fa,w.a.key)]=find(fa,w.b.key);}
+    else wrongs.push(w);
+  });
+  const conn=(x,y)=>pinMap[x]&&pinMap[y]&&find(fa,x)===find(fa,y);
+  const lines=[],activeRoots=new Set();
+  let okCount=0,total=0;
+  const pass=(d,msg,extra)=>{okCount++;lines.push(`<div class="ok">✔ ${msg}${extra||""}</div>`);};
+  const fail=(d,why)=>lines.push(`<div class="bad">✘ ${d.name}:不工作 —— ${why}</div>`);
+  const activate=ks=>ks.forEach(k=>{if(pinMap[k])activeRoots.add(find(fa,k));});
+
+  /* UART 口分配(UART 设备 + MAX485 桥) */
+  const claims={};
+  devices.forEach(d=>{d._port=null;d._cs=null;d._br=null;});
+  const uartClaim=(d,rxk,txk)=>{
+    const hits=UART_PORTS.filter(p=>conn(rxk,p.tx)&&conn(txk,p.rx));
+    if(hits.length){const p=hits[0];(claims[p.name]=claims[p.name]||[]).push(d);d._port=p;}
+  };
+  devices.filter(d=>d.cat==="uart").forEach(d=>uartClaim(d,d.id+".RX",d.id+".TX"));
+  devices.filter(d=>d.cat==="b485").forEach(d=>uartClaim(d,d.id+".DI",d.id+".RO"));
+  const portBusy=n=>(claims[n]||[]).length>1;
+
+  devices.filter(d=>d.cat==="uart").forEach(d=>{
+    total++;
+    if(!d._port)return fail(d,"没有正确接到任何 UART 口。记住要交叉:它的 TX→MCU.RXn、它的 RX→MCU.TXn。");
+    if(portBusy(d._port.name))return fail(d,`${d._port.name} 被多个设备同时占用,两个 TX 打一根 RX,数据碰撞。`);
+    pass(d,d.ok,`<span class="info">(占用 ${d._port.name})</span>`);
+    activate([d._port.tx,d._port.rx]);
+  });
+
+  /* I²C */
+  const i2cOK=devices.filter(d=>d.cat==="i2c"&&conn(d.id+".SDA","mcu.SDA")&&conn(d.id+".SCL","mcu.SCL"));
+  const addrCnt={};i2cOK.forEach(d=>addrCnt[d.addr]=(addrCnt[d.addr]||0)+1);
+  devices.filter(d=>d.cat==="i2c").forEach(d=>{
+    total++;
+    if(!i2cOK.includes(d))return fail(d,"SDA/SCL 没有接通到 MCU 的 I²C 总线(可并联或菊花链)。");
+    if(addrCnt[d.addr]>1)return fail(d,`I²C 地址冲突!0x${d.addr.toString(16).toUpperCase()} 上挂了 ${addrCnt[d.addr]} 个设备,应答互相打架。改地址脚或用 I²C 复用器。`);
+    pass(d,d.ok,`<span class="info">(应答地址 0x${d.addr.toString(16).toUpperCase()})</span>`);
+    activate(["mcu.SDA","mcu.SCL"]);
+  });
+
+  /* SPI */
+  const csClaims={};
+  devices.filter(d=>d.cat==="spi").forEach(d=>{
+    const cp=CS_PORTS.filter(k=>conn(d.id+".CS",k));
+    if(cp.length===1){d._cs=cp[0];(csClaims[cp[0]]=csClaims[cp[0]]||[]).push(d);}
+    else d._cs=null;
+  });
+  devices.filter(d=>d.cat==="spi").forEach(d=>{
+    total++;
+    const shared=conn(d.id+".SCK","mcu.SCK")&&conn(d.id+".MOSI","mcu.MOSI")&&conn(d.id+".MISO","mcu.MISO");
+    if(!shared)return fail(d,"SCK/MOSI/MISO 三根共享线未全部同名接通。");
+    if(!d._cs)return fail(d,"片选 CS 必须单独接到一个 MCU.CSn(不能悬空、不能接错)。");
+    if(csClaims[d._cs].length>1)return fail(d,`片选冲突!${d._cs.split(".")[1]} 同时选中了 ${csClaims[d._cs].length} 片从机,MISO 上一起说话。`);
+    pass(d,d.ok,`<span class="info">(片选 ${d._cs.split(".")[1]})</span>`);
+    activate(["mcu.SCK","mcu.MOSI","mcu.MISO",d._cs]);
+  });
+
+  /* RS-485 */
+  const bridges485=devices.filter(d=>d.cat==="b485");
+  bridges485.forEach(d=>{
+    total++;
+    if(!d._port)return fail(d,"MAX485 未桥接:MCU.TXn→DI、RO→MCU.RXn(交叉逻辑同串口)。");
+    if(portBusy(d._port.name))return fail(d,`${d._port.name} 被多个设备同时占用。`);
+    pass(d,`🔁 ${d.name}:桥接就绪(${d._port.name} ↔ A/B 总线)`);
+    activate([d._port.tx,d._port.rx]);
+  });
+  const s485=devices.filter(d=>d.cat==="485s");
+  if(s485.length){
+    const okB=bridges485.filter(d=>d._port&&!portBusy(d._port.name));
+    const a485={};
+    s485.forEach(d=>{
+      d._br=okB.find(m=>conn(d.id+".A",m.id+".A")&&conn(d.id+".B",m.id+".B"));
+      if(d._br)a485[d.addr]=(a485[d.addr]||0)+1;
+    });
+    s485.forEach(d=>{
+      total++;
+      if(!bridges485.length)return fail(d,"画布上没有 RS-485 收发器,先从器件库添加 MAX485。");
+      if(!d._br)return fail(d,"A/B 未接到(已桥接好的)MAX485 的 A/B 上 —— A 接 A、B 接 B,不交叉。");
+      if(a485[d.addr]>1)return fail(d,`485 地址冲突!地址 ${String(d.addr).padStart(2,"0")} 有 ${a485[d.addr]} 台从机同时应答。`);
+      pass(d,d.ok,`<span class="info">(485 地址 ${String(d.addr).padStart(2,"0")})</span>`);
+      activate([d._br.id+".A",d._br.id+".B"]);
+    });
+  }
+
+  /* CAN */
+  const bcans=devices.filter(d=>d.cat==="bcan");
+  const canNodes=devices.filter(d=>d.cat==="can");
+  const resistors=devices.filter(d=>d.cat==="res");
+  let canBridge=null;
+  bcans.forEach(d=>{
+    total++;
+    const okb=conn(d.id+".TXD","mcu.CTX")&&conn(d.id+".RXD","mcu.CRX");
+    if(!okb)return fail(d,"未桥接:MCU.CTX→TXD、RXD→MCU.CRX。");
+    pass(d,`🔁 ${d.name}:桥接就绪(CAN 控制器 ↔ CANH/CANL)`);
+    activate(["mcu.CTX","mcu.CRX"]);
+    canBridge=canBridge||d;
+  });
+  if(canNodes.length){
+    let resCnt=0,resWarn="";
+    if(canBridge){
+      const hr=find(fa,canBridge.id+".CANH"),lr=find(fa,canBridge.id+".CANL");
+      resistors.forEach(r=>{
+        const p1=find(fa,r.id+".P1"),p2=find(fa,r.id+".P2");
+        if((p1===hr&&p2===lr)||(p1===lr&&p2===hr))resCnt++;
+        else if(p1===p2&&(p1===hr||p1===lr))resWarn="⚠ 有一颗终端电阻两脚接在同一根线上,不起作用。";
+      });
+    }
+    canNodes.forEach(d=>{
+      total++;
+      if(!bcans.length)return fail(d,"没有 CAN 收发器,先从器件库添加 TJA1050。");
+      if(!canBridge)return fail(d,"CAN 收发器还没桥接好。");
+      const onBus=conn(d.id+".CANH",canBridge.id+".CANH")&&conn(d.id+".CANL",canBridge.id+".CANL");
+      if(!onBus)return fail(d,"CANH/CANL 未接入总线(H 连 H、L 连 L)。");
+      if(resCnt===0)return fail(d,"总线上没有 120Ω 终端电阻:信号反射叠加,错误帧频发,通信失败。添加电阻并把两脚跨接 H-L。");
+      pass(d,d.ok,`<span class="info">(在线)</span>`);
+      activate([canBridge.id+".CANH",canBridge.id+".CANL"]);
+    });
+    if(canBridge&&resCnt===1)lines.push(`<div class="warn">⚠ CAN:只有 1 颗终端电阻(60Ω 匹配不足)。短线勉强能跑,标准做法是总线两端各 1 颗、共 2 颗。</div>`);
+    if(canBridge&&resCnt===2)lines.push(`<div class="ok">✔ CAN:两端各 1 颗 120Ω,阻抗匹配完美。</div>`);
+    if(canBridge&&resCnt>2)lines.push(`<div class="warn">⚠ CAN:${resCnt} 颗终端电阻,总线负载过重,驱动器压力山大 —— 只留 2 颗。</div>`);
+    if(resWarn)lines.push(`<div class="warn">${resWarn}</div>`);
+  }
+
+  /* 错误线提示 */
+  wrongs.forEach(w=>{
+    flashWrong(w,token);
+    lines.push(`<div class="warn">⚠ ${fname(w.a)} ↔ ${fname(w.b)} 接错了:${wrongMsg(w.a,w.b)}</div>`);
+  });
+  /* 动画 */
+  goodWires.forEach((w,i)=>{
+    if(activeRoots.has(find(fa,w.a.key)))animateWire(w,token,i*90);
+  });
+
+  resEl.innerHTML=lines.length?lines.join(""):"画布上还没有需要判定的器件。";
+  if(total&&okCount===total&&!wrongs.length)
+    stEl.textContent=`🎉 完美!${okCount}/${total} 全部上线,白点就是流动的数据。试着再加器件或故意接错,看看诊断。`;
+  else
+    stEl.textContent=`通电结果:${okCount}/${total} 正常${wrongs.length?`,${wrongs.length} 根线接错(红色虚线)`:""}。详见下方诊断。`;
+};
+
+/* ═════════ 自动接线 ═════════ */
+$("btnAuto").onclick=()=>{
+  fxToken++;
+  [...wires].forEach(w=>removeWire(w,true));
+  const P=k=>pinMap[k];
+  let portI=0;
+  const takePort=()=>UART_PORTS[portI++]||null;
+  devices.filter(d=>d.cat==="uart").forEach(d=>{
+    const p=takePort();if(!p)return;
+    addWire(P(p.tx),P(d.id+".RX"),true);addWire(P(d.id+".TX"),P(p.rx),true);
+  });
+  devices.filter(d=>d.cat==="b485").forEach(d=>{
+    const p=takePort();if(!p)return;
+    addWire(P(p.tx),P(d.id+".DI"),true);addWire(P(d.id+".RO"),P(p.rx),true);
+  });
+  devices.filter(d=>d.cat==="i2c").forEach(d=>{
+    addWire(P("mcu.SDA"),P(d.id+".SDA"),true);addWire(P("mcu.SCL"),P(d.id+".SCL"),true);
+  });
+  let csI=0;
+  devices.filter(d=>d.cat==="spi").forEach(d=>{
+    addWire(P("mcu.SCK"),P(d.id+".SCK"),true);
+    addWire(P("mcu.MOSI"),P(d.id+".MOSI"),true);
+    addWire(P("mcu.MISO"),P(d.id+".MISO"),true);
+    const cs=CS_PORTS[csI++];if(cs)addWire(P(cs),P(d.id+".CS"),true);
+  });
+  const br=devices.find(d=>d.cat==="b485");
+  if(br)devices.filter(d=>d.cat==="485s").forEach(d=>{
+    addWire(P(br.id+".A"),P(d.id+".A"),true);addWire(P(br.id+".B"),P(d.id+".B"),true);
+  });
+  const bc=devices.find(d=>d.cat==="bcan");
+  if(bc){
+    addWire(P("mcu.CTX"),P(bc.id+".TXD"),true);addWire(P(bc.id+".RXD"),P("mcu.CRX"),true);
+    devices.filter(d=>d.cat==="can").forEach(d=>{
+      addWire(P(bc.id+".CANH"),P(d.id+".CANH"),true);addWire(P(bc.id+".CANL"),P(d.id+".CANL"),true);
+    });
+    devices.filter(d=>d.cat==="res").forEach(d=>{
+      addWire(P(d.id+".P1"),P(bc.id+".CANH"),true);addWire(P(d.id+".P2"),P(bc.id+".CANL"),true);
+    });
+  }
+  const skipped=[];
+  if(portI>UART_PORTS.length)skipped.push("UART 口不够,部分串口设备没接");
+  if(csI>CS_PORTS.length)skipped.push("CS 口不够,部分 SPI 从机没接");
+  if(!br&&devices.some(d=>d.cat==="485s"))skipped.push("缺 MAX485,485 从机没接");
+  if(!bc&&devices.some(d=>d.cat==="can"))skipped.push("缺 CAN 收发器,CAN 节点没接");
+  stEl.textContent="已按当前画布上的器件自动布线"+(skipped.length?"(注意:"+skipped.join(";")+")":"")+"。点「⚡ 通电测试」看效果!";
+};
+
+/* ═════════ 器件库 UI ═════════ */
+(function buildLib(){
+  const sel=$("libSel");
+  const cats=[["uart","UART 设备"],["i2c","I²C 从机"],["spi","SPI 从机"],
+    ["b485","RS-485 桥接"],["485s","RS-485 从机"],["bcan","CAN 桥接"],["can","CAN 节点"],["res","无源器件"]];
+  cats.forEach(([c,label])=>{
+    const og=document.createElement("optgroup");og.label=label;
+    LIB.forEach((t,i)=>{
+      if(t.cat!==c)return;
+      const o=document.createElement("option");
+      o.value=i;o.textContent=`${t.name}(${t.sub})`;
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  });
+  const upd=()=>{$("libDesc").textContent="ℹ "+LIB[sel.value].desc;};
+  sel.addEventListener("change",upd);upd();
+})();
+$("btnAdd").onclick=()=>{
+  const tpl=LIB[$("libSel").value];
+  const d=addDevice(tpl);
+  stEl.textContent=`已添加 ${d.name}(${d.sub})。拖到合适位置开始连线吧。`;
+};
+$("btnCustom").onclick=()=>$("customForm").classList.toggle("show");
+$("cfCat").addEventListener("change",()=>{
+  const c=$("cfCat").value;
+  const show=c==="i2c"||c==="485s";
+  $("cfAddr").style.display=$("cfAddrLab").style.display=show?"":"none";
+  $("cfAddr").value=c==="i2c"?"0x77":"9";
+});
+$("cfOk").onclick=()=>{
+  const name=$("cfName").value.trim()||"自定义器件";
+  const cat=$("cfCat").value;
+  let addr=null;
+  if(cat==="i2c"){addr=parseInt($("cfAddr").value,16);if(isNaN(addr)||addr<0x03||addr>0x77){stEl.textContent="I²C 地址无效,请输入 0x03~0x77 之间的十六进制,如 0x77。";return;}}
+  if(cat==="485s"){addr=parseInt($("cfAddr").value,10);if(isNaN(addr)||addr<1||addr>247){stEl.textContent="485 地址无效,请输入 1~247 的数字。";return;}}
+  const defMsg={uart:`📟 ${name}:串口数据收发正常`,i2c:`📟 ${name}:应答成功,寄存器读写正常`,
+    spi:`📟 ${name}:SPI 读写正常`,"485s":`📟 ${name}:轮询应答正常`,can:`📟 ${name}:报文收发正常`}[cat];
+  const ok=$("cfMsg").value.trim()||defMsg;
+  addDevice({t:"cust",cat,name,sub:"自定义",addr,ok,desc:""});
+  stEl.textContent=`已创建自定义器件「${name}」并放入画布。`;
+  $("customForm").classList.remove("show");
+};
+
+/* ═════════ 场景管理 ═════════ */
+function clearWiresAll(){fxToken++;[...wires].forEach(w=>removeWire(w,true));resEl.textContent="测试结果会显示在这里。";}
+function loadDefault(){
+  fxToken++;
+  [...wires].forEach(w=>removeWire(w,true));
+  devices.forEach(d=>d.g.remove());
+  devices=[];pinMap={};clearSel();
+  const mcu={...MCU_DEF,pins:MCU_DEF.pins.map(p=>({...p}))};
+  devices.push(mcu);renderDevice(mcu);
+  LIB.filter(t=>t.def).forEach(t=>addDevice(t));
+  resEl.textContent="测试结果会显示在这里。";
+}
+$("btnClearW").onclick=()=>{clearWiresAll();stEl.textContent="接线已清空(器件保留),动手接一遍吧!";};
+$("btnReset").onclick=()=>{loadDefault();stEl.textContent="已恢复默认场景:MCU + CH340 + OLED + AHT20 + Flash + MAX485 + 电表。";};
+$("btnHint").onclick=()=>$("hintBox").classList.toggle("show");
+
+loadDefault();
+</script>
+</body>
+</html>

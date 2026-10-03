@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAN 总线工作流程 · 动态图解</title>
+<style>
+  :root{
+    --bg:#0d1220; --panel:#151c2e; --panel2:#1b2440;
+    --ink:#e8edf7; --muted:#8fa0c0; --accent:#4cc9f0;
+    --hi:#ff6b6b; --lo:#4ade80; --gold:#fbbf24; --purple:#a78bfa;
+    --line:#2a3654;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.7;
+  }
+  header{
+    text-align:center; padding:48px 16px 24px;
+    background:radial-gradient(ellipse at top,#1c2a4d 0%,var(--bg) 70%);
+  }
+  header h1{font-size:2.2rem; letter-spacing:2px;}
+  header h1 span{color:var(--accent);}
+  header p{color:var(--muted); margin-top:8px;}
+  nav{
+    position:sticky; top:0; z-index:50; display:flex; gap:4px; justify-content:center;
+    flex-wrap:wrap; padding:10px; background:rgba(13,18,32,.92);
+    backdrop-filter:blur(6px); border-bottom:1px solid var(--line);
+  }
+  nav a{
+    color:var(--muted); text-decoration:none; padding:6px 14px;
+    border-radius:20px; font-size:.9rem; transition:.2s;
+  }
+  nav a:hover{color:var(--ink); background:var(--panel2);}
+  main{max-width:1060px; margin:0 auto; padding:24px 16px 80px;}
+  section{
+    background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:28px; margin-top:28px; scroll-margin-top:70px;
+  }
+  section h2{
+    font-size:1.4rem; margin-bottom:6px; display:flex; align-items:center; gap:10px;
+  }
+  section h2 .num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:30px; height:30px; border-radius:50%; background:var(--accent);
+    color:#04121c; font-size:1rem; flex:none;
+  }
+  section > p.desc{color:var(--muted); margin-bottom:16px;}
+  .stage{
+    background:var(--panel2); border:1px solid var(--line); border-radius:12px;
+    padding:12px; overflow-x:auto;
+  }
+  svg{display:block; margin:0 auto; max-width:100%;}
+  .controls{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; align-items:center;}
+  button{
+    background:var(--accent); border:none; color:#04121c; font-weight:bold;
+    padding:8px 20px; border-radius:8px; cursor:pointer; font-size:.95rem;
+    font-family:inherit; transition:.15s;
+  }
+  button:hover{filter:brightness(1.15);}
+  button.ghost{background:transparent; color:var(--accent); border:1px solid var(--accent);}
+  button:disabled{opacity:.4; cursor:not-allowed;}
+  .status{
+    color:var(--gold); font-size:.92rem; min-height:1.6em; margin-top:10px;
+    padding:6px 12px; background:rgba(251,191,36,.07); border-radius:8px;
+    border-left:3px solid var(--gold);
+  }
+  .legend{display:flex; gap:18px; flex-wrap:wrap; margin-top:10px; font-size:.85rem; color:var(--muted);}
+  .legend i{
+    display:inline-block; width:12px; height:12px; border-radius:3px;
+    margin-right:5px; vertical-align:-1px;
+  }
+  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:14px;}
+  .card{
+    background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+    padding:14px; font-size:.9rem;
+  }
+  .card b{color:var(--accent);}
+  .field-info{
+    margin-top:12px; padding:12px 16px; background:var(--panel2);
+    border-radius:10px; border-left:3px solid var(--purple);
+    font-size:.92rem; min-height:3.2em; color:var(--muted);
+  }
+  .field-info b{color:var(--purple);}
+  code{background:#0a0f1c; padding:2px 7px; border-radius:5px; color:var(--lo); font-size:.88em;}
+  footer{text-align:center; color:var(--muted); padding:24px; font-size:.85rem;}
+  .frame-seg{cursor:pointer; transition:.15s;}
+  .frame-seg:hover{filter:brightness(1.3);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>CAN 总线<span>工作流程</span>动态图解</h1>
+  <p>Controller Area Network —— 汽车与工业控制的神经网络</p>
+</header>
+
+<nav>
+  <a href="index.html" style="color:var(--accent)">🏠 协议总览</a>
+  <a href="#s1">① 总线拓扑</a>
+  <a href="#s2">② 差分信号</a>
+  <a href="#s3">③ 帧结构</a>
+  <a href="#s4">④ 逐位仲裁</a>
+  <a href="#s5">⑤ 完整流程</a>
+  <a href="#s6">⑥ 错误处理</a>
+</nav>
+
+<main>
+
+<!-- ═══════════ ① 总线拓扑 ═══════════ -->
+<section id="s1">
+  <h2><span class="num">1</span>总线拓扑:所有节点挂在同一对双绞线上</h2>
+  <p class="desc">
+    CAN 是<b>多主(Multi-Master)广播式</b>总线:所有 ECU 节点并联在 CAN_H / CAN_L 双绞线上,
+    两端各接 120Ω 终端电阻防止信号反射。任何节点发送的报文,<b>所有节点都能收到</b>,
+    再由各节点自行「验收滤波」决定要不要处理。点击播放,看一条报文如何广播。
+  </p>
+  <div class="stage">
+    <svg id="svgTopo" viewBox="0 0 900 300" width="900" height="300">
+      <!-- 总线双线 -->
+      <line x1="60" y1="150" x2="840" y2="150" stroke="#4cc9f0" stroke-width="5"/>
+      <line x1="60" y1="170" x2="840" y2="170" stroke="#f0a04c" stroke-width="5"/>
+      <text x="35" y="155" fill="#4cc9f0" font-size="13">CAN_H</text>
+      <text x="35" y="180" fill="#f0a04c" font-size="13">CAN_L</text>
+      <!-- 终端电阻 -->
+      <g fill="#1b2440" stroke="#8fa0c0">
+        <rect x="52" y="148" width="16" height="24" rx="3"/>
+        <rect x="832" y="148" width="16" height="24" rx="3"/>
+      </g>
+      <text x="42" y="205" fill="#8fa0c0" font-size="12">120Ω</text>
+      <text x="822" y="205" fill="#8fa0c0" font-size="12">120Ω</text>
+      <!-- 节点 -->
+      <g id="topoNodes"></g>
+      <!-- 报文小球 -->
+      <circle id="msgBallL" r="9" fill="#fbbf24" opacity="0">
+        <animate attributeName="r" values="9;12;9" dur="0.6s" repeatCount="indefinite"/>
+      </circle>
+      <circle id="msgBallR" r="9" fill="#fbbf24" opacity="0">
+        <animate attributeName="r" values="9;12;9" dur="0.6s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+  </div>
+  <div class="controls">
+    <button id="btnTopo">▶ 播放:发动机 ECU 广播转速报文</button>
+  </div>
+  <div class="status" id="stTopo">提示:报文 ID=0x100(发动机转速),仪表盘和变速箱需要它,车窗控制器不需要。</div>
+  <div class="cards">
+    <div class="card"><b>多主结构</b><br>没有主机/从机之分,任何节点都可以主动发起发送,靠仲裁解决冲突。</div>
+    <div class="card"><b>广播 + 验收滤波</b><br>报文不写目的地址,只写「内容标识 ID」。节点按 ID 过滤,决定接收或忽略。</div>
+    <div class="card"><b>双绞线 + 终端电阻</b><br>双绞抵消电磁干扰,120Ω 电阻吸收信号能量,防止末端反射造成波形畸变。</div>
+  </div>
+</section>
+
+<!-- ═══════════ ② 差分信号 ═══════════ -->
+<section id="s2">
+  <h2><span class="num">2</span>物理层:用「电压差」表示 0 和 1</h2>
+  <p class="desc">
+    CAN 不看单根线的电平,而看 <b>CAN_H 与 CAN_L 的电压差</b>:
+    差值约 2V 时为<b style="color:var(--hi)">显性电平(逻辑 0)</b>,
+    差值约 0V 时为<b style="color:var(--lo)">隐性电平(逻辑 1)</b>。
+    显性能「压过」隐性——这正是后面仲裁机制的物理基础。共模干扰同时影响两根线,差值不变,所以抗干扰极强。
+  </p>
+  <div class="stage">
+    <svg id="svgDiff" viewBox="0 0 900 320" width="900" height="320">
+      <!-- 网格基线 -->
+      <g stroke="#2a3654" stroke-width="1">
+        <line x1="80" y1="70"  x2="860" y2="70"/>
+        <line x1="80" y1="130" x2="860" y2="130"/>
+        <line x1="80" y1="190" x2="860" y2="190"/>
+      </g>
+      <text x="20" y="74"  fill="#8fa0c0" font-size="12">3.5V</text>
+      <text x="20" y="134" fill="#8fa0c0" font-size="12">2.5V</text>
+      <text x="20" y="194" fill="#8fa0c0" font-size="12">1.5V</text>
+      <path id="waveH" fill="none" stroke="#4cc9f0" stroke-width="3"/>
+      <path id="waveL" fill="none" stroke="#f0a04c" stroke-width="3"/>
+      <g id="bitLabels"></g>
+      <line id="scanLine" x1="80" y1="40" x2="80" y2="230" stroke="#fbbf24" stroke-width="2" opacity="0"/>
+      <text x="80" y="30" fill="#4cc9f0" font-size="13">CAN_H</text>
+      <text x="160" y="30" fill="#f0a04c" font-size="13">CAN_L</text>
+      <!-- 当前位大字显示 -->
+      <text id="curBit" x="470" y="290" fill="#fbbf24" font-size="26" text-anchor="middle" font-weight="bold"></text>
+    </svg>
+  </div>
+  <div class="controls">
+    <button id="btnDiff">▶ 播放:发送位序列 0 1 0 0 1 1 0 1</button>
+  </div>
+  <div class="legend">
+    <span><i style="background:#ff6b6b"></i>显性 Dominant = 0(H/L 分开,差压≈2V)</span>
+    <span><i style="background:#4ade80"></i>隐性 Recessive = 1(H/L 重合,差压≈0V)</span>
+  </div>
+  <div class="status" id="stDiff">关键规则:总线上只要有一个节点发显性(0),总线就呈显性——「线与」逻辑。</div>
+</section>
+
+<!-- ═══════════ ③ 帧结构 ═══════════ -->
+<section id="s3">
+  <h2><span class="num">3</span>数据帧结构:一条报文由哪些字段组成</h2>
+  <p class="desc">
+    标准数据帧(CAN 2.0A,11 位 ID)如下图。<b>把鼠标移到 / 点击任意字段</b>查看它的作用,
+    或点「逐字段讲解」自动播放。
+  </p>
+  <div class="stage">
+    <svg id="svgFrame" viewBox="0 0 940 190" width="940" height="190">
+      <g id="frameSegs"></g>
+      <line id="framePointer" x1="0" y1="40" x2="0" y2="130" stroke="#fbbf24" stroke-width="3" opacity="0"/>
+    </svg>
+  </div>
+  <div class="controls">
+    <button id="btnFrame">▶ 逐字段讲解</button>
+    <button id="btnFrameStop" class="ghost">■ 停止</button>
+  </div>
+  <div class="field-info" id="frameInfo">👆 把鼠标移到上方的彩色字段上试试。</div>
+</section>
+
+<!-- ═══════════ ④ 逐位仲裁 ═══════════ -->
+<section id="s4">
+  <h2><span class="num">4</span>核心机制:非破坏性逐位仲裁(CSMA/CA)</h2>
+  <p class="desc">
+    多个节点同时开始发送怎么办?CAN 的答案优雅至极:各节点一边发 ID 一边<b>回读总线电平</b>。
+    由于显性(0)会覆盖隐性(1),当某节点发出 <b>1</b> 却读回 <b>0</b>,说明有更高优先级的节点在发送,
+    它立刻退出转为接收——报文毫发无损,<b>ID 数值越小优先级越高</b>。点「下一位」逐位观察三个节点的竞争。
+  </p>
+  <div class="stage">
+    <svg id="svgArb" viewBox="0 0 940 360" width="940" height="360">
+      <g id="arbRows"></g>
+    </svg>
+  </div>
+  <div class="controls">
+    <button id="btnArbStep">▶ 下一位</button>
+    <button id="btnArbAuto" class="ghost">⏩ 自动播放</button>
+    <button id="btnArbReset" class="ghost">↺ 重置</button>
+  </div>
+  <div class="status" id="stArb">三个节点同时开始发送各自的 11 位 ID,请点「下一位」。</div>
+</section>
+
+<!-- ═══════════ ⑤ 完整流程 ═══════════ -->
+<section id="s5">
+  <h2><span class="num">5</span>一次完整通信的流程串讲</h2>
+  <p class="desc">从「想发送」到「确认收到」,一条 CAN 报文的完整一生:</p>
+  <div class="stage">
+    <svg id="svgFlow" viewBox="0 0 940 430" width="940" height="430">
+      <g id="flowSteps"></g>
+    </svg>
+  </div>
+  <div class="controls">
+    <button id="btnFlow">▶ 播放完整流程</button>
+  </div>
+  <div class="status" id="stFlow">点击播放,高亮框会依次走完 6 个步骤。</div>
+</section>
+
+<!-- ═══════════ ⑥ 错误处理 ═══════════ -->
+<section id="s6">
+  <h2><span class="num">6</span>错误处理:总线的自愈能力</h2>
+  <p class="desc">
+    CAN 内建 5 种错误检测。任一节点发现错误立即发送<b>错误帧</b>(6 个连续显性位,故意破坏当前报文),
+    迫使发送方自动重发。每个节点还有错误计数器,错误太多的节点会自动「降级隔离」,防止一个坏节点拖垮整条总线。
+  </p>
+  <div class="cards">
+    <div class="card"><b>位错误</b><br>发送方回读总线,发现电平与自己发的不一致(仲裁段与 ACK 段除外)。</div>
+    <div class="card"><b>填充错误</b><br>规则:连续 5 个同电平后必须插入 1 个反相位;收到 6 个连续同电平即报错。</div>
+    <div class="card"><b>CRC 错误</b><br>接收方按同样多项式计算校验和,与帧内 CRC 字段不符则报错。</div>
+    <div class="card"><b>格式错误</b><br>固定格式字段(CRC 界定符、ACK 界定符、EOF)出现了非法电平。</div>
+    <div class="card"><b>ACK 错误</b><br>发送方在 ACK 槽读不到任何显性位——没有任何节点正确收到这条报文。</div>
+    <div class="card"><b>故障隔离</b><br>错误计数 &gt;127 转「被动错误」态,&gt;255 直接「总线关闭」自我下线。</div>
+  </div>
+  <div class="status" style="margin-top:16px">
+    一句话总结:CAN = 广播总线 + 线与电平 + ID 仲裁定优先级 + CRC/ACK 保可靠 + 错误计数器保自愈。
+  </div>
+</section>
+
+</main>
+<footer>CAN 总线工作流程动态图解 · 纯 HTML / SVG / JavaScript 实现</footer>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent){
+  const e = document.createElementNS(SVGNS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  if(parent) parent.appendChild(e);
+  return e;
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ═══════════ ① 总线拓扑 ═══════════ */
+const topoNodes = [
+  {x:150, name:"发动机 ECU",  role:"sender",  accept:true},
+  {x:370, name:"变速箱 ECU",  role:"recv",    accept:true},
+  {x:590, name:"仪表盘",      role:"recv",    accept:true},
+  {x:790, name:"车窗控制器",  role:"recv",    accept:false},
+];
+(function buildTopo(){
+  const g = $("topoNodes");
+  topoNodes.forEach((n,i)=>{
+    const grp = el("g", {id:"tn"+i}, g);
+    el("line", {x1:n.x, y1:100, x2:n.x, y2:150, stroke:"#8fa0c0", "stroke-width":3}, grp);
+    el("line", {x1:n.x, y1:170, x2:n.x, y2:100, stroke:"#8fa0c0", "stroke-width":0}, grp);
+    n.rect = el("rect", {x:n.x-62, y:52, width:124, height:48, rx:10,
+      fill:"#1b2440", stroke:"#2a3654", "stroke-width":2}, grp);
+    const t = el("text", {x:n.x, y:82, fill:"#e8edf7", "font-size":15, "text-anchor":"middle"}, grp);
+    t.textContent = n.name;
+    n.badge = el("text", {x:n.x, y:235, fill:"#4ade80", "font-size":14,
+      "text-anchor":"middle", opacity:0, "font-weight":"bold"}, grp);
+  });
+})();
+let topoBusy=false;
+$("btnTopo").onclick = async ()=>{
+  if(topoBusy) return; topoBusy=true;
+  const st=$("stTopo"), bl=$("msgBallL"), br=$("msgBallR");
+  topoNodes.forEach(n=>{ n.rect.setAttribute("stroke","#2a3654"); n.badge.setAttribute("opacity",0); });
+  st.textContent = "① 发动机 ECU 检测到总线空闲,开始发送报文(ID=0x100,数据=转速 3000rpm)…";
+  topoNodes[0].rect.setAttribute("stroke","#fbbf24");
+  await sleep(1200);
+  st.textContent = "② 报文以电信号形式向总线两端传播,所有节点同时监听…";
+  const sx = topoNodes[0].x;
+  bl.setAttribute("opacity",1); br.setAttribute("opacity",1);
+  bl.setAttribute("cy",160); br.setAttribute("cy",160);
+  const t0 = performance.now(), dur = 2600;
+  await new Promise(res=>{
+    (function step(now){
+      const p = Math.min((now-t0)/dur, 1);
+      bl.setAttribute("cx", sx + (60-sx)*p);
+      br.setAttribute("cx", sx + (840-sx)*p);
+      topoNodes.forEach((n,i)=>{
+        if(i===0) return;
+        const reached = (n.x>sx) ? (sx+(840-sx)*p >= n.x) : (sx+(60-sx)*p <= n.x);
+        if(reached && !n.hit){
+          n.hit=true;
+          n.rect.setAttribute("stroke", "#4cc9f0");
+        }
+      });
+      p<1 ? requestAnimationFrame(step) : res();
+    })(t0);
+  });
+  bl.setAttribute("opacity",0); br.setAttribute("opacity",0);
+  st.textContent = "③ 各节点做「验收滤波」:比对报文 ID 是否是自己关心的…";
+  await sleep(1400);
+  topoNodes.forEach((n,i)=>{
+    if(i===0){ n.badge.textContent="发送方"; n.badge.setAttribute("fill","#fbbf24"); }
+    else if(n.accept){ n.badge.textContent="✔ 接收处理"; n.badge.setAttribute("fill","#4ade80"); n.rect.setAttribute("stroke","#4ade80"); }
+    else{ n.badge.textContent="✘ 忽略丢弃"; n.badge.setAttribute("fill","#ff6b6b"); n.rect.setAttribute("stroke","#ff6b6b"); }
+    n.badge.setAttribute("opacity",1);
+    n.hit=false;
+  });
+  st.textContent = "④ 完成:变速箱和仪表盘需要转速值 → 接收;车窗控制器不关心 → 丢弃。这就是「广播 + 验收滤波」。";
+  topoBusy=false;
+};
+
+/* ═══════════ ② 差分信号 ═══════════ */
+const diffBits = [0,1,0,0,1,1,0,1];
+(function buildDiffStatic(){
+  const g = $("bitLabels");
+  const x0=80, bw=(860-80)/diffBits.length;
+  diffBits.forEach((b,i)=>{
+    el("line",{x1:x0+i*bw, y1:40, x2:x0+i*bw, y2:230, stroke:"#2a3654","stroke-dasharray":"4 4"},g);
+    const t = el("text",{x:x0+i*bw+bw/2, y:255, "font-size":16,"text-anchor":"middle",
+      fill: b? "#4ade80":"#ff6b6b","font-weight":"bold"},g);
+    t.textContent = b;
+  });
+})();
+let diffBusy=false;
+$("btnDiff").onclick = async ()=>{
+  if(diffBusy) return; diffBusy=true;
+  const wH=$("waveH"), wL=$("waveL"), scan=$("scanLine"), cur=$("curBit"), st=$("stDiff");
+  wH.setAttribute("d",""); wL.setAttribute("d","");
+  const x0=80, bw=(860-80)/diffBits.length;
+  const yH = b => b? 130:70;    // 隐性: H=2.5V; 显性: H=3.5V
+  const yL = b => b? 130:190;   // 隐性: L=2.5V; 显性: L=1.5V
+  let dH=`M ${x0} ${yH(diffBits[0])}`, dL=`M ${x0} ${yL(diffBits[0])}`;
+  scan.setAttribute("opacity",1);
+  for(let i=0;i<diffBits.length;i++){
+    const b=diffBits[i];
+    cur.textContent = b ? `第 ${i+1} 位:1(隐性,H=L=2.5V,差压 0V)`
+                        : `第 ${i+1} 位:0(显性,H=3.5V L=1.5V,差压 2V)`;
+    cur.setAttribute("fill", b? "#4ade80":"#ff6b6b");
+    if(i>0){ dH+=` L ${x0+i*bw} ${yH(b)}`; dL+=` L ${x0+i*bw} ${yL(b)}`; }
+    const t0=performance.now(), dur=650;
+    await new Promise(res=>{
+      (function step(now){
+        const p=Math.min((now-t0)/dur,1), x=x0+i*bw+bw*p;
+        wH.setAttribute("d", dH+` L ${x} ${yH(b)}`);
+        wL.setAttribute("d", dL+` L ${x} ${yL(b)}`);
+        scan.setAttribute("x1",x); scan.setAttribute("x2",x);
+        p<1 ? requestAnimationFrame(step) : res();
+      })(t0);
+    });
+    dH+=` L ${x0+(i+1)*bw} ${yH(b)}`; dL+=` L ${x0+(i+1)*bw} ${yL(b)}`;
+  }
+  scan.setAttribute("opacity",0);
+  cur.textContent="发送完毕:8 位序列 01001101";
+  cur.setAttribute("fill","#fbbf24");
+  st.textContent="注意看:发 1 时两条线重合在 2.5V(差压 0);发 0 时张开成 3.5V/1.5V(差压 2V)。接收方只测差压,共模干扰全被抵消。";
+  diffBusy=false;
+};
+
+/* ═══════════ ③ 帧结构 ═══════════ */
+const frameFields = [
+  {name:"SOF",  bits:1,  color:"#ff6b6b", desc:"帧起始(Start Of Frame):1 个显性位,通知所有节点「报文开始了」,并用于硬同步。"},
+  {name:"ID",   bits:11, color:"#4cc9f0", desc:"标识符:11 位,表示报文「内容类型」而非目的地址;数值越小优先级越高,是仲裁的依据。"},
+  {name:"RTR",  bits:1,  color:"#a78bfa", desc:"远程请求位:显性 0=数据帧,隐性 1=远程帧(向别的节点索要数据)。"},
+  {name:"IDE",  bits:1,  color:"#a78bfa", desc:"标识符扩展位:显性 0=标准帧(11 位 ID),隐性 1=扩展帧(29 位 ID)。"},
+  {name:"r0",   bits:1,  color:"#5b6b8c", desc:"保留位:为未来协议扩展预留,当前恒为显性。"},
+  {name:"DLC",  bits:4,  color:"#fbbf24", desc:"数据长度码(Data Length Code):4 位,声明后面数据段有几个字节(0~8)。"},
+  {name:"DATA", bits:64, color:"#4ade80", desc:"数据段:0~8 字节的有效载荷,例如转速、温度、开关状态等真正要传的内容。"},
+  {name:"CRC",  bits:16, color:"#f0a04c", desc:"校验段:15 位 CRC 校验码 + 1 位界定符,接收方用它验证报文是否传错。"},
+  {name:"ACK",  bits:2,  color:"#ff6b6b", desc:"应答段:发送方发隐性位,任何正确收到报文的节点在此打入一个显性位作为「回执」。"},
+  {name:"EOF",  bits:7,  color:"#5b6b8c", desc:"帧结束(End Of Frame):7 个连续隐性位,标志报文结束;之后还有 3 位帧间隔。"},
+];
+(function buildFrame(){
+  const g=$("frameSegs"), info=$("frameInfo");
+  const totalW=880, x0=30;
+  const totalBits = frameFields.reduce((s,f)=>s+Math.sqrt(f.bits),0);
+  let x=x0;
+  frameFields.forEach((f,i)=>{
+    const w = Math.sqrt(f.bits)/totalBits*totalW;
+    const grp = el("g",{class:"frame-seg"},g);
+    f.rect = el("rect",{x, y:55, width:w-3, height:70, rx:6, fill:f.color, opacity:.82},grp);
+    const t1=el("text",{x:x+(w-3)/2, y:92, "font-size":14, "text-anchor":"middle",
+      fill:"#0d1220","font-weight":"bold"},grp);
+    t1.textContent=f.name;
+    const t2=el("text",{x:x+(w-3)/2, y:150, "font-size":11.5, "text-anchor":"middle", fill:"#8fa0c0"},grp);
+    t2.textContent = f.bits + (f.name==="DATA" ? "位(0~8字节)" : "位");
+    f.cx = x+(w-3)/2;
+    grp.addEventListener("mouseenter",()=>showField(i));
+    grp.addEventListener("click",()=>showField(i));
+    x+=w;
+  });
+  window.showField = i=>{
+    const f=frameFields[i];
+    frameFields.forEach(o=>o.rect.setAttribute("opacity", o===f? 1:.35));
+    info.innerHTML = `<b>${f.name}</b> —— ${f.desc}`;
+    const p=$("framePointer");
+    p.setAttribute("opacity",1);
+    p.setAttribute("x1",f.cx); p.setAttribute("x2",f.cx);
+  };
+})();
+let frameTimer=null;
+$("btnFrame").onclick = ()=>{
+  clearInterval(frameTimer);
+  let i=0; showField(0);
+  frameTimer=setInterval(()=>{
+    i++;
+    if(i>=frameFields.length){
+      clearInterval(frameTimer);
+      frameFields.forEach(o=>o.rect.setAttribute("opacity",.82));
+      $("framePointer").setAttribute("opacity",0);
+      $("frameInfo").innerHTML="讲解完毕。核心记忆点:<b>ID 决定优先级,DATA 装载荷,CRC+ACK 保可靠。</b>";
+      return;
+    }
+    showField(i);
+  },2600);
+};
+$("btnFrameStop").onclick=()=>{
+  clearInterval(frameTimer);
+  frameFields.forEach(o=>o.rect.setAttribute("opacity",.82));
+  $("framePointer").setAttribute("opacity",0);
+};
+
+/* ═══════════ ④ 逐位仲裁 ═══════════ */
+const arbNodes = [
+  {name:"节点 A", id:"01100110011"},
+  {name:"节点 B", id:"01100101011"},
+  {name:"节点 C", id:"01101110011"},
+];
+const NB = 11;
+let arbBit, arbAlive, arbAutoTimer=null;
+(function buildArb(){
+  const g=$("arbRows"); g.innerHTML="";
+  const x0=170, bw=62;
+  // 表头
+  for(let b=0;b<NB;b++){
+    const t=el("text",{x:x0+b*bw+bw/2, y:38, "font-size":12,"text-anchor":"middle",fill:"#8fa0c0"},g);
+    t.textContent="bit"+(10-b);
+  }
+  arbNodes.forEach((n,r)=>{
+    const y=60+r*68;
+    n.label = el("text",{x:20, y:y+30, "font-size":15, fill:"#e8edf7","font-weight":"bold"},g);
+    n.label.textContent=`${n.name}`;
+    n.sub = el("text",{x:20, y:y+50, "font-size":11, fill:"#8fa0c0"},g);
+    n.sub.textContent="ID="+n.id;
+    n.cells=[];
+    for(let b=0;b<NB;b++){
+      const rect=el("rect",{x:x0+b*bw, y:y, width:bw-6, height:44, rx:6,
+        fill:"#1b2440", stroke:"#2a3654"},g);
+      const txt=el("text",{x:x0+b*bw+(bw-6)/2, y:y+29, "font-size":16,"text-anchor":"middle",
+        fill:"#5b6b8c","font-weight":"bold"},g);
+      txt.textContent=n.id[b];
+      n.cells.push({rect,txt});
+    }
+    n.tag = el("text",{x:x0+NB*bw+8, y:y+30, "font-size":13, fill:"#4ade80","font-weight":"bold"},g);
+  });
+  // 总线行
+  const yb=60+3*68+14;
+  const t=el("text",{x:20, y:yb+30, "font-size":15, fill:"#fbbf24","font-weight":"bold"},g);
+  t.textContent="总线电平";
+  window.busCells=[];
+  for(let b=0;b<NB;b++){
+    const rect=el("rect",{x:x0+b*bw, y:yb, width:bw-6, height:44, rx:6,
+      fill:"#2a2410", stroke:"#5b4a1a"},g);
+    const txt=el("text",{x:x0+b*bw+(bw-6)/2, y:yb+29, "font-size":16,"text-anchor":"middle",
+      fill:"#fbbf24","font-weight":"bold"},g);
+    busCells.push({rect,txt});
+  }
+  resetArb();
+})();
+function resetArb(){
+  clearInterval(arbAutoTimer); arbAutoTimer=null;
+  $("btnArbAuto").textContent="⏩ 自动播放";
+  arbBit=0; arbAlive=arbNodes.map(()=>true);
+  arbNodes.forEach(n=>{
+    n.cells.forEach(c=>{
+      c.rect.setAttribute("fill","#1b2440"); c.rect.setAttribute("stroke","#2a3654");
+      c.txt.setAttribute("fill","#5b6b8c");
+    });
+    n.tag.textContent=""; n.label.setAttribute("fill","#e8edf7");
+  });
+  busCells.forEach(c=>{ c.txt.textContent=""; c.rect.setAttribute("stroke","#5b4a1a"); });
+  $("btnArbStep").disabled=false;
+  $("stArb").textContent="三个节点同时开始发送各自的 11 位 ID,请点「下一位」。";
+}
+function arbStep(){
+  if(arbBit>=NB) return;
+  const b=arbBit;
+  const sent = arbNodes.map((n,i)=> arbAlive[i] ? +n.id[b] : null);
+  const bus = sent.some(v=>v===0) ? 0 : 1;   // 线与:有 0 则 0
+  busCells[b].txt.textContent=bus;
+  busCells[b].rect.setAttribute("stroke","#fbbf24");
+  let losers=[];
+  arbNodes.forEach((n,i)=>{
+    const c=n.cells[b];
+    if(!arbAlive[i]){ c.txt.setAttribute("fill","#3a4460"); return; }
+    c.rect.setAttribute("fill", +n.id[b]===0 ? "#3d1a1a" : "#15301f");
+    c.rect.setAttribute("stroke", +n.id[b]===0 ? "#ff6b6b" : "#4ade80");
+    c.txt.setAttribute("fill","#e8edf7");
+    if(+n.id[b]===1 && bus===0){          // 发隐性读回显性 → 出局
+      arbAlive[i]=false; losers.push(n.name);
+      c.rect.setAttribute("fill","#4a1520"); c.rect.setAttribute("stroke","#ff2d55");
+      n.tag.textContent="✘ 仲裁失败,转为接收";
+      n.tag.setAttribute("fill","#ff6b6b");
+      n.label.setAttribute("fill","#8fa0c0");
+      n.cells.forEach((cc,ci)=>{ if(ci>b){ cc.txt.setAttribute("fill","#3a4460"); }});
+    }
+  });
+  const st=$("stArb");
+  if(losers.length)
+    st.textContent=`bit${10-b}:总线=${bus}(线与)。${losers.join("、")} 发出隐性 1 却读回显性 0 → 立即退出竞争!`;
+  else
+    st.textContent=`bit${10-b}:各节点发送的电平相同,总线=${bus},竞争继续…`;
+  arbBit++;
+  if(arbBit>=NB || arbAlive.filter(v=>v).length===1){
+    const wi=arbAlive.findIndex(v=>v);
+    const w=arbNodes[wi];
+    w.tag.textContent="🏆 赢得总线,继续发送";
+    w.tag.setAttribute("fill","#4ade80");
+    w.label.setAttribute("fill","#4ade80");
+    st.textContent=`仲裁结束:${w.name}(ID 最小)胜出,独占总线发完整帧;失败者等总线空闲后自动重试。全程无冲突损坏,这就是「非破坏性仲裁」。`;
+    $("btnArbStep").disabled=true;
+    clearInterval(arbAutoTimer); arbAutoTimer=null;
+    $("btnArbAuto").textContent="⏩ 自动播放";
+    arbBit=NB;
+  }
+}
+$("btnArbStep").onclick=arbStep;
+$("btnArbAuto").onclick=()=>{
+  if(arbAutoTimer){ clearInterval(arbAutoTimer); arbAutoTimer=null; $("btnArbAuto").textContent="⏩ 自动播放"; return; }
+  if(arbBit>=NB) resetArb();
+  $("btnArbAuto").textContent="⏸ 暂停";
+  arbAutoTimer=setInterval(()=>{ arbStep(); },1200);
+};
+$("btnArbReset").onclick=resetArb;
+
+/* ═══════════ ⑤ 完整流程 ═══════════ */
+const flowSteps = [
+  {t:"① 监听总线", d:"节点想发送,先监听:总线连续 11 位隐性 = 空闲,才能开始(CSMA)。"},
+  {t:"② 发送帧起始+ID", d:"发出 SOF 和 11 位 ID,同时逐位回读总线,参与仲裁。"},
+  {t:"③ 仲裁裁决", d:"读回与所发一致 → 继续;不一致 → 让出总线转为接收,稍后重试。"},
+  {t:"④ 广播数据", d:"胜出节点发送控制段、数据段、CRC;全网所有节点同步接收。"},
+  {t:"⑤ 校验+应答", d:"接收方 CRC 校验通过,就在 ACK 槽打入显性位,给发送方「回执」。"},
+  {t:"⑥ 滤波处理", d:"各节点按 ID 验收滤波:需要的交给应用处理,不需要的丢弃。出错则发错误帧,发送方自动重发。"},
+];
+(function buildFlow(){
+  const g=$("flowSteps");
+  const cols=3, cw=290, ch=150, gapx=18, gapy=44, x0=30, y0=30;
+  flowSteps.forEach((s,i)=>{
+    const r=Math.floor(i/cols), c=i%cols;
+    const x=x0+c*(cw+gapx), y=y0+r*(ch+gapy);
+    s.box=el("rect",{x,y,width:cw,height:ch,rx:12,fill:"#1b2440",stroke:"#2a3654","stroke-width":2},g);
+    const t1=el("text",{x:x+16,y:y+34,"font-size":17,fill:"#4cc9f0","font-weight":"bold"},g);
+    t1.textContent=s.t;
+    // 描述折行
+    const words=s.d, lineLen=17;
+    for(let l=0;l*lineLen<words.length && l<5;l++){
+      const t2=el("text",{x:x+16,y:y+62+l*22,"font-size":13,fill:"#8fa0c0"},g);
+      t2.textContent=words.slice(l*lineLen,(l+1)*lineLen);
+    }
+    // 箭头
+    if(i<flowSteps.length-1){
+      if(c<cols-1){
+        el("path",{d:`M ${x+cw+2} ${y+ch/2} l 12 0 m 0 0 l -6 -5 m 6 5 l -6 5`,
+          stroke:"#5b6b8c","stroke-width":2,fill:"none"},g);
+      }else{
+        el("path",{d:`M ${x+cw/2} ${y+ch+4} l 0 34 L ${x0+cw/2} ${y+ch+38} l 0 -34 m 0 34 l -5 -8 m 5 8 l 5 -8`,
+          stroke:"#5b6b8c","stroke-width":2,fill:"none"},g);
+      }
+    }
+  });
+})();
+let flowBusy=false;
+$("btnFlow").onclick=async ()=>{
+  if(flowBusy) return; flowBusy=true;
+  const st=$("stFlow");
+  flowSteps.forEach(s=>{ s.box.setAttribute("stroke","#2a3654"); s.box.setAttribute("fill","#1b2440"); });
+  for(const s of flowSteps){
+    s.box.setAttribute("stroke","#fbbf24");
+    s.box.setAttribute("fill","#26304f");
+    st.textContent=s.t+" —— "+s.d;
+    await sleep(2400);
+    s.box.setAttribute("stroke","#4ade80");
+  }
+  st.textContent="流程走完!任何时刻发生错误 → 错误帧打断 → 发送方自动重发,可靠性由硬件闭环保证。";
+  flowBusy=false;
+};
+</script>
+</body>
+</html>

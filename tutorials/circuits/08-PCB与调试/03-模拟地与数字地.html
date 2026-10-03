@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>模拟地与数字地</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.gpo{fill:none;stroke:var(--low);stroke-width:1.2;stroke-dasharray:5 4}
+.slot{fill:var(--panel);stroke:var(--low);stroke-width:1}
+.trk{fill:none;stroke:var(--copper);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.bridge{fill:var(--copper);fill-opacity:.85}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#pcb">PCB与调试</a><span class="sp"></span><span>03 / 08</span></nav>
+<header>
+  <span class="eyebrow">PCB与调试 · 混合信号接地</span>
+  <h1>模拟地与数字地</h1>
+  <p class="lede">分地的目的只有一个：别让数字电路的回流电流从模拟电路的地下面流过。弄清这一点，就知道什么时候该割地、什么时候不该割。</p>
+</header>
+
+<section id="why">
+  <span class="eyebrow">公共阻抗耦合</span>
+  <h2>为什么要把两种地分开</h2>
+  <p>地线不是理想导体，它有电阻和电感。数字电路翻转时电流变化极快，在地线电感上产生 ΔV = L·di/dt 的压降。如果模拟电路的地也挂在这段地线上，它的"零电位"就跟着数字电流一起跳，噪声直接叠加到模拟信号上。这叫公共阻抗耦合。</p>
+  <p>办法是让数字电流不流过模拟电路参考的那一段地。下图对比串联共地和单点接地。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 262" role="img" aria-label="电源给数字电路和模拟电路供电。串联共地时数字电流流过模拟电路也在用的地线段，单点接地时两路地线各自回到电源">
+        <rect class="box" x="20" y="70" width="50" height="110" rx="4"/>
+        <text x="45" y="122" text-anchor="middle" class="t">电源</text>
+        <text x="45" y="140" text-anchor="middle" class="v">3.3 V</text>
+        <path class="w" d="M45,70 V40 H365 V90 M215,40 V90"/>
+        <circle class="dot" cx="215" cy="40" r="3.5"/>
+        <text x="52" y="62" class="tm">+</text>
+        <text x="52" y="194" class="tm">−</text>
+        <rect class="box" x="170" y="90" width="90" height="56" rx="4"/>
+        <text x="215" y="114" text-anchor="middle" class="t">数字电路</text>
+        <text x="215" y="132" text-anchor="middle" class="tm">MCU、时钟</text>
+        <rect class="box" x="320" y="90" width="90" height="56" rx="4"/>
+        <text x="365" y="114" text-anchor="middle" class="t">模拟电路</text>
+        <text x="365" y="132" text-anchor="middle" class="tm">运放、ADC 前端</text>
+        <g id="s1-gd">
+          <path class="w" d="M45,180 V220 H100 M150,220 H270 M320,220 H365 V146 M215,146 V220"/>
+          <rect class="r" x="100" y="212" width="50" height="16" rx="2"/>
+          <rect class="r" x="270" y="212" width="50" height="16" rx="2"/>
+          <circle class="dot" cx="215" cy="220" r="3.5"/>
+          <text x="125" y="205" text-anchor="middle" class="t">Z1 公共段</text>
+          <text x="295" y="205" text-anchor="middle" class="t">Z2</text>
+          <text x="125" y="246" text-anchor="middle" class="tm">数字、模拟电流都过</text>
+        </g>
+        <g id="s1-gs" hidden>
+          <path class="w" d="M45,180 V244 H270 M45,220 H100 M150,220 H215 V146 M320,244 H365 V146"/>
+          <rect class="r" x="100" y="212" width="50" height="16" rx="2"/>
+          <rect class="r" x="270" y="236" width="50" height="16" rx="2"/>
+          <circle class="dot" cx="45" cy="220" r="3.5"/>
+          <text x="125" y="205" text-anchor="middle" class="t">Zd 数字地线</text>
+          <text x="295" y="229" text-anchor="middle" class="t">Za 模拟地线</text>
+          <text x="54" y="256" class="tm">单点：两路地只在电源处汇合</text>
+        </g>
+        <path id="s1-fd" class="flow" d="M45,68 V42 H213 V88 M215,148 V218 H47 V182"/>
+        <text id="s1-va" x="374" y="176" class="v">ΔV</text>
+        <text x="374" y="192" class="tm">模拟地电位</text>
+      </svg>
+      <figcaption>绿色虚线是数字电路的电流。地线用电阻形状表示它的阻抗，细走线的电感按约 1 nH/mm 估算（典型值），数字电流边沿取 5 ns。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">接地方式</span>
+        <div class="seg" id="s1-m"><button id="s1-m-d" data-v="d" aria-pressed="true">串联共地</button><button id="s1-m-s" data-v="s" aria-pressed="false">单点接地</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-i">数字电流跳变 ΔI</label>
+        <span class="rv" id="s1-iv">50 mA</span>
+        <input type="range" id="s1-i" min="10" max="200" step="10" value="50"></div>
+      <div class="ctl"><label class="ctl-l" for="s1-l">公共地线长度</label>
+        <span class="rv" id="s1-lv">20 mm</span>
+        <input type="range" id="s1-l" min="5" max="50" step="5" value="20"></div>
+      <dl class="read">
+        <dt>地线电感 L</dt><dd id="s1-lh">—</dd>
+        <dt>di/dt</dt><dd id="s1-di">—</dd>
+        <dt>模拟地被抬高</dt><dd id="s1-dv">—</dd>
+        <dt>12 位 ADC 1 LSB</dt><dd>0.81 mV（3.3 V 满量程）</dd>
+        <dt>相当于</dt><dd id="s1-lsb">—</dd>
+        <dt>模拟侧</dt><dd><span id="s1-st" class="chip bad">被污染</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="plan">
+  <span class="eyebrow">三种布局方案</span>
+  <h2>割地还是不割地</h2>
+  <p>早期常见做法是把地平面割成模拟地 AGND 和数字地 DGND，两块只在一点用 0 Ω 电阻或磁珠相连，这个点一般放在 ADC 正下方。它能工作，但很脆弱：只要有一根信号线跨过割缝，回流就要绕到连接点，反而把数字回流引进了模拟区。</p>
+  <p>现在主流推荐的是：<b>一整块完整地平面，只做分区布局</b>。数字器件放一边，模拟器件放另一边，ADC 骑在分界线上，数字走线不进模拟区。高频回流天然贴着信号线走，不会跑到模拟区去。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 262" role="img" aria-label="PCB 俯视图：左半边数字区放 MCU，右半边模拟区放运放，ADC 位置和地平面割缝随方案变化，绿色虚线是 SPI 信号的回流">
+        <rect class="zone-sat" x="10" y="10" width="220" height="220"/>
+        <rect class="zone-cut" x="230" y="10" width="220" height="220"/>
+        <rect class="gpo" x="10" y="10" width="440" height="220" rx="6"/>
+        <rect id="s2-s1" class="slot" x="226" y="10" width="8" height="90"/>
+        <rect id="s2-s2" class="slot" x="226" y="150" width="8" height="80"/>
+        <rect id="s2-br" class="bridge" x="222" y="120" width="16" height="10"/>
+        <text id="s2-brt" x="242" y="172" class="tm">0 Ω / 磁珠</text>
+        <text id="s2-zl" x="20" y="28" class="t">数字区 DGND</text>
+        <text id="s2-zr" x="440" y="28" text-anchor="end" class="t">模拟区 AGND</text>
+        <rect class="box" x="20" y="182" width="60" height="36" rx="4"/>
+        <text x="50" y="205" text-anchor="middle" class="tm">电源入口</text>
+        <rect class="box" x="60" y="95" width="80" height="60" rx="4"/>
+        <text x="100" y="130" text-anchor="middle" class="t">MCU</text>
+        <rect class="box" x="370" y="100" width="60" height="50" rx="4"/>
+        <text x="400" y="130" text-anchor="middle" class="t">运放</text>
+        <path id="s2-spi" class="trk" d="M140,125 H205"/>
+        <text id="s2-spit" x="172" y="116" text-anchor="middle" class="tm">SPI</text>
+        <path id="s2-ana" class="trk" d="M370,125 H255"/>
+        <g id="s2-adc">
+          <rect class="box" x="205" y="100" width="50" height="50" rx="4"/>
+          <text x="230" y="130" text-anchor="middle" class="t">ADC</text>
+        </g>
+        <path id="s2-aret" class="flow thin" d="M255,134 H370" style="opacity:.5"/>
+        <path id="s2-ret" class="flow" d="M205,134 H140"/>
+      </svg>
+      <figcaption>比例 10 像素 = 1 mm。黄色底是数字区，蓝色底是模拟区；白色竖条是地平面割缝。粗绿虚线是 SPI 的回流，细绿虚线是模拟信号的回流。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">方案</span>
+        <div class="seg" id="s2-m"><button id="s2-m-1" data-v="1" aria-pressed="true">割地，单点在 ADC 下</button><button id="s2-m-2" data-v="2" aria-pressed="false">割地，信号跨缝</button><button id="s2-m-3" data-v="3" aria-pressed="false">统一地，分区布局</button></div></div>
+      <dl class="read">
+        <dt>SPI 回流</dt><dd id="s2-path">—</dd>
+        <dt>流经模拟区的长度</dt><dd id="s2-in">—</dd>
+        <dt>SPI 环路面积</dt><dd id="s2-a">—</dd>
+        <dt>模拟区</dt><dd><span id="s2-st" class="chip on">干净</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="cmp">
+  <span class="eyebrow">方案对比</span>
+  <h2>怎么选</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>方案</th><th>做法</th><th>风险</th></tr></thead>
+    <tbody>
+      <tr><td>割地 + 单点连接</td><td>AGND、DGND 两块平面，在 ADC 下方用 0 Ω 电阻、磁珠或直接一小段铜相连</td><td>任何信号跨缝都会让回流绕行；多个 ADC 时单点无法兼顾</td></tr>
+      <tr><td>统一地 + 分区布局</td><td>一整块地平面，器件按数字、模拟分区摆放，走线不越区</td><td>靠布局纪律；数字大电流器件要远离模拟区</td></tr>
+      <tr><td>模拟和数字各一路电源</td><td>模拟电源经 LDO 或磁珠加电容滤波后单独供电</td><td>和地的方案配合使用，并不矛盾</td></tr>
+    </tbody>
+  </table></div>
+  <p>0 Ω 电阻和磁珠的区别：0 Ω 电阻在全频段都是短接，只是留一个可以断开调试的位置；磁珠在几十到几百 MHz 呈电阻性，能把高频噪声消耗掉，但它有直流电阻，而且高频时两块地之间的电位差会变大，用在地之间要谨慎。</p>
+  <p>混合信号芯片数据手册上的 AGND、DGND 引脚，指的是芯片内部的两套地。对于数字电流不大的 ADC，一般两个引脚都接到同一块模拟地上，而不是一个接模拟地一个接数字地（以数据手册为准）。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>为什么要区分模拟地和数字地？</summary>
+      <div class="ans"><p>因为地线有阻抗。数字电路电流变化快，在地阻抗上产生 L·di/dt 的噪声，如果模拟电路也参考这段地，噪声就直接叠加到模拟信号上。分地的真正目的，是不让数字回流经过模拟电路的参考地。</p></div></details>
+    <details><summary>割地后单点连接放在哪？用什么连？</summary>
+      <div class="ans"><p>一般放在 ADC 正下方，因为 ADC 同时有模拟和数字部分，它是两块地唯一需要相连的地方。连接可以用 0 Ω 电阻、磁珠或一小段铜皮。所有跨两区的信号都要从这个连接点上方走。</p></div></details>
+    <details><summary>现在推荐的做法是什么？</summary>
+      <div class="ans"><p>统一完整地平面加分区布局，不割地。高频回流天然走在信号线正下方，只要数字器件和数字走线都待在数字区，数字回流就不会进模拟区。好处是不存在跨缝问题，对布线更宽容。</p></div></details>
+    <details><summary>信号线跨过地的分割缝有什么后果？</summary>
+      <div class="ans"><p>回流过不去缝，只能绕到连接点，环路面积大增。后果有三个：数字回流灌进模拟地，EMI 变大，信号在跨缝处阻抗不连续产生反射。这是 PCB 设计里的大忌。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="02-地平面与电源平面.html"><span>上一页</span>地平面与电源平面</a><a class="next" href="04-反射与阻抗匹配.html"><span>下一页</span>反射与阻抗匹配</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 公共阻抗耦合 */
+const s1={m:'d'};
+function s1u(){
+  const I=+$('s1-i').value*1e-3,len=+$('s1-l').value,L=len*1e-9,di=I/5e-9,dv=L*di,d=s1.m==='d';
+  show($('s1-gd'),d);show($('s1-gs'),!d);
+  $('s1-iv').textContent=(I*1e3).toFixed(0)+' mA';$('s1-i').setAttribute('aria-valuetext',(I*1e3).toFixed(0)+' mA');
+  $('s1-lv').textContent=len+' mm';$('s1-l').setAttribute('aria-valuetext',len+' mm');
+  $('s1-lh').textContent=len+' nH';
+  $('s1-di').textContent=(di/1e6).toFixed(0)+' mA/ns';
+  const va=d?dv:0,lsb=3.3/4096;
+  $('s1-dv').textContent=d?(dv*1e3).toFixed(0)+' mV':'≈ 0，数字电流不经过 Za';
+  $('s1-lsb').textContent=d?(va/lsb).toFixed(0)+' LSB':'不足 1 LSB';
+  $('s1-va').textContent=d?'+'+(dv*1e3).toFixed(0)+' mV':'≈ 0';
+  $('s1-va').style.fill=d?'var(--danger)':'var(--flow)';
+  chip($('s1-st'),d?'被污染':'干净',d?'bad':'on');
+  $('s1-note').textContent=d?'数字电流经 Z1 回电源，在 Z1 上产生 L·di/dt 的尖峰。模拟电路的地接在 Z1 之后，它的零电位跟着跳了 '+(dv*1e3).toFixed(0)+' mV，对 12 位 ADC 来说是几十上百个 LSB。'
+    :'两路地线只在电源处汇合，数字电流只走 Zd，模拟电路的地只流过它自己的小电流。这就是单点接地（星形接地）。在多层板上，完整地平面的阻抗极低，同样能起到这个作用，这就是下面统一地方案的依据。';
+}
+seg('s1-m',v=>{s1.m=v;s1u();});
+$('s1-i').addEventListener('input',s1u);
+$('s1-l').addEventListener('input',s1u);
+s1u();
+
+/* 2. 三种方案 */
+const s2P={
+  1:{adc:0,sl:[10,90,150,80],br:120,spi:'M140,125 H205',ana:'M370,125 H255',aret:'M255,134 H370',ret:'M205,134 H140',c:[[205,125],[140,125]],path:'数字地里，紧贴 SPI 走线下方',zl:'数字区 DGND',zr:'模拟区 AGND',brt:[240,170],bt:'单点连接在 ADC 正下方',
+    n:'两块地只在 ADC 下方相连。SPI 线全程在数字区，回流在数字地里跟着走线回到 MCU，不进模拟区。缺点是布线约束很严：任何一根线跨缝，就会变成第二种情况。'},
+  2:{adc:75,sl:[10,185,215,15],br:195,spi:'M140,125 H280',ana:'M370,125 H330',aret:'M330,134 H370',ret:'M280,134 L242,200 H218 L140,134',c:[[280,125],[242,200],[218,200],[140,125]],path:'在模拟地里绕到连接点，再回数字区',zl:'数字区 DGND',zr:'模拟区 AGND',brt:[244,190],bt:'0 Ω / 磁珠',
+    n:'ADC 整个放进了模拟区，连接点却放在电源入口附近。SPI 线跨过割缝，回流过不去，只能在模拟地里绕到连接点，环路面积大增，数字噪声直接灌进模拟地。'},
+  3:{adc:0,sl:null,spi:'M140,125 H205',ana:'M370,125 H255',aret:'M255,134 H370',ret:'M205,134 H140',c:[[205,125],[140,125]],path:'地平面上，紧贴 SPI 走线下方',zl:'数字区',zr:'模拟区',
+    n:'不割地，只把数字器件和模拟器件分区摆放，ADC 骑在分界线上。高频回流天然贴着信号线走，数字走线不进模拟区，数字回流就不进模拟区。没有缝，也就不存在跨缝的问题。'}
+};
+const s2={m:1};
+function s2In(pts){let s=0;for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]);
+  if(a[0]>=230&&b[0]>=230)s+=L;else if(a[0]>230||b[0]>230){const hi=Math.max(a[0],b[0]),lo=Math.min(a[0],b[0]);s+=L*(hi-230)/(hi-lo);}}return s/10;}
+function s2u(){
+  const p=s2P[s2.m];
+  $('s2-adc').setAttribute('transform','translate('+p.adc+',0)');
+  $('s2-spi').setAttribute('d',p.spi);$('s2-ana').setAttribute('d',p.ana);$('s2-aret').setAttribute('d',p.aret);$('s2-ret').setAttribute('d',p.ret);
+  const cut=!!p.sl;
+  [$('s2-s1'),$('s2-s2'),$('s2-br'),$('s2-brt')].forEach(e=>show(e,cut));
+  if(cut){$('s2-s1').setAttribute('y',p.sl[0]);$('s2-s1').setAttribute('height',p.sl[1]);
+    $('s2-s2').setAttribute('y',p.sl[2]);$('s2-s2').setAttribute('height',p.sl[3]);
+    $('s2-br').setAttribute('y',p.br);$('s2-brt').setAttribute('x',p.brt[0]);$('s2-brt').setAttribute('y',p.brt[1]);$('s2-brt').textContent=p.bt;}
+  $('s2-zl').textContent=p.zl;$('s2-zr').textContent=p.zr;
+  const ln=(p.c[0][0]-140)/10,P=[[140,125]].concat(p.c);let A=0;
+  P.forEach((q,i)=>{const r=P[(i+1)%P.length];A+=q[0]*r[1]-r[0]*q[1];});A=Math.abs(A)/2/100+ln*0.2;
+  const inA=s2In(p.c);
+  $('s2-path').textContent=p.path;
+  $('s2-in').textContent=inA<0.05?'0':inA.toFixed(1)+' mm';
+  $('s2-a').textContent=A.toFixed(1)+' mm²';
+  chip($('s2-st'),inA>0.05?'数字回流侵入':'干净',inA>0.05?'bad':'on');
+  $('s2-note').textContent=p.n;
+}
+seg('s2-m',v=>{s2.m=+v;s2u();});
+s2u();
+</script>
+</body>
+</html>

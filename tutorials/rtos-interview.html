@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RTOS 面试考点手册</title>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#EDF0F3; --surface:#FFFFFF; --ink:#172029; --muted:#5D6B78; --line:#D3DAE1; --soft:#F5F7F9;
+  --accent:#2F57C9; --accent-ink:#FFFFFF; --amber:rgba(245,197,66,.42); --red:#D33F49; --green:#1F8A4C;
+  --code-bg:#F8FAFC; --kw:#7A3E9D; --ty:#0E7490; --str:#237A3F; --num:#B45309; --com:#7B8794; --pre:#0E7490; --api:#2F57C9;
+  --t1:#2F57C9; --t2:#1F8A4C; --t3:#B45309; --t4:#D33F49; --tidle:#C5CDD4;
+  --shadow:0 1px 2px rgba(23,32,41,.06),0 8px 24px -12px rgba(23,32,41,.18);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0F1419; --surface:#161C23; --ink:#E4EAF0; --muted:#90A0AE; --line:#263038; --soft:#1C242D;
+  --accent:#7A9BFF; --accent-ink:#0F1419; --amber:rgba(245,197,66,.22); --red:#F0616A; --green:#4CC57E;
+  --code-bg:#12181F; --kw:#C48BE0; --ty:#5CC3DB; --str:#7ED39A; --num:#F0A050; --com:#6E7C8A; --pre:#5CC3DB; --api:#7A9BFF;
+  --t1:#7A9BFF; --t2:#4CC57E; --t3:#F0A050; --t4:#F0616A; --tidle:#2A3540;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}}
+:root[data-theme="dark"]{
+  --bg:#0F1419; --surface:#161C23; --ink:#E4EAF0; --muted:#90A0AE; --line:#263038; --soft:#1C242D;
+  --accent:#7A9BFF; --accent-ink:#0F1419; --amber:rgba(245,197,66,.22); --red:#F0616A; --green:#4CC57E;
+  --code-bg:#12181F; --kw:#C48BE0; --ty:#5CC3DB; --str:#7ED39A; --num:#F0A050; --com:#6E7C8A; --pre:#5CC3DB; --api:#7A9BFF;
+  --t1:#7A9BFF; --t2:#4CC57E; --t3:#F0A050; --t4:#F0616A; --tidle:#2A3540;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;padding-block:0 48px;padding-inline:20px}
+code,pre,.code,.tl{font-family:"IBM Plex Mono",ui-monospace,Consolas,"SFMono-Regular",Menlo,monospace}
+a{color:var(--accent)}
+.wrap{max-width:1180px;margin:0 auto}
+.masthead{padding-block:36px 20px;border-bottom:1px solid var(--line);margin-bottom:24px;display:flex;flex-wrap:wrap;align-items:end;gap:12px 32px}
+.masthead h1{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.masthead h1 small{display:block;font-family:"IBM Plex Sans",sans-serif;font-weight:400;font-size:15px;color:var(--muted);letter-spacing:0;margin-top:8px}
+.legend{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px;margin-left:auto}
+.legend b{font-weight:500;color:var(--ink)}
+.layout{display:grid;grid-template-columns:210px minmax(0,1fr);gap:32px;align-items:start}
+nav{position:sticky;top:16px;display:flex;flex-direction:column;gap:2px;font-size:13.5px}
+nav a{color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:6px;border-left:2px solid transparent;display:flex;gap:8px;align-items:baseline;line-height:1.35}
+nav a .nt{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);opacity:.7;min-width:34px;white-space:nowrap}
+nav a:hover{background:var(--soft);color:var(--ink)}
+nav a.on{color:var(--ink);border-left-color:var(--accent);background:var(--soft);font-weight:500}
+.topic{padding-block:28px;border-top:1px solid var(--line)}
+.topic:first-child{border-top:0;padding-top:4px}
+.topic header{display:flex;align-items:baseline;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+.topic h2{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:600;font-size:24px;margin:0;letter-spacing:-.005em}
+.tag{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600;padding:2px 7px;border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:4px;white-space:nowrap}
+.points{margin:0 0 14px;padding-left:1.2em;max-width:68ch;color:var(--ink)}
+.points li{margin:3px 0}
+.points code,.answer code,.note code{font-size:.9em;background:var(--soft);padding:1px 5px;border-radius:4px}
+.answer{margin:14px 0 0;max-width:72ch;color:var(--muted);font-size:14px;padding-left:14px;border-left:3px solid var(--line)}
+.answer strong{color:var(--ink);font-weight:600;margin-right:8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+
+.runner{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,1fr);gap:14px}
+.runner.solo{grid-template-columns:1fr}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden;min-width:0}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--soft)}
+.toolbar .fn{font-size:12.5px;color:var(--muted)}
+.btn{font:inherit;font-size:13px;font-weight:500;padding:5px 12px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;margin-left:auto}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.code{background:var(--code-bg);font-size:13px;line-height:1.55;padding-block:8px;overflow-x:auto;max-height:520px;overflow-y:auto;font-variant-ligatures:none}
+.ln{display:flex;min-width:max-content;padding-right:16px}
+.gut{width:44px;flex:0 0 44px;text-align:right;padding-right:10px;color:var(--com);user-select:none;font-variant-numeric:tabular-nums}
+.src{white-space:pre;padding-left:8px;flex:1}
+.ln.hl{background:var(--amber);box-shadow:inset 3px 0 0 #E0A800}
+.c-kw{color:var(--kw);font-weight:500}.c-ty{color:var(--ty)}.c-str{color:var(--str)}.c-num{color:var(--num)}.c-com{color:var(--com);font-style:italic}.c-pre{color:var(--pre)}.c-api{color:var(--api);font-weight:500}
+
+.side{display:flex;flex-direction:column}
+.ph{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:7px 12px;border-bottom:1px solid var(--line)}
+.note{padding:10px 12px;font-size:13.5px;color:var(--ink);line-height:1.55}
+.note p{margin:0 0 8px}.note p:last-child{margin:0}
+.note ul{margin:0;padding-left:1.2em}.note li{margin:2px 0}
+.note table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+.note th,.note td{text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.note th{font-weight:600;color:var(--muted);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.note tr:last-child td{border-bottom:0}
+
+/* 时序图 */
+.tl{padding:10px 12px 8px;font-size:12px}
+.tl .row{display:grid;grid-template-columns:64px 1fr;align-items:center;gap:8px;margin:3px 0}
+.tl .lbl{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;font-size:11.5px}
+.tl .bar{position:relative;height:20px;background:var(--tidle);border-radius:3px;overflow:hidden}
+.tl .seg{position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10.5px;white-space:nowrap;overflow:hidden;border-right:1px solid rgba(255,255,255,.35)}
+.tl .seg.blk{background:repeating-linear-gradient(135deg,transparent 0 3px,rgba(0,0,0,.18) 3px 6px);color:var(--ink)}
+.tl .axis{display:grid;grid-template-columns:64px 1fr;gap:8px;margin-top:4px}
+.tl .ticks{position:relative;height:14px;color:var(--muted);font-size:10.5px}
+.tl .ticks span{position:absolute;transform:translateX(-50%)}
+.tl .cap{color:var(--muted);font-size:12px;margin:6px 0 0;font-family:"IBM Plex Sans",sans-serif;line-height:1.5}
+.foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);max-width:72ch}
+@media (max-width:900px){.layout{grid-template-columns:1fr}nav{position:static;flex-direction:row;flex-wrap:wrap;gap:4px}nav a{border-left:0;border:1px solid var(--line)}nav a .nt{display:none}.runner{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <h1>RTOS 高频面试考点<small>16 个考点，以 FreeRTOS 为例，每个配一段能直接放进工程编译的最小代码。调度类考点附时序图。</small></h1>
+    <div class="legend"><span><b>要点</b> 面试官想听的</span><span><b>代码</b> 最简易用法</span><span><b>一句话</b> 开口先答这句</span></div>
+  </header>
+  <div class="layout">
+    <nav id="nav" aria-label="考点目录"></nav>
+    <main id="topics"></main>
+  </div>
+  <p class="foot">代码基于 FreeRTOS V10 API（Cortex-M 移植），省略了 <code>#include "FreeRTOS.h"</code>、<code>task.h</code>、<code>queue.h</code>、<code>semphr.h</code>、<code>event_groups.h</code>、<code>timers.h</code> 与硬件初始化。点击"复制"可把代码贴到 STM32CubeIDE / ESP-IDF / Keil 工程验证。时序图为示意，横轴单位是 tick。</p>
+</div>
+
+<script>
+const EXAMPLES = [
+{id:'task', tag:'任务', title:'任务创建与任务状态', points:[
+ '任务 = 一个永不返回的函数 + 独立栈 + TCB（任务控制块）。<code>xTaskCreate</code> 的栈深度单位是"字"不是字节。',
+ '四种状态：运行 Running、就绪 Ready、阻塞 Blocked（等延时/信号量/队列）、挂起 Suspended（只能被 <code>vTaskResume</code> 唤醒）。',
+ '任务函数不能 <code>return</code>；要结束必须 <code>vTaskDelete(NULL)</code>，否则跳进非法地址。'],
+ answer:'答法：任务是有独立栈的死循环函数，由调度器在 Ready 队列里按优先级挑选；阻塞是"主动让出并等事件"，挂起是"被外部强制停下"。',
+ side:{title:'状态迁移', html:`<table><tr><th>从</th><th>到</th><th>触发</th></tr>
+ <tr><td>Running</td><td>Blocked</td><td>vTaskDelay / xQueueReceive 等待</td></tr>
+ <tr><td>Blocked</td><td>Ready</td><td>超时到 / 事件发生</td></tr>
+ <tr><td>Ready</td><td>Running</td><td>调度器选中（最高优先级）</td></tr>
+ <tr><td>Running</td><td>Ready</td><td>被更高优先级抢占 / 时间片用完</td></tr>
+ <tr><td>任意</td><td>Suspended</td><td>vTaskSuspend</td></tr></table>`},
+ code:`void vLedTask(void *pvParameters) {
+    for (;;) {                          // 任务函数必须是死循环
+        LED_Toggle();
+        vTaskDelay(pdMS_TO_TICKS(500)); // 进入 Blocked，让出 CPU
+    }
+    /* 若真要退出：vTaskDelete(NULL); 绝不能 return */
+}
+
+int main(void) {
+    xTaskCreate(vLedTask,      // 任务函数
+                "LED",         // 名字（仅调试用）
+                128,           // 栈深度：128 个字 = 512 字节
+                NULL,          // 传给任务的参数
+                2,             // 优先级，数字越大越高
+                NULL);         // 任务句柄（可为 NULL）
+    vTaskStartScheduler();     // 启动调度器，正常不会返回
+    for (;;);                  // 只有堆不够创建空闲任务才会到这
+}`},
+
+{id:'sched', tag:'调度', title:'抢占式调度与时间片', points:[
+ 'FreeRTOS 默认 <code>configUSE_PREEMPTION=1</code>：任何时刻运行的都是最高优先级的就绪任务。',
+ '同优先级任务在 <code>configUSE_TIME_SLICING=1</code> 时按 tick 轮转（Round Robin）。',
+ '高优先级任务若不阻塞，低优先级永远饿死。这是 RTOS 与"公平调度"的最大区别。',
+ '优先级数字：FreeRTOS 越大越高（0 是空闲任务）；uC/OS 和 CMSIS 有不同约定，回答前先说明是哪个 RTOS。'],
+ answer:'答法：抢占是"高优先级就绪立刻上 CPU"，时间片是"同优先级轮着来"；RTOS 靠这两条保证高优先级任务的响应时间确定。',
+ timeline:{ticks:8, rows:[
+   {name:'高(3)', segs:[[3,4,'运行',3]]},
+   {name:'中(2)', segs:[[0,1,'运行',2],[2,3,'运行',2],[4,5,'运行',2],[6,7,'运行',2]]},
+   {name:'低(1)', segs:[[1,2,'运行',1],[5,6,'运行',1],[7,8,'运行',1]]}],
+   cap:'中、低任务各自 delay 1 tick 轮流跑；tick 3 高优先级就绪，立即抢占，跑完再还回去。'},
+ code:`void vHigh(void *p) {
+    for (;;) {
+        vTaskDelay(pdMS_TO_TICKS(30));   // 大部分时间阻塞
+        DoUrgentWork();                  // 一就绪就抢占别人
+    }
+}
+void vLow(void *p) {
+    for (;;) {
+        DoBackgroundWork();              // 不主动阻塞
+        taskYIELD();                     // 只把 CPU 让给同优先级
+    }
+}
+int main(void) {
+    xTaskCreate(vHigh, "H", 128, NULL, 3, NULL);
+    xTaskCreate(vLow,  "L", 128, NULL, 1, NULL);
+    xTaskCreate(vLow,  "L2",128, NULL, 1, NULL); // 与 L 同级，时间片轮转
+    vTaskStartScheduler();
+}`},
+
+{id:'delay', tag:'调度', title:'vTaskDelay 与 vTaskDelayUntil', points:[
+ '<code>vTaskDelay(n)</code>：从"调用那一刻"起再阻塞 n 个 tick，任务本身耗时会累积到周期里。',
+ '<code>vTaskDelayUntil(&amp;last, n)</code>：以"上次唤醒时刻"为基准，保证固定周期，不漂移。',
+ '周期采样、固定频率控制环必须用 <code>DelayUntil</code>；简单"等一会儿"用 <code>Delay</code>。',
+ '两者都会让任务进入 Blocked，<code>HAL_Delay</code> 这类忙等不会，会浪费 CPU。'],
+ answer:'答法：Delay 是相对延时，会漂移；DelayUntil 是绝对延时，周期精确。周期任务用后者。',
+ side:{title:'为什么会漂移', html:`<p>任务体耗时 2 tick，想要 10 tick 周期：</p>
+ <ul><li><code>vTaskDelay(10)</code> 实际周期 = 2 + 10 = <b>12</b></li>
+ <li><code>vTaskDelayUntil(10)</code> 实际周期 = <b>10</b>，任务体时间被"吸收"</li></ul>
+ <p>若任务体耗时超过周期，DelayUntil 会立即返回，不再补偿。</p>`},
+ code:`void vSampleTask(void *p) {
+    TickType_t xLast = xTaskGetTickCount();     // 记录起点
+    const TickType_t xPeriod = pdMS_TO_TICKS(10);
+    for (;;) {
+        ReadSensor();                           // 耗时不定
+        vTaskDelayUntil(&xLast, xPeriod);       // 精确每 10ms 醒一次
+        /* xLast 由函数内部自动更新为"上次应唤醒时刻 + 周期" */
+    }
+}
+
+void vBlinkTask(void *p) {
+    for (;;) {
+        LED_Toggle();
+        vTaskDelay(pdMS_TO_TICKS(500));         // 只是"等一等"，漂移无所谓
+    }
+}`},
+
+{id:'binsem', tag:'同步', title:'二值信号量：中断与任务同步', points:[
+ '典型模式：ISR 只做最少的事，<code>xSemaphoreGiveFromISR</code> 通知，任务在 <code>xSemaphoreTake</code> 上阻塞处理。',
+ '中断里必须用 <code>FromISR</code> 版本，普通版本会尝试阻塞，在中断里是致命的。',
+ '<code>portYIELD_FROM_ISR(xHigherPriorityTaskWoken)</code>：如果唤醒的任务比被打断的任务优先级高，退出中断后立刻切换过去。',
+ '二值信号量不计数：连续 Give 两次只记一次，可能丢事件，计数信号量可解。'],
+ answer:'答法：二值信号量是"事件旗子"，ISR 举旗、任务等旗；中断里必须用 FromISR API，并通过 portYIELD_FROM_ISR 实现"中断退出直接切到高优先级任务"。',
+ side:{title:'为什么需要 FromISR', html:`<ul><li>普通 API 可能阻塞、可能触发调度，在中断上下文都不允许</li>
+ <li>FromISR 版本永不阻塞，只把"要不要切换"写进 <code>xHigherPriorityTaskWoken</code></li>
+ <li>调用 FromISR 的中断优先级必须 <b>低于</b>（数值大于）<code>configMAX_SYSCALL_INTERRUPT_PRIORITY</code>，否则会破坏内核临界区</li></ul>`},
+ code:`SemaphoreHandle_t xSem;
+
+void EXTI0_IRQHandler(void) {                // 按键中断
+    BaseType_t xWoken = pdFALSE;
+    CLEAR_IRQ_FLAG();
+    xSemaphoreGiveFromISR(xSem, &xWoken);    // 只举旗，不处理
+    portYIELD_FROM_ISR(xWoken);              // 需要就立即切任务
+}
+
+void vKeyTask(void *p) {
+    for (;;) {
+        if (xSemaphoreTake(xSem, portMAX_DELAY) == pdTRUE) {
+            HandleKeyPress();                // 真正的处理放在任务里
+        }
+    }
+}
+
+int main(void) {
+    xSem = xSemaphoreCreateBinary();         // 创建时为"空"
+    xTaskCreate(vKeyTask, "KEY", 128, NULL, 3, NULL);
+    vTaskStartScheduler();
+}`},
+
+{id:'mutex', tag:'同步', title:'互斥量 vs 二值信号量', points:[
+ '互斥量用于<b>保护共享资源</b>，谁拿谁还；二值信号量用于<b>同步</b>，一方 Give 另一方 Take。',
+ '互斥量带<b>优先级继承</b>：低优先级任务持锁时被高优先级等待，会临时提升到高优先级，缓解优先级翻转。',
+ '互斥量不能在中断里用（没有 FromISR 版本），因为中断不是任务，无法"持有"。',
+ '递归互斥量 <code>xSemaphoreCreateRecursiveMutex</code> 允许同一任务重复加锁，需成对解锁。'],
+ answer:'答法：互斥量是"带钥匙的锁"，有所有权和优先级继承；二值信号量是"没有所有权的旗子"。保护资源用互斥量，通知事件用信号量。',
+ side:{title:'对照', html:`<table><tr><th></th><th>互斥量</th><th>二值信号量</th></tr>
+ <tr><td>用途</td><td>互斥访问</td><td>同步/通知</td></tr>
+ <tr><td>所有权</td><td>有，谁 Take 谁 Give</td><td>无</td></tr>
+ <tr><td>优先级继承</td><td>有</td><td>无</td></tr>
+ <tr><td>中断里用</td><td>不能</td><td>FromISR 可以</td></tr>
+ <tr><td>创建后初值</td><td>可用（1）</td><td>空（0）</td></tr></table>`},
+ code:`SemaphoreHandle_t xUartMutex;
+
+void SafePrint(const char *s) {
+    xSemaphoreTake(xUartMutex, portMAX_DELAY);  // 上锁
+    UART_Send(s);                               // 临界资源：串口
+    xSemaphoreGive(xUartMutex);                 // 必须由同一任务解锁
+}
+
+void vTaskA(void *p) { for (;;) { SafePrint("A\\r\\n"); vTaskDelay(10); } }
+void vTaskB(void *p) { for (;;) { SafePrint("B\\r\\n"); vTaskDelay(15); } }
+
+int main(void) {
+    xUartMutex = xSemaphoreCreateMutex();       // 创建后即为"可用"
+    xTaskCreate(vTaskA, "A", 128, NULL, 2, NULL);
+    xTaskCreate(vTaskB, "B", 128, NULL, 1, NULL);
+    vTaskStartScheduler();
+}`},
+
+{id:'inversion', tag:'同步', title:'优先级翻转与优先级继承', points:[
+ '场景：低 L 持锁 → 高 H 等锁被阻塞 → 中 M 就绪抢占 L → H 被 M 间接压住，"中优先级跑在高优先级前面"。',
+ '优先级继承：H 等锁时把 L 临时提升到 H 的优先级，M 抢不了 L，L 尽快放锁。',
+ '优先级天花板协议：任务一拿锁就升到该锁所有使用者的最高优先级（FreeRTOS 未实现，VxWorks/uC-OS 有）。',
+ '经典案例：1997 年火星探路者复位事故，就是优先级翻转，远程打开优先级继承修复。'],
+ answer:'答法：优先级翻转是低任务持锁、中任务抢占、高任务干等；解决靠互斥量的优先级继承（临时抬高持锁者），或天花板协议。',
+ timeline:{ticks:8, rows:[
+   {name:'高 H', segs:[[2,3,'Take 阻塞',3,true],[3,6,'等 M…',3,true],[7,8,'运行',3]]},
+   {name:'中 M', segs:[[3,6,'运行(无关)',2]]},
+   {name:'低 L', segs:[[0,2,'持锁',1],[6,7,'放锁',1]]}],
+   cap:'无优先级继承：H 在 tick 2 要锁，却要等 M 跑完、L 放锁才能继续。有继承时 L 在 tick 2 升为 H 级，M 无法抢占，tick 3 H 即可运行。'},
+ code:`SemaphoreHandle_t xLock;
+
+void vLow(void *p) {                         // 优先级 1
+    for (;;) {
+        xSemaphoreTake(xLock, portMAX_DELAY);
+        BusyWork(50);                        // 持锁期间被 H 等待 → 临时升到 3
+        xSemaphoreGive(xLock);               // 放锁后降回 1
+        vTaskDelay(10);
+    }
+}
+void vMid(void *p) {                         // 优先级 2，与锁无关
+    for (;;) { BusyWork(30); vTaskDelay(5); }
+}
+void vHigh(void *p) {                        // 优先级 3
+    for (;;) {
+        vTaskDelay(2);
+        xSemaphoreTake(xLock, portMAX_DELAY); // 若换成二值信号量，这里可能被 M 拖很久
+        CriticalWork();
+        xSemaphoreGive(xLock);
+    }
+}
+/* xLock = xSemaphoreCreateMutex();  ← 互斥量才有优先级继承 */`},
+
+{id:'queue', tag:'通信', title:'队列：任务间传数据', points:[
+ '队列按<b>值拷贝</b>传递，发送后原变量可随意改；传大数据就传指针（注意生命周期）。',
+ '满时发送、空时接收都可指定阻塞时间：0 立即返回，<code>portMAX_DELAY</code> 永久等。',
+ '多个任务等同一个队列时，<b>最高优先级</b>的先拿到；同级则等得最久的先拿。',
+ '<code>xQueueSendToFront</code> 插队、<code>xQueueOverwrite</code> 覆盖（长度为 1 的"邮箱"）、<code>xQueuePeek</code> 只看不取。'],
+ answer:'答法：队列是线程安全的 FIFO 缓冲，拷贝传值，读写都可带超时阻塞，是 RTOS 最通用的任务间通信手段。',
+ side:{title:'常见追问', html:`<ul><li><b>ISR 里发队列？</b> 用 <code>xQueueSendFromISR</code>，配 <code>portYIELD_FROM_ISR</code></li>
+ <li><b>传结构体还是指针？</b> 小于几十字节直接传值；大缓冲传指针，但要保证发送方不提前释放</li>
+ <li><b>队列集 QueueSet？</b> 一个任务同时等多个队列/信号量</li></ul>`},
+ code:`typedef struct { uint8_t id; int16_t value; } Msg_t;
+QueueHandle_t xQ;
+
+void vProducer(void *p) {
+    Msg_t m = { .id = 1 };
+    for (;;) {
+        m.value = ReadADC();
+        xQueueSend(xQ, &m, pdMS_TO_TICKS(10)); // 满则最多等 10ms
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
+void vConsumer(void *p) {
+    Msg_t m;
+    for (;;) {
+        if (xQueueReceive(xQ, &m, portMAX_DELAY) == pdTRUE)  // 空则一直等
+            printf("id=%d val=%d\\n", m.id, m.value);
+    }
+}
+int main(void) {
+    xQ = xQueueCreate(8, sizeof(Msg_t));       // 8 个元素，每个 4 字节
+    xTaskCreate(vProducer, "P", 128, NULL, 1, NULL);
+    xTaskCreate(vConsumer, "C", 128, NULL, 2, NULL);
+    vTaskStartScheduler();
+}`},
+
+{id:'notify', tag:'通信', title:'任务通知：轻量级替代', points:[
+ '每个任务自带一个 32 位通知值，无需创建对象，比信号量快约 45%、省 RAM。',
+ '限制：只能<b>一对一</b>（发送方必须知道接收任务句柄），且只能通知任务，不能通知队列。',
+ '<code>eSetBits</code> 当事件组用，<code>eIncrement</code> 当计数信号量用，<code>eSetValueWithOverwrite</code> 当长度 1 邮箱用。',
+ '<code>ulTaskNotifyTake(pdTRUE, ...)</code>：pdTRUE 表示取走后清零（二值语义），pdFALSE 表示减一（计数语义）。'],
+ answer:'答法：任务通知是内置在 TCB 里的 32 位值，一对一场景下能替代二值/计数信号量和事件组，更快更省，但没有多接收者和队列缓冲。',
+ side:{title:'选型', html:`<table><tr><th>场景</th><th>用</th></tr>
+ <tr><td>ISR 通知固定的一个任务</td><td>任务通知</td></tr>
+ <tr><td>多个任务可能来处理</td><td>信号量</td></tr>
+ <tr><td>要传数据、要缓冲</td><td>队列</td></tr>
+ <tr><td>等多个条件同时满足</td><td>事件组</td></tr></table>`},
+ code:`TaskHandle_t xRxTask;
+
+void UART_IRQHandler(void) {
+    BaseType_t xWoken = pdFALSE;
+    uint32_t byte = UART_ReadByte();
+    /* 把收到的字节直接当通知值送过去 */
+    xTaskNotifyFromISR(xRxTask, byte, eSetValueWithOverwrite, &xWoken);
+    portYIELD_FROM_ISR(xWoken);
+}
+
+void vRxTask(void *p) {
+    uint32_t val;
+    for (;;) {
+        /* 等通知：进入时不清、退出时清零、永久等 */
+        xTaskNotifyWait(0, 0xFFFFFFFF, &val, portMAX_DELAY);
+        HandleByte((uint8_t)val);
+    }
+}
+
+int main(void) {
+    xTaskCreate(vRxTask, "RX", 128, NULL, 3, &xRxTask); // 拿到句柄
+    vTaskStartScheduler();
+}`},
+
+{id:'event', tag:'同步', title:'事件组：等多个事件', points:[
+ '一个事件组是若干位（通常 24 位可用），每位代表一个事件，可"等任意一位"或"等全部位"。',
+ '<code>xEventGroupWaitBits(grp, bits, clearOnExit, waitForAll, timeout)</code> 返回时的值是<b>解除阻塞那一刻</b>的位图。',
+ '<code>xEventGroupSync</code> 实现"会合"：多个任务各自到达后一起继续。',
+ 'ISR 里设置位要走 <code>xEventGroupSetBitsFromISR</code>，它内部借助定时器守护任务，不是即时的。'],
+ answer:'答法：事件组是位图 + 等待列表，一个任务可以等"A 且 B"或"A 或 B"，信号量做不到多条件组合。',
+ code:`#define EV_WIFI_OK   (1 << 0)
+#define EV_SENSOR_OK (1 << 1)
+EventGroupHandle_t xEv;
+
+void vWifiTask(void *p)   { WifiConnect();  xEventGroupSetBits(xEv, EV_WIFI_OK);   vTaskDelete(NULL); }
+void vSensorTask(void *p) { SensorInit();   xEventGroupSetBits(xEv, EV_SENSOR_OK); vTaskDelete(NULL); }
+
+void vUploadTask(void *p) {
+    /* 等两位都置位（pdTRUE），退出时清零（pdTRUE） */
+    xEventGroupWaitBits(xEv, EV_WIFI_OK | EV_SENSOR_OK,
+                        pdTRUE, pdTRUE, portMAX_DELAY);
+    for (;;) { UploadData(); vTaskDelay(pdMS_TO_TICKS(1000)); }
+}
+
+int main(void) {
+    xEv = xEventGroupCreate();
+    xTaskCreate(vWifiTask,   "W", 256, NULL, 2, NULL);
+    xTaskCreate(vSensorTask, "S", 128, NULL, 2, NULL);
+    xTaskCreate(vUploadTask, "U", 256, NULL, 1, NULL);
+    vTaskStartScheduler();
+}`},
+
+{id:'critical', tag:'并发', title:'临界区、挂起调度器与中断屏蔽', points:[
+ '<code>taskENTER_CRITICAL()</code>：关掉优先级 ≤ <code>configMAX_SYSCALL_INTERRUPT_PRIORITY</code> 的中断，同时阻止任务切换。支持嵌套，要成对。',
+ '<code>vTaskSuspendAll()</code>：只禁止任务切换，中断照常响应；用于较长的共享数据操作。里面不能调用可能阻塞的 API。',
+ '临界区要<b>极短</b>（几条指令），长临界区会破坏实时性。',
+ 'Cortex-M 上 FreeRTOS 不关全部中断，高于阈值的中断仍能响应，但那些中断里不能调任何 FreeRTOS API。'],
+ answer:'答法：三种粒度由重到轻：关中断的临界区、挂调度器、互斥量。共享几个变量用临界区，共享一段较长逻辑用挂调度器，共享设备用互斥量。',
+ side:{title:'三种手段对比', html:`<table><tr><th>手段</th><th>挡任务</th><th>挡中断</th><th>可阻塞</th></tr>
+ <tr><td>taskENTER_CRITICAL</td><td>是</td><td>是(阈值下)</td><td>否</td></tr>
+ <tr><td>vTaskSuspendAll</td><td>是</td><td>否</td><td>否</td></tr>
+ <tr><td>互斥量</td><td>只挡竞争者</td><td>否</td><td>是</td></tr></table>`},
+ code:`volatile uint32_t g_counter;   // 被任务和中断共享
+
+void TIM_IRQHandler(void) {
+    UBaseType_t s = taskENTER_CRITICAL_FROM_ISR();  // 中断里的版本
+    g_counter++;
+    taskEXIT_CRITICAL_FROM_ISR(s);
+}
+
+void vTask(void *p) {
+    for (;;) {
+        taskENTER_CRITICAL();          // 非原子的读-改-写必须保护
+        g_counter += 10;
+        taskEXIT_CRITICAL();
+
+        vTaskSuspendAll();             // 只挡任务切换，中断仍响应
+        UpdateLinkedList();            // 稍长的操作，但不能阻塞
+        xTaskResumeAll();
+
+        vTaskDelay(1);
+    }
+}`},
+
+{id:'race', tag:'并发', title:'竞态、volatile 与可重入', points:[
+ '<code>i++</code> 是读-改-写三条指令，两个任务或任务+中断同时做会丢更新，这就是竞态。',
+ '<code>volatile</code> 只是告诉编译器"每次都从内存读"，<b>不保证原子性</b>，不能替代锁。',
+ '可重入函数：不用静态/全局变量、不调非可重入库函数（<code>strtok</code>、非线程安全的 <code>printf</code>/<code>malloc</code>）。',
+ '多任务用标准库要打开 <code>configUSE_NEWLIB_REENTRANT</code> 或自己加锁。'],
+ answer:'答法：volatile 解决的是编译器优化问题，锁解决的是并发问题，两者不可互相替代；判断一个函数能否被多任务调用，看它有没有共享状态。',
+ side:{title:'为什么 i++ 不安全', html:`<pre style="margin:0;font-size:12px;line-height:1.5">LDR  r0, [i]   ; 读到 5
+; ← 此处被中断，ISR 把 i 改成 6
+ADD  r0, #1    ; 5+1
+STR  r0, [i]   ; 写回 6，ISR 的修改丢了</pre>`},
+ code:`volatile int g_shared = 0;     // volatile 阻止编译器缓存到寄存器
+SemaphoreHandle_t xMtx;
+
+void vTaskInc(void *p) {
+    for (;;) {
+        xSemaphoreTake(xMtx, portMAX_DELAY);
+        g_shared++;                // 现在这三条指令不会被另一任务打断
+        xSemaphoreGive(xMtx);
+    }
+}
+
+/* 不可重入：内部有 static 状态 */
+char *bad_itoa(int v) { static char buf[12]; sprintf(buf, "%d", v); return buf; }
+
+/* 可重入：状态由调用方提供 */
+void good_itoa(int v, char *buf, size_t n) { snprintf(buf, n, "%d", v); }`},
+
+{id:'timer', tag:'定时', title:'软件定时器', points:[
+ '软件定时器回调运行在<b>定时器守护任务</b>（Timer Service Task）里，不是中断，所以回调里不能阻塞、不能调 FromISR 以外的阻塞 API。',
+ '单次 one-shot 与周期 auto-reload；<code>xTimerStart/Stop/Reset/ChangePeriod</code> 都是往定时器命令队列发消息，可带超时。',
+ '守护任务的优先级 <code>configTIMER_TASK_PRIORITY</code> 要设够高，否则回调被拖延。',
+ '精度受 tick 限制，需要微秒级用硬件定时器。'],
+ answer:'答法：软件定时器由一个专门的守护任务统一管理，回调在任务上下文，一颗硬件 tick 就能提供任意多个定时器，代价是精度只到 tick 且不能在回调里阻塞。',
+ code:`TimerHandle_t xTmr;
+
+void vTimerCb(TimerHandle_t xTimer) {         // 运行在守护任务里
+    uint32_t cnt = (uint32_t)pvTimerGetTimerID(xTimer);
+    vTimerSetTimerID(xTimer, (void *)(cnt + 1)); // 用 ID 存回调次数
+    LED_Toggle();                             // 不能在这里 vTaskDelay
+}
+
+int main(void) {
+    xTmr = xTimerCreate("blink",
+                        pdMS_TO_TICKS(200),   // 周期
+                        pdTRUE,               // pdTRUE=自动重装, pdFALSE=单次
+                        (void *)0,            // 定时器 ID
+                        vTimerCb);
+    xTimerStart(xTmr, 0);                     // 发命令到定时器队列，0=不等
+    vTaskStartScheduler();
+}`},
+
+{id:'stack', tag:'内存', title:'任务栈大小与栈溢出', points:[
+ '任务栈存局部变量、函数调用返回地址、被打断时保存的寄存器上下文（Cortex-M 约 17 个字）。',
+ '<code>uxTaskGetStackHighWaterMark</code> 返回历史最小剩余，剩余接近 0 就要加栈。',
+ '<code>configCHECK_FOR_STACK_OVERFLOW=2</code>：每次切换时检查栈尾的标记字节，溢出时调 <code>vApplicationStackOverflowHook</code>。',
+ '常见溢出原因：栈上大数组、递归、<code>printf</code> 浮点格式化、中断嵌套深。'],
+ answer:'答法：栈大小靠"水位线"实测，先给大再收缩；打开溢出检测钩子，遇到莫名 HardFault 先查栈。',
+ side:{title:'排查 HardFault 的顺序', html:`<ol style="margin:0;padding-left:1.2em"><li>栈溢出（看水位线 / 钩子）</li><li>中断优先级高于 configMAX_SYSCALL 却调了 API</li><li>任务函数 return 了</li><li>野指针、数组越界</li><li>堆耗尽导致创建对象返回 NULL 未检查</li></ol>`},
+ code:`void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcName) {
+    /* configCHECK_FOR_STACK_OVERFLOW = 2 时溢出会跑到这 */
+    printf("STACK OVERFLOW: %s\\n", pcName);
+    taskDISABLE_INTERRUPTS();
+    for (;;);
+}
+
+void vWorker(void *p) {
+    char buf[64];                     // 栈上数组，别开太大
+    for (;;) {
+        DoWork(buf);
+        /* 剩余栈的历史最小值，单位：字 */
+        UBaseType_t hw = uxTaskGetStackHighWaterMark(NULL);
+        printf("min free stack = %lu words\\n", (unsigned long)hw);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}`},
+
+{id:'heap', tag:'内存', title:'内存管理：heap_1 到 heap_5', points:[
+ 'heap_1：只分配不释放，最简单最确定，适合创建完不再删除的系统。',
+ 'heap_2：可释放，但不合并相邻空闲块，有碎片（已不推荐）。',
+ 'heap_3：包一层 <code>malloc/free</code> 并加临界区，依赖 C 库，行为不确定。',
+ 'heap_4：可释放，<b>合并相邻空闲块</b>，最常用。heap_5：heap_4 + 多段不连续内存（内部 SRAM + 外部 SDRAM）。',
+ '静态分配 <code>xTaskCreateStatic</code> 完全不用堆，安全认证项目首选。'],
+ answer:'答法：默认选 heap_4；不释放就用 heap_1；有多块 RAM 用 heap_5；要求确定性就全部静态分配。',
+ side:{title:'相关配置', html:`<ul><li><code>configTOTAL_HEAP_SIZE</code> 堆总大小</li><li><code>xPortGetFreeHeapSize()</code> 当前剩余</li><li><code>xPortGetMinimumEverFreeHeapSize()</code> 历史最低</li><li><code>vApplicationMallocFailedHook</code> 分配失败钩子</li></ul>`},
+ code:`/* 静态分配：栈和 TCB 都由用户提供，不碰堆 */
+static StackType_t  xStack[256];
+static StaticTask_t xTCB;
+
+void vTask(void *p) { for (;;) vTaskDelay(100); }
+
+int main(void) {
+    TaskHandle_t h = xTaskCreateStatic(vTask, "S", 256, NULL, 1,
+                                       xStack, &xTCB);
+    /* 动态分配则要检查返回值 */
+    if (xTaskCreate(vTask, "D", 128, NULL, 1, NULL) != pdPASS) {
+        printf("heap left: %u\\n", xPortGetFreeHeapSize());
+    }
+    vTaskStartScheduler();
+}
+
+void vApplicationMallocFailedHook(void) { for (;;); } // pvPortMalloc 失败时`},
+
+{id:'tick', tag:'内核', title:'Tick、上下文切换与 PendSV', points:[
+ 'SysTick 周期中断产生 tick（常 1ms），tick 处理里递减延时、检查超时、同优先级轮转。',
+ 'Cortex-M 上任务切换在 <b>PendSV</b>（可挂起的系统调用）中完成，优先级设为最低，保证所有中断处理完后才切换。',
+ '切换过程：硬件自动压 8 个寄存器 → PendSV 手动压 r4-r11 → 保存 PSP 到当前 TCB → 选下一个 TCB → 恢复。',
+ '任务用 PSP 栈，中断用 MSP 栈，两者分离是 RTOS 能安全切换的基础。',
+ 'tickless 低功耗：无任务就绪时停掉 tick 进入睡眠，唤醒后补偿 tick 计数。'],
+ answer:'答法：tick 是时间基准，PendSV 是切换执行者；把切换放在最低优先级的 PendSV 里，能保证不会在别的中断处理到一半时切任务。',
+ side:{title:'一次切换的流程', html:`<ol style="margin:0;padding-left:1.2em"><li>SysTick/ISR 里判断需要切换，置 PendSV 挂起位</li><li>所有更高优先级中断返回</li><li>PendSV 进入：保存当前任务 r4-r11、PSP 到 TCB</li><li><code>vTaskSwitchContext</code> 选出最高优先级就绪任务</li><li>从新 TCB 恢复 PSP、r4-r11，异常返回，硬件弹出剩余寄存器</li></ol>`},
+ code:`/* FreeRTOSConfig.h 里的关键项 */
+#define configTICK_RATE_HZ               1000  // 1ms 一个 tick
+#define configUSE_PREEMPTION             1
+#define configUSE_TIME_SLICING           1
+#define configUSE_TICKLESS_IDLE          1     // 空闲时停 tick 省电
+#define configKERNEL_INTERRUPT_PRIORITY  (15 << 4)  // PendSV/SysTick 最低
+#define configMAX_SYSCALL_INTERRUPT_PRIORITY (5 << 4) // 可调 API 的最高中断级
+
+/* 手动触发一次切换：本质就是挂起 PendSV */
+#define portYIELD()  do { \\
+    portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT; \\
+    __dsb(portSY_FULL_READ_WRITE); \\
+    __isb(portSY_FULL_READ_WRITE); } while (0)
+
+/* tick 钩子：每个 tick 在中断里被调一次，要极短 */
+void vApplicationTickHook(void) { g_ms++; }`},
+
+{id:'idle', tag:'内核', title:'空闲任务与钩子函数', points:[
+ '调度器启动时自动创建优先级 0 的空闲任务，保证永远有任务可跑。',
+ '空闲任务负责回收被 <code>vTaskDelete</code> 删除的任务的栈和 TCB，所以它不能被饿死（用户任务不能在 0 级死循环不阻塞）。',
+ '<code>vApplicationIdleHook</code>：在空闲任务里反复调用，可进低功耗（<code>__WFI</code>）、喂看门狗、统计 CPU 占用率，但<b>不能阻塞</b>。',
+ 'CPU 利用率 = 1 − 空闲任务运行时间占比，通过 <code>configGENERATE_RUN_TIME_STATS</code> 与 <code>vTaskGetRunTimeStats</code> 查看。'],
+ answer:'答法：空闲任务是最低优先级的兜底任务，做资源回收和低功耗入口；钩子里只能做不阻塞的事，否则删除的任务永远回收不了。',
+ code:`/* configUSE_IDLE_HOOK = 1 */
+void vApplicationIdleHook(void) {
+    IWDG_Feed();          // 喂狗：若某任务死循环占住 CPU，空闲跑不到就复位
+    __WFI();              // 等待中断，CPU 睡眠直到下一个 tick 或外设中断
+    /* 这里不能 vTaskDelay / xQueueReceive(…, >0) */
+}
+
+/* configGENERATE_RUN_TIME_STATS = 1，看各任务 CPU 占比 */
+void vStatsTask(void *p) {
+    static char buf[512];
+    for (;;) {
+        vTaskGetRunTimeStats(buf);   // "IDLE  98765  95%" 之类
+        printf("%s\\n", buf);
+        vTaskDelay(pdMS_TO_TICKS(5000));
+    }
+}`},
+];
+</script>
+<script>
+(function () {
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const KW = /\b(if|else|while|do|for|return|break|continue|sizeof|static|const|volatile|typedef|struct|union|extern|NULL|pdTRUE|pdFALSE|pdPASS|portMAX_DELAY)\b/g;
+  const TY = /\b(int|char|short|long|float|double|void|unsigned|signed|u?int(?:8|16|32|64)_t|size_t|[A-Za-z]+Handle_t|BaseType_t|UBaseType_t|TickType_t|StackType_t|StaticTask_t|Msg_t|EventBits_t|eNotifyAction)\b/g;
+  const API = /\b((?:x|v|ux|ul|pv|e)[A-Z][A-Za-z0-9]*|task[A-Z_]+|port[A-Z_]+|config[A-Z_]+|pdMS_TO_TICKS)\b/g;
+  function highlight(line) {
+    const s = esc(line);
+    if (/^\s*#/.test(s)) return `<span class="c-pre">${s}</span>`;
+    const parts = []; let rest = s;
+    const re = /(\/\/.*$|\/\*.*?\*\/|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/;
+    while (rest.length) {
+      const m = rest.match(re);
+      if (!m) { parts.push(plain(rest)); break; }
+      parts.push(plain(rest.slice(0, m.index)));
+      parts.push(/^\/[\/*]/.test(m[0]) ? `<span class="c-com">${m[0]}</span>` : `<span class="c-str">${m[0]}</span>`);
+      rest = rest.slice(m.index + m[0].length);
+    }
+    return parts.join('');
+    function plain(t) {
+      // 单次扫描：一个词只归一类，避免嵌套 span
+      return t.replace(/\b(0x[0-9a-fA-F]+|\d+|[A-Za-z_][A-Za-z0-9_]*)\b/g, w => {
+        if (/^(0x|\d)/.test(w)) return `<span class="c-num">${w}</span>`;
+        if (new RegExp('^' + KW.source.slice(2, -2) + '$').test(w)) return `<span class="c-kw">${w}</span>`;
+        if (new RegExp('^' + TY.source.slice(2, -2) + '$').test(w)) return `<span class="c-ty">${w}</span>`;
+        if (new RegExp('^' + API.source.slice(2, -2) + '$').test(w)) return `<span class="c-api">${w}</span>`;
+        return w;
+      });
+    }
+  }
+  function renderCode(code) {
+    return code.split('\n').map((l, i) => `<div class="ln"><span class="gut">${i + 1}</span><span class="src">${highlight(l) || ' '}</span></div>`).join('');
+  }
+  function renderTimeline(tl) {
+    const w = 100 / tl.ticks;
+    const rows = tl.rows.map(r => `<div class="row"><span class="lbl">${r.name}</span><div class="bar">${
+      r.segs.map(([a, b, label, c, blk]) => `<span class="seg${blk ? ' blk' : ''}" style="left:${a * w}%;width:${(b - a) * w}%;${blk ? '' : `background:var(--t${c})`}">${label}</span>`).join('')
+    }</div></div>`).join('');
+    const ticks = Array.from({length: tl.ticks + 1}, (_, i) => `<span style="left:${i * w}%">${i}</span>`).join('');
+    return `<div class="tl">${rows}<div class="axis"><span></span><div class="ticks">${ticks}</div></div><p class="cap">${tl.cap}</p></div>`;
+  }
+  function renderSide(e) {
+    if (e.timeline) return `<div class="pane side"><div class="ph">时序图（tick）</div>${renderTimeline(e.timeline)}</div>`;
+    if (e.side) return `<div class="pane side"><div class="ph">${e.side.title}</div><div class="note">${e.side.html}</div></div>`;
+    return '';
+  }
+
+  const nav = document.getElementById('nav'), main = document.getElementById('topics');
+  nav.innerHTML = EXAMPLES.map(e => `<a href="#${e.id}"><span class="nt">${e.tag}</span>${e.title}</a>`).join('');
+  main.innerHTML = EXAMPLES.map(e => {
+    const side = renderSide(e);
+    return `
+    <section class="topic" id="${e.id}">
+      <header><span class="tag">${e.tag}</span><h2>${e.title}</h2></header>
+      <ul class="points">${e.points.map(p => `<li>${p}</li>`).join('')}</ul>
+      <div class="runner${side ? '' : ' solo'}">
+        <div class="pane">
+          <div class="toolbar"><span class="fn">FreeRTOS · 最简示例</span><button type="button" class="btn" data-copy="${e.id}">复制</button></div>
+          <div class="code">${renderCode(e.code)}</div>
+        </div>
+        ${side}
+      </div>
+      <p class="answer"><strong>一句话</strong>${e.answer.replace(/^答法：/, '')}</p>
+    </section>`;
+  }).join('');
+
+  main.addEventListener('click', async ev => {
+    const b = ev.target.closest('[data-copy]'); if (!b) return;
+    const ex = EXAMPLES.find(x => x.id === b.dataset.copy);
+    try { await navigator.clipboard.writeText(ex.code); b.textContent = '已复制'; }
+    catch { b.textContent = '复制失败'; }
+    setTimeout(() => b.textContent = '复制', 1200);
+  });
+
+  const links = [...nav.querySelectorAll('a')];
+  const io = new IntersectionObserver(es => { for (const en of es) if (en.isIntersecting) links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + en.target.id)); }, {rootMargin: '-30% 0px -60% 0px'});
+  document.querySelectorAll('.topic').forEach(t => io.observe(t));
+})();
+</script>
+</body>
+</html>

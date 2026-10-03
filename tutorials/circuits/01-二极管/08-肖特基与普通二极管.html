@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>肖特基与普通二极管</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.pr{fill:var(--shade2);stroke:var(--line)}
+.nr{fill:var(--shade);stroke:var(--line)}
+.metal{fill:var(--muted);fill-opacity:.35;stroke:var(--line)}
+.dep{fill:var(--panel);fill-opacity:.7;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.hole{fill:var(--panel);stroke:var(--copper);stroke-width:1.5}
+.ele{fill:var(--low)}
+.dim{opacity:.3}
+.mk{fill:var(--copper);stroke:var(--panel);stroke-width:2}
+.mk2{fill:var(--low);stroke:var(--panel);stroke-width:2}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#diode">二极管</a><span class="sp"></span><span>08 / 08</span></nav>
+<header>
+  <span class="eyebrow">二极管 · 肖特基</span>
+  <h1>肖特基与普通二极管</h1>
+  <p class="lede">肖特基压降低、几乎没有反向恢复，是低压开关电源续流的首选。但它漏电大、耐压低，漏电还随温度涨得飞快。这页把它和普通 PN 结二极管放在一起比。</p>
+</header>
+
+<section id="mech">
+  <span class="eyebrow">金属-半导体结 · 多子导电</span>
+  <h2>没有少子存储，所以关得快</h2>
+  <p>肖特基二极管不是 PN 结，而是金属和 N 型半导体直接接触形成的肖特基势垒。正向导通时，N 区的电子越过势垒流进金属，导电只靠 N 区的多数载流子。金属一侧几乎不向半导体注入空穴。</p>
+  <p>因为没有少子注入，结两侧就没有存储电荷。关断时不用等电荷被抽走或复合，只要给结电容充上电就行，所以几乎没有反向恢复，时间是 ns 级，而且和正向电流基本无关。</p>
+  <p>肖特基势垒比硅 PN 结的势垒低，同样电流下需要的正向电压更小，VF 典型 0.2~0.45 V，和电流、耐压有关。势垒低的代价是反向时电子也更容易越过去，漏电大。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 300" role="img" aria-label="上方是 PN 结或金属-N 型硅结构中载流子的运动，下方是两种二极管从 1 A 正向电流关断时的电流波形">
+        <text id="s1-lt" x="120" y="24" text-anchor="middle" class="t">P 区</text>
+        <text x="300" y="24" text-anchor="middle" class="t">N 型硅</text>
+        <rect id="s1-lb" class="pr" x="40" y="36" width="160" height="100"/>
+        <rect class="nr" x="200" y="36" width="200" height="100"/>
+        <rect id="s1-dep" class="dep" x="190" y="36" width="20" height="100"/>
+        <g id="s1-car"></g>
+        <g id="s1-arr"></g>
+        <text id="s1-cap" x="220" y="176" text-anchor="middle" class="tm"></text>
+        <line class="gl" x1="56" y1="196" x2="420" y2="196"/>
+        <line class="gl" x1="56" y1="276" x2="420" y2="276"/>
+        <path class="ax" d="M56,192 V280 M56,244 H420"/>
+        <text x="50" y="200" text-anchor="end" class="v">2</text>
+        <text x="50" y="248" text-anchor="end" class="v">0</text>
+        <text x="50" y="280" text-anchor="end" class="v">−3</text>
+        <text x="62" y="192" class="tm">iD / A</text>
+        <text x="56" y="294" text-anchor="middle" class="v">0</text>
+        <text x="177.3" y="294" text-anchor="middle" class="v">40</text>
+        <text x="298.7" y="294" text-anchor="middle" class="v">80</text>
+        <text x="420" y="294" text-anchor="end" class="v">120 ns</text>
+        <polyline id="s1-wp" class="real" points="56,228"/>
+        <polyline id="s1-ws" class="real2" points="56,228"/>
+        <text id="s1-lp" x="260" y="266" class="t hi">PN 快恢复</text>
+        <text id="s1-ls" x="250" y="236" class="t lo">肖特基</text>
+      </svg>
+      <figcaption>上：结构示意，空心圆是空穴，实心点是电子，虚线框是耗尽层，箭头是载流子运动方向。下：两种二极管从 1 A 正向电流关断时的电流，所选的一种不透明。示意：PN 结按快恢复管取 Qrr = 60 nC；肖特基只有约 1 nC 的结电容电荷；外电路 di/dt = 100 A/µs。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">结构</span>
+        <div class="seg" id="s1-t"><button id="s1-t-pn" data-v="pn" aria-pressed="true">PN 结</button><button id="s1-t-sb" data-v="sb" aria-pressed="false">肖特基</button></div></div>
+      <div class="ctl"><span class="ctl-l">状态</span>
+        <div class="seg" id="s1-b"><button id="s1-b-f" data-v="f" aria-pressed="true">正偏导通</button><button id="s1-b-r" data-v="r" aria-pressed="false">刚切到反偏</button></div></div>
+      <dl class="read">
+        <dt>导电靠</dt><dd id="s1-cr">空穴和电子都参与</dd>
+        <dt>向对面注入少子</dt><dd id="s1-inj">有</dd>
+        <dt>存储电荷</dt><dd id="s1-q">约 60 nC</dd>
+        <dt>反向恢复</dt><dd id="s1-rr">IRM 2.74 A，trr 44 ns</dd>
+        <dt>1 A 时 VF（典型值）</dt><dd id="s1-vf">0.8~1.0 V</dd>
+        <dt>状态</dt><dd><span id="s1-st" class="chip on">导通，同时在存电荷</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="iv">
+  <span class="eyebrow">伏安特性 · 导通损耗</span>
+  <h2>同样的电流，肖特基的压降只有一半</h2>
+  <p>把两条正向曲线画在一起，肖特基整体往左移了三四百毫伏。二极管导通损耗 P = VF·IF，低压大电流时这点压降差就是效率差。比如 12 V 转 3.3 V 的 Buck，续流二极管导通约 73% 的时间，0.4 V 的压降差带来的损耗约占输出功率的 9%。</p>
+  <p class="eq">P导通 = VF·IF　　VF ≈ n·VT·ln(IF / Is) + IF·Rs</p>
+  <p>大电流段曲线不再是纯指数，体电阻 Rs 上的压降越来越明显。所以看手册要看具体电流、具体温度下的 VF，不能只记一个数。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="PN 快恢复二极管和肖特基二极管的正向伏安特性对比，标出所选电流下两者的正向压降">
+        <line class="gl" x1="56" y1="40" x2="500" y2="40"/>
+        <line class="gl" x1="56" y1="110" x2="500" y2="110"/>
+        <line class="gl" x1="56" y1="180" x2="500" y2="180"/>
+        <line class="gl" x1="130" y1="36" x2="130" y2="250"/>
+        <line class="gl" x1="204" y1="36" x2="204" y2="250"/>
+        <line class="gl" x1="278" y1="36" x2="278" y2="250"/>
+        <line class="gl" x1="352" y1="36" x2="352" y2="250"/>
+        <line class="gl" x1="426" y1="36" x2="426" y2="250"/>
+        <path class="ax" d="M56,36 V250 H500"/>
+        <text x="50" y="44" text-anchor="end" class="v">3</text>
+        <text x="50" y="114" text-anchor="end" class="v">2</text>
+        <text x="50" y="184" text-anchor="end" class="v">1</text>
+        <text x="50" y="254" text-anchor="end" class="v">0</text>
+        <text x="62" y="28" class="tm">IF / A</text>
+        <text x="56" y="268" text-anchor="middle" class="v">0</text>
+        <text x="130" y="268" text-anchor="middle" class="v">0.2</text>
+        <text x="204" y="268" text-anchor="middle" class="v">0.4</text>
+        <text x="278" y="268" text-anchor="middle" class="v">0.6</text>
+        <text x="352" y="268" text-anchor="middle" class="v">0.8</text>
+        <text x="426" y="268" text-anchor="middle" class="v">1.0</text>
+        <text x="500" y="268" text-anchor="end" class="v">1.2</text>
+        <text x="500" y="284" text-anchor="end" class="tm">VF / V</text>
+        <line id="s2-hl" class="ax dash" x1="56" y1="110" x2="500" y2="110"/>
+        <polyline id="s2-cp" class="real" points="56,250"/>
+        <polyline id="s2-cs" class="real2" points="56,250"/>
+        <text id="s2-lp" x="414" y="52" class="t hi">PN 快恢复</text>
+        <text id="s2-ls" x="232" y="52" text-anchor="end" class="t lo">肖特基</text>
+        <circle id="s2-mp" class="mk" cx="382" cy="110" r="5.5"/>
+        <circle id="s2-ms" class="mk2" cx="222" cy="110" r="5.5"/>
+        <text id="s2-dvt" x="302" y="100" text-anchor="middle" class="v">ΔVF 430 mV</text>
+      </svg>
+      <figcaption>橙线是 PN 结快恢复管，蓝线是肖特基，两个圆点是所选电流下的工作点，横向距离就是压降差。示意模型：PN 管 Is = 72 nA、n = 1.76、Rs = 50 mΩ；肖特基为 3 A / 40 V 级，Is = 83 µA、n = 1.5、Rs = 30 mΩ；均为 25 °C。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-if">正向电流 IF</label>
+        <span class="rv" id="s2-ifv">2.0 A</span>
+        <input type="range" id="s2-if" min="0.1" max="3" step="0.1" value="2"></div>
+      <dl class="read">
+        <dt>PN 管 VF</dt><dd id="s2-vp">0.88 V</dd>
+        <dt>肖特基 VF</dt><dd id="s2-vs">0.45 V</dd>
+        <dt>PN 管导通损耗</dt><dd id="s2-pp">1.76 W</dd>
+        <dt>肖特基导通损耗</dt><dd id="s2-ps">0.90 W</dd>
+        <dt>省下</dt><dd id="s2-sv">0.86 W</dd>
+        <dt>放进 3.3 V Buck</dt><dd id="s2-bk">约占输出的 9%</dd>
+        <dt>结论</dt><dd><span id="s2-st" class="chip on">差距明显</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+<section id="leak">
+  <span class="eyebrow">反向漏电 · 耐压 · 热失控</span>
+  <h2>漏电大、耐压低，高温下还会热失控</h2>
+  <p>势垒低，反向时电子也容易越过去，所以肖特基的反向漏电比同规格 PN 管大两三个数量级：常温下 PN 管是 nA 到 µA 级，肖特基是几十 µA 到 mA 级。漏电大约每升高 10 °C 翻一倍，100 °C 以上能到几十 mA。</p>
+  <p>想做高耐压，就要用更高的势垒、更厚更轻掺杂的漂移区，VF 随之升高，低压降的优势就没了。所以硅肖特基一般在 200 V 以内，常见 20~100 V；更高压用 SiC 肖特基。</p>
+  <p>漏电还会自我加剧：反偏时的漏电功耗 VR·IR 让结温升高，结温升高漏电翻倍，功耗再升高。散热跟不上就是热失控。PN 管漏电小得多，基本没有这个问题。</p>
+  <p class="eq">Tj = Ta + Rθ·(P导通 + VR·IR(Tj)·D)　　IR(Tj) ≈ IR25·2^((Tj − 25) / 10)</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="肖特基和 PN 快恢复管的反向漏电随结温变化的对数曲线，标出各自稳态结温的位置">
+        <line class="gl" x1="56" y1="40" x2="500" y2="40"/>
+        <line class="gl" x1="56" y1="75" x2="500" y2="75"/>
+        <line class="gl" x1="56" y1="110" x2="500" y2="110"/>
+        <line class="gl" x1="56" y1="145" x2="500" y2="145"/>
+        <line class="gl" x1="56" y1="180" x2="500" y2="180"/>
+        <line class="gl" x1="56" y1="215" x2="500" y2="215"/>
+        <line class="gl" x1="130" y1="36" x2="130" y2="250"/>
+        <line class="gl" x1="204" y1="36" x2="204" y2="250"/>
+        <line class="gl" x1="278" y1="36" x2="278" y2="250"/>
+        <line class="gl" x1="352" y1="36" x2="352" y2="250"/>
+        <path class="ax" d="M56,36 V250 H500"/>
+        <line class="leak dash" x1="426" y1="36" x2="426" y2="250" style="stroke-width:1.2"/>
+        <text x="422" y="244" text-anchor="end" class="tm" style="fill:var(--danger)">Tj 上限 150 °C</text>
+        <text x="50" y="44" text-anchor="end" class="v">1 A</text>
+        <text x="50" y="114" text-anchor="end" class="v">10 mA</text>
+        <text x="50" y="184" text-anchor="end" class="v">100 µA</text>
+        <text x="50" y="254" text-anchor="end" class="v">1 µA</text>
+        <text x="62" y="28" class="tm">反向漏电 IR（对数坐标）</text>
+        <text x="56" y="268" text-anchor="middle" class="v">25</text>
+        <text x="130" y="268" text-anchor="middle" class="v">50</text>
+        <text x="204" y="268" text-anchor="middle" class="v">75</text>
+        <text x="278" y="268" text-anchor="middle" class="v">100</text>
+        <text x="352" y="268" text-anchor="middle" class="v">125</text>
+        <text x="426" y="268" text-anchor="middle" class="v">150</text>
+        <text x="500" y="268" text-anchor="end" class="v">175</text>
+        <text x="500" y="284" text-anchor="end" class="tm">结温 Tj / °C</text>
+        <polyline id="s3-cs" class="real2" points="56,180"/>
+        <polyline id="s3-cp" class="real" points="56,250"/>
+        <text id="s3-ls" x="130" y="150" class="t lo">肖特基</text>
+        <text id="s3-lp" x="300" y="200" class="t hi">PN 快恢复</text>
+        <circle id="s3-ms" class="mk2" cx="200" cy="120" r="6"/>
+        <circle id="s3-mp" class="mk" cx="300" cy="220" r="6"/>
+        <text id="s3-mt" x="210" y="110" class="t lo">稳态结温</text>
+      </svg>
+      <figcaption>蓝线和橙线是两种管子在所选反压下的漏电随结温的变化，圆点是各自算出来的稳态结温。示意：Buck 输出 2 A，二极管反偏的时间占比 D = 0.2；肖特基 40 V 级，VF 0.45 V，IR25 = 0.1 mA × VR / 40 V；PN 快恢复 VF 0.88 V，IR25 = 0.2 µA；热阻都取 40 °C/W；漏电按每 10 °C 翻一倍估算。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s3-ta">环境温度 Ta</label>
+        <span class="rv" id="s3-tav">70 °C</span>
+        <input type="range" id="s3-ta" min="25" max="85" step="5" value="70"></div>
+      <div class="ctl"><span class="ctl-l">反向电压 VR（Buck 输入）</span>
+        <div class="seg" id="s3-vr"><button id="s3-vr-12" data-v="12" aria-pressed="false">12 V</button><button id="s3-vr-24" data-v="24" aria-pressed="true">24 V</button><button id="s3-vr-36" data-v="36" aria-pressed="false">36 V</button></div></div>
+      <dl class="read">
+        <dt>肖特基结温</dt><dd id="s3-tjs">102 °C</dd>
+        <dt>肖特基漏电</dt><dd id="s3-irs">12 mA</dd>
+        <dt>漏电损耗</dt><dd id="s3-pls">58 mW</dd>
+        <dt>肖特基</dt><dd><span id="s3-st" class="chip on">稳定</span></dd>
+        <dt>PN 管结温</dt><dd id="s3-tjp">126 °C</dd>
+        <dt>PN 管漏电</dt><dd id="s3-irp">30 µA</dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+<section id="pick">
+  <span class="eyebrow">选型 · 背下来</span>
+  <h2>肖特基和 PN 结二极管怎么选</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>对比项</th><th>肖特基</th><th>普通 / 快恢复 PN 结</th></tr></thead>
+    <tbody>
+      <tr><td>结构</td><td>金属-半导体结</td><td>P 型和 N 型半导体组成的 PN 结</td></tr>
+      <tr><td>导电载流子</td><td>只有多子（电子）</td><td>多子扩散，同时向对面注入少子</td></tr>
+      <tr><td>正向压降 VF（典型值）</td><td class="n">0.2~0.45 V</td><td class="n">0.6~1.0 V，快恢复管可到 1.3 V</td></tr>
+      <tr><td>反向恢复</td><td>几乎没有，只有结电容充放电</td><td>有：1N4007 约 2 µs，超快恢复 25~75 ns</td></tr>
+      <tr><td>反向漏电（常温）</td><td>µA 到 mA 级</td><td>nA 到 µA 级</td></tr>
+      <tr><td>漏电随温度</td><td>涨得快，高温高反压可能热失控</td><td>也会涨，但绝对值小</td></tr>
+      <tr><td>耐压</td><td>硅管一般 ≤ 200 V，常见 20~100 V</td><td>几十伏到上千伏</td></tr>
+      <tr><td>典型用途</td><td>低压 Buck、Boost 续流，电源并联防倒灌，低压整流，高频检波</td><td>工频整流，高压开关电源，PFC，高压输出的反激次级</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li>先看反压：最高反压留 20%~50% 余量后还在 100 V 以内，优先考虑肖特基。</li>
+    <li>再看温度和漏电：高温、高反压、对待机电流敏感的场合慎用肖特基，或选低漏电型号并核算热平衡。</li>
+    <li>高压高频选超快恢复或 SiC 肖特基；低压大电流直接上同步整流。</li>
+  </ul>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>肖特基二极管和普通二极管有什么区别？</summary>
+      <div class="ans"><p>结构不同：肖特基是金属-半导体结，普通二极管是 PN 结。肖特基只靠多子导电，没有少子存储，所以几乎没有反向恢复，开关快；势垒低，VF 只有 0.2~0.45 V。代价是反向漏电大、耐压低，漏电随温度上升很快。</p></div></details>
+    <details><summary>为什么肖特基速度快？</summary>
+      <div class="ans"><p>反向恢复的根源是正向导通时注入并存下来的少子电荷。肖特基导通时是 N 区的电子越过势垒进入金属，金属几乎不向半导体注入少子，没有存储电荷。关断时只需要给结电容充电，所以是 ns 级，而且和正向电流基本无关。</p></div></details>
+    <details><summary>肖特基有哪些缺点？使用时要注意什么？</summary>
+      <div class="ans"><p>一是漏电大，常温就有 µA 到 mA 级，温度每升高约 10 °C 翻一倍。二是耐压低，硅管一般不超过 200 V。三是高温高反压下漏电功耗会让结温继续升高，可能热失控。所以反压要留余量，高温场合要核算漏电功耗和散热，对待机电流敏感的电路也要看漏电。</p></div></details>
+    <details><summary>Buck 续流管、电源防反接各选什么？</summary>
+      <div class="ans"><p>低压 Buck 续流选肖特基，压降低、没有反向恢复；输入高于约 100 V 时改用超快恢复或 SiC 肖特基。防反接如果用串联二极管，肖特基压降小、发热少，但漏电大；电流大时更好的办法是 PMOS 防反接，压降只有 I·Rds(on)，见 <a href="../10-保护电路/06-PMOS防反接.html">PMOS 防反接</a>。</p></div></details>
+    <details><summary>为什么高压场合不用硅肖特基？</summary>
+      <div class="ans"><p>耐压要高，就要更高的势垒和更厚的低掺杂漂移区，VF 随之升高，漏电却依然大，优势全没了，所以硅肖特基一般止步于 200 V 左右。600 V 以上用 SiC 肖特基：禁带宽，耐压高、漏电小，同样几乎没有反向恢复，常用作 PFC 的升压二极管。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="07-反向恢复时间.html"><span>上一页</span>反向恢复时间</a><a class="next" href="../index.html#diode"><span>下一页</span>返回目录</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 结构与关断 */
+const s1={t:'pn',b:'f'},XW=scale(0,120e-9,56,420),YW=scale(-3,2,276,196),DIW=100e6,TQW=20e-9;
+function rrW(q,s){const irm=Math.sqrt(2*q*DIW/(1+s)),ta=irm/DIW,tb=s*ta,t2=TQW+1/DIW+ta,t3=t2+tb;
+  return {irm,trr:ta+tb,t3,f:t=>t<TQW?1:t<t2?1-DIW*(t-TQW):t<t3?-irm*(t3-t)/tb:0};}
+const WP=rrW(60e-9,0.6),WS=rrW(1e-9,1);
+$('s1-wp').setAttribute('points',plot(WP.f,0,120e-9,XW,YW,480));
+$('s1-ws').setAttribute('points',plot(WS.f,0,120e-9,XW,YW,480));
+$('s1-lp').setAttribute('x',(XW(WP.t3)+10).toFixed(1));
+function arrowH(g,x1,x2,y,cls){const d=x2>x1?1:-1;
+  g.append(svgEl('path',{class:'w '+(cls==='hi'?'s-hi':'s-lo'),d:`M${x1},${y} H${x2-d*8}`}));
+  g.append(svgEl('polygon',{class:cls,points:`${x2},${y} ${x2-d*10},${y-5} ${x2-d*10},${y+5}`}));}
+const s1N={
+  pnf:'PN 结正偏：P 区的空穴注入 N 区，N 区的电子注入 P 区，它们在对方区域里是少子，来不及复合就堆在结附近。电流越大存得越多，这就是存储电荷。',
+  pnr:'刚切到反偏，存储的空穴还堆在 N 区，只能被反向电流抽回 P 区，结才能恢复阻断。下面橙线里那段负电流就是它，IRM 达到 '+fmtA(WP.irm)+'。',
+  sbf:'肖特基正偏：N 区的电子越过较低的势垒流进金属。电子在金属里本来就是多子，马上融入，金属也几乎不向硅注入空穴，所以没有少子存下来。',
+  sbr:'切到反偏，没有存储电荷要抽，只需要把耗尽层撑宽、给结电容充电，几 ns 就结束。蓝线几乎看不到反向电流。'
+};
+const s1S={pnf:['导通，同时在存电荷','on'],pnr:['反向恢复中','warn'],sbf:['导通，不存电荷','on'],sbr:['几乎立刻阻断','on']};
+function s1u(){
+  const pn=s1.t==='pn',fw=s1.b==='f',k=s1.t+s1.b;
+  $('s1-lb').setAttribute('class',pn?'pr':'metal');$('s1-lt').textContent=pn?'P 区':'金属';
+  const dep=pn?(fw?[192,208]:[172,236]):(fw?[200,207]:[200,236]);
+  $('s1-dep').setAttribute('x',dep[0]);$('s1-dep').setAttribute('width',dep[1]-dep[0]);
+  const g=$('s1-car');g.replaceChildren();
+  for(let r=0;r<4;r++){const y=50+r*24;
+    for(let j=0;j<8;j++){const xe=214+j*24,xh=50+j*20;
+      if(xe>dep[1]+4&&xe<396)g.append(svgEl('circle',{class:'ele',cx:xe,cy:y,r:3.5}));
+      if(pn&&xh<dep[0]-6)g.append(svgEl('circle',{class:'hole',cx:xh,cy:y+8,r:4.5}));}
+    if(pn)for(let j=0;j<(fw?3:2);j++){const xs=(fw?214:244)+j*18+(r%2)*9;if(xs>dep[1]+2)g.append(svgEl('circle',{class:'hole',cx:xs,cy:y+11,r:4.5}));}
+  }
+  const a=$('s1-arr');a.replaceChildren();
+  if(pn&&fw){arrowH(a,150,250,148,'hi');arrowH(a,250,150,160,'lo');}
+  else if(pn){arrowH(a,262,150,154,'hi');}
+  else if(fw){arrowH(a,300,150,154,'lo');}
+  $('s1-cap').textContent=pn?(fw?'空穴 P → N、电子 N → P，互相注入成为少子':'存储的空穴被抽回 P 区，形成反向电流'):(fw?'只有电子从 N 区流进金属':'没有少子要抽，只有结电容充电');
+  $('s1-wp').classList.toggle('dim',!pn);$('s1-ws').classList.toggle('dim',pn);
+  $('s1-cr').textContent=pn?'空穴和电子都参与':'只有 N 区的电子（多子）';
+  $('s1-inj').textContent=pn?'有，两边互相注入':'几乎没有';
+  $('s1-q').textContent=pn?'约 60 nC（IF = 1 A）':'无，只有约 1 nC 结电容电荷';
+  $('s1-rr').textContent=pn?'IRM '+fmtA(WP.irm)+'，trr '+fmtT(WP.trr):'IRM '+fmtA(WS.irm)+'，约 '+fmtT(WS.trr)+'，是结电容充电';
+  $('s1-vf').textContent=pn?'0.8~1.0 V（快恢复管）':'0.3~0.45 V';
+  chip($('s1-st'),s1S[k][0],s1S[k][1]);$('s1-note').textContent=s1N[k];
+}
+seg('s1-t',v=>{s1.t=v;s1u();});
+seg('s1-b',v=>{s1.b=v;s1u();});
+s1u();
+/* 2. 正向伏安特性与导通损耗 */
+const VT=0.02585,DP={Is:7.2e-8,n:1.76,rs:0.05},DS={Is:8.3e-5,n:1.5,rs:0.03};
+const vfOf=(d,i)=>d.n*VT*Math.log(i/d.Is+1)+i*d.rs;
+const XV=scale(0,1.2,56,500),YA=scale(0,3,250,40);
+function ivPts(d){const p=['56,250'];for(let k=1;k<=150;k++){const i=3*Math.pow(k/150,2);p.push(XV(vfOf(d,i)).toFixed(1)+','+YA(i).toFixed(1));}return p.join(' ');}
+$('s2-cp').setAttribute('points',ivPts(DP));$('s2-cs').setAttribute('points',ivPts(DS));
+$('s2-lp').setAttribute('x',(XV(vfOf(DP,2.9))+8).toFixed(1));$('s2-ls').setAttribute('x',(XV(vfOf(DS,2.9))-8).toFixed(1));
+function s2u(){
+  const i=+$('s2-if').value,vp=vfOf(DP,i),vs=vfOf(DS,i),y=YA(i),pp=vp*i,ps=vs*i,bk=(vp-vs)*0.725/3.3;
+  $('s2-ifv').textContent=i.toFixed(1)+' A';$('s2-if').setAttribute('aria-valuetext',i.toFixed(1)+' A');
+  $('s2-hl').setAttribute('y1',y.toFixed(1));$('s2-hl').setAttribute('y2',y.toFixed(1));
+  $('s2-mp').setAttribute('cx',XV(vp).toFixed(1));$('s2-mp').setAttribute('cy',y.toFixed(1));
+  $('s2-ms').setAttribute('cx',XV(vs).toFixed(1));$('s2-ms').setAttribute('cy',y.toFixed(1));
+  const dt=$('s2-dvt');dt.setAttribute('x',((XV(vp)+XV(vs))/2).toFixed(1));dt.setAttribute('y',(y>60?y-10:y+20).toFixed(1));
+  dt.textContent='ΔVF '+((vp-vs)*1e3).toFixed(0)+' mV';
+  $('s2-vp').textContent=fmtV(vp);$('s2-vs').textContent=fmtV(vs);
+  $('s2-pp').textContent=fmtP(pp);$('s2-ps').textContent=fmtP(ps);
+  $('s2-sv').textContent=fmtP(pp-ps)+'，少 '+((1-ps/pp)*100).toFixed(0)+'%';
+  $('s2-bk').textContent='损耗差约占输出的 '+(bk*100).toFixed(1)+'%';
+  chip($('s2-st'),pp-ps>=0.3?'差距明显':'差距不大',pp-ps>=0.3?'on':'off');
+  $('s2-note').textContent=i<0.5?'小电流时两条曲线都在指数段，压降差主要来自势垒高度。电流小，损耗的绝对值也小，这时选哪种更多看漏电和耐压。'
+    :'IF = '+i.toFixed(1)+' A 时，肖特基少发热 '+fmtP(pp-ps)+'。放进 12 V 转 3.3 V 的 Buck（二极管导通约 73% 的时间），相当于输出功率的 '+(bk*100).toFixed(1)+'%。输出电压越低，这个比例越大，所以低压输出几乎都用肖特基或同步整流。';
+}
+$('s2-if').addEventListener('input',s2u);
+s2u();
+
+/* 3. 漏电与热失控 */
+const s3={vr:24},RTH=40,DR=0.2,IO3=2,TMAX=175;
+const XTj=scale(25,175,56,500),YL=l=>Math.max(40,Math.min(250,250-(Math.log10(l)+6)*35));
+const irS=(T,vr)=>1e-4*vr/40*Math.pow(2,(T-25)/10),irP=T=>2e-7*Math.pow(2,(T-25)/10);
+const PCS=vfOf(DS,IO3)*IO3*(1-DR),PCP=vfOf(DP,IO3)*IO3*(1-DR);
+function tjSolve(ta,pc,ir,vr){let t=ta;for(let k=0;k<400;k++){const n=ta+RTH*(pc+vr*ir(t)*DR);if(n>TMAX+25)return null;if(Math.abs(n-t)<1e-4)return n;t=n;}return t;}
+$('s3-cp').setAttribute('points',plot(T=>YL(irP(T)),25,175,XTj,v=>v,150));
+$('s3-lp').setAttribute('x',XTj(100).toFixed(1));$('s3-lp').setAttribute('y',(YL(irP(100))+20).toFixed(1));
+function s3u(){
+  const ta=+$('s3-ta').value,vr=s3.vr,irs=T=>irS(T,vr);
+  $('s3-tav').textContent=ta+' °C';$('s3-ta').setAttribute('aria-valuetext',ta+' °C');
+  $('s3-cs').setAttribute('points',plot(T=>YL(irs(T)),25,175,XTj,v=>v,150));
+  $('s3-ls').setAttribute('x',XTj(40).toFixed(1));$('s3-ls').setAttribute('y',(YL(irs(40))-10).toFixed(1));
+  const tjs=tjSolve(ta,PCS,irs,vr),tjp=tjSolve(ta,PCP,irP,vr),ms=$('s3-ms'),mt=$('s3-mt');
+  $('s3-mp').setAttribute('cx',XTj(tjp).toFixed(1));$('s3-mp').setAttribute('cy',YL(irP(tjp)).toFixed(1));
+  $('s3-tjp').textContent=tjp.toFixed(0)+' °C';$('s3-irp').textContent=fmtA(irP(tjp));
+  let n;
+  if(tjs===null){ms.setAttribute('cx','500');ms.setAttribute('cy','40');
+    mt.setAttribute('x','490');mt.setAttribute('y','62');mt.setAttribute('text-anchor','end');mt.textContent='热失控';mt.style.fill='var(--danger)';
+    $('s3-tjs').textContent='不收敛，一路上升';$('s3-irs').textContent='越来越大';$('s3-pls').textContent='越来越大';
+    chip($('s3-st'),'热失控','bad');
+    n='反压 '+vr+' V、环境 '+ta+' °C 时，漏电损耗随结温翻倍的速度超过了散热能力，热平衡方程没有解，结温会一直升到管子烧毁。对策：降低反压或选耐压更高、漏电更小的型号，加强散热，或换快恢复管、同步整流。PN 管这时结温 '+tjp.toFixed(0)+' °C，漏电只有 '+fmtA(irP(tjp))+'，没有这个问题。';}
+  else{const ir=irs(tjs),pl=vr*ir*DR,x=XTj(tjs),y=YL(ir);
+    ms.setAttribute('cx',x.toFixed(1));ms.setAttribute('cy',y.toFixed(1));
+    mt.setAttribute('x',(x>400?x-10:x+10).toFixed(1));mt.setAttribute('y',(y-10).toFixed(1));mt.setAttribute('text-anchor',x>400?'end':'start');
+    mt.textContent='稳态 '+tjs.toFixed(0)+' °C';mt.style.fill='';
+    $('s3-tjs').textContent=tjs.toFixed(0)+' °C';$('s3-irs').textContent=fmtA(ir);$('s3-pls').textContent=fmtP(pl);
+    if(tjs>150)chip($('s3-st'),'超过结温上限','bad');else if(pl>0.25*PCS)chip($('s3-st'),'漏电损耗不可忽略','warn');else chip($('s3-st'),'稳定','on');
+    n='肖特基导通损耗 '+fmtP(PCS)+'，加上漏电损耗 '+fmtP(pl)+'，结温稳定在 '+tjs.toFixed(0)+' °C。PN 管导通损耗 '+fmtP(PCP)+'，结温反而更高（'+tjp.toFixed(0)+' °C），但漏电只有 '+fmtA(irP(tjp))+'。把环境温度往上拖，或把反压加到 36 V，看肖特基什么时候失控。';}
+  $('s3-note').textContent=n;
+}
+seg('s3-vr',v=>{s3.vr=+v;s3u();});
+$('s3-ta').addEventListener('input',s3u);
+s3u();
+</script>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<title>任佳欢 · 个人站</title>
+<meta name="description" content="任佳欢,电子信息硕士,FPGA/光电系统方向。项目作品、交互式教程与知识分享。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f5f4;
+  --surface:#ffffff;
+  --fg:#1c2b28;
+  --fg-soft:#5b6b67;
+  --line:#d8e0dd;
+  --accent:#0e7c66;
+  --accent-soft:#e2f0ec;
+  --warn:#a05a12;
+  --warn-soft:#f7ead6;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121716;
+  --surface:#1a2120;
+  --fg:#e4ebe8;
+  --fg-soft:#93a29d;
+  --line:#2b3533;
+  --accent:#4fc3a5;
+  --accent-soft:#173029;
+  --warn:#e0a458;
+  --warn-soft:#3a2c17;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#121716;
+  --surface:#1a2120;
+  --fg:#e4ebe8;
+  --fg-soft:#93a29d;
+  --line:#2b3533;
+  --accent:#4fc3a5;
+  --accent-soft:#173029;
+  --warn:#e0a458;
+  --warn-soft:#3a2c17;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--fg);
+  font-family:"Noto Sans SC",system-ui,-apple-system,"Microsoft YaHei",sans-serif;
+  font-size:15px;line-height:1.75;padding:0 16px;
+}
+.wrap{max-width:960px;margin:0 auto;padding-block:0 64px}
+a{color:var(--accent)}
+h1,h2,h3{font-family:"Noto Serif SC","Noto Sans SC",serif;text-wrap:balance;margin:0}
+.mono{font-family:"JetBrains Mono",Consolas,monospace}
+
+/* hero */
+.hero{padding-block:64px 40px;border-bottom:1px solid var(--line)}
+.kicker{letter-spacing:.18em;font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px}
+.hero h1{font-size:clamp(30px,6vw,46px);font-weight:900;line-height:1.25}
+.hero .role{margin-top:12px;font-size:16px;color:var(--fg-soft)}
+.hero .role b{color:var(--fg)}
+.hero-links{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-block;text-decoration:none;font-size:13.5px;font-weight:500;padding:7px 16px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.wave{margin-top:34px;width:100%;height:44px;display:block}
+
+/* nav */
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:10px 0 8px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+nav a{text-decoration:none;font-size:12.5px;font-weight:500;padding:4px 11px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+
+/* sections */
+section{margin-top:52px;scroll-margin-top:70px}
+.sec-head{border-bottom:2px solid var(--fg);padding-bottom:8px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.sec-head h2{font-size:22px;font-weight:900}
+.sec-head .cnt{font-size:13px;color:var(--fg-soft)}
+.sec-intro{color:var(--fg-soft);margin:12px 0 0;font-size:14px}
+
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column}
+.card .top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.card h3{font-size:16.5px;font-weight:700}
+.card .year{font-size:12px;color:var(--fg-soft);flex:none}
+.card p{margin:8px 0 0;font-size:13.5px;color:var(--fg);flex:1}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.tag{font-family:"JetBrains Mono",Consolas,monospace;font-size:10.5px;padding:2px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.card .go{margin-top:12px;font-size:13px;font-weight:500;text-decoration:none}
+.badge{font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;background:var(--warn-soft);color:var(--warn)}
+
+/* tutorial list */
+.tlist{margin-top:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.trow{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px;text-decoration:none;color:var(--fg)}
+.trow:hover{border-color:var(--accent)}
+.trow .t{font-weight:500;font-size:14px;min-width:0}
+.trow .d{display:block;font-size:12px;color:var(--fg-soft);font-weight:400;margin-top:2px}
+.trow .arrow{color:var(--accent);flex:none;font-family:"JetBrains Mono",monospace}
+
+/* about */
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+@media (max-width:640px){.about-grid{grid-template-columns:1fr}}
+.about-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.about-card h3{font-size:15px;margin-bottom:8px}
+.about-card ul{margin:0;padding-left:18px}
+.about-card li{font-size:13.5px;margin-top:5px}
+.about-card li b{font-weight:600}
+
+/* footer */
+footer{margin-top:64px;border-top:1px solid var(--line);padding-top:20px;color:var(--fg-soft);font-size:13px}
+footer .mono{font-size:11.5px}
+.note{margin-top:10px;font-size:12px;color:var(--fg-soft)}
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="kicker">REN JIAHUAN · PORTFOLIO & NOTES</div>
+    <h1>任佳欢</h1>
+    <p class="role"><b>电子信息硕士</b>(西安工业大学,2027 届)· 光电信息科学与工程本科 · 专注 <b>FPGA 逻辑</b>、<b>光电系统设计</b> 与 <b>嵌入式开发</b></p>
+    <div class="hero-links">
+      <a class="btn primary" href="#tutorials">交互式教程</a>
+      <a class="btn" href="#projects">项目作品</a>
+      <a class="btn" href="#demos">在线 Demo</a>
+    </div>
+    <svg class="wave" viewBox="0 0 900 44" preserveAspectRatio="none" aria-hidden="true">
+      <polyline fill="none" stroke="var(--accent)" stroke-width="1.5" opacity=".55"
+        points="0,22 60,22 75,4 90,40 105,22 200,22 215,4 230,40 245,22 360,22 375,4 390,40 405,22 520,22 535,4 550,40 565,22 700,22 715,4 730,40 745,22 900,22"/>
+      <polyline fill="none" stroke="var(--accent)" stroke-width="1" opacity=".25"
+        points="0,30 120,30 135,14 150,42 165,30 300,30 315,14 330,42 345,30 520,30 535,14 550,42 565,30 760,30 775,14 790,42 805,30 900,30"/>
+    </svg>
+  </header>
+
+  <nav>
+    <a href="#about">关于</a>
+    <a href="#projects">硬件 / FPGA</a>
+    <a href="#software">软件工程</a>
+    <a href="#tutorials">交互式教程</a>
+    <a href="#academic">竞赛学术</a>
+    <a href="#freelance">项目定制</a>
+    <a href="#demos">在线 Demo</a>
+  </nav>
+
+  <!-- ============ 关于 ============ -->
+  <section id="about">
+    <div class="sec-head"><h2>关于我</h2></div>
+    <div class="about-grid">
+      <div class="about-card">
+        <h3>教育背景</h3>
+        <ul>
+          <li><b>2024.09 – 2027.06</b> 西安工业大学 · 电子信息 · 全日制硕士</li>
+          <li><b>2020.09 – 2024.06</b> 西安工业大学 · 光电信息科学与工程 · 本科</li>
+          <li>主修:数字图像处理、多光谱成像技术、光电成像技术与系统、单片机原理及接口技术、传感器原理等</li>
+        </ul>
+      </div>
+      <div class="about-card">
+        <h3>技术栈</h3>
+        <ul>
+          <li><b>FPGA:</b> Xilinx Artix-7 / Vivado / Verilog,时序收敛、ILA 调试、ISP 流水线算法</li>
+          <li><b>嵌入式:</b> STM32 / ARM / C,UART · CAN · SPI · I2C,ESP8266 / LoRa / 蓝牙</li>
+          <li><b>硬件:</b> Altium Designer、立创 EDA,独立完成原理图与 PCB 设计</li>
+          <li><b>软件:</b> Python(C-model / 上位机 PyQt5)、.NET Core、Node.js</li>
+          <li><b>机器人:</b> LIO-SAM + AMCL + Nav2 激光 SLAM,Jetson AGX Orin / RK3588</li>
+        </ul>
+      </div>
+      <div class="about-card">
+        <h3>荣誉奖项</h3>
+        <ul>
+          <li><b>国家级二等奖</b> — "华为杯"中国研究生数学建模竞赛(2025)</li>
+          <li>一等学业奖学金(2026)· 三等学业奖学金(2025)</li>
+          <li>三好学生(2024)· 优秀共青团员(2023)</li>
+          <li>校级数学建模三等奖(2022、2023)· 校级三等奖学金(2022、2023)</li>
+        </ul>
+      </div>
+      <div class="about-card">
+        <h3>经历(节选)</h3>
+        <ul>
+          <li><b>FPGA 多波段成像课题</b> — 独立承担系统方案、硬件设计、FPGA 逻辑与算法建模</li>
+          <li><b>红外干扰目标系统</b>(横向课题)— 温控电路设计,采集误差 ±0.5℃</li>
+          <li><b>技术原理实验系统</b>(横向课题)— PyQt5 通信框架复用于 8 个实验子系统</li>
+          <li><b>港口机器人</b>(实习)— RS485/LoRa 链路 + LIO-SAM 建图 + Nav2 导航闭环</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 硬件/FPGA ============ -->
+  <section id="projects">
+    <div class="sec-head"><h2>硬件 / FPGA 项目</h2><span class="cnt">原创设计</span></div>
+    <div class="grid">
+      <div class="card">
+        <div class="top"><h3>FPGA 多波段远摄成像系统</h3><span class="year">2025.10 – 至今</span></div>
+        <p>研究生课题,独立承担全部环节。低成本可见光/近红外双波段成像:双目 OV5640 + IR-CUT 切换 + 主动近红外照明 + 差分融合。纯 Verilog 双路 RAW8 采集链路(四时钟域跨域、DDR3 缓存、千兆以太网上传),配 ISP/融合 C-model 与 24 色卡双光源标定、PyQt5 调参平台。应用于伪装目标识别、低照度远距离观测。</p>
+        <div class="tags"><span class="tag">Verilog</span><span class="tag">Artix-7</span><span class="tag">DDR3</span><span class="tag">ISP</span><span class="tag">STM32</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>算法 C-Model 验证库</h3><span class="year">配套课题</span></div>
+        <p>FPGA 上板前的算法验证体系:GDF 广义差分融合框架(金字塔/Sobel/自适应权重)、Q15/Q8.8 定点化、Vitis HLS 综合报告(目标 xc7a200t)、OV5640 双路去马赛克验证、CCM 色彩标定(多色温实测数据)、Bayer 仿真 GUI。</p>
+        <div class="tags"><span class="tag">Python</span><span class="tag">C++</span><span class="tag">Vitis HLS</span><span class="tag">定点化</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>RJH 四路恒流驱动控制板</h3><span class="year">2025</span></div>
+        <p>原创合板方案:STM32F103RBT6 主控 + 四路 PT4115 恒流 LED 驱动(PWM 调光)+ MX1508 H 桥 IR-CUT 双向切换 + RS485 通信,12V 输入。独立完成原理图、选型、PCB、焊接调试,经实测修正迭代一版。</p>
+        <div class="tags"><span class="tag">PCB</span><span class="tag">PT4115</span><span class="tag">RS485</span><span class="tag">立创EDA</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>ISP 去马赛克算法对比研究</h3><span class="year">2025</span></div>
+        <p>以尼康 NEF 14bit 与 BMPCC braw 真 RAW 数据驱动,横向量化对比双线性、边缘感知、OpenCV VNG 三种去马赛克算法(PSNR/SSIM/MAE),给出各算法的 FPGA 实现难度评级与开发路线建议。</p>
+        <div class="tags"><span class="tag">RAW</span><span class="tag">Bayer</span><span class="tag">PSNR/SSIM</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>多波段照明光源驱动电路</h3><span class="year">2025</span></div>
+        <p>四通道恒流驱动设计:TPS92515HV ×4(冷白 6500K / 暖白 3000K / 近红外 850nm / 880nm),STM32G030 PWM 调光,24/48V 输入,≤40W,含完整选型论证与供电方案。</p>
+        <div class="tags"><span class="tag">TPS92515</span><span class="tag">恒流</span><span class="tag">STM32G0</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>激光雷达协议逆向 + ROS2 驱动</h3><span class="year">2025</span></div>
+        <p>串口抓包逆向解析 YDLidar 帧协议(角度/距离编码),据此适配 ROS2 Humble C++ 驱动(460800 波特率),发布 LaserScan,含 SLAM launch、URDF、RViz 配置与完整中文复现文档。</p>
+        <div class="tags"><span class="tag">ROS2</span><span class="tag">C++</span><span class="tag">协议逆向</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>Verilog 数字设计练习</h3><span class="year">2025</span></div>
+        <p>跨时钟域边沿检测模块与二进制转七段数码管译码器,含 testbench 与仿真验证——与 CDC 实验台教程互为印证的数字设计功底。</p>
+        <div class="tags"><span class="tag">Verilog</span><span class="tag">CDC</span><span class="tag">Testbench</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 软件工程 ============ -->
+  <section id="software">
+    <div class="sec-head"><h2>软件工程项目</h2><span class="cnt">全栈 / AI</span></div>
+    <div class="grid">
+      <div class="card">
+        <div class="top"><h3>制造执行工单管理系统</h3><span class="year">2025</span></div>
+        <p>离散制造全流程系统:工单-派工-报工-物料闭环。ASP.NET Core 分层架构 + SQL Server + JWT 认证 + RBAC 三级角色权限,Playwright 端到端测试、并发上报测试、部署脚本与完整中文文档。</p>
+        <div class="tags"><span class="tag">ASP.NET Core</span><span class="tag">SQL Server</span><span class="tag">RBAC</span><span class="tag">Playwright</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>SyncWatch 同步观影平台</h3><span class="year">2025</span></div>
+        <p>自研零注册房间制异地同步观影网站:Node.js + Express + Socket.IO + better-sqlite3 + ArtPlayer 播放器,含产品 PRD、管理员后台、nginx/HTTPS/PM2 部署配置。</p>
+        <div class="tags"><span class="tag">Node.js</span><span class="tag">Socket.IO</span><span class="tag">SQLite</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>管道缺陷智能检测系统</h3><span class="year">2024 – 2025</span></div>
+        <p>工业视觉项目:YOLO OBB 旋转框管道缺陷检测 + SAM 分割 + 自研算法(DTAS 动态阈值自适应分割、AGPC、AMFD、TAWA),含专利申请草稿与 PyQt 桌面端。</p>
+        <div class="tags"><span class="tag">YOLO OBB</span><span class="tag">SAM</span><span class="tag">PyQt</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>多模态客服智能体</h3><span class="year">2025</span></div>
+        <p>高校创新创业大赛赛题:FastAPI 后端 + RAG 知识检索引擎(索引构建与评测)+ Qwen2.5-VL 多模态理解 + 会话记忆管理,按评分权重倒推架构的完整落地工程。</p>
+        <div class="tags"><span class="tag">FastAPI</span><span class="tag">RAG</span><span class="tag">VLM</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>电商系统(双版本)</h3><span class="year">2024 – 2025</span></div>
+        <p>"麦·衣"女装电商:Flask + SQLite + Jinja2 版本(双店铺、管理后台、下单流程)与 Next.js 14 + Prisma + PostgreSQL 前后端分离重写版。</p>
+        <div class="tags"><span class="tag">Flask</span><span class="tag">Next.js 14</span><span class="tag">Prisma</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>游戏开发练习</h3><span class="year">2024 – 2025</span></div>
+        <p>Pygame"吸血鬼幸存者猫"(PyInstaller 打包 exe)、Godot 4"七天还债"(完整经济/存档系统)、纯 JS 像素沙盒、C++ 小项目若干——前后端与引擎的练兵场。</p>
+        <div class="tags"><span class="tag">Pygame</span><span class="tag">Godot 4</span><span class="tag">Canvas</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 教程 ============ -->
+  <section id="tutorials">
+    <div class="sec-head"><h2>交互式教程与科普</h2><span class="cnt">全部自制 · 可在线阅读</span></div>
+    <p class="sec-intro">学习嵌入式与硬件过程中自己写的交互式教程,共 80+ 页,覆盖 FPGA、模拟电路、通信协议与面试准备,点击直接打开。</p>
+    <div class="tlist">
+      <a class="trow" href="tutorials/cdc-lab.html"><span class="t">CDC 跨时钟域实验台<span class="d">数字 IC 教学实验台,含代码与主题切换</span></span><span class="arrow">→</span></a>
+      <a class="trow" href="tutorials/fpga-interview.html"><span class="t">FPGA 面试图解<span class="d">高频考点波形图解,信号/时钟语义配色</span></span><span class="arrow">→</span></a>
+      <a class="trow" href="tutorials/verilog/"><span class="t">Verilog 十二课<span class="d">从入门到实践,12 节互动课 + 仿真验证</span></span><span class="arrow">→</span></a>
+      <a class="trow" href="tutorials/protocols/"><span class="t">通信协议动态图解<span class="d">UART / SPI / I2C / CAN / RS232 / RS485</span></span><span class="arrow">→</span></a>
+      <a class="trow" href="tutorials/circuits/"><span class="t">元器件原理图解<span class="d">二极管 8 讲 · 三极管 · MOS · IGBT · 运放 · 电源</span></span><span class="arrow">→</span></a>
+      <a class="trow" href="tutorials/adc-dac/"><span class="t">ADC / DAC 交互教学<span class="d">采样、量化与转换原理可视化</span></span><span class="arrow">→</span></a>
+      <a class="trow" href="tutorials/topology/"><span class="t">硬件拓扑图实验室<span class="d">交互式电路拓扑绘制与推演</span></span><span class="arrow">→</span></a>
+      <a class="trow" href="tutorials/c/c-interview.html"><span class="t">C 语言面试 + 内存专题<span class="d">指针、内存管理、结构体高频题</span></span><span class="arrow">→</span></a>
+      <a class="trow" href="tutorials/c/embedded-c-cheatsheet.html"><span class="t">嵌入式 C 速查表<span class="d">关键字、位操作、 volatile 等速查</span></span><span class="arrow">→</span></a>
+      <a class="trow" href="tutorials/rtos-interview.html"><span class="t">RTOS 面试题<span class="d">任务调度、信号量、优先级反转等</span></span><span class="arrow">→</span></a>
+      <a class="trow" href="tutorials/rtos-kaodian/"><span class="t">RTOS 考点复习页<span class="d">交互式知识点抽认与自测</span></span><span class="arrow">→</span></a>
+      <a class="trow" href="tutorials/python-learning.html"><span class="t">Python 学习互动站<span class="d">语法要点 + 可运行示例</span></span><span class="arrow">→</span></a>
+    </div>
+  </section>
+
+  <!-- ============ 竞赛学术 ============ -->
+  <section id="academic">
+    <div class="sec-head"><h2>竞赛与学术</h2></div>
+    <div class="grid">
+      <div class="card">
+        <div class="top"><h3>"华为杯"研究生数学建模 <span class="badge">国家级二等奖</span></h3><span class="year">2025</span></div>
+        <p>E 题《高速列车轴承智能故障诊断》:48kHz 振动信号的时频域特征工程、故障特征分析与模型对比,完成最终论文与预测。</p>
+        <div class="tags"><span class="tag">信号处理</span><span class="tag">特征工程</span><span class="tag">Python</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>数字普惠金融空间计量研究</h3><span class="year">2025</span></div>
+        <p>基于 CFPS-2022 / CHFS-2021 微观数据与北大数字金融指数的实证研究:熵值法 → 固定效应 → 中介效应 → 空间杜宾模型 → 市级 Moran's I,20+ 步可复现脚本流水线。</p>
+        <div class="tags"><span class="tag">计量经济</span><span class="tag">空间杜宾</span><span class="tag">可视化</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>睿创杯创新创业大赛</h3><span class="year">2025</span></div>
+        <p>赛题三《多模态客服智能体设计》:RAG + 多模态 + 会话管理的完整工程实现与技术方案,详见软件工程板块。</p>
+        <div class="tags"><span class="tag">RAG</span><span class="tag">Qwen2.5-VL</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>SolidWorks 机械设计</h3><span class="year">2025</span></div>
+        <p>多 LED 灯泡装配体(E27 灯座 / 反光杯 / LED,含 STEP/STL 与渲染图)、工业相机 + 镜头、V 型槽定位结构——课题靶标与光源结构的配套设计。</p>
+        <div class="tags"><span class="tag">SolidWorks</span><span class="tag">结构设计</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 接单 ============ -->
+  <section id="freelance">
+    <div class="sec-head"><h2>项目定制案例</h2><span class="cnt">受托开发 · 已匿名</span></div>
+    <p class="sec-intro">为他人承接的毕业设计与课程项目,应委托方要求隐去一切身份信息,仅展示技术内容。</p>
+    <div class="grid">
+      <div class="card">
+        <div class="top"><h3>后量子混合密钥协商系统</h3><span class="year">硕士毕设级</span></div>
+        <p>X25519 + ML-KEM-768 混合密钥建立方案:C 密码库实现 + NS-3 网络仿真 + Python GUI + 性能基准测试,配论文与答辩讲稿。</p>
+        <div class="tags"><span class="tag">密码学</span><span class="tag">ML-KEM</span><span class="tag">NS-3</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>FPGA 宽动态瞬态高温测量系统</h3><span class="year">研究课题级</span></div>
+        <p>比色测温原理 + AD9259 采集 + Artix-IV 信号处理:触发、SDRAM 缓存与 HDR 处理链的完整技术方案与 PRD。</p>
+        <div class="tags"><span class="tag">FPGA</span><span class="tag">测温</span><span class="tag">AD9259</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>学生信息管理系统</h3><span class="year">课程设计</span></div>
+        <p>纯前端(HTML/JS)在宿学生信息管理系统,登录与管理流程完整,<a href="demos/student-ms/">在线可玩</a>。</p>
+        <div class="tags"><span class="tag">HTML</span><span class="tag">JavaScript</span></div>
+      </div>
+      <div class="card">
+        <div class="top"><h3>其他定制</h3><span class="year">2024 – 2025</span></div>
+        <p>K-Means 聚类 MNIST 实验、HBase + Kafka 海量数据存储系统、MADDPG 多智能体强化学习复现、MATLAB 光伏建模、PPT 定制全流程(需求文档 → 逐页设计 → 成品)等。</p>
+        <div class="tags"><span class="tag">机器学习</span><span class="tag">大数据</span><span class="tag">强化学习</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Demos ============ -->
+  <section id="demos">
+    <div class="sec-head"><h2>在线 Demo</h2><span class="cnt">直接玩</span></div>
+    <div class="tlist">
+      <a class="trow" href="demos/sandbox-game/"><span class="t">像素沙盒游戏<span class="d">纯 JS Canvas:挖掘建造、合成、Boss 战</span></span><span class="arrow">→</span></a>
+      <a class="trow" href="demos/student-ms/"><span class="t">学生信息管理系统<span class="d">纯前端 CRUD,登录与管理</span></span><span class="arrow">→</span></a>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2026 任佳欢 · 本站由静态 HTML 构建,托管于 GitHub Pages</p>
+    <p class="mono">renjiahuan2002@qq.com</p>
+    <p class="note">教程与笔记均为原创,转载请注明出处;项目定制案例已匿名处理。</p>
+  </footer>
+</div>

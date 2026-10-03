@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 02 课 组合逻辑:wire 与 assign</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="02" data-root="../">
+
+<aside class="side">
+  <a class="brand" href="../index.html">Verilog 十二课<span>FPGA RTL 实训</span></a>
+  <ol></ol>
+  <div class="foot">
+    <button class="themer" type="button">主题</button>
+    <p>iverilog + GTKWave<br>Vivado / Quartus 可选</p>
+  </div>
+</aside>
+
+<main>
+<div class="ruler"></div>
+
+<p class="eyebrow">Lesson 02 <em>／ 组合逻辑</em></p>
+<h1>组合逻辑:wire 与 assign</h1>
+<p class="lede">组合逻辑是没有记忆的电路:输出只由当前输入决定,输入一变输出立刻跟着变。这一课把 <code>assign</code> 和全部运算符过一遍,然后搭出加法器和优先编码器 —— 顺便解决新手最容易中招的位宽陷阱。</p>
+
+<dl class="goals">
+  <dt>学完这一课你能</dt>
+  <dd>一句话判断某个信号该声明成 <code>wire</code> 还是 <code>reg</code></dd>
+  <dd>熟练使用拼接 <code>{}</code>、复制 <code>{n{}}</code> 和归约 <code>|a</code> <code>^a</code></dd>
+  <dd>解释为什么 <code>assign sum = a + b;</code> 会把进位悄悄丢掉</dd>
+  <dd>写出优先编码器,并说清“优先级链”和“并行选择”在电路上的差别</dd>
+</dl>
+
+<nav class="toc"><h2>本课路线</h2><ol></ol></nav>
+
+<h2 id="s1">wire 还是 reg,只有一条判据</h2>
+<p>这是初学阶段最耗时间的疑问,但规则短得离谱:</p>
+<div class="box tip">
+  <b>唯一判据</b>
+  <p>在 <code>always</code> 或 <code>initial</code> 块里<strong>被赋值</strong>的信号声明成 <code>reg</code>,其余全部是 <code>wire</code>。就这一句,没有例外。</p>
+</div>
+
+<div class="tw">
+<table>
+  <caption>对照表</caption>
+  <thead><tr><th>场景</th><th>类型</th><th>为什么</th></tr></thead>
+  <tbody>
+    <tr><td>模块的 <code>input</code></td><td><code>wire</code></td><td>由外部驱动,内部只能读</td></tr>
+    <tr><td>用 <code>assign</code> 驱动的信号</td><td><code>wire</code></td><td><code>assign</code> 只能驱动线网</td></tr>
+    <tr><td>子模块的 <code>output</code> 接出来的线</td><td><code>wire</code></td><td>由那个子模块驱动</td></tr>
+    <tr><td>在 <code>always</code> 里赋值的信号</td><td><code>reg</code></td><td>过程块只能给变量赋值</td></tr>
+    <tr><td>Testbench 里的激励信号</td><td><code>reg</code></td><td>在 <code>initial</code> 里赋值</td></tr>
+  </tbody>
+</table>
+</div>
+<p><code>reg</code> 这个名字是 Verilog 历史上最坏的一个命名。它<strong>不代表寄存器</strong>,只代表“过程块里的变量”。真正决定综合出触发器还是组合逻辑的,是这个 <code>always</code> 块<em>怎么写</em>(第 03 课)。SystemVerilog 用 <code>logic</code> 一举取消了这个纠结 —— 如果你的工具支持,可以全用 <code>logic</code>。</p>
+
+<h2 id="s2">assign:一根永远在算的线</h2>
+<p><code>assign</code> 叫“连续赋值”,意思是<strong>右边任何一个信号变化,左边立刻重新计算</strong>。它不是“执行一次”,而是一条永远接着的电路。</p>
+<figure class="file">
+  <figcaption><span class="path">写法示例</span><span class="note">这几行不在工程里,只用来看语法</span></figcaption>
+  <div class="body"><pre><code>wire [7:0] a, b;
+wire [7:0] y1, y2, y3;
+wire       eq, any, odd;
+
+assign y1  = a &amp; b;                 // 逐位与:8 个独立的与门
+assign y2  = a &lt;&lt; 2;                // 左移 2 位,低位补 0
+assign y3  = eq ? a : b;            // 二选一
+assign eq  = (a == b);              // 比较,结果 1 位
+assign any = |a;                    // 归约或:a 里有 1 吗
+assign odd = ^a;                    // 归约异或:a 里 1 的个数是奇数吗
+
+// 一次给多个信号赋值,用拼接
+assign {y1, y2} = {a + b, a - b};</code></pre></div>
+</figure>
+<div class="box pit">
+  <b>同一个 wire 不能被 assign 两次</b>
+  <p>写了两条 <code>assign y = …;</code> 就是两个电路同时驱动一根线 —— 综合工具报多驱动错误,仿真里得到 <code>x</code>。想“分情况赋值”,要么合成一条三目运算符,要么改用 <code>always @(*)</code> 配 <code>if/else</code>(第 05 课)。</p>
+</div>
+
+<h2 id="s3">运算符全表</h2>
+<div class="tw">
+<table>
+  <caption>Verilog 运算符</caption>
+  <thead><tr><th>类别</th><th>运算符</th><th>说明</th><th>综合</th></tr></thead>
+  <tbody>
+    <tr><td>算术</td><td><code>+</code> <code>-</code> <code>*</code></td><td>加减乘。乘法会占用 DSP 或大量 LUT</td><td><span class="tag syn">可综合</span></td></tr>
+    <tr><td>算术</td><td><code>/</code> <code>%</code> <code>**</code></td><td>除、取模、幂。<strong>除数不是 2 的幂时代价极大</strong>,改用 IP 核</td><td><span class="tag no">慎用</span></td></tr>
+    <tr><td>位运算</td><td><code>~</code> <code>&amp;</code> <code>|</code> <code>^</code> <code>~^</code></td><td>逐位操作,输出位宽 = 输入位宽</td><td><span class="tag syn">可综合</span></td></tr>
+    <tr><td>逻辑</td><td><code>!</code> <code>&amp;&amp;</code> <code>||</code></td><td>结果只有 1 位。<code>!a</code> 是“a 是否为 0”,<code>~a</code> 是逐位取反</td><td><span class="tag syn">可综合</span></td></tr>
+    <tr><td>关系</td><td><code>&gt;</code> <code>&lt;</code> <code>&gt;=</code> <code>&lt;=</code></td><td>比较,结果 1 位。<em>注意 <code>&lt;=</code> 在过程块里是非阻塞赋值</em></td><td><span class="tag syn">可综合</span></td></tr>
+    <tr><td>相等</td><td><code>==</code> <code>!=</code></td><td>任一边含 <code>x</code>/<code>z</code>,结果就是 <code>x</code></td><td><span class="tag syn">可综合</span></td></tr>
+    <tr><td>全等</td><td><code>===</code> <code>!==</code></td><td>把 <code>x</code>/<code>z</code> 也当值来比,只有仿真里有意义</td><td><span class="tag sim">仅仿真</span></td></tr>
+    <tr><td>归约</td><td><code>&amp;a</code> <code>~&amp;a</code> <code>|a</code> <code>~|a</code> <code>^a</code> <code>~^a</code></td><td>把一个向量收成 1 位。<code>^a</code> 就是奇偶校验</td><td><span class="tag syn">可综合</span></td></tr>
+    <tr><td>移位</td><td><code>&lt;&lt;</code> <code>&gt;&gt;</code></td><td>逻辑移位,空位补 0。移固定位数时<strong>零成本</strong>,只是换根线</td><td><span class="tag syn">可综合</span></td></tr>
+    <tr><td>算术移位</td><td><code>&lt;&lt;&lt;</code> <code>&gt;&gt;&gt;</code></td><td>右移时保留符号位,配合 <code>signed</code> 使用</td><td><span class="tag syn">可综合</span></td></tr>
+    <tr><td>拼接</td><td><code>{a, b}</code></td><td>把多个信号接成更宽的一个</td><td><span class="tag syn">可综合</span></td></tr>
+    <tr><td>复制</td><td><code>{4{a}}</code></td><td>把 <code>a</code> 重复 4 遍</td><td><span class="tag syn">可综合</span></td></tr>
+    <tr><td>条件</td><td><code>c ? x : y</code></td><td>二选一,可以串起来做多选一</td><td><span class="tag syn">可综合</span></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s4">拼接、复制、归约:三个真正的高频动作</h2>
+<p>这三个不是语法点缀,是每天都会写的东西。</p>
+<figure class="file">
+  <figcaption><span class="path">写法示例</span><span class="note">拿一个 8 位的 data 当例子</span></figcaption>
+  <div class="body"><pre><code>wire [7:0] data;
+
+// ---- 拼接 {} ----
+{data[3:0], data[7:4]}      // 高低半字节互换
+{1'b0, data[7:1]}           // 右移一位(等价于 data &gt;&gt; 1)
+{data[6:0], 1'b0}           // 左移一位
+{cout, sum}                 // 把进位和结果拼成一个 9 位数
+
+// ---- 复制 {n{}} ----
+{8{1'b1}}                   // 8'b1111_1111,即 8'hFF
+{4{2'b01}}                  // 8'b0101_0101
+{{8{data[7]}}, data}        // 8 位符号扩展到 16 位:高 8 位全填符号位
+
+// ---- 归约:向量收成 1 位 ----
+&amp;data                       // 是否全 1
+|data                       // 是否有 1(即“不为 0”)
+^data                       // 1 的个数是否为奇数 —— 奇偶校验位
+~|data                      // 是否全 0</code></pre></div>
+</figure>
+<div class="box tip">
+  <b>移位与拼接的选择</b>
+  <p><code>data &gt;&gt; 1</code> 和 <code>{1'b0, data[7:1]}</code> 综合结果完全一样,都是<strong>零成本</strong>的换线。但拼接写法能明确表达“空位补什么”,做循环移位(<code>{data[0], data[7:1]}</code>)时更是只有拼接能写。</p>
+</div>
+
+<h2 id="s5">加法器:位宽陷阱就在这里</h2>
+<figure class="file">
+  <figcaption><span class="path">code/lesson02/full_adder.v</span><span class="note">可综合 · 一位全加器</span></figcaption>
+  <div class="body"><pre><code>module full_adder (
+    input  wire a,      // 加数
+    input  wire b,      // 加数
+    input  wire cin,    // 低位来的进位
+    output wire sum,    // 本位和
+    output wire cout    // 往高位去的进位
+);
+
+    // 三个数里有奇数个 1,本位就是 1
+    assign sum  = a ^ b ^ cin;
+
+    // 三个数里任意两个是 1,就产生进位
+    assign cout = (a &amp; b) | (a &amp; cin) | (b &amp; cin);
+
+endmodule</code></pre></div>
+</figure>
+
+<p>一位的加法可以手推真值表。到了 8 位,没人会去串 8 个全加器 —— 直接写 <code>+</code>,综合工具会用芯片里专门的进位链资源实现,比你手搭的快得多。但这里有个坑:</p>
+
+<figure class="dia">
+<svg viewBox="0 0 590 190" role="img" aria-label="位宽对比:左边只有 8 位时加法按 8 位计算,进位根本没有算出来;把 cout 拼进左边变成 9 位后,第 9 位就是进位">
+  <text class="w-marktxt" x="220" y="34" text-anchor="middle">进位丢了</text>
+  <text class="d-code" x="10" y="65">sum = a + b</text>
+  <rect class="d-box-dash" x="200" y="44" width="40" height="32"/>
+  <text class="w-marktxt" x="220" y="65" text-anchor="middle">×</text>
+  <rect class="d-box" x="240" y="44" width="40" height="32"/><text class="d-tab" x="260" y="65" text-anchor="middle">7</text>
+  <rect class="d-box" x="280" y="44" width="40" height="32"/><text class="d-tab" x="300" y="65" text-anchor="middle">6</text>
+  <rect class="d-box" x="320" y="44" width="40" height="32"/><text class="d-tab" x="340" y="65" text-anchor="middle">5</text>
+  <rect class="d-box" x="360" y="44" width="40" height="32"/><text class="d-tab" x="380" y="65" text-anchor="middle">4</text>
+  <rect class="d-box" x="400" y="44" width="40" height="32"/><text class="d-tab" x="420" y="65" text-anchor="middle">3</text>
+  <rect class="d-box" x="440" y="44" width="40" height="32"/><text class="d-tab" x="460" y="65" text-anchor="middle">2</text>
+  <rect class="d-box" x="480" y="44" width="40" height="32"/><text class="d-tab" x="500" y="65" text-anchor="middle">1</text>
+  <rect class="d-box" x="520" y="44" width="40" height="32"/><text class="d-tab" x="540" y="65" text-anchor="middle">0</text>
+  <text class="d-sub" x="380" y="94">sum[7:0] —— 结果按 8 位算</text>
+
+  <text class="d-code" x="10" y="137">{cout,sum} = a + b</text>
+  <rect class="d-box-hl" x="200" y="116" width="40" height="32"/>
+  <text class="d-tab" x="220" y="137" text-anchor="middle">cout</text>
+  <rect class="d-box" x="240" y="116" width="40" height="32"/><text class="d-tab" x="260" y="137" text-anchor="middle">7</text>
+  <rect class="d-box" x="280" y="116" width="40" height="32"/><text class="d-tab" x="300" y="137" text-anchor="middle">6</text>
+  <rect class="d-box" x="320" y="116" width="40" height="32"/><text class="d-tab" x="340" y="137" text-anchor="middle">5</text>
+  <rect class="d-box" x="360" y="116" width="40" height="32"/><text class="d-tab" x="380" y="137" text-anchor="middle">4</text>
+  <rect class="d-box" x="400" y="116" width="40" height="32"/><text class="d-tab" x="420" y="137" text-anchor="middle">3</text>
+  <rect class="d-box" x="440" y="116" width="40" height="32"/><text class="d-tab" x="460" y="137" text-anchor="middle">2</text>
+  <rect class="d-box" x="480" y="116" width="40" height="32"/><text class="d-tab" x="500" y="137" text-anchor="middle">1</text>
+  <rect class="d-box" x="520" y="116" width="40" height="32"/><text class="d-tab" x="540" y="137" text-anchor="middle">0</text>
+  <text class="d-sub" x="380" y="166">结果按 9 位算,第 9 位就是进位</text>
+</svg>
+<figcaption><b>加法的位宽由等号两边一起决定。</b>左边只有 8 位,右边就只按 8 位算 —— 进位不是“算出来又丢了”,而是<em>从来没被算过</em>。把 <code>cout</code> 拼进左边,表达式宽度变成 9 位,进位自然出现在最高位。</figcaption>
+</figure>
+
+<figure class="file">
+  <figcaption><span class="path">code/lesson02/adder8.v</span><span class="note">可综合 · 综合工具会用芯片的专用进位链</span></figcaption>
+  <div class="body"><pre><code>module adder8 (
+    input  wire [7:0] a,
+    input  wire [7:0] b,
+    input  wire       cin,
+    output wire [7:0] sum,
+    output wire       cout
+);
+
+    // 左边一共 9 位,所以右边的加法按 9 位来算,第 9 位天然就是进位。
+    // 如果写成  assign sum = a + b + cin;  只有 8 位,进位就被丢掉了。
+    assign {cout, sum} = a + b + cin;
+
+endmodule</code></pre></div>
+</figure>
+
+<div class="box pit">
+  <b>位宽规则,记这三条就够</b>
+  <ul>
+    <li>表达式按<strong>等号两边所有操作数中最宽的那个</strong>来计算,包括左边。</li>
+    <li>裸写的常数(如 <code>1</code>)默认是 <strong>32 位</strong>,可能悄悄把整个表达式撑到 32 位。写 <code>1'b1</code> 更安全。</li>
+    <li>宽的赋给窄的会<strong>静默截断</strong>,不报错、不警告。中间结果宁可多留一位。</li>
+  </ul>
+</div>
+
+<h2 id="s6">优先编码器:第一次遇到“优先级”</h2>
+<p>八个请求同时来了,该响应哪个?优先编码器给出“最高优先级的那个的编号”。</p>
+<figure class="file">
+  <figcaption><span class="path">code/lesson02/prio_enc8.v</span><span class="note">可综合 · 归约运算符 + 三目链</span></figcaption>
+  <div class="body"><pre><code>module prio_enc8 (
+    input  wire [7:0] req,     // 8 个请求,req[7] 优先级最高
+    output wire [2:0] idx,     // 优先级最高的那个请求的编号
+    output wire       valid    // 是否至少有一个请求
+);
+
+    // 归约或:把 8 位全部 or 在一起,得到 1 位结果
+    assign valid = |req;
+
+    // 三目运算符链天然带优先级:先判断的赢
+    assign idx = req[7] ? 3'd7 :
+                 req[6] ? 3'd6 :
+                 req[5] ? 3'd5 :
+                 req[4] ? 3'd4 :
+                 req[3] ? 3'd3 :
+                 req[2] ? 3'd2 :
+                 req[1] ? 3'd1 : 3'd0;
+
+endmodule</code></pre></div>
+</figure>
+
+<div class="tw">
+<table>
+  <caption>优先级链 与 并行选择的差别</caption>
+  <thead><tr><th></th><th>三目链 / <code>if…else if</code></th><th><code>case</code> / 独立判断</th></tr></thead>
+  <tbody>
+    <tr><td>电路形状</td><td>一串级联的选择器,<strong>有先后</strong></td><td>一层并列的选择器,<strong>没有先后</strong></td></tr>
+    <tr><td>逻辑深度</td><td>随分支数线性增长,路径变长</td><td>基本恒定</td></tr>
+    <tr><td>适合</td><td>条件<em>会同时成立</em>,需要谁赢谁输</td><td>条件<em>互斥</em>,比如按 <code>sel</code> 选一路</td></tr>
+  </tbody>
+</table>
+</div>
+<p>这里必须用优先级链 —— 八个请求可以同时为 1,而 <code>idx</code> 只能输出一个数。而第 01 课的 <code>mux4</code> 里 <code>sel</code> 只可能是一个值,条件天然互斥,用 <code>case</code> 更合适(第 05 课)。<strong>选错的代价是白白拉长关键路径</strong>,在高频设计里会直接卡住时序。</p>
+
+<h2 id="s7">跑仿真</h2>
+<p><code>comb_tb.v</code> 里放了两个 DUT,一个 Testbench 就把加法器和编码器都验了。加法器用边界值加随机值,编码器 256 种输入直接全遍历 —— 输入空间小的时候,穷举永远比随机可靠。</p>
+<div class="term"><pre><span class="cmd">.\sim.bat lesson02 full_adder_tb</span>
+[TB] 一位全加器,8 种输入组合全遍历
+   0 + 0 + 0 = 00   [PASS]
+   0 + 0 + 1 = 01   [PASS]
+   0 + 1 + 0 = 01   [PASS]
+   0 + 1 + 1 = 10   [PASS]
+   1 + 0 + 0 = 01   [PASS]
+   1 + 0 + 1 = 10   [PASS]
+   1 + 1 + 0 = 10   [PASS]
+   1 + 1 + 1 = 11   [PASS]
+[结果] 8/8 通过,0 处不符
+
+<span class="cmd">.\sim.bat lesson02 comb_tb</span>
+[1] 8 位加法器 —— 边界值 + 随机值
+     0 +   0 + 0 =   0  cout=0  [PASS]
+     1 +   1 + 0 =   2  cout=0  [PASS]
+   255 +   1 + 0 = 256  cout=1  [PASS]
+   255 + 255 + 1 = 511  cout=1  [PASS]
+   ...
+[2] 优先编码器 —— 256 种输入全遍历(只打印出错的)
+   256 种输入检查完毕
+[结果] 全部通过,0 处不符</pre></div>
+<div class="box tip">
+  <b>穷举 vs 随机</b>
+  <p>纯组合逻辑输入位数 ≤ 16 时(65536 种),直接双层 <code>for</code> 穷举,几秒就跑完,而且是<strong>完备</strong>的。位数一多再上随机 + 边界值。这门课后面凡是能穷举的地方都穷举。</p>
+</div>
+
+<h2 id="ex">练习</h2>
+<ol class="tasks">
+<li>
+  <h3>一行搞定奇偶校验<span class="lv">热身</span></h3>
+  <p>写 <code>code/lesson02/parity.v</code>:输入 8 位 <code>data</code>,输出 <code>even_p</code>(偶校验位)和 <code>odd_p</code>(奇校验位)。每个输出只准写一行。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <pre>module parity (
+    input  wire [7:0] data,
+    output wire       even_p,   // 补上它之后,1 的总数是偶数
+    output wire       odd_p     // 补上它之后,1 的总数是奇数
+);
+    assign even_p = ^data;      // data 里有奇数个 1 时输出 1,正好凑成偶数
+    assign odd_p  = ~^data;     // 取反即可
+endmodule</pre>
+    <p>归约异或就是奇偶校验的全部内容。UART 的校验位、以太网的 FCS、内存的 ECC,底层都是这一个运算符往上堆。</p>
+  </div></details>
+</li>
+<li>
+  <h3>8 位比较器<span class="lv">动手</span></h3>
+  <p>写 <code>cmp8.v</code>:输入 <code>a</code>、<code>b</code>,输出 <code>gt</code>、<code>eq</code>、<code>lt</code> 三个 1 位信号。写完想一想:如果 <code>a = 8'hFF</code>、<code>b = 8'h01</code>,你的电路说谁大?如果这两个数其实代表有符号数呢?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <pre>module cmp8 (
+    input  wire [7:0] a,
+    input  wire [7:0] b,
+    output wire       gt,
+    output wire       eq,
+    output wire       lt
+);
+    assign gt = (a &gt;  b);
+    assign eq = (a == b);
+    assign lt = (a &lt;  b);
+endmodule</pre>
+    <p>默认<strong>无符号</strong>:<code>8'hFF</code> 是 255,比 1 大。若这两个数是有符号的,<code>8'hFF</code> 就是 −1,结果完全相反。</p>
+    <p>改成有符号只需在声明上加 <code>signed</code>:<code>input wire signed [7:0] a, b;</code>,或者在表达式里临时转换 <code>$signed(a) &gt; $signed(b)</code>。<strong>同一串比特,解释方式不同结论就不同</strong> —— 这是位宽之外第二个高发 bug 来源。</p>
+  </div></details>
+</li>
+<li>
+  <h3>桶形移位器<span class="lv">动手</span></h3>
+  <p>写 <code>barrel_shift8.v</code>:输入 8 位 <code>din</code>、3 位移位量 <code>shamt</code>、1 位模式 <code>rotate</code>(0 = 逻辑左移,1 = 循环左移),输出 <code>dout</code>。不准用 <code>always</code>,只用 <code>assign</code>。提示:把 <code>din</code> 拼成 16 位,然后开个 8 位的窗口去取。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <pre>module barrel_shift8 (
+    input  wire [7:0] din,
+    input  wire [2:0] shamt,
+    input  wire       rotate,      // 0=逻辑左移  1=循环左移
+    output wire [7:0] dout
+);
+    wire [15:0] pad = {din, 8'b0}; // 逻辑移位:低位补零
+    wire [15:0] dbl = {din, din};  // 循环移位:接一份自己
+    wire [15:0] src = rotate ? dbl : pad;
+
+    // 索引部分选择:从第 (15-shamt) 位开始,往低位数 8 位
+    assign dout = src[15-shamt -: 8];
+endmodule</pre>
+    <p>验一下 <code>shamt=1</code>:<code>pad[14:7] = {din[6:0], 1'b0}</code> 正是左移一位;<code>dbl[14:7] = {din[6:0], din[7]}</code> 正是循环左移一位。同一个窗口表达式,换个源就换了功能 —— 这就是把移位问题“摊平成选线问题”的技巧。</p>
+  </div></details>
+</li>
+<li>
+  <h3>故意制造一次多驱动<span class="lv">想清楚</span></h3>
+  <p>在 <code>adder8.v</code> 里多加一行 <code>assign cout = 1'b0;</code>,重跑 <code>comb_tb</code>。<code>cout</code> 变成了什么?为什么综合工具会把这件事当成错误而不是警告?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>仿真里 <code>cout</code> 会变成 <code>x</code>。线网的规则是:两个驱动源给出不同的值,结果就是不确定 —— 这正是真实电路的行为(两个输出短接在一起,电压既不是高也不是低)。两个驱动恰好给出相同值时反而不报错,这让 bug 更难查。</p>
+    <p>综合工具直接报错(Vivado 的 <em>multiple driver nets</em>),因为它没法为这种网络生成电路。真实芯片上把两个驱动器短接会持续灌电流,可能烧掉引脚。</p>
+    <p>推论:<strong>一个信号,一个驱动源</strong>。要分情况赋值,就把所有情况收进<em>同一条</em> <code>assign</code>(用三目链)或<em>同一个</em> <code>always</code> 块。</p>
+  </div></details>
+</li>
+</ol>
+
+<nav class="pager"></nav>
+</main>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>IGBT 结构</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.n{fill:var(--copper);fill-opacity:.1}.n2{fill:var(--copper);fill-opacity:.22}.np{fill:var(--copper);fill-opacity:.4}
+.p{fill:var(--low);fill-opacity:.16}.pp{fill:var(--low);fill-opacity:.4}
+.metal{fill:var(--muted);fill-opacity:.6}.ox{fill:var(--panel);stroke:var(--muted);stroke-width:1}
+.chn{fill:var(--flow)}.edge{fill:none;stroke:var(--line);stroke-width:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#igbt">IGBT</a><span class="sp"></span><span>01 / 07</span></nav>
+<header>
+  <span class="eyebrow">IGBT · 器件结构</span>
+  <h1>IGBT = MOS 驱动 + BJT 输出</h1>
+  <p class="lede">IGBT 就是在功率 MOSFET 的漏极底下多垫了一层 P+。这一层让它输入像 MOS，输出像 BJT。下面切换剖面和等效电路，看这一层到底改变了什么。</p>
+</header>
+
+<section id="struct">
+  <span class="eyebrow">剖面 · 等效电路</span>
+  <h2>多出来的 P+ 层</h2>
+  <p>功率 MOSFET 的底部是 N+ 衬底，电流只靠电子走。IGBT 把它换成 P+ 集电区，于是 P+ / N− 漂移区 / P 体区 叠成了一个 PNP 晶体管。栅极加正压时，MOS 沟道打开，电子流进 N− 漂移区，这股电子电流正好就是 PNP 的基极电流。所以说 IGBT 是 MOS 驱动一个 PNP。</p>
+  <p class="eq">Ic = I沟道（电子，即 PNP 基极电流） + I空穴（PNP 集电极电流）</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 310" role="img" aria-label="IGBT 元胞剖面：顶部发射极金属和栅极，P 体区中有 N+ 源区，下方是 N− 漂移区、N 场截止层、P+ 集电区；也可切换为 MOS 驱动 PNP 的等效电路">
+        <g id="s1-sec">
+          <rect class="n" x="20" y="50" width="300" height="180"/>
+          <rect class="n2" x="20" y="230" width="300" height="18"/>
+          <rect id="s1-bot" class="pp" x="20" y="248" width="300" height="26"/>
+          <rect class="metal" x="20" y="274" width="300" height="10"/>
+          <path class="p" d="M20,50 H136 V104 Q136,118 122,118 H20 Z"/>
+          <path class="p" d="M320,50 H204 V104 Q204,118 218,118 H320 Z"/>
+          <rect class="np" x="80" y="50" width="32" height="18"/>
+          <rect class="np" x="228" y="50" width="32" height="18"/>
+          <text x="96" y="64" text-anchor="middle" class="tm">N+</text>
+          <text x="244" y="64" text-anchor="middle" class="tm">N+</text>
+          <rect class="ox" x="100" y="42" width="140" height="8"/>
+          <rect class="metal" x="104" y="30" width="132" height="12"/>
+          <rect class="metal" x="20" y="32" width="76" height="18"/>
+          <rect class="metal" x="244" y="32" width="76" height="18"/>
+          <rect class="edge" x="20" y="30" width="300" height="254"/>
+          <g id="s1-ch"><rect class="chn" x="112" y="50" width="24" height="4"/><rect class="chn" x="204" y="50" width="24" height="4"/>
+            <text x="170" y="70" text-anchor="middle" class="tm">沟道打开</text></g>
+          <path class="w" d="M58,32 V10 H282 V32 M170,30 V20"/>
+          <text x="178" y="26" class="t">G</text>
+          <text id="s1-te" x="290" y="14" class="t">E</text>
+          <path class="w" d="M170,284 V290"/>
+          <text id="s1-tc" x="170" y="304" text-anchor="middle" class="t">C</text>
+          <text x="330" y="90" class="tm">P 体区</text>
+          <text x="330" y="160" class="tm">N− 漂移区</text>
+          <text x="330" y="176" class="tm">（耐压层）</text>
+          <text x="330" y="243" class="tm">N 场截止层</text>
+          <text id="s1-ly" x="330" y="266" class="tm">P+ 集电区</text>
+          <g id="s1-holes"></g>
+          <path id="s1-fe" class="flow" d="M170,272 V62 L136,54 H100 L88,44 M170,62 L204,54 H240 L252,44"/>
+          <path id="s1-fh" class="flow thin" d="M50,272 V44 M290,272 V44"/>
+        </g>
+        <g id="s1-eq" hidden>
+          <g transform="translate(60,0)">
+            <text x="202" y="16" text-anchor="middle" class="t">C</text>
+            <path class="w" d="M70,82 V151 H60 M60,189 H70 V280 M60,170 H70 M50,144 V196 M50,170 H24 M70,280 H240"/>
+            <line class="bar" x1="60" y1="144" x2="60" y2="158"/><line class="bar" x1="60" y1="163" x2="60" y2="177"/><line class="bar" x1="60" y1="182" x2="60" y2="196"/>
+            <polygon class="ah" points="62,170 70,166 70,174"/>
+            <text x="18" y="174" text-anchor="end" class="t">G</text>
+            <text x="80" y="176" class="t">MOS</text>
+            <text x="248" y="285" class="t">E</text>
+            <g id="s1-eq-pnp">
+              <path class="w" d="M202,24 V60 L180,74 M180,90 L202,104 V280 M70,82 H180"/>
+              <line class="bar" x1="180" y1="64" x2="180" y2="100"/>
+              <polygon class="ah" points="185,71 194,70 190,63"/>
+              <circle class="dot" cx="202" cy="280" r="3.5"/>
+              <text x="212" y="78" class="t">PNP</text>
+              <text x="212" y="94" class="tm">P+ / N− / P</text>
+              <text x="84" y="74" class="tm">N− 漂移区</text>
+            </g>
+            <path id="s1-eq-mos" class="w" d="M202,24 V40 H70 V82" hidden/>
+            <path id="s1-ef" class="flow" d="M202,28 V58 L184,70 V82 H72 V151 H62 V189 H72 V278"/>
+            <path id="s1-eh" class="flow thin" d="M202,28 V58 L184,70 V94 L202,106 V278"/>
+          </g>
+          <text id="s1-eqt" x="20" y="302" class="tm">IGBT 等效：MOS 的漏极电流就是 PNP 的基极电流</text>
+        </g>
+      </svg>
+      <figcaption>示意图，未按比例。橙底是 N 型，蓝底是 P 型，蓝点是注入的空穴。绿色粗线是经 MOS 沟道的电子电流，细线是空穴电流，都按常规电流方向画，从 C 流向 E。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">看哪种图</span>
+        <div class="seg" id="s1-v"><button id="s1-v-sec" data-v="sec" aria-pressed="true">剖面结构</button><button id="s1-v-eq" data-v="eq" aria-pressed="false">等效电路</button></div></div>
+      <div class="ctl"><span class="ctl-l">栅极电压 Vge</span>
+        <div class="seg" id="s1-g"><button id="s1-g-15" data-v="1" aria-pressed="true">+15 V</button><button id="s1-g-0" data-v="0" aria-pressed="false">0 V</button></div></div>
+      <div class="ctl"><span class="ctl-l">底层</span>
+        <div class="seg" id="s1-d"><button id="s1-d-p" data-v="igbt" aria-pressed="true">P+，即 IGBT</button><button id="s1-d-n" data-v="mos" aria-pressed="false">N+，即 MOSFET</button></div></div>
+      <dl class="read">
+        <dt>MOS 沟道</dt><dd><span id="s1-chip" class="chip on">导通</span></dd>
+        <dt>背面空穴注入</dt><dd id="s1-inj"></dd>
+        <dt>漂移区电阻（示意）</dt><dd id="s1-rd"></dd>
+        <dt>50 A 时压降</dt><dd id="s1-vce"></dd>
+        <dt>导通损耗 V·I</dt><dd id="s1-p"></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+      <p class="note">示意值：按 1200 V 器件、50 A 估算，只为看量级对比。</p>
+    </div>
+  </div>
+</section>
+
+<section id="latch">
+  <span class="eyebrow">寄生晶闸管 · 闩锁</span>
+  <h2>结构里还藏着一个晶闸管</h2>
+  <p>N+ 源区 / P 体区 / N− 漂移区 本身又是一个 NPN。它和前面那个 PNP 首尾相接，构成 PNPN 四层结构，就是晶闸管。平时 NPN 的基极（P 体区）通过金属接到发射极，被体区电阻 Rb 短路住，所以它不导通。</p>
+  <p>空穴电流从 P 体区流到发射极时，会在 Rb 上产生压降。电流太大或者温度太高，这个压降超过约 0.7 V，寄生 NPN 就被打开。NPN 和 PNP 互相给对方供基极电流，形成正反馈，栅极再怎么关也关不掉，这叫闩锁（latch-up）。</p>
+  <p class="eq">V_Rb = I空穴 · Rb，超过 Vbe(NPN) ≈ 0.7 V 就闩锁</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 400 310" role="img" aria-label="IGBT 含寄生晶闸管的等效电路：MOS 驱动 PNP，PNP 集电极接寄生 NPN 基极和体区电阻 Rb，NPN 集电极接 PNP 基极">
+        <text x="202" y="16" text-anchor="middle" class="t">C</text>
+        <path class="w" d="M202,24 V60 L180,74 M180,90 L202,104 V188 H260 V214 M260,254 V280 M70,82 H180"/>
+        <line class="bar" x1="180" y1="64" x2="180" y2="100"/>
+        <polygon class="ah" points="185,71 194,70 190,63"/>
+        <text x="212" y="78" class="t">寄生 PNP</text>
+        <text x="212" y="94" class="tm">P+ / N− / P</text>
+        <text x="84" y="74" class="tm">N− 漂移区</text>
+        <path class="w" d="M70,82 V151 H60 M60,189 H70 V280 M60,170 H70 M50,144 V196 M50,170 H24 M70,280 H300"/>
+        <line class="bar" x1="60" y1="144" x2="60" y2="158"/><line class="bar" x1="60" y1="163" x2="60" y2="177"/><line class="bar" x1="60" y1="182" x2="60" y2="196"/>
+        <polygon class="ah" points="62,170 70,166 70,174"/>
+        <text x="18" y="174" text-anchor="end" class="t">G</text>
+        <text id="s2-gt" x="30" y="160" text-anchor="middle" class="v hi">15 V</text>
+        <text x="80" y="176" class="t">MOS</text>
+        <g id="s2-npn">
+          <path class="w" d="M128,82 V166 L150,180 M150,196 L128,210 V280 M150,188 H202"/>
+          <line class="bar" x1="150" y1="170" x2="150" y2="206"/>
+          <polygon class="ah" points="131,208 140.8,206.6 136.4,199.8"/>
+        </g>
+        <text x="156" y="236" class="t">寄生 NPN</text>
+        <text x="156" y="252" class="tm">N+ / P / N−</text>
+        <circle class="dot" cx="128" cy="82" r="3.5"/><circle class="dot" cx="202" cy="188" r="3.5"/>
+        <circle class="dot" cx="128" cy="280" r="3.5"/><circle class="dot" cx="260" cy="280" r="3.5"/>
+        <text x="214" y="180" class="tm">P 体区</text>
+        <rect class="r" x="251" y="214" width="18" height="40" rx="2"/>
+        <text x="276" y="228" class="t">Rb</text>
+        <text id="s2-rbt" x="276" y="244" class="v">8 mΩ</text>
+        <text id="s2-vrbt" x="276" y="262" class="v">0.14 V</text>
+        <text x="308" y="285" class="t">E</text>
+        <path id="s2-fm" class="flow" d="M202,28 V58 L184,70 V82 H72 V151 H62 V189 H72 V278"/>
+        <path id="s2-fh" class="flow thin" d="M202,28 V58 L184,70 V94 L202,106 V188 H260 V278"/>
+        <path id="s2-fl" class="flow bad" d="M128,84 V166 L146,178 V198 L128,210 V278" hidden/>
+      </svg>
+      <figcaption>绿色是正常电流，红色是寄生 NPN 导通后的电流。NPN 集电极接 PNP 基极，PNP 集电极接 NPN 基极，这就是晶闸管的正反馈。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-i">集电极电流 Ic（额定 50 A）</label>
+        <span class="rv" id="s2-iv">50 A</span>
+        <input type="range" id="s2-i" min="0" max="400" step="10" value="50"></div>
+      <div class="ctl"><span class="ctl-l">结温</span>
+        <div class="seg" id="s2-t"><button id="s2-t-25" data-v="25" aria-pressed="true">25 °C</button><button id="s2-t-150" data-v="150" aria-pressed="false">150 °C</button></div></div>
+      <div class="ctl"><span class="ctl-l">栅极</span>
+        <div class="seg" id="s2-g"><button id="s2-g-1" data-v="1" aria-pressed="true">+15 V 开通</button><button id="s2-g-0" data-v="0" aria-pressed="false">关断</button></div></div>
+      <dl class="read">
+        <dt>空穴电流，取 35%</dt><dd id="s2-ih"></dd>
+        <dt>Rb 压降</dt><dd id="s2-vrb"></dd>
+        <dt>NPN 开启电压</dt><dd id="s2-vbe"></dd>
+        <dt>闩锁电流 IL</dt><dd id="s2-il"></dd>
+        <dt>状态</dt><dd><span id="s2-chip" class="chip on">正常</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+      <p class="note">示意值：Rb 取 8 mΩ。高温下体区电阻变大、Vbe 变小，两头一起让闩锁更容易。现代 IGBT 的静态闩锁电流远高于短路电流，正常用不会碰到。</p>
+    </div>
+  </div>
+</section>
+
+<section id="cmp">
+  <span class="eyebrow">一句话概括</span>
+  <h2>输入像 MOS，输出像 BJT</h2>
+  <p>因为控制端是 MOS 的栅极，所以驱动它只要给栅极电容充放电，稳态几乎不耗电流。因为输出端靠 PNP 的少子注入，所以漂移区被电导调制，高压下导通压降仍然很低。代价也来自少子：关断时这些空穴要慢慢复合掉，所以开关比 MOS 慢，还有拖尾电流。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>对比项</th><th>BJT</th><th>功率 MOSFET</th><th>IGBT</th></tr></thead>
+    <tbody>
+      <tr><td>驱动方式</td><td>电流驱动，要持续给 Ib</td><td>电压驱动，只给栅极电容充放电</td><td>电压驱动，同 MOS</td></tr>
+      <tr><td>导电载流子</td><td>双极，少子参与</td><td>单极，只有多子</td><td>双极，空穴注入漂移区</td></tr>
+      <tr><td>导通特性</td><td>Vce(sat) 约 0.2~1 V</td><td>纯电阻 Rds(on)，高压管很大</td><td>约 0.7 V 结压降加小电阻，典型 1.5~2.5 V</td></tr>
+      <tr><td>开关速度</td><td>慢，存储时间长</td><td>最快</td><td>中等，有拖尾</td></tr>
+      <tr><td>反向导通</td><td>无</td><td>自带体二极管</td><td>无，要另并快恢复二极管（模块里已封装）</td></tr>
+      <tr><td>典型场合</td><td>小信号、老式功率</td><td>低中压、高频</td><td>600 V 以上、大电流、中低频</td></tr>
+    </tbody>
+  </table></div>
+  <p>最后一行的"反向导通"面试常被追问：IGBT 底部是 P+，不存在 MOS 那样的体二极管，所以桥臂里要反并一个快恢复二极管 FRD 来续流。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>IGBT 的结构是怎样的？为什么说它是 MOS 和 BJT 的复合？</summary>
+      <div class="ans"><p>在功率 MOSFET 的漏极侧多加一层 P+ 集电区。P+、N− 漂移区、P 体区构成一个 PNP，MOS 沟道的电子电流就是这个 PNP 的基极电流。所以等效为 MOS 驱动 PNP：输入是 MOS 栅极，电压驱动；输出是 BJT，有电导调制，压降低。</p></div></details>
+    <details><summary>IGBT 为什么高压大电流下压降比 MOS 小？</summary>
+      <div class="ans"><p>高压 MOS 的漂移区又厚又轻掺杂，电阻很大，只靠多子导电。IGBT 的 P+ 层往漂移区注入大量空穴，同时吸引等量电子，载流子浓度远高于原掺杂，漂移区电阻大幅下降，这叫电导调制。</p></div></details>
+    <details><summary>什么是 IGBT 的闩锁？怎么避免？</summary>
+      <div class="ans"><p>IGBT 内部有 N+/P/N−/P+ 四层寄生晶闸管。空穴电流在 P 体区电阻上的压降超过约 0.7 V 时，寄生 NPN 导通，和 PNP 形成正反馈，栅极失去控制，通常会烧管。器件上靠减小体区电阻、加深 P+ 体区来防；使用上不要超过额定电流和结温，短路时尽快关断，关断也不能太猛，以免动态闩锁。</p></div></details>
+    <details><summary>IGBT 有体二极管吗？</summary>
+      <div class="ans"><p>没有。它底部是 P+，集电极和漂移区之间的 PN 结在反向时是反偏的，不能反向导通。桥式电路要外加反并联快恢复二极管，模块里一般已经封装在一起。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="next" href="02-导通压降Vcesat.html"><span>下一页</span>导通压降 Vce(sat)</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 结构与等效电路 */
+const s1={v:'sec',on:true,igbt:true};
+[[40,150],[78,196],[110,140],[150,212],[190,160],[232,198],[262,146],[300,182],[60,222],[170,124],[210,222],[130,178],[282,222],[96,168],[244,170],[36,190]]
+  .forEach(([x,y])=>$('s1-holes').append(svgEl('circle',{cx:x,cy:y,r:3,class:'lo'})));
+function s1u(){
+  const on=s1.on,ig=s1.igbt,I=50,R=ig?0.02:0.2,V=on?(ig?0.7:0)+I*R:0;
+  show($('s1-sec'),s1.v==='sec');show($('s1-eq'),s1.v==='eq');
+  show($('s1-ch'),on);show($('s1-holes'),on&&ig);
+  $('s1-bot').setAttribute('class',ig?'pp':'np');
+  $('s1-ly').textContent=ig?'P+ 集电区':'N+ 衬底';
+  $('s1-tc').textContent=ig?'C':'D';$('s1-te').textContent=ig?'E':'S';
+  show($('s1-fe'),on);show($('s1-fh'),on&&ig);
+  show($('s1-eq-pnp'),ig);show($('s1-eq-mos'),!ig);
+  show($('s1-ef'),on);show($('s1-eh'),on&&ig);
+  $('s1-ef').setAttribute('d',ig?'M202,28 V58 L184,70 V82 H72 V151 H62 V189 H72 V278':'M202,28 V40 H72 V151 H62 V189 H72 V278');
+  $('s1-eqt').textContent=ig?'IGBT 等效：MOS 的漏极电流就是 PNP 的基极电流':'MOSFET：没有 PNP，电流全靠沟道里的电子';
+  chip($('s1-chip'),on?'导通':'关断',on?'on':'off');
+  $('s1-inj').textContent=ig?(on?'有，漂移区充满空穴':'无，栅极关断'):'无，底层是 N+';
+  $('s1-rd').textContent=on?(ig?'≈ '+fmtR(R)+'，被电导调制':fmtR(R)+'，只靠多子'):'—';
+  $('s1-vce').textContent=on?fmtV(V)+(ig?' = 0.7 + 50 × '+R:' = 50 × '+R):'承受母线电压，Ic ≈ 0';
+  $('s1-p').textContent=on?fmtP(V*I):'≈ 0';
+  $('s1-note').textContent=!on?'Vge = 0，沟道消失，没有电子流入漂移区，PNP 也就没有基极电流。N− 漂移区和 P 体区之间的 PN 结反偏，承受全部电压。'
+    :ig?'沟道打开后，电子进入漂移区，P+ 层随即向上注入空穴。漂移区里载流子浓度远超原来的掺杂，电阻降到原来的零头。代价是多了一个约 0.7 V 的 PN 结压降。'
+    :'底层换成 N+ 就是普通功率 MOSFET。为了耐 1200 V，漂移区必须又厚又轻掺杂，只靠多子电子导电，电阻很大，50 A 下压降达到十伏量级。';
+}
+seg('s1-v',v=>{s1.v=v;s1u();});
+seg('s1-g',v=>{s1.on=v==='1';s1u();});
+seg('s1-d',v=>{s1.igbt=v==='igbt';s1u();});
+s1u();
+
+/* 2. 寄生晶闸管与闩锁 */
+const s2={T:25,on:true,lat:false};
+function s2u(){
+  const I=+$('s2-i').value,hot=s2.T>100,Rb=hot?10.4e-3:8e-3,vbe=hot?0.45:0.7,IL=vbe/(0.35*Rb);
+  if(s2.on)s2.lat=I>IL;
+  const lat=s2.lat,cond=s2.on||lat,Ih=cond?0.35*I:0,vrb=Math.min(Ih*Rb,vbe);
+  $('s2-iv').textContent=I+' A';$('s2-i').setAttribute('aria-valuetext',I+' A');
+  $('s2-ih').textContent=cond?fmtA(Ih):'0';
+  $('s2-vrb').textContent=cond?fmtV(vrb)+(lat?'，被 NPN 发射结钳住':''):'0 V';
+  $('s2-vbe').textContent=fmtV(vbe);$('s2-il').textContent='≈ '+IL.toFixed(0)+' A';
+  $('s2-rbt').textContent=fmtR(Rb);$('s2-vrbt').textContent=fmtV(vrb);
+  $('s2-gt').textContent=s2.on?'15 V':'0 V';setLv($('s2-gt'),null,s2.on);
+  show($('s2-fm'),s2.on&&I>0);show($('s2-fh'),cond&&I>0);show($('s2-fl'),lat);
+  $('s2-npn').style.color=lat?'var(--danger)':'';
+  let note;
+  if(lat&&!s2.on){chip($('s2-chip'),'关不掉','bad');note='栅极已经关断，MOS 沟道没了，可 PNP 和 NPN 互相供基极电流，电流照样流。这时只能等外电路切断电流，通常管子已经烧毁。';}
+  else if(lat){chip($('s2-chip'),'闩锁','bad');note='Rb 上的压降达到 NPN 的开启电压，寄生 NPN 导通。它的集电极电流又成了 PNP 的基极电流，正反馈锁住。试着把栅极关掉。';}
+  else if(!s2.on){chip($('s2-chip'),'已关断','off');note='没有闩锁时，栅极一关，沟道电子电流消失，PNP 失去基极电流，IGBT 正常关断。';}
+  else if(Ih*Rb>0.6*vbe){chip($('s2-chip'),'接近闩锁','warn');note='Rb 上的压降已接近 NPN 开启电压。电流再大一点，或者再热一点，就会触发闩锁。';}
+  else{chip($('s2-chip'),'正常','on');note='空穴电流经 P 体区流到发射极，在 Rb 上的压降远小于开启电压，寄生 NPN 截止，晶闸管不起作用。';}
+  $('s2-note').textContent=note;
+}
+$('s2-i').addEventListener('input',s2u);
+seg('s2-t',v=>{s2.T=+v;s2u();});
+seg('s2-g',v=>{s2.on=v==='1';s2u();});
+s2u();
+</script>
+</body>
+</html>

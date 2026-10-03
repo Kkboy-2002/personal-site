@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>增强型与耗尽型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.pz{fill:var(--copper);fill-opacity:.16;stroke:var(--line)}
+.nz{fill:var(--low);fill-opacity:.24;stroke:var(--line)}
+.ox{fill:var(--muted);fill-opacity:.35}
+.chn{fill:var(--low);fill-opacity:.85}
+.pre{fill:none;stroke:var(--low);stroke-width:1.5;stroke-dasharray:3 3}
+.op{fill:var(--panel);stroke-width:2.5}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#mos">MOS管</a><span class="sp"></span><span>02 / 09</span></nav>
+<header>
+  <span class="eyebrow">MOS管 · 增强型与耗尽型</span>
+  <h1>增强型与耗尽型</h1>
+  <p class="lede">Vgs = 0 时管子是通还是断？这一点把 MOS 管分成增强型和耗尽型。下面拖动栅压，看沟道什么时候出现、什么时候消失。</p>
+</header>
+
+<section id="ch">
+  <span class="eyebrow">有没有预置沟道</span>
+  <h2>一个要"加压才通"，一个要"加压才断"</h2>
+  <p>增强型 NMOS 出厂时源漏之间没有沟道，Vgs = 0 就关断，要加正压超过阈值 Vth 才能把沟道"吸"出来。耗尽型 NMOS 在制造时就在栅极下面注入了一层 N 型杂质，沟道天生就在，Vgs = 0 也导通；要加负压把沟道里的电子赶走、把沟道"耗尽"才能关断。关断所需的这个负电压叫夹断电压 Vgs(off)，本质上就是一个负的 Vth。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 250" role="img" aria-label="左边 NMOS 剖面，沟道厚度随栅压变化；右边对应的电路符号，增强型沟道画成三段断开，耗尽型画成一条实线">
+        <text x="70" y="18" text-anchor="middle" class="v">S</text>
+        <text id="s1-tg" x="160" y="18" text-anchor="middle" class="v">G 0 V</text>
+        <text x="250" y="18" text-anchor="middle" class="v">D</text>
+        <path class="w" d="M70,26 V90 M160,26 V60 M250,26 V90"/>
+        <rect class="pz" x="20" y="90" width="280" height="120"/>
+        <path class="nz" d="M30,90 V120 Q30,134 44,134 H96 Q110,134 110,120 V90 Z"/>
+        <path class="nz" d="M210,90 V120 Q210,134 224,134 H276 Q290,134 290,120 V90 Z"/>
+        <rect class="ox" x="110" y="78" width="100" height="12"/>
+        <rect class="box" x="110" y="60" width="100" height="18" rx="2"/>
+        <text x="70" y="118" text-anchor="middle" class="t">N+</text>
+        <text x="250" y="118" text-anchor="middle" class="t">N+</text>
+        <rect id="s1-pre" class="pre" x="110" y="90" width="100" height="6"/>
+        <rect id="s1-ch" class="chn" x="110" y="90" width="100" height="6"/>
+        <text id="s1-lch" x="160" y="156" text-anchor="middle" class="tm">预置 N 沟道</text>
+        <text x="160" y="196" text-anchor="middle" class="t">P 型衬底</text>
+        <path id="s1-flow" class="flow" d="M250,28 V94 H70 V28"/>
+
+        <path class="w" d="M340,130 H378"/>
+        <text x="334" y="134" text-anchor="end" class="t">G</text>
+        <line class="bar" x1="378" y1="110" x2="378" y2="150"/>
+        <g id="s1-se">
+          <line class="bar" x1="390" y1="106" x2="390" y2="118"/>
+          <line class="bar" x1="390" y1="124" x2="390" y2="136"/>
+          <line class="bar" x1="390" y1="142" x2="390" y2="154"/>
+        </g>
+        <line id="s1-sd" class="bar" x1="390" y1="106" x2="390" y2="154"/>
+        <path class="w" d="M390,112 H412 V70 M390,148 H412 M390,130 H412 V190"/>
+        <circle class="dot" cx="412" cy="148" r="3.5"/>
+        <polygon class="ah" points="393,130 402,125 402,135"/>
+        <text x="412" y="62" text-anchor="middle" class="t">D</text>
+        <text x="412" y="206" text-anchor="middle" class="t">S</text>
+        <text id="s1-symt" x="394" y="234" text-anchor="middle" class="t">耗尽型：实线</text>
+      </svg>
+      <figcaption>蓝色是 N 型沟道，厚度示意沟道里电子的多少。虚线框是耗尽型预先注入的沟道位置。右边符号省略了体二极管。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">类型（均为 N 沟道）</span>
+        <div class="seg" id="s1-t"><button id="s1-t-e" data-v="e" aria-pressed="false">增强型</button><button id="s1-t-d" data-v="d" aria-pressed="true">耗尽型</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-vg">栅源电压 Vgs</label>
+        <span class="rv" id="s1-vgv">0.0 V</span>
+        <input type="range" id="s1-vg" min="-5" max="5" step="0.5" value="0"></div>
+      <dl class="read">
+        <dt>阈值 Vth</dt><dd id="s1-vth">−2 V</dd>
+        <dt>Vgs − Vth</dt><dd id="s1-ov">2.0 V</dd>
+        <dt>漏极电流 Id</dt><dd id="s1-id">40 mA</dd>
+        <dt>状态</dt><dd><span id="s1-st" class="chip on">导通</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="tf">
+  <span class="eyebrow">转移特性对比</span>
+  <h2>两条曲线形状一样，只是左右平移</h2>
+  <p>饱和区里两种管子都满足平方律 Id = K·(Vgs − Vth)^2。区别只在 Vth 的符号：增强型 NMOS 的 Vth 为正，曲线从右边起步；耗尽型 Vth 为负，曲线在 Vgs = 0 时已经有电流。耗尽型 Vgs = 0 时的电流叫 Idss，于是也常写成下面第二种形式。</p>
+  <p class="eq">Id = K·(Vgs − Vth)^2，Vgs &gt; Vth<br>Id = Idss·(1 − Vgs / Vgs(off))^2，Idss = K·Vgs(off)^2</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 300" role="img" aria-label="增强型和耗尽型 NMOS 的转移特性曲线，横轴 Vgs 从负 5 伏到正 5 伏，纵轴 Id">
+        <rect class="zone-cut" x="60" y="30" width="215" height="220"/>
+        <text x="68" y="46" class="tm">Vgs &lt; 0</text>
+        <line class="gl" x1="60" y1="30" x2="490" y2="30"/>
+        <line class="gl" x1="60" y1="85" x2="490" y2="85"/>
+        <line class="gl" x1="60" y1="140" x2="490" y2="140"/>
+        <line class="gl" x1="60" y1="195" x2="490" y2="195"/>
+        <line class="ax dash" x1="275" y1="30" x2="275" y2="250"/>
+        <path class="ax" d="M60,30 V250 H490"/>
+        <text x="54" y="34" text-anchor="end" class="v">200</text>
+        <text x="54" y="89" text-anchor="end" class="v">150</text>
+        <text x="54" y="144" text-anchor="end" class="v">100</text>
+        <text x="54" y="199" text-anchor="end" class="v">50</text>
+        <text x="54" y="254" text-anchor="end" class="v">0</text>
+        <text x="64" y="22" class="tm">Id / mA</text>
+        <text x="60" y="268" text-anchor="middle" class="v">−5</text>
+        <text x="146" y="268" text-anchor="middle" class="v">−3</text>
+        <text x="232" y="268" text-anchor="middle" class="v">−1</text>
+        <text x="275" y="268" text-anchor="middle" class="v">0</text>
+        <text x="318" y="268" text-anchor="middle" class="v">1</text>
+        <text x="404" y="268" text-anchor="middle" class="v">3</text>
+        <text x="490" y="268" text-anchor="end" class="v">5</text>
+        <text x="490" y="290" text-anchor="end" class="tm">Vgs / V</text>
+        <polyline id="s2-ce" class="real" points=""/>
+        <polyline id="s2-cd" class="real2" points=""/>
+        <text x="470" y="150" text-anchor="end" class="t" style="fill:var(--copper)">增强型</text>
+        <text x="344" y="44" text-anchor="end" class="t" style="fill:var(--low)">耗尽型</text>
+        <text x="189" y="244" text-anchor="middle" class="tm">Vgs(off)</text>
+        <text x="361" y="244" text-anchor="middle" class="tm">Vth</text>
+        <line id="s2-vl" class="ax dash" x1="275" y1="30" x2="275" y2="250"/>
+        <circle id="s2-pe" class="op" style="stroke:var(--copper)" cx="275" cy="250" r="5"/>
+        <circle id="s2-pd" class="op" style="stroke:var(--low)" cx="275" cy="206" r="5"/>
+      </svg>
+      <figcaption>示意参数：K = 10 mA/V²，增强型 Vth = +2 V，耗尽型 Vgs(off) = −2 V，Idss = 40 mA。按饱和区平方律计算，曲线超出纵轴部分不画。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-vg">栅源电压 Vgs</label>
+        <span class="rv" id="s2-vgv">0.0 V</span>
+        <input type="range" id="s2-vg" min="-5" max="5" step="0.25" value="0"></div>
+      <dl class="read">
+        <dt>增强型 Id</dt><dd id="s2-ie">0</dd>
+        <dt>增强型状态</dt><dd><span id="s2-se" class="chip off">截止</span></dd>
+        <dt>耗尽型 Id</dt><dd id="s2-id">40 mA</dd>
+        <dt>耗尽型状态</dt><dd><span id="s2-sd" class="chip on">导通</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="why">
+  <span class="eyebrow">选型 · 为什么都用增强型</span>
+  <h2>功率电路要的是"默认关断"</h2>
+  <p>开关电源、电机驱动、电池保护这些电路里，驱动芯片没上电、MCU 复位、驱动线断了，栅极都会被下拉电阻拉到 0 V。增强型此时自然关断，电路处在安全状态；耗尽型此时反而全开，桥臂直通、负载失控。所以功率电路几乎全用增强型。</p>
+  <p>另一个原因是驱动简单：增强型 NMOS 只要 0 V 和 +10 V 两个电平，单电源就能驱动；耗尽型关断要负压，驱动得配负电源。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>类型</th><th>Vth 符号</th><th>Vgs = 0 时</th><th>符号沟道</th><th>典型用途</th></tr></thead>
+    <tbody>
+      <tr><td>N 沟道增强型</td><td>正，约 +1~+4 V</td><td>关断</td><td>三段虚线</td><td>低边开关、同步整流、半桥、几乎所有功率场合</td></tr>
+      <tr><td>P 沟道增强型</td><td>负，约 −1~−4 V</td><td>关断</td><td>三段虚线</td><td>高边开关、防反接、负载开关</td></tr>
+      <tr><td>N 沟道耗尽型</td><td>负，约 −1~−3 V</td><td>导通</td><td>实线</td><td>栅源短接做恒流源、离线电源高压启动、常闭开关</td></tr>
+      <tr><td>P 沟道耗尽型</td><td>正</td><td>导通</td><td>实线</td><td>很少见，集成电路里偶尔用</td></tr>
+    </tbody>
+  </table></div>
+  <p>耗尽型也有用武之地：栅源短接后 Vgs 恒为 0，漏极电流被钉在 Idss 附近，两个脚就构成一个简单的恒流源；离线开关电源刚上电时靠它从高压母线取电给控制芯片启动。另外，氮化镓 GaN HEMT 天生是耗尽型，功率应用里要用 p-GaN 栅结构或与硅管级联，把它做成增强型再用，也是出于"默认关断"的要求。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>增强型和耗尽型 MOS 管有什么区别？</summary>
+      <div class="ans"><p>看 Vgs = 0 时有没有沟道。增强型没有沟道，Vgs = 0 关断，要加电压超过 Vth 才导通。耗尽型制造时预先做好了沟道，Vgs = 0 就导通，要加反向电压到夹断电压才关断。两者转移特性形状一样，都是平方律，只是 Vth 符号不同。</p></div></details>
+    <details><summary>从符号上怎么区分？</summary>
+      <div class="ans"><p>看沟道那根竖线。增强型画成三段断开的虚线，表示平时没有沟道；耗尽型画成一条实线，表示沟道本来就在。</p></div></details>
+    <details><summary>为什么功率电路几乎都用增强型？</summary>
+      <div class="ans"><p>一是失效安全：驱动掉电或栅极被下拉到 0 V 时，增强型自然关断，不会出现桥臂直通。二是驱动简单：单电源 0 V / 10 V 就能开关，耗尽型关断还要负电源。</p></div></details>
+    <details><summary>耗尽型 MOS 管有什么实际用途？</summary>
+      <div class="ans"><p>栅源短接做两端恒流源；离线开关电源的高压启动电路；需要"默认导通"的常闭开关。GaN HEMT 天生是耗尽型，功率应用里通常做成 p-GaN 增强型或和硅 MOS 级联来用。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="01-N沟道与P沟道.html"><span>上一页</span>N沟道与P沟道</a><a class="next" href="03-阈值电压与转移特性.html"><span>下一页</span>阈值电压与转移特性</a></nav>
+</div>
+
+<script src="../_assets/kit.js"></script>
+<script>
+const K2=0.010,VTH={e:2,d:-2};
+const idOf=(vgs,vth)=>vgs>vth?K2*(vgs-vth)*(vgs-vth):0;
+const sgnV=v=>(v>0?'+':'')+fmtV(v,1);
+
+/* 1. 预置沟道 */
+const s1={t:'d'};
+function s1u(){
+  const d=s1.t==='d',vg=+$('s1-vg').value,vth=VTH[s1.t],ov=vg-vth,id=idOf(vg,vth),on=id>0;
+  $('s1-vgv').textContent=sgnV(vg);$('s1-vg').setAttribute('aria-valuetext',sgnV(vg));
+  $('s1-tg').textContent='G '+sgnV(vg);
+  const h=on?Math.min(16,2.4*ov):0;
+  $('s1-ch').setAttribute('height',h.toFixed(1));show($('s1-ch'),on);
+  show($('s1-pre'),d);show($('s1-flow'),on);
+  show($('s1-se'),!d);show($('s1-sd'),d);
+  $('s1-symt').textContent=d?'耗尽型：实线':'增强型：三段断开';
+  $('s1-lch').textContent=on?(d&&vg<0?'沟道被负压削薄':d&&vg===0?'预置 N 沟道，Vgs = 0 已导通':'反型层 / 沟道加厚'):(d?'沟道被耗尽，夹断':'没有沟道');
+  $('s1-vth').textContent=d?'Vgs(off) = −2 V':'+2 V';
+  $('s1-ov').textContent=sgnV(ov);
+  $('s1-id').textContent=on?fmtA(id):'0';
+  chip($('s1-st'),on?'导通':'截止',on?'on':'off');
+  let n;
+  if(!d)n=on?'栅压超过 Vth = +2 V，表面反型出 N 沟道。Vgs 越高，沟道越厚，电流越大。':vg>0?'有正栅压但还没到阈值，表面只是被耗尽，还没反型，没有沟道。':'Vgs ≤ 0，增强型没有沟道，管子关断。这是它"默认关断"的特性。';
+  else n=!on?'负栅压把预置沟道里的电子全部排斥走，沟道被夹断，管子关断。关断需要负压，驱动电路得有负电源。':vg<0?'负栅压排斥沟道里的电子，沟道变薄，电流减小，但还没夹断。':vg===0?'Vgs = 0，预置沟道已经存在，管子导通，电流就是 Idss。耗尽型"默认导通"。':'正栅压往预置沟道里再吸电子，沟道更厚，电流比 Idss 更大，这叫增强工作。';
+  $('s1-note').textContent=n;
+}
+seg('s1-t',v=>{s1.t=v;s1u();});
+$('s1-vg').addEventListener('input',s1u);
+s1u();
+
+/* 2. 转移特性 */
+const X2=scale(-5,5,60,490),Y2=scale(0,200,250,30);
+const clip=f=>v=>{const y=f(v);return y>200?NaN:y;};
+$('s2-ce').setAttribute('points',plot(clip(v=>idOf(v,2)*1e3),-5,5,X2,Y2,200));
+$('s2-cd').setAttribute('points',plot(clip(v=>idOf(v,-2)*1e3),-5,5,X2,Y2,200));
+function s2u(){
+  const vg=+$('s2-vg').value,ie=idOf(vg,2),idd=idOf(vg,-2),x=X2(vg).toFixed(1);
+  $('s2-vgv').textContent=sgnV(vg);$('s2-vg').setAttribute('aria-valuetext',sgnV(vg));
+  $('s2-vl').setAttribute('x1',x);$('s2-vl').setAttribute('x2',x);
+  const pe=$('s2-pe'),pd=$('s2-pd');
+  pe.setAttribute('cx',x);pe.setAttribute('cy',Y2(Math.min(ie*1e3,200)).toFixed(1));
+  pd.setAttribute('cx',x);pd.setAttribute('cy',Y2(Math.min(idd*1e3,200)).toFixed(1));
+  $('s2-ie').textContent=ie>0?fmtA(ie):'0';$('s2-id').textContent=idd>0?fmtA(idd):'0';
+  chip($('s2-se'),ie>0?'导通':'截止',ie>0?'on':'off');
+  chip($('s2-sd'),idd>0?'导通':'截止',idd>0?'on':'off');
+  let n;
+  if(vg<=-2)n='Vgs 低于 −2 V，两种管子都关断。耗尽型要关断必须走到这么负。';
+  else if(vg<=0)n='这一段只有耗尽型导通。Vgs = 0 处耗尽型电流为 Idss = '+fmtA(idOf(0,-2))+'，增强型为零，这就是两者最本质的区别。';
+  else if(vg<=2)n='正栅压还没到增强型的 Vth，增强型依然关断；耗尽型已被"增强"，电流超过 Idss。';
+  else n='两者都导通。同一个 Vgs 下耗尽型电流更大，因为它的 Vgs − Vth 多出 4 V。两条曲线形状完全一样，只是平移了 4 V。';
+  $('s2-note').textContent=n;
+}
+$('s2-vg').addEventListener('input',s2u);
+s2u();
+</script>
+</body>
+</html>

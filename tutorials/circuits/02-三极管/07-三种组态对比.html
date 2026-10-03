@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>三种组态对比</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#bjt">三极管</a><span class="sp"></span><span>07 / 09</span></nav>
+<header>
+  <span class="eyebrow">三极管 · 共射 共集 共基</span>
+  <h1>三种组态对比</h1>
+  <p class="lede">三极管有三个脚，一个进、一个出、一个公共，就有三种接法。判断方法只有一条：信号从哪进、从哪出，剩下那个脚就是"共"的。</p>
+</header>
+
+<section id="cfg">
+  <span class="eyebrow">切换组态 · 看相位</span>
+  <h2>三种接法，三种性格</h2>
+  <p>共射：基极进、集电极出，电压电流都放大，输出反相。共集：基极进、发射极出，电压增益约 1、同相，但输入阻抗高、输出阻抗低，也叫射极跟随器。共基：发射极进、集电极出，电压放大、同相，电流不放大，输入阻抗很低，高频好。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 360 300" role="img" aria-label="三极管三种组态的交流信号通路，可切换共射、共集、共基">
+        <text id="c1-com" x="16" y="30" class="t">公共端：发射极</text>
+        <line class="bar" x1="198" y1="154" x2="198" y2="190"/>
+        <path class="w" d="M198,164 L220,150 M198,180 L220,194"/>
+        <polygon class="ah" points="217,192 208,191 212,184"/>
+        <text x="228" y="158" class="tm">C</text>
+        <text x="256" y="176" class="t">NPN</text>
+        <g id="c1-ce">
+          <text x="220" y="18" text-anchor="middle" class="v">Vcc</text>
+          <path class="w" d="M208,26 H232 M220,26 V50 M220,90 V150 M220,194 V250 M206,250 H234 M211,255 H229 M216,260 H224"/>
+          <rect class="r" x="211" y="50" width="18" height="40" rx="2"/>
+          <text x="236" y="74" class="v">Rc 5 kΩ</text>
+          <text x="228" y="206" class="tm">E</text>
+          <path class="w s-lo" style="stroke-width:3" d="M64,172 H198"/>
+          <circle class="r" cx="60" cy="172" r="4"/>
+          <text x="60" y="158" text-anchor="middle" class="t">输入</text>
+          <path class="w s-hi" style="stroke-width:3" d="M220,120 H300"/>
+          <circle class="dot" cx="220" cy="120" r="3.5"/>
+          <circle class="r" cx="304" cy="120" r="4"/>
+          <text x="304" y="106" text-anchor="middle" class="t">输出</text>
+        </g>
+        <g id="c1-cc" hidden>
+          <text x="220" y="18" text-anchor="middle" class="v">Vcc</text>
+          <path class="w" d="M208,26 H232 M220,26 V150 M220,194 V216 M220,256 V266 M206,266 H234 M211,271 H229 M216,276 H224"/>
+          <rect class="r" x="211" y="216" width="18" height="40" rx="2"/>
+          <text x="236" y="244" class="v">Re 5 kΩ</text>
+          <text x="208" y="214" text-anchor="end" class="tm">E</text>
+          <path class="w s-lo" style="stroke-width:3" d="M64,172 H198"/>
+          <circle class="r" cx="60" cy="172" r="4"/>
+          <text x="60" y="158" text-anchor="middle" class="t">输入</text>
+          <path class="w s-hi" style="stroke-width:3" d="M220,206 H300"/>
+          <circle class="dot" cx="220" cy="206" r="3.5"/>
+          <circle class="r" cx="304" cy="206" r="4"/>
+          <text x="304" y="192" text-anchor="middle" class="t">输出</text>
+        </g>
+        <g id="c1-cb" hidden>
+          <text x="220" y="18" text-anchor="middle" class="v">Vcc</text>
+          <path class="w" d="M208,26 H232 M220,26 V50 M220,90 V150 M220,194 V232 M220,268 V278 M198,172 H170 V184 M156,184 H184 M161,189 H179 M166,194 H174"/>
+          <rect class="r" x="211" y="50" width="18" height="40" rx="2"/>
+          <text x="236" y="74" class="v">Rc 5 kΩ</text>
+          <rect class="r" x="211" y="232" width="18" height="36" rx="2"/>
+          <text x="236" y="256" class="v">Re 5 kΩ</text>
+          <text x="220" y="294" text-anchor="middle" class="v">−VEE</text>
+          <text x="228" y="208" class="tm">E</text>
+          <text x="160" y="166" text-anchor="end" class="tm">B 交流接地</text>
+          <path class="w s-lo" style="stroke-width:3" d="M64,214 H220"/>
+          <circle class="dot" cx="220" cy="214" r="3.5"/>
+          <circle class="r" cx="60" cy="214" r="4"/>
+          <text x="60" y="200" text-anchor="middle" class="t">输入</text>
+          <path class="w s-hi" style="stroke-width:3" d="M220,120 H300"/>
+          <circle class="dot" cx="220" cy="120" r="3.5"/>
+          <circle class="r" cx="304" cy="120" r="4"/>
+          <text x="304" y="106" text-anchor="middle" class="t">输出</text>
+        </g>
+      </svg>
+      <svg viewBox="0 0 480 200" role="img" aria-label="输入和输出电压波形，用来比较相位">
+        <path class="ax" d="M56,20 V80 M56,50 H456 M56,115 V175 M56,145 H456"/>
+        <line id="c1-pk" class="ax dash" x1="106" y1="16" x2="106" y2="180"/>
+        <text x="50" y="54" text-anchor="end" class="v">0</text>
+        <text x="50" y="149" text-anchor="end" class="v">0</text>
+        <text id="c1-il" x="60" y="14" class="t" style="fill:var(--low)">输入 ±10 mV</text>
+        <text id="c1-ol" x="60" y="109" class="t" style="fill:var(--copper)">输出 ±1.92 V</text>
+        <polyline id="c1-wi" class="real2" points="56,50 456,50"/>
+        <polyline id="c1-wo" class="real" points="56,145 456,145"/>
+        <text x="456" y="196" text-anchor="end" class="tm">时间，两个周期；上下两图纵轴各自缩放</text>
+      </svg>
+      <figcaption>只画交流信号通路，偏置和耦合电容省略。示意参数：β = 100，IcQ = 1 mA，rbe ≈ β·26 mV / Ic = 2.6 kΩ，信号源内阻 1 kΩ，空载。蓝线是输入，橙线是输出。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">组态</span>
+        <div class="seg" id="c1-m"><button id="c1-m-ce" data-v="ce" aria-pressed="true">共射</button><button id="c1-m-cc" data-v="cc" aria-pressed="false">共集</button><button id="c1-m-cb" data-v="cb" aria-pressed="false">共基</button></div></div>
+      <dl class="read">
+        <dt>进 / 出 / 公共</dt><dd id="c1-io">B / C / E</dd>
+        <dt>电压增益 Av</dt><dd id="c1-av">—</dd>
+        <dt>电流增益 Ai</dt><dd id="c1-ai">—</dd>
+        <dt>输入阻抗 Ri</dt><dd id="c1-ri">—</dd>
+        <dt>输出阻抗 Ro</dt><dd id="c1-ro">—</dd>
+        <dt>相位</dt><dd><span id="c1-ph" class="chip warn">反相</span></dd>
+      </dl>
+      <p class="note" id="c1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="tbl">
+  <span class="eyebrow">对比表 · 面试必背</span>
+  <h2>一张表记住三种组态</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>指标</th><th>共射 CE</th><th>共集 CC（射随器）</th><th>共基 CB</th></tr></thead>
+    <tbody>
+      <tr><td>信号进 / 出</td><td>B 进 C 出</td><td>B 进 E 出</td><td>E 进 C 出</td></tr>
+      <tr><td>电压增益</td><td>大，−β·Rc / rbe</td><td>≈ 1，略小于 1</td><td>大，β·Rc / rbe</td></tr>
+      <tr><td>电流增益</td><td>大，≈ β</td><td>大，≈ 1 + β</td><td>≈ α，略小于 1</td></tr>
+      <tr><td>输入阻抗</td><td>中，≈ rbe，kΩ 级</td><td>高，≈ rbe + (1 + β)·Re</td><td>低，≈ rbe / (1 + β)，几十 Ω</td></tr>
+      <tr><td>输出阻抗</td><td>较高，≈ Rc</td><td>低，≈ (rbe + Rs) / (1 + β)</td><td>较高，≈ Rc</td></tr>
+      <tr><td>输入输出相位</td><td>反相</td><td>同相</td><td>同相</td></tr>
+      <tr><td>高频特性 / 带宽</td><td>较差，Cbc 有米勒效应</td><td>较好</td><td>最好，没有米勒倍增</td></tr>
+      <tr><td>典型用途</td><td>电压放大的主力级</td><td>输入级、输出级、缓冲、阻抗变换</td><td>高频、宽带放大，和共射组成共射-共基（cascode）</td></tr>
+    </tbody>
+  </table></div>
+  <p>记忆技巧：共集"电压跟随、电流放大"；共基"电压放大、电流跟随"；共射两样都放大，但反相。三者的功率增益都大于 1。</p>
+</section>
+
+<section id="buf">
+  <span class="eyebrow">射随器 · 增益为 1 也有用</span>
+  <h2>电压没放大，为什么还要射随器</h2>
+  <p>射随器的价值在阻抗变换。信号源内阻大、负载电阻小，直接连，大部分电压都压在内阻上，负载上几乎拿不到信号。中间插一级射随器：它的输入阻抗约是负载的 (1 + β) 倍，几乎不拖累信号源；输出阻抗很低，能推得动小负载。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 220" role="img" aria-label="内阻 10 千欧的信号源驱动负载 RL，可直接连接或经过射极跟随器">
+        <circle class="r" cx="40" cy="130" r="16"/>
+        <text x="40" y="135" text-anchor="middle" class="t">~</text>
+        <text x="62" y="152" class="v">vs 100 mV</text>
+        <path class="w" d="M40,114 V80 H70 M40,146 V190 M26,190 H54 M31,195 H49 M36,200 H44"/>
+        <rect class="r" x="70" y="72" width="50" height="16" rx="2"/>
+        <text x="95" y="64" text-anchor="middle" class="v">Rs 10 kΩ</text>
+        <g id="c2-gd">
+          <path id="c2-wd" class="w s-hi" style="stroke-width:3" d="M120,80 H380 V130"/>
+        </g>
+        <g id="c2-ge" hidden>
+          <text x="252" y="18" text-anchor="middle" class="v">Vcc</text>
+          <path class="w" d="M240,26 H264 M252,26 V58 L230,72 M230,88 L252,102 V130 M252,170 V190 M238,190 H266 M243,195 H261 M248,200 H256"/>
+          <path class="w s-lo" style="stroke-width:3" d="M120,80 H230"/>
+          <line class="bar" x1="230" y1="62" x2="230" y2="98"/>
+          <polygon class="ah" points="249,100 240,99 244,92"/>
+          <rect class="r" x="243" y="130" width="18" height="40" rx="2"/>
+          <text x="268" y="154" class="v">Re 5 kΩ</text>
+          <circle class="dot" cx="252" cy="120" r="3.5"/>
+          <path id="c2-we" class="w s-hi" style="stroke-width:3" d="M252,120 H380 V130"/>
+          <text x="184" y="72" text-anchor="middle" class="v" id="c2-vb">vb</text>
+        </g>
+        <rect class="r" x="371" y="130" width="18" height="40" rx="2"/>
+        <path class="w" d="M380,170 V190 M366,190 H394 M371,195 H389 M376,200 H384"/>
+        <text x="396" y="150" class="t">RL</text>
+        <text id="c2-rlt" x="396" y="166" class="v">100 Ω</text>
+        <text id="c2-vo" x="468" y="114" text-anchor="end" class="v hi">vo</text>
+      </svg>
+      <figcaption>示意：射随器 β = 100，rbe = 2.6 kΩ，偏置省略，只算交流小信号。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">连接方式</span>
+        <div class="seg" id="c2-m"><button id="c2-m-d" data-v="d" aria-pressed="false">直接接负载</button><button id="c2-m-e" data-v="e" aria-pressed="true">中间加射随器</button></div></div>
+      <div class="ctl"><span class="ctl-l">负载电阻 RL</span>
+        <div class="seg" id="c2-rl"><button id="c2-rl-100" data-v="100" aria-pressed="true">100 Ω</button><button id="c2-rl-1k" data-v="1000" aria-pressed="false">1 kΩ</button><button id="c2-rl-10k" data-v="10000" aria-pressed="false">10 kΩ</button></div></div>
+      <dl class="read">
+        <dt>信号源看到的负载</dt><dd id="c2-rin">—</dd>
+        <dt>负载上的电压 vo</dt><dd id="c2-v">—</dd>
+        <dt>vo / vs</dt><dd id="c2-r">—</dd>
+        <dt>效果</dt><dd><span id="c2-st" class="chip on">推得动</span></dd>
+      </dl>
+      <p class="note" id="c2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>怎么判断一个电路是哪种组态？</summary>
+      <div class="ans"><p>看交流信号从哪个脚进、哪个脚出，剩下交流接地的那个脚就是公共端。基极进集电极出是共射，基极进发射极出是共集，发射极进集电极出是共基。注意集电极接电源在交流上也算接地。</p></div></details>
+    <details><summary>三种组态各有什么特点和用途？</summary>
+      <div class="ans"><p>共射电压、电流都放大，输出反相，是放大的主力。共集电压增益约 1，输入阻抗高、输出阻抗低，做缓冲和输出级。共基电流增益约 1，输入阻抗低，没有米勒效应，频率特性最好，做高频放大或和共射组成 cascode。</p></div></details>
+    <details><summary>射极跟随器电压增益小于 1，有什么用？</summary>
+      <div class="ans"><p>用来做阻抗变换。它输入阻抗高，不拖累前级；输出阻抗低，能驱动小负载。它有电流增益和功率增益，所以放在高内阻信号源和低阻负载之间，负载上反而能拿到更大的信号。</p></div></details>
+    <details><summary>为什么共基电路的高频特性比共射好？</summary>
+      <div class="ans"><p>共射电路里集电结电容 Cbc 跨在反相放大的输入输出之间，米勒效应让它等效到输入端放大约 (1 + |Av|) 倍，极点频率很低。共基的基极交流接地，Cbc 一端接地，不存在米勒倍增，所以带宽宽。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="06-温度稳定性与热漂移.html"><span>上一页</span>温度稳定性与热漂移</a><a class="next" href="08-饱和失真与截止失真.html"><span>下一页</span>饱和失真与截止失真</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 三种组态 */
+const cB=100,cRbe=2600,cRc=5000,cRe=5000,cRs=1000;
+const cPar=(a,b)=>a*b/(a+b);
+const cD={
+  ce:{io:'B / C / E',com:'公共端：发射极',av:-cB*cRc/cRbe,ai:cB,ri:cRbe,ro:cRc,
+    note:'基极电压升高 → Ib 增大 → Ic 增大 → Rc 上压降增大 → 集电极电压下降。所以输入往上，输出往下，反相。电压、电流都放大，功率增益最大。'},
+  cc:{io:'B / E / C',com:'公共端：集电极（接 Vcc，交流接地）',av:(1+cB)*cRe/(cRbe+(1+cB)*cRe),ai:1+cB,ri:cRbe+(1+cB)*cRe,ro:cPar(cRe,(cRbe+cRs)/(1+cB)),
+    note:'发射极始终比基极低一个 Ube，基极怎么动，发射极就跟着怎么动，所以叫射极跟随器。电压没放大，但输入阻抗是 Re 的约 (1 + β) 倍，输出阻抗只有几十欧，电流放大了约 (1 + β) 倍。'},
+  cb:{io:'E / C / B',com:'公共端：基极（交流接地）',av:cB*cRc/cRbe,ai:cB/(1+cB),ri:cPar(cRe,cRbe/(1+cB)),ro:cRc,
+    note:'发射极电压降低 → Ube 增大 → Ic 增大 → 集电极电压下降。输入往下，输出也往下，同相。输入阻抗只有几十欧：内阻 1 kΩ 的电压源接上来，只有约 2.5% 的电压能进到发射极，所以共基适合接电流型信号源。'}
+};
+const c1X=scale(0,2,56,456);
+const c1={m:'ce'};
+function c1u(){
+  const d=cD[c1.m],inv=d.av<0,amp=Math.abs(d.av)*10e-3;
+  ['ce','cc','cb'].forEach(k=>show($('c1-'+k),k===c1.m));
+  $('c1-com').textContent=d.com;
+  $('c1-io').textContent=d.io;
+  $('c1-av').textContent=(inv?'−':'+')+(Math.abs(d.av)>10?Math.abs(d.av).toFixed(0):Math.abs(d.av).toFixed(3));
+  $('c1-ai').textContent=d.ai>10?d.ai.toFixed(0):d.ai.toFixed(2);
+  $('c1-ri').textContent=fmtR(d.ri);$('c1-ro').textContent=fmtR(d.ro);
+  chip($('c1-ph'),inv?'反相 180°':'同相',inv?'warn':'on');
+  $('c1-wi').setAttribute('points',plot(t=>Math.sin(2*Math.PI*t),0,2,c1X,v=>50-25*v,200));
+  $('c1-wo').setAttribute('points',plot(t=>(inv?-1:1)*Math.sin(2*Math.PI*t),0,2,c1X,v=>145-25*v,200));
+  $('c1-ol').textContent='输出 ±'+(amp>=1?fmtV(amp):(amp*1e3).toFixed(1)+' mV')+(inv?'，反相':'，同相');
+  $('c1-note').textContent=d.note;
+}
+seg('c1-m',v=>{c1.m=v;c1u();});
+c1u();
+
+/* 2. 射随器做缓冲 */
+const c2={e:true,rl:100};
+function c2u(){
+  const rl=c2.rl,e=c2.e,vs=0.1,rs=10e3;
+  let rin,vo,vb=vs;
+  if(e){const rp=cPar(cRe,rl);rin=cRbe+(1+cB)*rp;vb=vs*rin/(rs+rin);vo=vb*(1+cB)*rp/rin;}
+  else{rin=rl;vo=vs*rl/(rs+rl);}
+  const r=vo/vs;
+  show($('c2-gd'),!e);show($('c2-ge'),e);
+  $('c2-rlt').textContent=fmtR(rl);
+  $('c2-vb').textContent='vb '+(vb*1e3).toFixed(0)+' mV';
+  $('c2-vo').textContent='vo '+(vo*1e3).toFixed(1)+' mV';
+  $('c2-rin').textContent=fmtR(rin);
+  $('c2-v').textContent=(vo*1e3).toFixed(1)+' mV';
+  $('c2-r').textContent=(r*100).toFixed(1)+'%';
+  if(r>0.5)chip($('c2-st'),'推得动','on');else if(r>0.1)chip($('c2-st'),'损失较大','warn');else chip($('c2-st'),'几乎拿不到信号','bad');
+  $('c2-note').textContent=e
+    ?'信号源看到的不再是 '+fmtR(rl)+'，而是 rbe + (1 + β)·(Re ∥ RL) ≈ '+fmtR(rin)+'，内阻上压降小多了。射随器自己的输出阻抗约 (rbe + Rs) / (1 + β) ≈ '+fmtR((cRbe+rs)/(1+cB))+'，所以负载上拿到 '+(r*100).toFixed(0)+'% 的信号。'
+    :'信号源内阻 10 kΩ 和负载 '+fmtR(rl)+' 分压，负载只分到 RL / (Rs + RL) = '+(r*100).toFixed(1)+'%。'+(rl<5e3?'切到"加射随器"对比一下。':'负载本身够大时，直接接也还行。');
+}
+seg('c2-m',v=>{c2.e=v==='e';c2u();});
+seg('c2-rl',v=>{c2.rl=+v;c2u();});
+c2u();
+</script>
+</body>
+</html>

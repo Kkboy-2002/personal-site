@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>跨导gm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.op{fill:var(--panel);stroke-width:2.5}
+.tan{stroke:var(--flow);stroke-width:2;fill:none}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#mos">MOS管</a><span class="sp"></span><span>05 / 09</span></nav>
+<header>
+  <span class="eyebrow">MOS管 · 跨导</span>
+  <h1>跨导gm</h1>
+  <p class="lede">栅压变一点，漏极电流变多少？这个比值就是跨导 gm，它衡量 MOS 管的"放大能力"。下面在转移曲线上拖动工作点，看切线斜率怎么变。</p>
+</header>
+
+<section id="def">
+  <span class="eyebrow">定义 · 转移曲线的斜率</span>
+  <h2>gm 就是转移曲线在工作点的切线斜率</h2>
+  <p>跨导的单位是西门子 S，也就是 A/V。输入是电压、输出是电流，所以叫"跨"导。对平方律 Id = K·(Vgs − Vth)^2 求导，就得到饱和区的 gm。</p>
+  <p class="eq">gm = ΔId / ΔVgs = 2·K·(Vgs − Vth) = 2·Id / (Vgs − Vth) = 2·√(K·Id)</p>
+  <p>三种写法是同一个东西。第一种说明 gm 随过驱动电压线性增大；第三种说明对同一颗管子，gm 只随 √Id 增长，电流翻四倍 gm 才翻一倍。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 300" role="img" aria-label="NMOS 转移特性曲线，工作点处画出切线和增量三角形，切线斜率即跨导">
+        <line class="gl" x1="60" y1="30" x2="490" y2="30"/>
+        <line class="gl" x1="60" y1="85" x2="490" y2="85"/>
+        <line class="gl" x1="60" y1="140" x2="490" y2="140"/>
+        <line class="gl" x1="60" y1="195" x2="490" y2="195"/>
+        <path class="ax" d="M60,30 V250 H490"/>
+        <text x="54" y="34" text-anchor="end" class="v">8</text>
+        <text x="54" y="89" text-anchor="end" class="v">6</text>
+        <text x="54" y="144" text-anchor="end" class="v">4</text>
+        <text x="54" y="199" text-anchor="end" class="v">2</text>
+        <text x="54" y="254" text-anchor="end" class="v">0</text>
+        <text x="64" y="22" class="tm">Id / A</text>
+        <text x="60" y="268" text-anchor="middle" class="v">0</text>
+        <text x="203.3" y="268" text-anchor="middle" class="v">2</text>
+        <text x="346.7" y="268" text-anchor="middle" class="v">4</text>
+        <text x="490" y="268" text-anchor="end" class="v">6</text>
+        <text x="490" y="290" text-anchor="end" class="tm">Vgs / V</text>
+        <text x="203.3" y="244" text-anchor="middle" class="tm">Vth</text>
+        <polyline id="s1-c" class="real" points=""/>
+        <text x="440" y="64" text-anchor="end" class="t" style="fill:var(--copper)">Id = K·(Vgs − Vth)^2</text>
+        <line id="s1-tan" class="tan" x1="0" y1="0" x2="0" y2="0"/>
+        <path id="s1-tri" class="ax dash" d=""/>
+        <text id="s1-dv" x="0" y="0" text-anchor="middle" class="tm">ΔVgs = 0.5 V</text>
+        <text id="s1-di" x="0" y="0" class="tm">ΔId</text>
+        <circle id="s1-pt" class="op" style="stroke:var(--flow)" cx="0" cy="0" r="5.5"/>
+      </svg>
+      <figcaption>绿线是工作点处的切线，斜率就是 gm。虚线三角形表示 Vgs 增加 0.5 V 时，按切线估算的 Id 增量。示意参数：Vth = 2 V，K = 0.5 A/V²，饱和区。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s1-vg">工作点 Vgs</label>
+        <span class="rv" id="s1-vgv">3.5 V</span>
+        <input type="range" id="s1-vg" min="2.1" max="5.8" step="0.05" value="3.5"></div>
+      <dl class="read">
+        <dt>Id</dt><dd id="s1-id">1.13 A</dd>
+        <dt>gm = 2·K·(Vgs − Vth)</dt><dd id="s1-g1">1.50 S</dd>
+        <dt>2·Id / (Vgs − Vth)</dt><dd id="s1-g2">1.50 S</dd>
+        <dt>Vgs 加 0.5 V，切线估算</dt><dd id="s1-e">+0.75 A</dd>
+        <dt>实际增量</dt><dd id="s1-a">+0.88 A</dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="amp">
+  <span class="eyebrow">电压控制 · 共源放大</span>
+  <h2>栅极只要电压，不要电流</h2>
+  <p>栅极和沟道之间隔着一层绝缘的氧化层，直流下栅极电流只有 nA 级漏电。所以 MOS 管是电压控制器件：用 Vgs 控制 Id，不像三极管要靠基极电流 Ib 去控制 Ic。把 Id 的变化放到漏极电阻 Rd 上，就变成了电压放大，小信号增益为：</p>
+  <p class="eq">Av = vds / vgs = −gm·Rd</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="共源放大器的输入输出波形：上面是栅极交流输入，下面是漏极电压输出，反相放大">
+        <text x="64" y="16" class="tm">输入 vgs 交流分量 / mV</text>
+        <line class="gl" x1="60" y1="30" x2="490" y2="30"/>
+        <line class="gl" x1="60" y1="90" x2="490" y2="90"/>
+        <path class="ax" d="M60,24 V96 M60,60 H490"/>
+        <text x="54" y="34" text-anchor="end" class="v">+50</text>
+        <text x="54" y="64" text-anchor="end" class="v">0</text>
+        <text x="54" y="94" text-anchor="end" class="v">−50</text>
+        <polyline id="s2-vi" class="real2" points=""/>
+        <text x="64" y="124" class="tm">输出 Vds / V</text>
+        <line class="gl" x1="60" y1="136" x2="490" y2="136"/>
+        <line class="gl" x1="60" y1="186" x2="490" y2="186"/>
+        <path class="ax" d="M60,130 V246 H490"/>
+        <line id="s2-q" class="ax dash" x1="60" y1="0" x2="490" y2="0"/>
+        <text x="54" y="140" text-anchor="end" class="v">12</text>
+        <text x="54" y="190" text-anchor="end" class="v">6</text>
+        <text x="54" y="250" text-anchor="end" class="v">0</text>
+        <polyline id="s2-vo" class="real" points=""/>
+        <text x="60" y="264" text-anchor="middle" class="v">0</text>
+        <text x="275" y="264" text-anchor="middle" class="v">1</text>
+        <text x="490" y="264" text-anchor="end" class="v">2</text>
+        <text x="490" y="282" text-anchor="end" class="tm">周期</text>
+      </svg>
+      <figcaption>电路：12 V 经 Rd 接漏极，源极接地，栅极加直流偏置 Vgs(Q) 再叠加 ±50 mV 正弦。虚线是静态 Vds(Q)。示意小信号管：Vth = 2 V，K = 10 mA/V²。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-vg">偏置 Vgs(Q)</label>
+        <span class="rv" id="s2-vgv">2.80 V</span>
+        <input type="range" id="s2-vg" min="2.1" max="3.5" step="0.02" value="2.8"></div>
+      <div class="ctl"><span class="ctl-l">漏极电阻 Rd</span>
+        <div class="seg" id="s2-rd"><button id="s2-rd-1" data-v="1000" aria-pressed="false">1 kΩ</button><button id="s2-rd-2" data-v="1500" aria-pressed="true">1.5 kΩ</button><button id="s2-rd-3" data-v="2200" aria-pressed="false">2.2 kΩ</button></div></div>
+      <dl class="read">
+        <dt>静态 Id(Q)</dt><dd id="s2-id">6.4 mA</dd>
+        <dt>gm</dt><dd id="s2-gm">16 mS</dd>
+        <dt>静态 Vds(Q)</dt><dd id="s2-vq">2.4 V</dd>
+        <dt>理论增益 −gm·Rd</dt><dd id="s2-av">−24</dd>
+        <dt>栅极直流电流</dt><dd>≈ 0，nA 级</dd>
+        <dt>波形</dt><dd><span id="s2-st" class="chip on">不失真</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="cmp">
+  <span class="eyebrow">和三极管比</span>
+  <h2>同样的电流，三极管的 gm 大得多</h2>
+  <p>三极管的集电极电流和 Vbe 是指数关系，求导得 gm = Ic / VT，常温下 VT ≈ 26 mV。MOS 管是平方律，gm = 2·Id / (Vgs − Vth)。两式一比：</p>
+  <p class="eq">gm(BJT) / gm(MOS) = (Vgs − Vth) / (2·VT)</p>
+  <p>MOS 管的过驱动电压通常取 0.1~1 V，远大于 2·VT ≈ 52 mV，所以同电流下三极管的 gm 大几倍到十几倍。MOS 的优势在别处：输入阻抗极高、没有基极电流、开关快、好集成。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 300" role="img" aria-label="双对数坐标下跨导随工作电流变化，三极管一条线，MOS 管一条线，MOS 线在下方">
+        <g id="s3-grid"></g>
+        <path class="ax" d="M70,30 V250 H490"/>
+        <text x="74" y="22" class="tm">gm / S</text>
+        <text x="490" y="290" text-anchor="end" class="tm">工作电流 Ic 或 Id</text>
+        <polyline id="s3-b" class="real2" points=""/>
+        <polyline id="s3-m" class="real" points=""/>
+        <text id="s3-bl" x="0" y="0" text-anchor="end" class="t" style="fill:var(--low)">BJT：Ic / VT</text>
+        <text id="s3-ml" x="0" y="0" class="t" style="fill:var(--copper)">MOS：2·Id / (Vgs − Vth)</text>
+        <line id="s3-vl" class="ax dash" x1="0" y1="30" x2="0" y2="250"/>
+        <circle id="s3-pb" class="op" style="stroke:var(--low)" cx="0" cy="0" r="5"/>
+        <circle id="s3-pm" class="op" style="stroke:var(--copper)" cx="0" cy="0" r="5"/>
+      </svg>
+      <figcaption>横纵轴都是对数坐标。两条线平行，垂直方向的距离就是两者 gm 的倍数，只由 (Vgs − Vth) / (2·VT) 决定。VT 取 26 mV（25 °C）。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s3-i">工作电流</label>
+        <span class="rv" id="s3-iv">1.00 mA</span>
+        <input type="range" id="s3-i" min="-5" max="-1" step="0.1" value="-3"></div>
+      <div class="ctl"><label class="ctl-l" for="s3-ov">MOS 过驱动电压 Vgs − Vth</label>
+        <span class="rv" id="s3-ovv">0.30 V</span>
+        <input type="range" id="s3-ov" min="0.06" max="1" step="0.02" value="0.3"></div>
+      <dl class="read">
+        <dt>gm(BJT)</dt><dd id="s3-gb">38 mS</dd>
+        <dt>gm(MOS)</dt><dd id="s3-gm">6.7 mS</dd>
+        <dt>BJT / MOS</dt><dd id="s3-r">5.8 倍</dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>什么是跨导？MOS 管的 gm 怎么算？</summary>
+      <div class="ans"><p>跨导是输出电流变化量与输入电压变化量之比，gm = ΔId / ΔVgs，单位西门子，就是转移曲线在工作点的切线斜率。饱和区 gm = 2·K·(Vgs − Vth) = 2·Id / (Vgs − Vth)。</p></div></details>
+    <details><summary>gm 和哪些因素有关？怎么提高？</summary>
+      <div class="ans"><p>gm = 2·√(K·Id)，K 正比于迁移率和宽长比 W/L。所以增大 W/L 或增大工作电流都能提高 gm，但对同一颗管子，gm 只随电流的平方根增长，代价是功耗上去得更快。</p></div></details>
+    <details><summary>为什么说 MOS 管是电压控制器件，三极管是电流控制器件？</summary>
+      <div class="ans"><p>MOS 管栅极和沟道之间是绝缘层，直流下栅极几乎不取电流，Id 由 Vgs 决定。三极管要维持 Ic 必须持续提供基极电流 Ib ≈ Ic / β。不过 MOS 管开关时要给栅极电容充放电，动态驱动电流并不小。</p></div></details>
+    <details><summary>同样电流下，三极管和 MOS 管谁的 gm 大？</summary>
+      <div class="ans"><p>三极管大。BJT 的 gm = Ic / VT，MOS 的 gm = 2·Id / (Vgs − Vth)，比值是 (Vgs − Vth) / (2·VT)。过驱动电压一般几百毫伏，远大于 52 mV，所以三极管 gm 大几倍到十几倍。MOS 只有在亚阈值区才接近三极管，但那时电流很小、速度很慢。</p></div></details>
+    <details><summary>功率 MOS 手册里的 gfs 有什么用？</summary>
+      <div class="ans"><p>gfs 是正向跨导，就是大信号条件下的 gm。它能用来估算开关时的米勒平台电压：V(plateau) ≈ Vth + Id / gfs。负载电流越大，平台越高，驱动器剩下的充电电压越小，开关越慢。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="04-输出特性与三个工作区.html"><span>上一页</span>输出特性与三个工作区</a><a class="next" href="06-栅极电容与米勒效应.html"><span>下一页</span>栅极电容与米勒效应</a></nav>
+</div>
+
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 切线斜率 */
+const K1=0.5,VT1=2,X1=scale(0,6,60,490),Y1=scale(0,8,250,30);
+const id1=v=>v>VT1?K1*(v-VT1)*(v-VT1):0;
+$('s1-c').setAttribute('points',plot(v=>{const y=id1(v);return y>8?NaN:y;},0,6,X1,Y1,200));
+function s1u(){
+  const vg=+$('s1-vg').value,id=id1(vg),ov=vg-VT1,gm=2*K1*ov;
+  $('s1-vgv').textContent=fmtV(vg,2);$('s1-vg').setAttribute('aria-valuetext',fmtV(vg,2));
+  const px=X1(vg),py=Y1(id);
+  $('s1-pt').setAttribute('cx',px.toFixed(1));$('s1-pt').setAttribute('cy',py.toFixed(1));
+  // 切线：限制在图框内
+  let a=vg-1.2,b=vg+1.2;a=Math.max(a,vg-id/gm);const yb=id+gm*(b-vg);if(yb>8)b=vg+(8-id)/gm;
+  const t=$('s1-tan');t.setAttribute('x1',X1(a).toFixed(1));t.setAttribute('y1',Y1(id+gm*(a-vg)).toFixed(1));
+  t.setAttribute('x2',X1(b).toFixed(1));t.setAttribute('y2',Y1(id+gm*(b-vg)).toFixed(1));
+  const dv=0.5,de=gm*dv,da=id1(vg+dv)-id,x2=X1(vg+dv),y2=Y1(Math.min(8,id+de));
+  const fits=id+de<=8;
+  $('s1-tri').setAttribute('d',fits?`M${px.toFixed(1)},${py.toFixed(1)} H${x2.toFixed(1)} V${y2.toFixed(1)}`:'');
+  show($('s1-dv'),fits);show($('s1-di'),fits);
+  $('s1-dv').setAttribute('x',((px+x2)/2).toFixed(1));$('s1-dv').setAttribute('y',(py+16).toFixed(1));
+  $('s1-di').setAttribute('x',(x2+6).toFixed(1));$('s1-di').setAttribute('y',((py+y2)/2+4).toFixed(1));
+  $('s1-id').textContent=fmtA(id);
+  $('s1-g1').textContent=gm.toFixed(2)+' S';
+  $('s1-g2').textContent=(2*id/ov).toFixed(2)+' S';
+  $('s1-e').textContent='+'+fmtA(de);$('s1-a').textContent='+'+fmtA(da);
+  $('s1-note').textContent=ov<0.4?'刚过阈值，曲线还很平，切线斜率小，gm 只有 '+gm.toFixed(2)+' S。栅压的变化几乎换不来电流变化。'
+    :'Vgs − Vth = '+fmtV(ov,2)+'，gm = '+gm.toFixed(2)+' S，意思是栅压每变 1 mV，漏极电流变 '+(gm).toFixed(2)+' mA。曲线越往上越陡，gm 随 Vgs 线性增大。切线估算比实际增量略小，因为曲线是向上弯的，gm 只适用于小信号。';
+}
+$('s1-vg').addEventListener('input',s1u);
+s1u();
+
+/* 2. 共源放大 */
+const K2=0.010,VT2=2,VDD=12,s2={rd:1500};
+const X2=scale(0,2,60,490),Yi=scale(-0.05,0.05,90,30),Yo2=scale(0,12,246,136);
+$('s2-vi').setAttribute('points',plot(t=>0.05*Math.sin(2*Math.PI*t),0,2,X2,Yi,160));
+function vdsOf(vgs,rd){
+  if(vgs<=VT2)return VDD;const ov=vgs-VT2;
+  let lo=0,hi=VDD;for(let k=0;k<60;k++){const m=(lo+hi)/2;const i=m<ov?K2*(2*ov*m-m*m):K2*ov*ov;if(i*rd+m-VDD>0)hi=m;else lo=m;}
+  return (lo+hi)/2;
+}
+function s2u(){
+  const vq=+$('s2-vg').value,rd=s2.rd,ov=vq-VT2,iq=K2*ov*ov,gm=2*K2*ov,vdq=vdsOf(vq,rd);
+  $('s2-vgv').textContent=fmtV(vq,2);$('s2-vg').setAttribute('aria-valuetext',fmtV(vq,2));
+  $('s2-vo').setAttribute('points',plot(t=>vdsOf(vq+0.05*Math.sin(2*Math.PI*t),rd),0,2,X2,Yo2,160));
+  $('s2-q').setAttribute('y1',Yo2(vdq).toFixed(1));$('s2-q').setAttribute('y2',Yo2(vdq).toFixed(1));
+  const hiV=vdsOf(vq-0.05,rd),loV=vdsOf(vq+0.05,rd),ovMax=ov+0.05;
+  $('s2-id').textContent=fmtA(iq);$('s2-gm').textContent=(gm*1e3).toFixed(1)+' mS';
+  $('s2-vq').textContent=fmtV(vdq,2);
+  $('s2-av').textContent='−'+(gm*rd).toFixed(1);
+  let n;
+  if(loV<ovMax){chip($('s2-st'),'底部失真','bad');n='输入正半周时 Id 增大，Vds 被压到低于 Vgs − Vth，管子掉进可变电阻区，gm 急剧下降，输出波谷被削平。偏置电流太大或 Rd 太大，工作点太靠近可变电阻区。';}
+  else if(ov<0.15){chip($('s2-st'),'顶部失真','bad');n='偏置太靠近 Vth，输入负半周时 Id 掉到很小，管子接近截止，输出波峰被压扁在 12 V 附近，上下半周明显不对称。';}
+  else{const sw=(hiV-loV)/2;chip($('s2-st'),'不失真','on');n='工作点在饱和区中部。输入 ±50 mV，输出摆幅约 ±'+fmtV(sw,2)+'，实测增益约 '+(sw/0.05).toFixed(1)+' 倍，和 gm·Rd = '+(gm*rd).toFixed(1)+' 接近，而且输出与输入反相。上下半周略不对称，是平方律带来的二次谐波失真。';}
+  $('s2-note').textContent=n;
+}
+$('s2-vg').addEventListener('input',s2u);
+seg('s2-rd',v=>{s2.rd=+v;s2u();});
+s2u();
+
+/* 3. 与 BJT 对比 */
+const VTH3=0.026,X3=scale(-5,-1,70,490),Y3=scale(-5,1,250,30);
+(function(){
+  const g=$('s3-grid'),xl=['10 µA','100 µA','1 mA','10 mA','100 mA'],yl=['10 µ','100 µ','1 m','10 m','100 m','1','10'];
+  for(let e=-5;e<=-1;e++){const x=X3(e).toFixed(1);g.append(svgEl('line',{class:'gl',x1:x,y1:30,x2:x,y2:250}));
+    g.append(svgEl('text',{x:x,y:268,'text-anchor':e===-1?'end':'middle',class:'v'},xl[e+5]));}
+  for(let e=-5;e<=1;e++){const y=Y3(e).toFixed(1);g.append(svgEl('line',{class:'gl',x1:70,y1:y,x2:490,y2:y}));
+    g.append(svgEl('text',{x:64,y:(+y+4).toFixed(1),'text-anchor':'end',class:'v'},yl[e+5]));}
+})();
+$('s3-b').setAttribute('points',plot(e=>Math.log10(Math.pow(10,e)/VTH3),-5,-1,X3,Y3,20));
+function s3u(){
+  const e=+$('s3-i').value,I=Math.pow(10,e),ov=+$('s3-ov').value,gb=I/VTH3,gmv=2*I/ov;
+  $('s3-iv').textContent=fmtA(I);$('s3-i').setAttribute('aria-valuetext',fmtA(I));
+  $('s3-ovv').textContent=fmtV(ov,2);$('s3-ov').setAttribute('aria-valuetext',fmtV(ov,2));
+  $('s3-m').setAttribute('points',plot(x=>Math.log10(2*Math.pow(10,x)/ov),-5,-1,X3,Y3,20));
+  const bl=$('s3-bl'),ml=$('s3-ml');
+  bl.setAttribute('x',X3(-1.6).toFixed(1));bl.setAttribute('y',(Y3(Math.log10(Math.pow(10,-1.6)/VTH3))-10).toFixed(1));
+  ml.setAttribute('x',X3(-4.6).toFixed(1));ml.setAttribute('y',(Y3(Math.log10(2*Math.pow(10,-4.6)/ov))+22).toFixed(1));
+  const x=X3(e).toFixed(1);
+  $('s3-vl').setAttribute('x1',x);$('s3-vl').setAttribute('x2',x);
+  $('s3-pb').setAttribute('cx',x);$('s3-pb').setAttribute('cy',Y3(Math.log10(gb)).toFixed(1));
+  $('s3-pm').setAttribute('cx',x);$('s3-pm').setAttribute('cy',Y3(Math.log10(gmv)).toFixed(1));
+  const fg=g=>g>=1?g.toFixed(2)+' S':g>=1e-3?(g*1e3).toFixed(g>=1e-2?0:1)+' mS':(g*1e6).toFixed(0)+' µS';
+  $('s3-gb').textContent=fg(gb);$('s3-gm').textContent=fg(gmv);
+  const r=ov/(2*VTH3);$('s3-r').textContent=r.toFixed(1)+' 倍';
+  $('s3-note').textContent=ov<0.1?'过驱动电压压到 '+fmtV(ov,2)+'，MOS 的 gm 追近三极管。但这已接近亚阈值区，要同样的电流就得把管子做得很宽，寄生电容大、速度慢，平方律公式也开始不准。'
+    :'同样 '+fmtA(I)+' 电流下，三极管 gm = Ic / VT = '+fg(gb)+'，MOS 只有 '+fg(gmv)+'，差 '+r.toFixed(1)+' 倍。改变电流两条线一起平移，倍数不变；只有减小过驱动电压才能缩小差距。';
+}
+$('s3-i').addEventListener('input',s3u);$('s3-ov').addEventListener('input',s3u);
+s3u();
+</script>
+</body>
+</html>

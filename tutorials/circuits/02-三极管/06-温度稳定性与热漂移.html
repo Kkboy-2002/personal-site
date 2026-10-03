@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>温度稳定性与热漂移</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#bjt">三极管</a><span class="sp"></span><span>06 / 09</span></nav>
+<header>
+  <span class="eyebrow">三极管 · 温漂与热失控</span>
+  <h1>温度稳定性与热漂移</h1>
+  <p class="lede">三极管的三个关键参数都怕热，而且方向一致：温度一升，Ic 就涨。Ic 涨了发热更多，温度再升，这个正反馈就是热失控。分压偏置加发射极电阻，就是专门来打断它的。</p>
+</header>
+
+<section id="three">
+  <span class="eyebrow">三个温度效应</span>
+  <h2>温度升高，三件事一起让 Ic 变大</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>参数</th><th>温度升高时</th><th>典型值</th><th>为什么让 Ic 变大</th></tr></thead>
+    <tbody>
+      <tr><td>Ube</td><td>下降</td><td class="n">约 −2 mV/°C</td><td>同样的 Ib 只需更低的 Ube；若 Ub 固定，Ube 富余出来，Ib 变大</td></tr>
+      <tr><td>β</td><td>增大</td><td class="n">约 +0.5%~1%/°C</td><td>同样的 Ib，Ic = β·Ib 变大</td></tr>
+      <tr><td>ICBO</td><td>指数增大</td><td class="n">约每 10 °C 翻一倍</td><td>基极开路时要乘 (1 + β) 变成 ICEO，直接叠加进 Ic</td></tr>
+    </tbody>
+  </table></div>
+  <p>硅管常温下 ICBO 只有 nA 级，影响主要来自 β 和 Ube；高温或大功率管里 ICBO 才会成为主角。三者方向相同，这就是为什么面试常说"三极管有正温度系数"，与之对比，MOS 管的导通电阻随温度上升而增大，更不容易热失控。</p>
+</section>
+
+<section id="runaway">
+  <span class="eyebrow">热失控 · 正反馈</span>
+  <h2>热失控：温度和电流互相推高</h2>
+  <p>结温升高 → Ic 增大 → 管耗 Uce·Ic 增大 → 结温再升高。只要每一轮新增的发热比散热能带走的多，温度就停不下来，直到管子烧毁。发射极电阻 Re 加进来后，Ic 一增大，Ue = Ie·Re 就升高，基极电位被分压电阻钉住，Ube 被挤小，Ib 减小，把 Ic 拉回去。这是一个负反馈，正好抵消正反馈。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 340" role="img" aria-label="上方是热失控的反馈环框图，下方是结温随迭代次数的变化">
+        <rect class="box" x="30" y="40" width="100" height="44" rx="6"/>
+        <rect class="box" x="190" y="40" width="100" height="44" rx="6"/>
+        <rect class="box" x="350" y="40" width="110" height="44" rx="6"/>
+        <text x="80" y="67" text-anchor="middle" class="t">结温 T ↑</text>
+        <text x="240" y="67" text-anchor="middle" class="t">Ic ↑</text>
+        <text x="405" y="67" text-anchor="middle" class="t">管耗 Uce·Ic ↑</text>
+        <path id="t2-pos" class="w s-bad" d="M130,62 H184 M290,62 H344 M405,40 V18 H80 V34"/>
+        <polygon id="t2-a1" points="190,62 180,57 180,67" style="fill:var(--danger)"/>
+        <polygon id="t2-a2" points="350,62 340,57 340,67" style="fill:var(--danger)"/>
+        <polygon id="t2-a3" points="80,40 75,30 85,30" style="fill:var(--danger)"/>
+        <text x="242" y="12" text-anchor="middle" class="tm">正反馈：越热电流越大，电流越大越热</text>
+        <text x="80" y="104" text-anchor="middle" class="tm">β↑ Ube↓ ICBO↑</text>
+        <g id="t2-neg">
+          <rect class="box" x="350" y="140" width="110" height="44" rx="6"/>
+          <rect class="box" x="190" y="140" width="100" height="44" rx="6"/>
+          <text x="405" y="167" text-anchor="middle" class="t">Ue = Ie·Re ↑</text>
+          <text x="240" y="167" text-anchor="middle" class="t">Ube ↓ Ib ↓</text>
+          <path class="w s-ok" d="M270,84 V112 H405 V134 M350,162 H296 M240,140 V90"/>
+          <polygon points="405,140 400,130 410,130" style="fill:var(--flow)"/>
+          <polygon points="290,162 300,157 300,167" style="fill:var(--flow)"/>
+          <polygon points="240,84 235,94 245,94" style="fill:var(--flow)"/>
+          <text x="232" y="122" text-anchor="end" class="t" style="fill:var(--flow)">− 拉回 Ic</text>
+          <text x="340" y="106" class="tm">Re 负反馈</text>
+        </g>
+        <line class="gl" x1="56" y1="212" x2="456" y2="212"/>
+        <line class="gl" x1="56" y1="262" x2="456" y2="262"/>
+        <line class="ax dash" x1="56" y1="237" x2="456" y2="237" style="stroke:var(--danger)"/>
+        <path class="ax" d="M56,212 V312 H456"/>
+        <text x="50" y="216" text-anchor="end" class="v">200</text>
+        <text x="50" y="266" text-anchor="end" class="v">100</text>
+        <text x="50" y="316" text-anchor="end" class="v">0</text>
+        <text x="60" y="206" class="tm">结温 / °C</text>
+        <text x="452" y="232" text-anchor="end" class="tm" style="fill:var(--danger)">结温上限 150 °C（典型值）</text>
+        <text x="56" y="330" text-anchor="middle" class="v">0</text>
+        <text x="456" y="330" text-anchor="end" class="v">15 轮</text>
+        <polyline id="t2-tc" class="real" points="56,303 456,303"/>
+      </svg>
+      <figcaption>下图示意：环境 25 °C，Uce 固定 10 V，IcQ 约 30 mA。每一轮用上一轮的结温算 Ic，再算新结温 T = 25 °C + 热阻 × 管耗。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">偏置方式</span>
+        <div class="seg" id="t2-m"><button id="t2-m-fix" data-v="fix" aria-pressed="true">固定偏置，无 Re</button><button id="t2-m-re" data-v="re" aria-pressed="false">分压 + Re</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="t2-r">散热热阻 Rth（结到环境）</label>
+        <span class="rv" id="t2-rv">150 °C/W</span>
+        <input type="range" id="t2-r" min="40" max="200" step="10" value="150"></div>
+      <dl class="read">
+        <dt>第 1 轮结温</dt><dd id="t2-t1">—</dd>
+        <dt>最终结温</dt><dd id="t2-tf">—</dd>
+        <dt>最终 Ic</dt><dd id="t2-ic">—</dd>
+        <dt>结果</dt><dd><span id="t2-st" class="chip bad">热失控</span></dd>
+      </dl>
+      <p class="note" id="t2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="divider">
+  <span class="eyebrow">分压偏置 · 发射极电阻</span>
+  <h2>分压偏置加 Re：把 Ic 交给电阻决定</h2>
+  <p>分压偏置用 R1、R2 把基极电位 Ub 钉住，只要流过分压电阻的电流远大于 Ib，Ub 就几乎不随管子变。发射极再串一个 Re：</p>
+  <p class="eq">Ic ≈ Ie = (Ub − Ube) / Re</p>
+  <p>公式里没有 β。β 变化只影响很小的 Ib；Ube 的 −2 mV/°C 除以 Re 上几伏的压降，影响也很小。所以 Ue 取 1~3 V（经验值）比较稳。固定偏置则是 Ic = β·(Vcc − Ube) / Rb，Ic 完全跟着 β 走。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 360 290" role="img" aria-label="共射电路，可在固定偏置和分压偏置加发射极电阻之间切换">
+        <text x="170" y="18" text-anchor="middle" class="v">Vcc 12 V</text>
+        <path class="w" d="M110,26 H232 M110,26 V50 M220,26 V50"/>
+        <rect class="r" x="101" y="50" width="18" height="40" rx="2"/>
+        <text id="t3-r1l" x="94" y="66" text-anchor="end" class="t">Rb</text>
+        <text id="t3-r1v" x="94" y="84" text-anchor="end" class="v">390 kΩ</text>
+        <path class="w" d="M110,90 V172 H198"/>
+        <rect class="r" x="211" y="50" width="18" height="40" rx="2"/>
+        <text x="236" y="66" class="t">Rc</text>
+        <text x="236" y="84" class="v">2 kΩ</text>
+        <path class="w" d="M220,90 V150 M198,164 L220,150 M198,180 L220,194 M206,270 H234 M211,275 H229 M216,280 H224"/>
+        <line class="bar" x1="198" y1="154" x2="198" y2="190"/>
+        <polygon class="ah" points="217,192 208,191 212,184"/>
+        <text x="228" y="158" class="tm">C</text>
+        <text x="228" y="192" class="tm">E</text>
+        <g id="t3-gf">
+          <path class="w" d="M220,194 V270"/>
+        </g>
+        <g id="t3-gd" hidden>
+          <circle class="dot" cx="110" cy="172" r="3.5"/>
+          <path class="w" d="M110,172 V206 M110,246 V270 M96,270 H124 M101,275 H119 M106,280 H114 M220,194 V206 M220,246 V270"/>
+          <rect class="r" x="101" y="206" width="18" height="40" rx="2"/>
+          <text x="94" y="222" text-anchor="end" class="t">R2</text>
+          <text x="94" y="240" text-anchor="end" class="v">24 kΩ</text>
+          <rect class="r" x="211" y="206" width="18" height="40" rx="2"/>
+          <text x="236" y="240" class="t">Re 1 kΩ</text>
+          <text id="t3-ue" x="236" y="222" class="v">Ue 2.9 V</text>
+          <text id="t3-ub" x="124" y="194" class="v">Ub 3.6 V</text>
+        </g>
+        <path id="t3-ow" class="w s-hi" style="stroke-width:3" d="M220,120 H300"/>
+        <circle class="dot" cx="220" cy="120" r="3.5"/>
+        <text x="306" y="124" class="t">Uc</text>
+        <text id="t3-out" x="298" y="110" text-anchor="end" class="v hi">6.2 V</text>
+        <path id="t3-f" class="flow" d="M220,30 V150 L202,162 V182 L220,194 V268"/>
+        <path id="t3-fb" class="flow thin" d="M110,30 V172 H196"/>
+      </svg>
+      <svg viewBox="0 0 480 236" role="img" aria-label="两种偏置下 Ic 随温度变化的曲线">
+        <line class="gl" x1="56" y1="36" x2="456" y2="36"/>
+        <line class="gl" x1="56" y1="116" x2="456" y2="116"/>
+        <line class="gl" x1="184.6" y1="36" x2="184.6" y2="196"/>
+        <path class="ax" d="M56,36 V196 H456"/>
+        <text x="50" y="40" text-anchor="end" class="v">6</text>
+        <text x="50" y="120" text-anchor="end" class="v">3</text>
+        <text x="50" y="200" text-anchor="end" class="v">0</text>
+        <text x="60" y="26" class="tm">Ic / mA</text>
+        <text x="56" y="214" text-anchor="middle" class="v">−20</text>
+        <text x="184.6" y="214" text-anchor="middle" class="v">25</text>
+        <text x="456" y="214" text-anchor="end" class="v">120</text>
+        <text x="456" y="230" text-anchor="end" class="tm">结温 / °C</text>
+        <polyline id="t3-cf" class="real" points="56,196 456,196"/>
+        <polyline id="t3-cd" class="real2" points="56,196 456,196"/>
+        <text x="300" y="72" class="t" style="fill:var(--copper)">固定偏置</text>
+        <text x="300" y="150" class="t" style="fill:var(--low)">分压 + Re</text>
+        <line id="t3-tl" class="ax dash" x1="146" y1="36" x2="146" y2="196"/>
+        <circle id="t3-pf" cx="146" cy="120" r="5" style="fill:var(--copper)"/>
+        <circle id="t3-pd" cx="146" cy="120" r="5" style="fill:var(--low)"/>
+      </svg>
+      <figcaption>两种电路在 25 °C 时 Ic 都约 2.9 mA。示意参数：β(25 °C) = 100，温度系数 +0.8%/°C；Ube 为 0.7 V、−2 mV/°C；ICBO 常温 5 nA、每 10 °C 翻倍。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">电路</span>
+        <div class="seg" id="t3-m"><button id="t3-m-fix" data-v="fix" aria-pressed="true">固定偏置</button><button id="t3-m-div" data-v="div" aria-pressed="false">分压偏置 + Re</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="t3-t">结温</label>
+        <span class="rv" id="t3-tv">25 °C</span>
+        <input type="range" id="t3-t" min="-20" max="120" step="5" value="25"></div>
+      <dl class="read">
+        <dt>β / Ube / ICBO</dt><dd id="t3-par">—</dd>
+        <dt>Ib</dt><dd id="t3-ib">—</dd>
+        <dt>Ic</dt><dd id="t3-ic">—</dd>
+        <dt>相对 25 °C 漂移</dt><dd id="t3-dr">—</dd>
+        <dt>状态</dt><dd><span id="t3-st" class="chip on">放大</span></dd>
+      </dl>
+      <p class="note" id="t3-note"></p>
+    </div>
+  </div>
+  <p>分压偏置的代价：Re 对交流信号也有负反馈，会把增益降到约 Rc / Re。常在 Re 两端并一个旁路电容，让直流上有反馈、交流上没有。更多见 <a href="../06-基本电路/05-分压偏置.html">分压偏置</a>。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>温度对三极管有哪些影响？</summary>
+      <div class="ans"><p>三个：Ube 约 −2 mV/°C；β 约每度增加 0.5%~1%；ICBO 每升高约 10 °C 翻一倍。三者都让 Ic 增大，所以 Q 点会随温度往饱和方向漂。</p></div></details>
+    <details><summary>什么是热失控？</summary>
+      <div class="ans"><p>温度升高使 Ic 增大，Ic 增大使管耗增大，管耗又让温度继续升高，形成正反馈。如果散热跟不上，结温一路上升直到管子损坏。功率三极管并联时还会出现一只管子抢电流、越抢越热的问题，所以要给每只管子串发射极均流电阻。</p></div></details>
+    <details><summary>分压偏置为什么能稳定工作点？</summary>
+      <div class="ans"><p>两点：一是分压电阻把 Ub 钉住；二是 Re 引入直流电流负反馈。Ic 增大 → Ue 增大 → Ube = Ub − Ue 减小 → Ib 减小 → Ic 回落。结果 Ic ≈ (Ub − Ube) / Re，基本与 β 无关。</p></div></details>
+    <details><summary>Re 会带来什么副作用？怎么解决？</summary>
+      <div class="ans"><p>Re 对交流也有负反馈，电压增益从 β·Rc / rbe 降到约 Rc / Re。解决办法是在 Re 上并联旁路电容 Ce，交流被短路，只保留直流反馈；也可以把 Re 拆成两段，只旁路一段，折中增益和线性。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="05-静态工作点Q.html"><span>上一页</span>静态工作点Q</a><a class="next" href="07-三种组态对比.html"><span>下一页</span>三种组态对比</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 共用温度模型（示意） */
+const tBeta=T=>100*(1+0.008*(T-25));
+const tUbe=T=>0.7-0.002*(T-25);
+const tIcbo=(T,i0)=>i0*Math.pow(2,(T-25)/10);
+
+/* 2. 热失控迭代 */
+const t2={m:'fix'};
+const t2Ic={
+  fix:T=>tBeta(T)*0.3e-3+(1+tBeta(T))*tIcbo(T,1e-6),
+  re:T=>(3.7-tUbe(T))/100+tIcbo(T,1e-6)*(1+1000/100)
+};
+const t2X=scale(0,15,56,456),t2Y=scale(0,200,312,212);
+function t2u(){
+  const rth=+$('t2-r').value,f=t2Ic[t2.m],re=t2.m==='re';
+  let T=25,ic=f(T),run=false,t1=0;const pts=[t2X(0).toFixed(1)+','+t2Y(25).toFixed(1)];
+  for(let n=1;n<=15;n++){
+    if(!run){ic=f(T);T=25+rth*10*ic;if(n===1)t1=T;if(T>150)run=true;}
+    pts.push(t2X(n).toFixed(1)+','+t2Y(Math.min(T,200)).toFixed(1));
+  }
+  $('t2-tc').setAttribute('points',pts.join(' '));
+  $('t2-tc').setAttribute('class',run?'real':'real3');
+  show($('t2-neg'),re);
+  $('t2-rv').textContent=rth+' °C/W';$('t2-r').setAttribute('aria-valuetext',rth+' °C/W');
+  $('t2-t1').textContent=t1.toFixed(0)+' °C';
+  $('t2-tf').textContent=run?'> 150 °C，持续上升':T.toFixed(0)+' °C';
+  $('t2-ic').textContent=run?'失控':fmtA(ic);
+  if(run){chip($('t2-st'),'热失控','bad');
+    $('t2-note').textContent='散热太差，每一轮新增的发热都比上一轮多。高温下 β 变大、ICBO 按指数增长，Ic 越涨越快，结温冲过 150 °C。';}
+  else{chip($('t2-st'),re?'负反馈稳住':'暂时稳定',re?'on':'warn');
+    $('t2-note').textContent=re
+      ?'有 Re 后 Ic ≈ (Ub − Ube) / Re，温度只能通过 −2 mV/°C 的 Ube 和很小的 ICBO 去推动 Ic。结温从 25 °C 升到 '+T.toFixed(0)+' °C，Ic 只变了 '+((ic/0.03-1)*100).toFixed(0)+'%，环路很快收敛。把热阻拉到最大也不会失控。'
+      :'散热够好，正反馈每一轮的增量在衰减，最后收敛在 '+T.toFixed(0)+' °C，但 Ic 已比常温涨了 '+((ic/0.0301-1)*100).toFixed(0)+'%。热阻再大一点就会失控。';}
+}
+seg('t2-m',v=>{t2.m=v;t2u();});
+$('t2-r').addEventListener('input',t2u);
+t2u();
+
+/* 3. 固定偏置 vs 分压偏置 */
+const t3Vth=12*24/71,t3Rth=47e3*24/71;
+function t3calc(m,T){
+  const b=tBeta(T),ube=tUbe(T),icbo=tIcbo(T,5e-9);
+  let ib,ic,sat=false;
+  if(m==='fix'){ib=(12-ube)/390e3;ic=b*ib+(1+b)*icbo;if(ic>5.9e-3){ic=5.9e-3;sat=true;}}
+  else{ib=(t3Vth-ube-(1+b)*icbo*1e3)/(t3Rth+(1+b)*1e3);ic=b*ib+(1+b)*icbo;if(ic>11.8/3e3){ic=11.8/3e3;sat=true;}}
+  return {b,ube,icbo,ib,ic,sat};
+}
+const t3X=scale(-20,120,56,456),t3Y=scale(0,6,196,36);
+$('t3-cf').setAttribute('points',plot(T=>t3calc('fix',T).ic*1e3,-20,120,t3X,t3Y,140));
+$('t3-cd').setAttribute('points',plot(T=>t3calc('div',T).ic*1e3,-20,120,t3X,t3Y,140));
+const t3={m:'fix'};
+function t3u(){
+  const T=+$('t3-t').value,m=t3.m,div=m==='div',r=t3calc(m,T),r0=t3calc(m,25),dr=(r.ic/r0.ic-1)*100;
+  show($('t3-gf'),!div);show($('t3-gd'),div);
+  $('t3-r1l').textContent=div?'R1':'Rb';$('t3-r1v').textContent=div?'47 kΩ':'390 kΩ';
+  $('t3-fb').setAttribute('d',div?'M110,30 V268 M112,172 H196':'M110,30 V172 H196');
+  const uc=12-r.ic*2e3,ue=(r.ic+r.ib)*1e3;
+  $('t3-out').textContent=fmtV(uc,1);setLv($('t3-out'),$('t3-ow'),uc>6);
+  $('t3-ub').textContent='Ub '+fmtV(t3Vth-r.ib*t3Rth,2);$('t3-ue').textContent='Ue '+fmtV(ue,2);
+  const x=t3X(T).toFixed(1);
+  $('t3-tl').setAttribute('x1',x);$('t3-tl').setAttribute('x2',x);
+  $('t3-pf').setAttribute('cx',x);$('t3-pf').setAttribute('cy',t3Y(t3calc('fix',T).ic*1e3).toFixed(1));
+  $('t3-pd').setAttribute('cx',x);$('t3-pd').setAttribute('cy',t3Y(t3calc('div',T).ic*1e3).toFixed(1));
+  $('t3-tv').textContent=T+' °C';$('t3-t').setAttribute('aria-valuetext',T+' °C');
+  $('t3-par').textContent=r.b.toFixed(0)+' / '+fmtV(r.ube)+' / '+fmtA(r.icbo);
+  $('t3-ib').textContent=fmtA(r.ib);
+  $('t3-ic').textContent=fmtA(r.ic)+(r.sat?'，已饱和':'');
+  $('t3-dr').textContent=(dr>=0?'+':'−')+Math.abs(dr).toFixed(0)+'%';
+  if(r.sat)chip($('t3-st'),'饱和','bad');
+  else if(Math.abs(dr)>30)chip($('t3-st'),'漂移大','warn');
+  else chip($('t3-st'),'放大，稳定','on');
+  $('t3-note').textContent=div
+    ?'Ib 随温度反而减小：Ic 一涨，Ue 跟着涨，Ube = Ub − Ue 被挤小，Ib 自动退让。Ic 基本由 (Ub − Ube) / Re 决定，漂移只有 '+Math.abs(dr).toFixed(0)+'%。'
+    :'Ib 由 Rb 决定，几乎不随温度变，Ic = β·Ib 就跟着 β 一起涨。'+(r.sat?'温度一高 Q 点直接漂进饱和区，放大电路失效。':'漂移 '+Math.abs(dr).toFixed(0)+'%，温度再高会进饱和。');
+}
+seg('t3-m',v=>{t3.m=v;t3u();});
+$('t3-t').addEventListener('input',t3u);
+t3u();
+</script>
+</body>
+</html>

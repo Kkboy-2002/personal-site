@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SPI 总线</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.smp{fill:var(--flow)}
+.mk{stroke:var(--flow);stroke-width:1.4}
+.cell{fill:var(--panel);stroke:currentColor;stroke-width:1.5}
+.ctl .seg button{padding:6px 11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#bus">通信接口</a><span class="sp"></span><span>02 / 05</span></nav>
+<header>
+  <span class="eyebrow">通信接口 · 同步串行</span>
+  <h1>SPI 总线</h1>
+  <p class="lede">SPI 用四根线：时钟 SCLK、主出从入 MOSI、主入从出 MISO、片选 CS。它是同步、全双工、一主多从的。看懂两件事就够了：主从两边其实是一个首尾相连的移位寄存器；四种模式只是在规定时钟空闲电平和在哪个沿采样。</p>
+</header>
+
+<section id="ring">
+  <span class="eyebrow">全双工 · 环形移位寄存器</span>
+  <h2>发一位的同时收一位</h2>
+  <p>时钟只由主机产生，数据跟着时钟走，所以叫同步，不需要事先约定波特率。主机把 CS 拉低选中从机，然后每给一个时钟，主机从 MOSI 移出一位、同时从 MISO 移进一位，从机也一样。8 个时钟后，两边寄存器里的字节正好互换。</p>
+  <p>SPI 的输出是推挽的，边沿陡，没有上拉电阻拖慢上升沿；又没有地址、没有应答，协议开销小，所以跑几十 MHz 很常见，SPI Flash 常见 50 MHz 以上。代价是线多，而且没有应答：从机收没收到、在不在线，主机不知道。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 540 256" role="img" aria-label="主机和从机的 8 位移位寄存器经 MOSI 和 MISO 首尾相连，构成一个环，SCLK 每来一个时钟移动一位">
+        <text x="148" y="42" text-anchor="middle" class="t">主机移位寄存器</text>
+        <text x="396" y="42" text-anchor="middle" class="t">从机移位寄存器</text>
+        <g id="s1-cells"></g>
+        <text x="57" y="100" text-anchor="middle" class="tm">b7</text>
+        <text x="239" y="100" text-anchor="middle" class="tm">b0</text>
+        <text x="305" y="100" text-anchor="middle" class="tm">b7</text>
+        <text x="487" y="100" text-anchor="middle" class="tm">b0</text>
+        <path class="w" d="M292,70 H254"/>
+        <polygon class="ah" points="252,70 261,65 261,75"/>
+        <text x="272" y="60" text-anchor="middle" class="v">MISO</text>
+        <path class="w" d="M44,70 H28 V130 H516 V70 H502"/>
+        <polygon class="ah" points="500,70 509,65 509,75"/>
+        <text x="272" y="124" text-anchor="middle" class="v">MOSI</text>
+        <path id="s1-fo" class="flow thin" d="M44,70 H28 V130 H516 V70 H504"/>
+        <path id="s1-fi" class="flow thin" d="M290,70 H256"/>
+        <text x="60" y="194" text-anchor="end" class="v">SCLK</text>
+        <polyline id="s1-clk0" class="ideal" points="70,200 520,200"/>
+        <polyline id="s1-clk" class="real" points="70,200 70,200"/>
+        <text x="60" y="238" text-anchor="end" class="v">CS</text>
+        <path id="s1-csw" class="w s-lo" d="M70,234 H520"/>
+        <text id="s1-cst" x="520" y="226" text-anchor="end" class="tm">CS = 0，从机被选中</text>
+        <text id="s1-kt" x="520" y="176" text-anchor="end" class="tm">已走 0 / 8 个时钟</text>
+      </svg>
+      <figcaption>橙色数字是主机原来的位，蓝色是从机原来的位。MSB 先发：主机从左端 b7 移出，经 MOSI 进入从机右端 b0；从机左端 b7 经 MISO 进入主机右端 b0。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">主机要发的字节（从机准备回 0x3C）</span>
+        <div class="seg" id="s1-md"><button id="s1-md-a5" data-v="165" aria-pressed="true">0xA5</button><button id="s1-md-9f" data-v="159" aria-pressed="false">0x9F 读 ID 命令</button><button id="s1-md-00" data-v="0" aria-pressed="false">0x00 哑元</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-k">已发出的时钟数</label>
+        <span class="rv" id="s1-kv">0</span>
+        <input type="range" id="s1-k" min="0" max="8" step="1" value="3">
+        <div class="seg"><button id="s1-play" aria-pressed="false">▶ 逐拍播放</button></div></div>
+      <dl class="read">
+        <dt>主机寄存器</dt><dd id="s1-mr">—</dd>
+        <dt>从机寄存器</dt><dd id="s1-sr">—</dd>
+        <dt>这一拍的 MOSI</dt><dd id="s1-mo">—</dd>
+        <dt>这一拍的 MISO</dt><dd id="s1-mi">—</dd>
+        <dt>状态</dt><dd><span id="s1-st" class="chip on">传输中</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="mode">
+  <span class="eyebrow">CPOL · CPHA · 四种模式</span>
+  <h2>四种模式：空闲电平和采样沿</h2>
+  <p>CPOL 定时钟空闲时是低还是高。CPHA 定在哪个沿采样：CPHA = 0 在第 1 个沿采样，数据要在 CS 拉低时就先放好，之后在第 2 个沿切换；CPHA = 1 在第 1 个沿切换数据，第 2 个沿采样。主从两边模式必须一致，否则会整体错一位或采到正在变化的数据。</p>
+  <p class="eq">模式号 = CPOL × 2 + CPHA；模式 0：空闲低、上升沿采样，最常用</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 560 290" role="img" aria-label="SPI 时序图：CS、SCLK、MOSI、MISO 四路波形，绿色竖线标出采样沿">
+        <rect id="s2-hl" class="zone-ok" x="70" y="134" width="47" height="100"/>
+        <g id="s2-edges"></g>
+        <text x="540" y="20" text-anchor="end" class="tm">绿线：采样沿　灰线：数据切换沿</text>
+        <text x="58" y="59" text-anchor="end" class="v">CS</text>
+        <text x="58" y="111" text-anchor="end" class="v">SCLK</text>
+        <text x="58" y="165" text-anchor="end" class="v">MOSI</text>
+        <text x="58" y="219" text-anchor="end" class="v">MISO</text>
+        <g id="s2-rows"></g>
+        <g id="s2-lab"></g>
+        <path class="ax" d="M70,248 H540"/>
+        <g id="s2-ax"></g>
+        <text x="540" y="284" text-anchor="end" class="tm">时间，下排数字是第几个 SCLK 周期</text>
+      </svg>
+      <figcaption>MOSI 是主机发的 0xA5（橙），MISO 是从机回的 0x3C（蓝），都是高位先发。虚线表示 CS 无效时的不关心或高阻状态。绿色底色是当前位的有效窗口。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">SPI 模式</span>
+        <div class="seg" id="s2-m"><button id="s2-m-0" data-v="0" aria-pressed="true">模式 0</button><button id="s2-m-1" data-v="1" aria-pressed="false">模式 1</button><button id="s2-m-2" data-v="2" aria-pressed="false">模式 2</button><button id="s2-m-3" data-v="3" aria-pressed="false">模式 3</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s2-bit">当前位</label>
+        <span class="rv" id="s2-bv">D7</span>
+        <input type="range" id="s2-bit" min="0" max="7" step="1" value="0">
+        <div class="seg"><button id="s2-play" aria-pressed="false">▶ 逐位播放</button></div></div>
+      <dl class="read">
+        <dt>CPOL</dt><dd id="s2-cpol">0</dd>
+        <dt>CPHA</dt><dd id="s2-cpha">0</dd>
+        <dt>采样沿</dt><dd id="s2-se">上升沿</dd>
+        <dt>数据切换沿</dt><dd id="s2-ce">下降沿</dd>
+        <dt>当前位</dt><dd id="s2-cur">—</dd>
+        <dt>常见程度</dt><dd><span id="s2-st" class="chip on">最常用</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>模式</th><th>CPOL</th><th>CPHA</th><th>SCLK 空闲</th><th>采样沿</th><th>切换沿</th></tr></thead>
+    <tbody>
+      <tr><td class="n">0</td><td class="n">0</td><td class="n">0</td><td>低</td><td>上升沿</td><td>下降沿</td></tr>
+      <tr><td class="n">1</td><td class="n">0</td><td class="n">1</td><td>低</td><td>下降沿</td><td>上升沿</td></tr>
+      <tr><td class="n">2</td><td class="n">1</td><td class="n">0</td><td>高</td><td>下降沿</td><td>上升沿</td></tr>
+      <tr><td class="n">3</td><td class="n">1</td><td class="n">1</td><td>高</td><td>上升沿</td><td>下降沿</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="multi">
+  <span class="eyebrow">一主多从 · 菊花链</span>
+  <h2>没有地址，靠片选挑人</h2>
+  <p>SPI 没有地址，主机拉低哪根 CS，哪个从机才理会 MOSI、才去驱动 MISO。所以挂几个从机就要几根 CS 线。没被选中的从机必须把 MISO 置成高阻，否则几个从机同时驱动 MISO 就会打架。</p>
+  <p>菊花链只用一根 CS：上一个从机的输出接下一个从机的输入，数据像穿过一串移位寄存器。先发出去的字节走得最远，最后留在链尾的从机里。适合移位寄存器、LED 驱动这类器件，要求器件支持数据直通。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 530 296" role="img" aria-label="一个主机连三个从机的 SPI 拓扑，可切换为每个从机一根片选线，或菊花链串联">
+        <rect class="box" x="16" y="30" width="94" height="140" rx="6"/>
+        <text x="38" y="104" text-anchor="middle" class="t">主机</text>
+        <text x="104" y="54" text-anchor="end" class="v">CS1</text>
+        <text x="104" y="74" text-anchor="end" class="v">CS2</text>
+        <text x="104" y="94" text-anchor="end" class="v">CS3</text>
+        <text x="104" y="114" text-anchor="end" class="v">SCLK</text>
+        <text x="104" y="134" text-anchor="end" class="v">MOSI</text>
+        <text x="104" y="154" text-anchor="end" class="v">MISO</text>
+        <path class="w" d="M110,110 H424 M160,110 V200 M292,110 V200 M424,110 V200"/>
+        <circle class="dot" cx="160" cy="110" r="3.5"/><circle class="dot" cx="292" cy="110" r="3.5"/>
+        <g id="s3-g-ind">
+          <path id="s3-cs1" class="w" d="M110,50 H212 V200"/>
+          <path id="s3-cs2" class="w" d="M110,70 H344 V200"/>
+          <path id="s3-cs3" class="w" d="M110,90 H476 V200"/>
+          <path class="w" d="M110,130 H388 M124,130 V236 H136 M256,130 V236 H268 M388,130 V236 H400"/>
+          <path class="w" d="M110,150 H512 M236,236 H248 V150 M368,236 H380 V150 M500,236 H512 V150"/>
+          <circle class="dot" cx="124" cy="130" r="3.5"/><circle class="dot" cx="256" cy="130" r="3.5"/>
+          <circle class="dot" cx="248" cy="150" r="3.5"/><circle class="dot" cx="380" cy="150" r="3.5"/>
+        </g>
+        <g id="s3-g-dc" hidden>
+          <path class="w s-lo" d="M110,50 H476 V200 M212,50 V200 M344,50 V200"/>
+          <circle class="dot" cx="212" cy="50" r="3.5"/><circle class="dot" cx="344" cy="50" r="3.5"/>
+          <path class="w" d="M110,130 H124 V236 H136 M236,236 H268 M368,236 H400 M500,236 H512 V150 H110"/>
+        </g>
+        <rect class="box" x="136" y="200" width="100" height="50" rx="5"/>
+        <rect class="box" x="268" y="200" width="100" height="50" rx="5"/>
+        <rect class="box" x="400" y="200" width="100" height="50" rx="5"/>
+        <text x="160" y="216" text-anchor="middle" class="tm">SCK</text><text x="212" y="216" text-anchor="middle" class="tm">CS</text>
+        <text x="292" y="216" text-anchor="middle" class="tm">SCK</text><text x="344" y="216" text-anchor="middle" class="tm">CS</text>
+        <text x="424" y="216" text-anchor="middle" class="tm">SCK</text><text x="476" y="216" text-anchor="middle" class="tm">CS</text>
+        <text x="142" y="240" class="tm">SDI</text><text x="230" y="240" text-anchor="end" class="tm">SDO</text>
+        <text x="274" y="240" class="tm">SDI</text><text x="362" y="240" text-anchor="end" class="tm">SDO</text>
+        <text x="406" y="240" class="tm">SDI</text><text x="494" y="240" text-anchor="end" class="tm">SDO</text>
+        <text x="186" y="268" text-anchor="middle" class="t">从机 1</text>
+        <text x="318" y="268" text-anchor="middle" class="t">从机 2</text>
+        <text x="450" y="268" text-anchor="middle" class="t">从机 3</text>
+        <text id="s3-t1" x="186" y="286" text-anchor="middle" class="tm">选中</text>
+        <text id="s3-t2" x="318" y="286" text-anchor="middle" class="tm">高阻</text>
+        <text id="s3-t3" x="450" y="286" text-anchor="middle" class="tm">高阻</text>
+        <path id="s3-fo" class="flow thin" d="M112,130 H124 V236 H134"/>
+        <path id="s3-fi" class="flow thin" d="M238,236 H248 V150 H112"/>
+        <path id="s3-fx" class="flow thin bad" d="M370,236 H380 V150 H250" hidden/>
+      </svg>
+      <figcaption>蓝色的 CS 线是被拉低、正在生效的片选。绿色虚线是数据流向，红色是两个从机同时驱动 MISO 造成的冲突电流。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">接法</span>
+        <div class="seg" id="s3-m"><button id="s3-m-ind" data-v="ind" aria-pressed="true">独立片选</button><button id="s3-m-dc" data-v="dc" aria-pressed="false">菊花链</button></div></div>
+      <div class="ctl"><span class="ctl-l">目标从机</span>
+        <div class="seg" id="s3-k"><button id="s3-k-1" data-v="1" aria-pressed="true">从机 1</button><button id="s3-k-2" data-v="2" aria-pressed="false">从机 2</button><button id="s3-k-3" data-v="3" aria-pressed="false">从机 3</button></div></div>
+      <div class="ctl"><span class="ctl-l">未选中从机的 MISO</span>
+        <div class="seg" id="s3-hz"><button id="s3-hz-ok" data-v="ok" aria-pressed="true">正常高阻</button><button id="s3-hz-bad" data-v="bad" aria-pressed="false">有一个不释放</button></div></div>
+      <dl class="read">
+        <dt>CS 线数量</dt><dd id="s3-ncs">3 根</dd>
+        <dt>这次传输</dt><dd id="s3-now">—</dd>
+        <dt>MISO 由谁驱动</dt><dd id="s3-miso">—</dd>
+        <dt>发送顺序</dt><dd id="s3-ord">—</dd>
+        <dt>状态</dt><dd><span id="s3-st" class="chip on">正常</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>SPI 的四种模式怎么区分？</summary>
+      <div class="ans"><p>由 CPOL 和 CPHA 两位决定。CPOL 是时钟空闲电平，0 空闲低、1 空闲高。CPHA 是采样沿，0 在第一个沿采样，1 在第二个沿采样。模式 0 空闲低、上升沿采样，最常用；模式 3 空闲高、也是上升沿采样，很多器件两种都支持。</p></div></details>
+    <details><summary>SPI 为什么能比 I2C 快得多？</summary>
+      <div class="ans"><p>因为 SPI 是推挽输出，高低电平都有管子主动驱动，边沿陡；I2C 是开漏加上拉，上升沿要靠电阻给总线电容充电，快不起来。另外 SPI 没有地址、没有应答，全双工，每个时钟都在传有效数据。</p></div></details>
+    <details><summary>主机只想读数据，为什么也要往 MOSI 上发东西？</summary>
+      <div class="ans"><p>SPI 本质是两个移位寄存器互换，时钟只有主机能产生。主机要收 8 位，就得打 8 个时钟，同时 MOSI 上必然移出 8 位。这些位从机不理会，常发 0x00 或 0xFF，叫哑元字节。</p></div></details>
+    <details><summary>一主多从时，没被选中的从机 MISO 要怎么处理？</summary>
+      <div class="ans"><p>必须是高阻。多个从机的 MISO 并在一根线上，没选中的要松开，只让被选中的那个驱动。如果某个器件 CS 无效时 MISO 仍然推挽输出，就会和被选中的从机打架，这种器件要单独加三态缓冲器。</p></div></details>
+    <details><summary>SPI 怎么知道从机收到了数据？</summary>
+      <div class="ans"><p>协议本身不知道，SPI 没有应答位。常见做法是写完再读回来比对，或者读从机的状态寄存器、ID 寄存器，或者在数据里加 CRC。这也是 SPI 和 I2C 的一个区别。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="01-UART.html"><span>上一页</span>UART</a><a class="next" href="03-I2C.html"><span>下一页</span>I2C</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+function stepPts(lv,xs,yOf){
+  const p=[];
+  lv.forEach((b,i)=>{const x=xs[i].toFixed(1);
+    if(i===0)p.push(x+','+yOf(b));
+    else if(b!==lv[i-1])p.push(x+','+yOf(lv[i-1]),x+','+yOf(b));});
+  p.push(xs[lv.length].toFixed(1)+','+yOf(lv[lv.length-1]));
+  return p.join(' ');
+}
+const hex2=v=>'0x'+v.toString(16).toUpperCase().padStart(2,'0');
+const bin4=v=>{const s=v.toString(2).padStart(8,'0');return s.slice(0,4)+' '+s.slice(4);};
+function player(btn,step,label){let tm=null;
+  $(btn).addEventListener('click',()=>{const b=$(btn);
+    if(tm){clearInterval(tm);tm=null;b.textContent='▶ '+label;b.setAttribute('aria-pressed','false');return;}
+    b.textContent='⏸ 暂停';b.setAttribute('aria-pressed','true');tm=setInterval(step,700);});}
+
+/* 1. 环形移位寄存器 */
+const s1={m:0xA5,s:0x3C,k:3};
+const s1T=[];
+(function(){const g=$('s1-cells');
+  for(let side=0;side<2;side++)for(let j=0;j<8;j++){const x=(side?292:44)+26*j;
+    g.append(svgEl('rect',{class:'cell',x,y:56,width:26,height:28}));
+    const t=svgEl('text',{x:x+13,y:75,'text-anchor':'middle',class:'v'},'0');g.append(t);s1T.push(t);}})();
+function s1u(){
+  const k=s1.k,M=s1.m,S=s1.s;
+  const mr=k===0?M:k===8?S:((M<<k)|(S>>(8-k)))&0xFF, sr=k===0?S:k===8?M:((S<<k)|(M>>(8-k)))&0xFF;
+  for(let j=0;j<8;j++){const b=7-j,mo=b<k,so=b<k;
+    s1T[j].textContent=(mr>>b)&1;s1T[j].classList.toggle('lo',mo);s1T[j].classList.toggle('hi',!mo);
+    s1T[8+j].textContent=(sr>>b)&1;s1T[8+j].classList.toggle('hi',so);s1T[8+j].classList.toggle('lo',!so);}
+  const cp=['70,200','100,200'];
+  for(let i=0;i<k;i++){const x=100+i*52;cp.push(x+',200',x+',180',(x+26)+',180',(x+26)+',200',(x+52)+',200');}
+  $('s1-clk').setAttribute('points',cp.join(' '));
+  const ip=['70,200'];for(let i=0;i<8;i++){const x=100+i*52;ip.push(x+',200',x+',180',(x+26)+',180',(x+26)+',200');}ip.push('520,200');
+  $('s1-clk0').setAttribute('points',ip.join(' '));
+  $('s1-kv').textContent=k;$('s1-k').setAttribute('aria-valuetext',k+' 个时钟');
+  $('s1-kt').textContent='已走 '+k+' / 8 个时钟';
+  $('s1-mr').textContent=hex2(mr)+'，'+bin4(mr);$('s1-sr').textContent=hex2(sr)+'，'+bin4(sr);
+  const busy=k>0;
+  $('s1-mo').textContent=busy?'主机 b'+(8-k)+' = '+((M>>(8-k))&1)+'，移进从机':'—';
+  $('s1-mi').textContent=busy?'从机 b'+(8-k)+' = '+((S>>(8-k))&1)+'，移进主机':'—';
+  show($('s1-fo'),busy);show($('s1-fi'),busy);
+  if(k===0)chip($('s1-st'),'等待时钟','off');else if(k<8)chip($('s1-st'),'传输中','warn');else chip($('s1-st'),'交换完成','on');
+  $('s1-note').textContent=k===0?'CS 已拉低，还没给时钟。两个寄存器各自装着要发的字节：主机 '+hex2(M)+'，从机 '+hex2(S)+'。'
+    :k<8?'第 '+k+' 个时钟：两边同时把最高位推出去、把对方的位收进最低位。现在主机寄存器低 '+k+' 位已经是从机的数据（蓝色）。'
+    :'8 个时钟后两边正好互换：主机拿到 '+hex2(S)+'，从机拿到 '+hex2(M)+'。'+(M===0?'主机发的 0x00 只是为了产生时钟，从机不理它，这就是哑元字节。':'发送和接收是同一件事，所以说 SPI 是全双工。');
+}
+seg('s1-md',v=>{s1.m=+v;s1u();});
+$('s1-k').addEventListener('input',()=>{s1.k=+$('s1-k').value;s1u();});
+player('s1-play',()=>{s1.k=(s1.k+1)%9;$('s1-k').value=s1.k;s1u();},'逐拍播放');
+s1u();
+
+/* 2. 四种模式 */
+const s2={m:0,bit:0},s2MO=0xA5,s2MI=0x3C,s2X=t=>70+t*23.5;
+function s2row(g,vals,yH,yL,cls){
+  let a=0;
+  while(a<vals.length){const z=vals[a]==='z';let b=a;while(b<vals.length&&(vals[b]==='z')===z)b++;
+    const xs=[];for(let t=a;t<=b;t++)xs.push(s2X(t));
+    if(z){const ym=(yH+yL)/2;g.append(svgEl('polyline',{class:'ideal',points:xs[0].toFixed(1)+','+ym+' '+xs[xs.length-1].toFixed(1)+','+ym}));}
+    else g.append(svgEl('polyline',{class:cls,points:stepPts(vals.slice(a,b),xs,v=>v?yH:yL)}));
+    a=b;}
+}
+function s2u(){
+  const cpol=s2.m>>1,cpha=s2.m&1,cs=[],sck=[],mo=[],mi=[];
+  for(let t=0;t<20;t++){
+    cs.push(t>=1&&t<19?0:1);
+    sck.push((t>=2&&t<18&&t%2===0)?1-cpol:cpol);
+    let i=null;
+    if(cpha===0){if(t>=1&&t<17)i=Math.floor((t-1)/2);}else if(t>=2&&t<18)i=Math.floor((t-2)/2);
+    mo.push(i===null?'z':(s2MO>>(7-i))&1);mi.push(i===null?'z':(s2MI>>(7-i))&1);
+  }
+  const g=$('s2-rows'),ed=$('s2-edges'),lab=$('s2-lab'),ax=$('s2-ax');[g,ed,lab,ax].forEach(e=>e.textContent='');
+  s2row(g,cs,44,66,'cv');s2row(g,sck,96,118,'cv');s2row(g,mo,150,172,'real');s2row(g,mi,204,226,'real2');
+  const w0=cpha?2:1;
+  for(let i=0;i<8;i++){
+    const ts=w0+1+2*i,tc=w0+2*i,xs=s2X(ts).toFixed(1),xc=s2X(tc).toFixed(1);
+    ed.append(svgEl('line',{class:'gl',x1:xc,y1:30,x2:xc,y2:236}));
+    ed.append(svgEl('line',{class:'mk',x1:xs,y1:30,x2:xs,y2:236}));
+    ed.append(svgEl('circle',{class:'smp',cx:xs,cy:107,r:3.5}));
+    lab.append(svgEl('text',{x:s2X(w0+1+2*i).toFixed(1),y:142,'text-anchor':'middle',class:'tm'},'D'+(7-i)));
+    ax.append(svgEl('text',{x:s2X(3+2*i).toFixed(1),y:266,'text-anchor':'middle',class:'v'},i+1));
+  }
+  for(let t=0;t<=20;t+=2)ax.append(svgEl('line',{class:'ax',x1:s2X(t).toFixed(1),y1:248,x2:s2X(t).toFixed(1),y2:253}));
+  const i=s2.bit,x0=s2X(w0+2*i);
+  $('s2-hl').setAttribute('x',x0.toFixed(1));$('s2-hl').setAttribute('width',(2*23.5).toFixed(1));
+  const lead=cpol?'下降沿':'上升沿',trail=cpol?'上升沿':'下降沿',se=cpha?trail:lead,ce=cpha?lead:trail;
+  $('s2-cpol').textContent=cpol+'，SCLK 空闲为'+(cpol?'高':'低');
+  $('s2-cpha').textContent=cpha+'，在第 '+(cpha?2:1)+' 个沿采样';
+  $('s2-se').textContent=se;
+  $('s2-ce').textContent=ce+(cpha?'':'，第一位在 CS 拉低时就放好');
+  $('s2-bv').textContent='D'+(7-i);$('s2-bit').setAttribute('aria-valuetext','D'+(7-i));
+  $('s2-cur').textContent='MOSI = '+((s2MO>>(7-i))&1)+'，MISO = '+((s2MI>>(7-i))&1);
+  if(s2.m===0)chip($('s2-st'),'最常用','on');else if(s2.m===3)chip($('s2-st'),'也很常见','on');else chip($('s2-st'),'较少用','off');
+  $('s2-note').textContent='D'+(7-i)+' 在第 '+(i+1)+' 个时钟的'+se+'被两边同时采样。'+
+    (cpha?'CPHA = 1：第 1 个沿（'+lead+'）先把数据放上线，半个周期后在第 2 个沿（'+trail+'）采样。':'CPHA = 0：数据在采样沿之前半个周期就放好了，第 1 位靠 CS 下降沿放出，之后每个'+trail+'切换下一位。')+
+    '采样沿总落在数据窗口正中间，这样建立和保持时间都有半个时钟周期。';
+}
+seg('s2-m',v=>{s2.m=+v;s2u();});
+$('s2-bit').addEventListener('input',()=>{s2.bit=+$('s2-bit').value;s2u();});
+player('s2-play',()=>{s2.bit=(s2.bit+1)%8;$('s2-bit').value=s2.bit;s2u();},'逐位播放');
+s2u();
+
+/* 3. 一主多从与菊花链 */
+const s3={m:'ind',k:1,hz:'ok'},s3L=[136,268,400];
+function s3u(){
+  const ind=s3.m==='ind',k=s3.k,L=s3L[k-1],fault=ind&&s3.hz==='bad',other=k===3?2:k+1,Lo=s3L[other-1];
+  show($('s3-g-ind'),ind);show($('s3-g-dc'),!ind);
+  [1,2,3].forEach(j=>{const w=$('s3-cs'+j);w.classList.toggle('s-lo',j===k);w.classList.toggle('s-hi',j!==k);});
+  const fo=$('s3-fo'),fi=$('s3-fi');
+  if(ind){fo.setAttribute('d',`M112,130 H${L-12} V236 H${L-2}`);fi.setAttribute('d',`M${L+102},236 H${L+112} V150 H112`);show(fi,true);}
+  else{fo.setAttribute('d','M112,130 H124 V236 H512 V150 H112');show(fi,false);}
+  show($('s3-fx'),fault);
+  if(fault)$('s3-fx').setAttribute('d',`M${Lo+102},236 H${Lo+112} V150 H${L+112}`);
+  [1,2,3].forEach(j=>{$('s3-t'+j).textContent=ind?(j===k?'选中，驱动 MISO':(fault&&j===other?'没选中却在输出':'没选中，MISO 高阻')):'留下第 '+(4-j)+' 个字节';
+    $('s3-t'+j).style.fill=fault&&j===other?'var(--danger)':'';});
+  $('s3-ncs').textContent=ind?'3 根，每个从机一根':'1 根，全部共用';
+  $('s3-now').textContent=ind?'只和从机 '+k+' 通信，8 个时钟':'一次串 24 个时钟，3 个从机同时更新';
+  $('s3-miso').textContent=ind?(fault?'从机 '+k+' 和从机 '+other+' 同时驱动':'只有从机 '+k+'，其余高阻'):'只有链尾从机 3 的 SDO 接回主机';
+  $('s3-ord').textContent=ind?'直接发给从机 '+k:'发给从机 '+k+' 的字节要第 '+(4-k)+' 个发';
+  if(fault)chip($('s3-st'),'MISO 打架','bad');else chip($('s3-st'),'正常','on');
+  $('s3-note').textContent=!ind?'三个从机首尾串成 24 位的移位寄存器。先发的字节被后面的字节一路推着走，最后停在链尾的从机 3 里，所以发给从机 '+k+' 的数据要排在第 '+(4-k)+' 个。CS 拉高的那一刻，三个从机同时锁存。'
+    :fault?'从机 '+other+' 没被选中，MISO 却还在推挽输出。它和从机 '+k+' 输出不同电平时，电流从一个的上管直通另一个的下管，主机读到的数据是乱的。这种器件要加三态缓冲器，用它自己的 CS 控制使能。'
+    :'主机拉低 CS'+k+'，只有从机 '+k+' 响应。另外两个从机虽然也收到 SCLK 和 MOSI，但 CS 是高，它们忽略数据，并把 MISO 置成高阻。代价是从机越多，主机要的 CS 引脚越多。';
+}
+seg('s3-m',v=>{s3.m=v;s3u();});
+seg('s3-k',v=>{s3.k=+v;s3u();});
+seg('s3-hz',v=>{s3.hz=v;s3u();});
+s3u();
+</script>
+</body>
+</html>

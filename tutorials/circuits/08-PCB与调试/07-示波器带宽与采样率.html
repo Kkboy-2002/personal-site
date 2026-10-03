@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>示波器带宽与采样率</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.smp{fill:var(--low)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#pcb">PCB与调试</a><span class="sp"></span><span>07 / 08</span></nav>
+<header>
+  <span class="eyebrow">PCB与调试 · 测量仪器</span>
+  <h1>示波器带宽与采样率</h1>
+  <p class="lede">带宽决定示波器能让多高频率的成分通过，采样率决定它每秒记多少个点。带宽不够，方波被磨圆、边沿被拉慢；采样率不够，屏幕上会冒出一个根本不存在的低频波形。</p>
+</header>
+
+<section id="bw">
+  <span class="eyebrow">带宽 · 上升时间</span>
+  <h2>带宽不够，方波被磨圆</h2>
+  <p>示波器的前端就是一个低通滤波器，带宽 BW 指幅度衰减到 −3 dB（约 70.7%）的频率。方波由基波和 3、5、7…次奇次谐波叠成，谐波被滤掉多少，边角就被磨圆多少。经验是带宽取信号最高关心频率的 3~5 倍，至少保住 3 次到 5 次谐波。</p>
+  <p>对数字信号，更直接的是看上升时间。示波器自己也有上升时间，和带宽的关系是：</p>
+  <p class="eq">tr示波器 ≈ 0.35 / BW（高斯响应；平坦响应的高端示波器约 0.4~0.45）</p>
+  <p>屏幕上看到的上升时间，是信号本身和示波器（再加上探头）按平方和开根号叠加的结果。所以要测准边沿，示波器上升时间要小于信号的 1/3~1/5，误差才在 5%~2% 以内。</p>
+  <p class="eq">tr显示 ≈ √(tr信号² + tr示波器² + tr探头²)</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 226" role="img" aria-label="方波经过不同带宽示波器后的显示波形，虚线是真实信号，橙线是屏幕显示">
+        <line class="gl" x1="50" y1="50" x2="440" y2="50"/>
+        <line class="gl" x1="50" y1="120" x2="440" y2="120"/>
+        <path class="ax" d="M50,36 V190 H440"/>
+        <text x="44" y="54" text-anchor="end" class="v">3.3</text>
+        <text x="44" y="124" text-anchor="end" class="v">1.65</text>
+        <text x="44" y="194" text-anchor="end" class="v">0</text>
+        <text x="54" y="28" class="tm">电压 / V</text>
+        <text id="s1-x0" x="50" y="206" text-anchor="middle" class="v">0</text>
+        <text id="s1-x1" x="147.5" y="206" text-anchor="middle" class="v">50</text>
+        <text id="s1-x2" x="245" y="206" text-anchor="middle" class="v">100</text>
+        <text id="s1-x3" x="342.5" y="206" text-anchor="middle" class="v">150</text>
+        <text id="s1-x4" x="440" y="206" text-anchor="end" class="v">200</text>
+        <text x="440" y="222" text-anchor="end" class="tm">时间 ns</text>
+        <polyline id="s1-in" class="ideal" points="50,190 440,190"/>
+        <polyline id="s1-out" class="real" points="50,190 440,190"/>
+        <text id="s1-lo" x="100" y="68" class="t" style="fill:var(--copper)">屏幕显示</text>
+        <text id="s1-li" x="300" y="182" class="tm">真实信号（虚线）</text>
+      </svg>
+      <figcaption>示意：3.3 V 方波，真实上升时间 1 ns；示波器按高斯响应计算，横轴固定显示两个周期。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">信号频率</span>
+        <div class="seg" id="s1-f"><button id="s1-f-10" data-v="10" aria-pressed="true">10 MHz</button><button id="s1-f-25" data-v="25" aria-pressed="false">25 MHz</button><button id="s1-f-50" data-v="50" aria-pressed="false">50 MHz</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-b">示波器带宽 BW</label>
+        <span class="rv" id="s1-bv">100 MHz</span>
+        <input type="range" id="s1-b" min="0" max="8" step="1" value="3"></div>
+      <dl class="read">
+        <dt>带宽 / 信号频率</dt><dd id="s1-r">—</dd>
+        <dt>5 次谐波剩下</dt><dd id="s1-h5">—</dd>
+        <dt>示波器 tr = 0.35/BW</dt><dd id="s1-ts">—</dd>
+        <dt>屏幕上的 tr</dt><dd id="s1-tm">—</dd>
+        <dt>上升时间误差</dt><dd id="s1-e">—</dd>
+        <dt>显示</dt><dd><span id="s1-st" class="chip warn">边沿被拉慢</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="fs">
+  <span class="eyebrow">采样率 · 混叠 · 存储深度</span>
+  <h2>采样率不够，冒出假波形</h2>
+  <p>奈奎斯特定理说采样率要大于信号最高频率的 2 倍。这是理论下限，前提是理想滤波和无限长的数据。实际示波器用 sin(x)/x 插值把点连成曲线，采样率一般取带宽的 2.5 倍以上，4~5 倍更稳（典型值）。</p>
+  <p>低于 2 倍时，信号频率会"折叠"下来。采到的点恰好也能连成一个低频正弦，示波器分不出真假，屏幕上就显示这个假波形，这就是混叠。</p>
+  <p class="eq">显示频率 = |f − N·fs|，N 取使结果最小的整数</p>
+  <p>存储深度是另一个坑。深度固定时，时基拉得越长，示波器只能降低采样率来装下整个时间窗。看慢信号时突然出现奇怪的低频波形，先看看采样率是不是被降下来了。</p>
+  <p class="eq">存储深度 = 采样率 × 时间窗</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 222" role="img" aria-label="10 MHz 正弦被不同采样率采样，蓝点是采样点，橙线是示波器插值显示的波形，虚线是真实信号">
+        <line class="gl" x1="50" y1="40" x2="440" y2="40"/>
+        <line class="gl" x1="50" y1="180" x2="440" y2="180"/>
+        <line class="ax" x1="50" y1="110" x2="440" y2="110"/>
+        <path class="ax" d="M50,36 V184"/>
+        <text x="44" y="44" text-anchor="end" class="v">+1</text>
+        <text x="44" y="114" text-anchor="end" class="v">0</text>
+        <text x="44" y="184" text-anchor="end" class="v">−1</text>
+        <text x="50" y="200" text-anchor="middle" class="v">0</text>
+        <text x="147.5" y="200" text-anchor="middle" class="v">250</text>
+        <text x="245" y="200" text-anchor="middle" class="v">500</text>
+        <text x="342.5" y="200" text-anchor="middle" class="v">750</text>
+        <text x="440" y="200" text-anchor="end" class="v">1000</text>
+        <text x="440" y="216" text-anchor="end" class="tm">时间 ns</text>
+        <text x="50" y="24" class="tm">真实信号 10 MHz（虚线）</text>
+        <text id="s2-lt" x="440" y="24" text-anchor="end" class="t" style="fill:var(--copper)">屏幕显示 1 MHz</text>
+        <polyline id="s2-in" class="ideal" points="50,110 440,110"/>
+        <polyline id="s2-out" class="real" points="50,110 440,110"/>
+        <g id="s2-dots"></g>
+      </svg>
+      <figcaption>信号是 10 MHz 正弦，幅度归一化。蓝点是采样点，橙线是示波器用 sin(x)/x 插值连出来的波形；欠采样时，它就是恰好穿过所有采样点的那个低频正弦。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-fs">采样率 fs</label>
+        <span class="rv" id="s2-fsv">11 MS/s</span>
+        <input type="range" id="s2-fs" min="0" max="9" step="1" value="2"></div>
+      <dl class="read">
+        <dt>fs / 信号频率</dt><dd id="s2-r">—</dd>
+        <dt>奈奎斯特频率 fs/2</dt><dd id="s2-ny">—</dd>
+        <dt>屏幕显示频率</dt><dd id="s2-fa">—</dd>
+        <dt>10 Mpts 能录多长</dt><dd id="s2-win">—</dd>
+        <dt>显示</dt><dd><span id="s2-st" class="chip bad">混叠</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="probe">
+  <span class="eyebrow">探头 · 衰减 · 接地线</span>
+  <h2>探头也是测量链的一部分</h2>
+  <p>探头和示波器一起构成测量系统。探头的带宽、输入电容和接地方式，都会改变你看到的波形。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>探头</th><th>输入阻抗 / 电容</th><th>带宽</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td>1× 无源</td><td>1 MΩ，约 100 pF（含电缆，典型值）</td><td>约 6~20 MHz</td><td>低频小信号，不想被衰减 10 倍时</td></tr>
+      <tr><td>10× 无源</td><td>10 MΩ，约 10~15 pF</td><td>可到几百 MHz</td><td>最常用；用前要补偿；示波器上的衰减比要设成 10×</td></tr>
+      <tr><td>有源 / 差分</td><td>约 1 pF 或更小</td><td>可到 GHz</td><td>高速信号；差分探头测不共地的信号，如半桥上管的 Vgs</td></tr>
+    </tbody>
+  </table></div>
+  <p>10× 探头使用前要接示波器的 1 kHz 校准方波做补偿：调探头上的微调电容，直到方波的角既不过冲也不圆钝。</p>
+  <p>接地线往往比带宽更坑。探头自带的 15 cm 鳄鱼夹地线大约有 150 nH 电感（按约 1 nH/mm 估算），和探头输入电容组成 LC 谐振。快边沿一来就激起振铃，这个振铃是测量引入的，电路里并不存在。</p>
+  <p class="eq">f0 = 1 / (2π·√(L地线·C探头))，阻尼比 ζ = (R/2)·√(C/L)</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 264" role="img" aria-label="上方是等效电路：驱动经电阻和地线环路电感接到探头输入电容；下方是示波器看到的边沿波形，长地线时出现振铃">
+        <rect class="box" x="14" y="22" width="46" height="30" rx="4"/>
+        <text x="37" y="42" text-anchor="middle" class="t">驱动</text>
+        <path class="w" d="M60,37 H86 M130,37 H156 M204,37 H290 M240,37 V48 M230,48 H250 M230,56 H250 M240,56 V66 M230,66 H250 M234,71 H246 M238,76 H242"/>
+        <rect class="r" x="86" y="29" width="44" height="16" rx="2"/>
+        <text x="108" y="21" text-anchor="middle" class="v">R 50 Ω</text>
+        <path class="w" d="M156,37 a6,6 0 0 1 12,0 a6,6 0 0 1 12,0 a6,6 0 0 1 12,0 a6,6 0 0 1 12,0"/>
+        <text id="s3-lt" x="180" y="21" text-anchor="middle" class="v">L 150 nH</text>
+        <text x="180" y="58" text-anchor="middle" class="tm">地线环路</text>
+        <circle class="dot" cx="240" cy="37" r="3.5"/>
+        <text x="256" y="58" class="v">C 10 pF</text>
+        <text x="256" y="74" class="tm">探头输入电容</text>
+        <text x="296" y="41" class="t">示波器看到的电压</text>
+        <line class="gl" x1="50" y1="110" x2="440" y2="110"/>
+        <line class="gl" x1="50" y1="150.8" x2="440" y2="150.8"/>
+        <path class="ax" d="M50,98 V230 H440"/>
+        <text x="44" y="114" text-anchor="end" class="v">5</text>
+        <text x="44" y="155" text-anchor="end" class="v">3.3</text>
+        <text x="44" y="234" text-anchor="end" class="v">0</text>
+        <text x="54" y="94" class="tm">电压 / V</text>
+        <text x="50" y="246" text-anchor="middle" class="v">0</text>
+        <text x="147.5" y="246" text-anchor="middle" class="v">10</text>
+        <text x="245" y="246" text-anchor="middle" class="v">20</text>
+        <text x="342.5" y="246" text-anchor="middle" class="v">30</text>
+        <text x="440" y="246" text-anchor="end" class="v">40</text>
+        <text x="440" y="262" text-anchor="end" class="tm">时间 ns</text>
+        <polyline id="s3-in" class="ideal" points="50,230 440,230"/>
+        <polyline id="s3-out" class="real" points="50,230 440,230"/>
+        <text x="440" y="142" text-anchor="end" class="t" style="fill:var(--copper)">屏幕显示</text>
+        <text x="440" y="168" text-anchor="end" class="tm">真实边沿（虚线）</text>
+      </svg>
+      <figcaption>地线电感在测量环路里，等效成和探头输入电容串联。R 是驱动内阻、走线和探头针尖的等效电阻，取 50 Ω；电感按约 1 nH/mm 估算，都是示意值。超出 5.5 V 的部分被截平。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">接地方式</span>
+        <div class="seg" id="s3-g"><button id="s3-g-150" data-v="150" aria-pressed="true">长地线夹 15 cm</button><button id="s3-g-30" data-v="30" aria-pressed="false">短地线 3 cm</button><button id="s3-g-5" data-v="5" aria-pressed="false">接地弹簧 5 mm</button></div></div>
+      <div class="ctl"><span class="ctl-l">信号上升时间</span>
+        <div class="seg" id="s3-e"><button id="s3-e-1" data-v="1" aria-pressed="true">1 ns</button><button id="s3-e-10" data-v="10" aria-pressed="false">10 ns</button></div></div>
+      <dl class="read">
+        <dt>地线电感 L</dt><dd id="s3-l">—</dd>
+        <dt>谐振频率 f0</dt><dd id="s3-f0">—</dd>
+        <dt>阻尼比 ζ</dt><dd id="s3-z">—</dd>
+        <dt>屏幕上的过冲</dt><dd id="s3-os">—</dd>
+        <dt>显示</dt><dd><span id="s3-st" class="chip bad">假振铃严重</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>示波器带宽怎么选？</summary>
+      <div class="ans"><p>带宽取信号最高关心频率的 3~5 倍，保住 3 次到 5 次谐波。数字信号看上升时间更准：示波器上升时间 ≈ 0.35/BW，要小于信号上升时间的 1/3~1/5，测出来的边沿误差才在 5%~2% 以内。还要记得带宽是 −3 dB 点，正弦信号在带宽频率处幅度只剩约 70%。</p></div></details>
+    <details><summary>采样率和带宽是什么关系？2 倍够吗？</summary>
+      <div class="ans"><p>2 倍是奈奎斯特给的理论下限，要求理想滤波和无限长数据，实际做不到。用 sin(x)/x 插值时一般至少 2.5 倍，4~5 倍更稳。比如 100 MHz 带宽的示波器常配 1 GS/s 采样率。</p></div></details>
+    <details><summary>什么是混叠？屏幕上怎么识别？</summary>
+      <div class="ans"><p>信号频率高于采样率的一半时，采到的点能连成一个低频正弦，示波器就显示这个不存在的波形，频率是 |f − N·fs|。识别方法：改变时基或采样率，真实信号的频率不变，混叠出来的频率会跟着变；也可以打开峰值检测，或者直接看屏幕上显示的实际采样率。</p></div></details>
+    <details><summary>存储深度有什么用？</summary>
+      <div class="ans"><p>存储深度 = 采样率 × 时间窗。深度固定时，时基拉长，采样率就被迫降低，可能带来混叠、丢失窄毛刺。深存储能在长时间窗里保持高采样率，适合抓偶发的异常。</p></div></details>
+    <details><summary>测高速信号为什么要用接地弹簧，不用长地线夹？</summary>
+      <div class="ans"><p>长地线有一百多 nH 的电感，和探头十几 pF 的输入电容串成 LC 谐振，15 cm 地线大约在 100 多 MHz 谐振。快边沿会激起振铃，这是测量引入的假象。接地弹簧把环路缩到几毫米，电感降到几 nH，谐振频率远高于信号频谱，振铃就消失了。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="06-热设计.html"><span>上一页</span>热设计</a><a class="next" href="08-逻辑分析仪触发.html"><span>下一页</span>逻辑分析仪触发</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 带宽 */
+const s1B=[20,50,70,100,200,350,500,1000,2000],s1={f:10},s1Tr=1;/* 信号上升时间 ns */
+function s1Erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x);
+  return s*(1-((((1.061405429*t-1.453152027)*t+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x));}
+const s1Y=scale(0,3.3,190,50);
+/* 方波：上升沿在 T/8 + m·T，边沿为高斯积分形，σ = tr / 2.563 */
+function s1Wave(T,sig){const k=sig*Math.SQRT2;
+  return t=>{let v=0;for(let m=-1;m<=3;m++){const r=T/8+m*T;v+=0.5*(s1Erf((t-r)/k)-s1Erf((t-r-T/2)/k));}return 3.3*v;};}
+const s1Ns=ns=>ns.toFixed(ns<10?2:1)+' ns';
+const s1Bw=b=>b>=1000?(b/1000)+' GHz':b+' MHz';
+function s1u(){
+  const f=s1.f,T=1000/f,BW=s1B[+$('s1-b').value],X=scale(0,2*T,50,440);
+  const ts=350/BW,ss=s1Tr/2.563,sd=Math.hypot(ss,ts/2.563),tm=2.563*sd;
+  const wi=s1Wave(T,ss),wo=s1Wave(T,sd);
+  $('s1-in').setAttribute('points',plot(wi,0,2*T,X,s1Y,600));
+  $('s1-out').setAttribute('points',plot(wo,0,2*T,X,s1Y,600));
+  let mx=-9,mn=9;for(let k=0;k<=400;k++){const v=wo(k*2*T/400);mx=Math.max(mx,v);mn=Math.min(mn,v);}
+  const pp=mx-mn;
+  for(let i=0;i<5;i++)$('s1-x'+i).textContent=+(i*T/2).toFixed(1);
+  $('s1-lo').setAttribute('x','123');$('s1-lo').setAttribute('y',(s1Y(wo(3*T/8))+18).toFixed(1));
+  $('s1-li').setAttribute('x','318');$('s1-li').setAttribute('y','44');$('s1-li').setAttribute('text-anchor','middle');
+  $('s1-lo').setAttribute('text-anchor','middle');
+  $('s1-bv').textContent=s1Bw(BW);$('s1-b').setAttribute('aria-valuetext',s1Bw(BW));
+  const r=BW/f,h5=Math.pow(2,-Math.pow(5*f/BW,2)/2),err=tm/s1Tr-1;
+  $('s1-r').textContent=r.toFixed(r<10?1:0)+' 倍';
+  $('s1-h5').textContent=(h5*100).toFixed(h5<0.01?1:0)+'%';
+  $('s1-ts').textContent=s1Ns(ts);
+  $('s1-tm').textContent=s1Ns(tm)+'，真实 1 ns';
+  $('s1-e').textContent='+'+(err*100).toFixed(err<0.1?1:0)+'%';
+  let n;
+  if(r<2){chip($('s1-st'),'变成正弦','bad');n='带宽只有信号频率的 '+r.toFixed(1)+' 倍，3 次谐波被衰减掉大半，方波显示得像正弦，峰峰值也只剩 '+pp.toFixed(2)+' V。';}
+  else if(r<5){chip($('s1-st'),'方波变圆','warn');n='带宽是信号频率的 '+r.toFixed(1)+' 倍，3 次谐波还在，更高次的谐波被滤掉，方波的角被磨圆。看时序、数脉冲够用，测边沿不行。';}
+  else if(err>0.05){chip($('s1-st'),'边沿被拉慢','warn');n='方波形状已经像样了，但屏幕上的上升时间是 '+s1Ns(tm)+'，真实只有 1 ns。示波器自身的 '+s1Ns(ts)+' 和信号按平方和开根号叠加，边沿被拉慢了 '+(err*100).toFixed(0)+'%。要测准，示波器上升时间要小于信号的 1/3~1/5。';}
+  else{chip($('s1-st'),'边沿可信','on');n='示波器上升时间只有信号的 '+(ts/s1Tr*100).toFixed(0)+'%，叠加后误差 '+(err*100).toFixed(1)+'%，边沿测量可信。这时带宽已是信号频率的 '+r.toFixed(0)+' 倍：测边沿比看波形形状的要求高得多。';}
+  $('s1-note').textContent=n;
+}
+seg('s1-f',v=>{s1.f=+v;s1u();});
+$('s1-b').addEventListener('input',s1u);
+s1u();
+/* 2. 采样率与混叠 */
+const s2L=[5,8,11,15,19,21,25,40,50,100],s2F=10,s2P=0.6,s2W=2*Math.PI/1000;/* f 用 MHz，t 用 ns */
+const s2X=scale(0,1000,50,440),s2Y=scale(-1,1,180,40);
+function s2u(){
+  const fs=s2L[+$('s2-fs').value],fr=s2F-fs*Math.round(s2F/fs),fa=Math.abs(fr),r=fs/s2F;
+  $('s2-in').setAttribute('points',plot(t=>Math.sin(s2W*s2F*t+s2P),0,1000,s2X,s2Y,800));
+  $('s2-out').setAttribute('points',plot(t=>Math.sin(s2W*fr*t+s2P),0,1000,s2X,s2Y,800));
+  const g=$('s2-dots');g.replaceChildren();
+  for(let k=0;k*1000/fs<=1000;k++){const t=k*1000/fs;
+    g.append(svgEl('circle',{class:'smp',cx:s2X(t).toFixed(1),cy:s2Y(Math.sin(s2W*s2F*t+s2P)).toFixed(1),r:3}));}
+  const win=10/fs;
+  $('s2-fsv').textContent=fs+' MS/s';$('s2-fs').setAttribute('aria-valuetext',fs+' MS/s');
+  $('s2-lt').textContent='屏幕显示 '+(fa<0.01?'直流':fa+' MHz');
+  $('s2-r').textContent=r.toFixed(1)+' 倍';
+  $('s2-ny').textContent=fs/2+' MHz';
+  $('s2-fa').textContent=fa<0.01?'0，一条平线':fa+' MHz，'+(fa===s2F?'正确':'是假的');
+  $('s2-win').textContent=win>=1?win.toFixed(2)+' s':(win*1000).toFixed(0)+' ms';
+  let n;
+  if(r<2){chip($('s2-st'),'混叠','bad');
+    n=fa<0.01?'采样率 '+fs+' MS/s，每次都采在正弦的同一个相位上，所有点一样高，屏幕上是一条平线，好像信号不存在。'
+      :'采样率只有信号频率的 '+r.toFixed(1)+' 倍，低于奈奎斯特的 2 倍。采样点恰好落在一个 '+fa+' MHz 的正弦上，示波器就把它当成真实波形画出来：|10 − '+Math.round(s2F/fs)+' × '+fs+'| = '+fa+' MHz。';}
+  else if(r<2.5){chip($('s2-st'),'勉强','warn');n='刚过 2 倍，理论上能还原，但每个周期只有两个多点，插值滤波器不理想时幅度和形状容易出错。实际至少取 2.5 倍。';}
+  else{chip($('s2-st'),'还原正确','on');n='采样率是信号频率的 '+r.toFixed(1)+' 倍，sin(x)/x 插值能正确还原 10 MHz 正弦。'+(r>=10?'点已经很密，直接连线也不会失真。':'往左拖，看看低于 2 倍会发生什么。');}
+  $('s2-note').textContent=n;
+}
+$('s2-fs').addEventListener('input',s2u);
+s2u();
+/* 3. 探头接地线 */
+const s3={l:150,e:1},s3C=10e-12,s3R=50,s3Nm={150:'15 cm 长地线',30:'3 cm 短地线',5:'5 mm 接地弹簧'};
+const s3X=scale(0,40,50,440),s3Y=v=>230-Math.max(0,Math.min(5.5,v))*24;
+function s3u(){
+  const L=s3.l*1e-9,tr=s3.e,dt=0.005,pi=[],po=[];let i=0,vc=0,mx=0;
+  for(let k=0;k<=8000;k++){const t=k*dt,vin=3.3*Math.max(0,Math.min(1,(t-5)/tr));
+    if(k%20===0){const x=s3X(t).toFixed(1);pi.push(x+','+s3Y(vin).toFixed(1));po.push(x+','+s3Y(vc).toFixed(1));}
+    i+=(vin-s3R*i-vc)/L*dt*1e-9;vc+=i/s3C*dt*1e-9;mx=Math.max(mx,vc);}
+  $('s3-in').setAttribute('points',pi.join(' '));$('s3-out').setAttribute('points',po.join(' '));
+  const f0=1/(2*Math.PI*Math.sqrt(L*s3C)),z=s3R/2*Math.sqrt(s3C/L),os=(mx-3.3)/3.3;
+  $('s3-lt').textContent='L '+s3.l+' nH';
+  $('s3-l').textContent=s3.l+' nH';
+  $('s3-f0').textContent=fmtF(f0);
+  $('s3-z').textContent=z.toFixed(2)+(z<1?'，欠阻尼':'，过阻尼');
+  $('s3-os').textContent=os>0.005?(os*100).toFixed(0)+'%，最高 '+mx.toFixed(2)+' V':'无';
+  if(os>0.2)chip($('s3-st'),'假振铃严重','bad');else if(os>0.05)chip($('s3-st'),'有振铃','warn');else chip($('s3-st'),'干净','on');
+  let n=s3Nm[s3.l]+'约 '+s3.l+' nH，和 10 pF 输入电容在 '+fmtF(f0)+' 谐振，阻尼比 '+z.toFixed(2)+'。';
+  if(z>=1)n+='已经过阻尼，不会振铃，边沿只是被 R·C 稍微拖慢。测高速信号就该这样接地。';
+  else if(s3.e===10)n+='边沿放慢到 10 ns，比谐振周期 '+(1e9/f0).toFixed(1)+' ns 还长，激不起多少振铃。所以慢信号用长地线看不出问题，一到快边沿就露馅。';
+  else if(os>0.05)n+='1 ns 边沿的频谱远远盖过 f0，一下就把谐振激起来。这段过冲和振铃是探头环路造出来的，电路里并不存在。';
+  else n+='振铃已经很小。';
+  $('s3-note').textContent=n;
+}
+seg('s3-g',v=>{s3.l=+v;s3u();});
+seg('s3-e',v=>{s3.e=+v;s3u();});
+s3u();
+</script>
+</body>
+</html>

@@ -1,0 +1,833 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>CDC 跨时钟域实验台</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#F4F6F8; --panel:#FFFFFF; --ink:#18212B; --muted:#5B6B7B; --line:#D3DCE5; --grid:#E6ECF1;
+  --a:#C9741F; --a-soft:#FBEEDF; --b:#2C6FB0; --b-soft:#E0EBF7; --x:#C4384F; --x-soft:#FADFE4;
+  --ok:#2F8A57; --ok-soft:#DDF2E5; --on-accent:#FFFFFF; --code-bg:#1B2430; --code-ink:#E6EDF3; --kw:#8CC2FF; --cm:#8FA1B3; --at:#F0B060;
+  --font-body:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --font-display:"Chakra Petch","Noto Sans SC",sans-serif;
+  --font-mono:"IBM Plex Mono",Consolas,"Courier New",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1318; --panel:#151C23; --ink:#E4EAF0; --muted:#8C9AA8; --line:#26313C; --grid:#1B242E;
+    --a:#F0A24A; --a-soft:#2E2113; --b:#5EA6E8; --b-soft:#13273A; --x:#F06A82; --x-soft:#3E1A22;
+    --ok:#5BC98A; --ok-soft:#153021; --on-accent:#0E1318; --code-bg:#0B1015; --code-ink:#DCE4EC;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1318; --panel:#151C23; --ink:#E4EAF0; --muted:#8C9AA8; --line:#26313C; --grid:#1B242E;
+  --a:#F0A24A; --a-soft:#2E2113; --b:#5EA6E8; --b-soft:#13273A; --x:#F06A82; --x-soft:#3E1A22;
+  --ok:#5BC98A; --ok-soft:#153021; --on-accent:#0E1318; --code-bg:#0B1015; --code-ink:#DCE4EC;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:15px/1.75 var(--font-body);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+}
+.wrap{max-width:980px;margin:0 auto;padding-block:36px 72px;padding-inline:20px}
+h1,h2,h3{margin:0;text-wrap:balance;line-height:1.3}
+h1{font-size:30px;font-weight:700}
+h2{font-size:21px;font-weight:700}
+h3{font-size:16px;font-weight:700}
+p{margin:0}
+a{color:var(--b)}
+b{font-weight:600}
+
+.top .eyebrow{font:600 12px var(--font-display);letter-spacing:.14em;color:var(--b);margin-bottom:8px}
+.lead{max-width:68ch;margin-top:12px;color:var(--ink)}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.toc a{font-size:13px;padding:5px 12px 5px 8px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--ink);background:var(--panel)}
+.toc a b{font:600 12px var(--font-display);color:var(--b);margin-right:7px}
+.toc a:hover{border-color:var(--b)}
+
+.fig{margin:24px 0 0}
+.fig svg{display:block;width:100%;height:auto;max-width:100%}
+.fig figcaption{font-size:13px;color:var(--muted);margin-top:8px;max-width:72ch}
+.sw{font-weight:600}.sw.a{color:var(--a)}.sw.b{color:var(--b)}.sw.x{color:var(--x)}
+
+/* static svg diagrams */
+.dz{fill:var(--a-soft);stroke:var(--a);stroke-dasharray:5 4;stroke-width:1.2}.dz.b{fill:var(--b-soft);stroke:var(--b)}
+.dl{font:600 12px var(--font-display);fill:var(--a);letter-spacing:.04em}.dl.b{fill:var(--b)}
+.ffbox{fill:var(--panel);stroke:var(--a);stroke-width:2}.ffbox.b{stroke:var(--b)}.ffbox.n{stroke:var(--ink)}
+.tri{fill:var(--a)}.tri.b{fill:var(--b)}
+svg .pin{font:11px var(--font-mono);fill:var(--muted)}
+.ffname{font:600 13px var(--font-mono);fill:var(--ink)}
+.cw{fill:none;stroke:var(--a);stroke-width:2}.cw.b{stroke:var(--b)}
+.w{stroke:var(--ink);stroke-width:1.6}
+.cross{stroke:var(--x);stroke-dasharray:4 4;stroke-width:1.4}
+.crossl{font:600 12px var(--font-display);fill:var(--x);letter-spacing:.06em}
+.note{font:12px var(--font-body);fill:var(--muted)}
+svg .lbl{font:12px var(--font-body);fill:var(--a)}svg .lbl.b{fill:var(--b)}
+marker path{fill:var(--ink)}
+
+/* sections */
+.exp{margin-top:56px;padding-top:26px;border-top:1px solid var(--line)}
+.exp-head{max-width:70ch}
+.num{display:inline-block;font:600 12px var(--font-display);letter-spacing:.12em;color:var(--b);margin-bottom:6px}
+.exp-head p{margin-top:10px;color:var(--ink)}
+.sub{margin-top:26px;display:flex;align-items:center;gap:10px}
+.tag{font:600 11px var(--font-display);letter-spacing:.08em;padding:2px 8px;border-radius:3px;color:var(--on-accent);background:var(--muted)}
+.tag.bad{background:var(--x)}.tag.ok{background:var(--ok)}
+
+.bench{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;margin-top:18px}
+.ckt{flex:0 1 auto;display:flex;align-items:center;flex-wrap:wrap;row-gap:12px}
+.scope{flex:1 1 100%;min-width:0}
+.scope svg{width:100%;height:auto;display:block;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+
+/* circuit blocks */
+.dom{--dc:var(--a);display:flex;align-items:flex-start;gap:6px;padding:24px 10px 8px;border:1px dashed var(--dc);border-radius:6px;background:var(--a-soft);position:relative}
+.dom.b{--dc:var(--b);background:var(--b-soft)}
+.dom::before{content:attr(data-name);position:absolute;top:5px;left:9px;font:600 11px var(--font-display);letter-spacing:.06em;color:var(--dc)}
+.ffw{display:flex;flex-direction:column;align-items:center;gap:3px}
+.ffw .name{font:11px var(--font-mono);color:var(--muted);white-space:nowrap}
+.ff{position:relative;width:58px;height:58px;border:2px solid var(--dc);border-radius:4px;background:var(--panel);display:grid;place-items:center;font-family:var(--font-mono)}
+.ff .pin{position:absolute;font:10px var(--font-mono);color:var(--muted)}
+.ff .pin.d{left:4px;top:2px}.ff .pin.q{right:4px;top:2px}
+.ff .clk{position:absolute;left:-1px;bottom:7px;width:9px;height:9px;fill:var(--dc)}
+.val{font-size:26px;font-weight:600;line-height:1}
+.val.v0{color:var(--muted)}.val.v1{color:var(--ink)}.val.vb{font-size:15px;color:var(--ink)}
+.val.vx{color:var(--x);animation:blink .7s ease-in-out infinite alternate}
+@keyframes blink{to{opacity:.35}}
+.wire{position:relative;width:34px;height:2px;background:var(--ink);align-self:center;flex:none;margin:0}
+.dom .wire{margin-bottom:20px}
+.wire::after{content:"";position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left:7px solid var(--ink);border-right:0}
+.wire .wl{position:absolute;left:50%;top:-20px;transform:translateX(-50%);font:11px var(--font-mono);color:var(--muted);white-space:nowrap}
+.sink{align-self:center;padding:6px 10px;border:1px solid var(--line);border-radius:4px;background:var(--panel);font-size:12px;color:var(--muted);line-height:1.5;max-width:150px}
+.sink .big{display:block;font:600 18px var(--font-mono);color:var(--ink)}
+.sink.bad{border-color:var(--x);background:var(--x-soft)}.sink.bad .big{color:var(--x)}
+.sink.ok{border-color:var(--ok);background:var(--ok-soft)}.sink.ok .big{color:var(--ok)}
+
+/* scope svg */
+.scope .grid{stroke:var(--grid);stroke-width:1}
+.scope .tick{font:10px var(--font-mono);fill:var(--muted)}
+.scope .wave{fill:none;stroke:var(--ink);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.scope .wave.a{stroke:var(--a)}.scope .wave.b{stroke:var(--b)}
+.scope .lbl{font:600 11px var(--font-mono);fill:var(--ink)}.scope .lbl.a{fill:var(--a)}.scope .lbl.b{fill:var(--b)}
+.scope .edge{stroke:var(--b);stroke-dasharray:3 3;stroke-width:1.2}
+.scope .band{fill:var(--x);opacity:.16}
+.scope .bandl{font:600 11px var(--font-body);fill:var(--x)}
+.scope .hatch{stroke:var(--x);stroke-width:1.2}
+.scope .xframe{fill:none;stroke:var(--x);stroke-width:1.2}
+.scope .xlbl{font:700 12px var(--font-mono);fill:var(--x)}
+.scope .cursor{stroke:var(--b);stroke-width:2}
+.scope .curlbl{font:600 11px var(--font-body);fill:var(--b)}
+.scope .edgelbl{font:600 11px var(--font-body);fill:var(--b)}.scope .edgelbl.ok{fill:var(--ok)}.scope .edgelbl.bad{fill:var(--x)}
+
+/* controls */
+.controls{display:grid;gap:12px;margin-top:16px;padding:14px 16px;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.ctl{display:grid;gap:4px}
+label{font-size:14px}
+output{font:600 14px var(--font-mono);color:var(--b)}
+input[type=range]{width:100%;margin:4px 0 0;accent-color:var(--b)}
+.hint{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.hint span:nth-child(2){color:var(--x)}
+.ctl-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+button{font:inherit;font-size:14px;padding:6px 14px;border:1px solid var(--line);background:var(--panel);border-radius:4px;cursor:pointer;color:var(--ink)}
+button:hover{border-color:var(--b);color:var(--b)}
+:focus-visible{outline:2px solid var(--b);outline-offset:2px}
+.small{font-size:13px;color:var(--muted)}
+.check{display:flex;align-items:center;gap:8px;font-size:14px}
+.check input{accent-color:var(--b);width:16px;height:16px;margin:0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg label{position:relative;padding:5px 12px;font-size:13px;cursor:pointer;color:var(--ink)}
+.seg label+label{border-left:1px solid var(--line)}
+.seg input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.seg label:has(input:checked){background:var(--b);color:var(--on-accent)}
+.seg label:has(input:focus-visible){outline:2px solid var(--b);outline-offset:-2px}
+
+.read{margin-top:12px;padding:12px 16px;border-left:4px solid var(--muted);background:var(--panel);border-radius:0 6px 6px 0;max-width:72ch}
+.read.ok{border-color:var(--ok)}.read.bad{border-color:var(--x)}.read.warn{border-color:var(--a)}
+.read .n{font-family:var(--font-mono);font-weight:600}
+.read .xv{color:var(--x);font-family:var(--font-mono);font-weight:700}
+
+.explain{margin:16px 0 0;padding-left:20px;max-width:72ch}
+.explain li{margin-bottom:6px}
+.explain li b{color:var(--ink)}
+
+/* code */
+.code{margin-top:16px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.code summary{padding:8px 14px;cursor:pointer;font-size:14px;font-weight:600;list-style:none;display:flex;align-items:center;gap:8px}
+.code summary::before{content:"";width:0;height:0;border:5px solid transparent;border-left:7px solid var(--b);border-right:0;transition:transform .15s}
+.code[open] summary::before{transform:rotate(90deg)}
+.code pre{margin:0;padding:14px 16px;background:var(--code-bg);color:var(--code-ink);border-radius:0 0 6px 6px;overflow-x:auto;font:13px/1.65 var(--font-mono)}
+.kw{color:var(--kw)}.cm{color:var(--cm);font-style:italic}.at{color:var(--at)}
+
+/* table / qa */
+.tablewrap{overflow-x:auto;margin-top:18px}
+.pick{border-collapse:collapse;width:100%;min-width:520px;font-size:14px;background:var(--panel)}
+.pick th,.pick td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.pick th{font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.pick td:nth-child(2){font-weight:600;color:var(--b)}
+.qa{margin-top:24px;max-width:72ch}
+.qa dl{margin:10px 0 0}
+.qa dt{font-weight:600;margin-top:12px}
+.qa dd{margin:2px 0 0;color:var(--ink)}
+.foot{margin-top:48px;font-size:12px;color:var(--muted);max-width:72ch}
+
+@media (max-width:520px){
+  h1{font-size:26px}
+  .wrap{padding-block:24px 56px}
+  .scope{flex-basis:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  .val.vx{animation:none}
+  .code summary::before{transition:none}
+}
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">Clock Domain Crossing · FPGA</p>
+  <h1>CDC 跨时钟域实验台</h1>
+  <p class="lead">一根信号从时钟 A 的寄存器，走到时钟 B 的寄存器。两个时钟没有固定关系，这一步就叫跨时钟域。下面 4 个实验，每个只讲一件事：先看它怎么坏，再看怎么修。拖动滑块，盯着寄存器里的数字和右边的波形。</p>
+  <nav class="toc" aria-label="实验目录">
+    <a href="#e1"><b>1</b>亚稳态</a>
+    <a href="#e2"><b>2</b>两级同步器</a>
+    <a href="#e3"><b>3</b>脉冲丢失</a>
+    <a href="#e4"><b>4</b>多比特撕裂</a>
+    <a href="#e5"><b>5</b>约束与选型</a>
+  </nav>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 200" role="img" aria-label="信号从时钟 A 域的寄存器跨到时钟 B 域的寄存器，两边时钟周期不同">
+      <defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z"/></marker></defs>
+      <rect x="16" y="14" width="292" height="172" rx="6" class="dz a"/>
+      <text x="28" y="34" class="dl a">时钟 A 域 · 周期 8 ns</text>
+      <line x1="120" y1="92" x2="170" y2="92" class="w"/>
+      <text x="122" y="84" class="pin">data</text>
+      <rect x="170" y="62" width="70" height="60" rx="3" class="ffbox a"/>
+      <text x="177" y="76" class="pin">D</text><text x="226" y="76" class="pin">Q</text>
+      <path d="M170 106 L179 112 L170 118Z" class="tri a"/>
+      <text x="205" y="98" class="ffname" text-anchor="middle">FF_A</text>
+      <path d="M40 160 h12 v-14 h12 v14 h12 v-14 h12 v14 h12 v-14 h12 v14 h12 v-14 h12 v14 h12 v-14 h12 v14 h12 v-14 h12 v14 h12 v-14 h12 v14 h12" class="cw a"/>
+      <text x="40" y="180" class="pin">clk_a</text>
+      <line x1="240" y1="92" x2="482" y2="92" class="w" marker-end="url(#ar1)"/>
+      <line x1="360" y1="8" x2="360" y2="192" class="cross"/>
+      <text x="360" y="60" text-anchor="middle" class="crossl">CDC 路径</text>
+      <text x="360" y="130" text-anchor="middle" class="note">两边时钟没有固定关系</text>
+      <rect x="412" y="14" width="292" height="172" rx="6" class="dz b"/>
+      <text x="424" y="34" class="dl b">时钟 B 域 · 周期 11 ns</text>
+      <rect x="482" y="62" width="70" height="60" rx="3" class="ffbox b"/>
+      <text x="489" y="76" class="pin">D</text><text x="538" y="76" class="pin">Q</text>
+      <path d="M482 106 L491 112 L482 118Z" class="tri b"/>
+      <text x="517" y="98" class="ffname" text-anchor="middle">FF_B</text>
+      <line x1="552" y1="92" x2="610" y2="92" class="w" marker-end="url(#ar1)"/>
+      <text x="614" y="96" class="pin">B 域逻辑</text>
+      <path d="M436 160 h16 v-14 h17 v14 h16 v-14 h17 v14 h16 v-14 h17 v14 h16 v-14 h17 v14 h16 v-14 h17 v14 h16 v-14 h17 v14 h16" class="cw b"/>
+      <text x="436" y="180" class="pin">clk_b</text>
+    </svg>
+    <figcaption>整页只有三种颜色要记：<span class="sw a">橙色</span>是时钟 A 域的东西，<span class="sw b">蓝色</span>是时钟 B 域的东西，<span class="sw x">红色斜纹</span>是亚稳态 X。</figcaption>
+  </figure>
+</header>
+
+<!-- ============ 实验 1 ============ -->
+<section class="exp" id="e1">
+  <div class="exp-head">
+    <span class="num">实验 1</span>
+    <h2>亚稳态：数据变化撞上时钟沿</h2>
+    <p>寄存器在时钟上升沿采样 D。沿前 1 ns、沿后 0.5 ns 这一小段叫建立/保持窗口，D 不许在这里面变。变了，Q 就会卡在 0 和 1 之间一段时间，这就是亚稳态，记作 X。</p>
+  </div>
+  <div class="bench">
+    <div class="ckt" id="e1-ckt"></div>
+    <div class="scope"><svg id="e1-scope"></svg></div>
+  </div>
+  <div class="controls">
+    <div class="ctl">
+      <label for="e1-off">D 变化的时刻，相对于 15 ns 处的采样沿：<output id="e1-off-v" for="e1-off">-0.4 ns</output></label>
+      <input type="range" id="e1-off" min="-4" max="4" step="0.1" value="-0.4">
+      <div class="hint"><span>沿前 4 ns</span><span>红色窗口</span><span>沿后 4 ns</span></div>
+    </div>
+    <div class="ctl-row">
+      <button id="e1-rand" type="button">随机变化 200 次</button>
+      <span class="small" id="e1-rand-v">看看有多少次会撞进窗口</span>
+    </div>
+  </div>
+  <p class="read" id="e1-read"></p>
+  <ul class="explain">
+    <li><b>窗口外变化</b>：完全没事。要么这个沿采到，要么下一个沿采到，最多晚一拍。</li>
+    <li><b>窗口内变化</b>：Q 变成 X。多久稳定、最后稳到 0 还是 1，都不可控。下游此时读到的就是垃圾。</li>
+    <li><b>真芯片</b>的窗口只有几十皮秒，这里放大到 1.5 ns 是为了看得见。但时钟一秒跑一亿次，天天撞。所以要靠结构来防，不能靠运气。</li>
+  </ul>
+</section>
+
+<!-- ============ 实验 2 ============ -->
+<section class="exp" id="e2">
+  <div class="exp-head">
+    <span class="num">实验 2</span>
+    <h2>两级同步器：让 X 死在第一级</h2>
+    <p>在 B 域再加一个寄存器 FF2，它在下一个沿才去采 Q1。这时 Q1 的 X 大概率已经稳定成 0 或 1 了。下游只看 Q2，永远看不到 X。</p>
+  </div>
+  <div class="bench">
+    <div class="ckt" id="e2-ckt"></div>
+    <div class="scope"><svg id="e2-scope"></svg></div>
+  </div>
+  <div class="controls">
+    <div class="ctl">
+      <label for="e2-off">D 变化的时刻，相对于 15 ns 处的采样沿：<output id="e2-off-v" for="e2-off">-0.4 ns</output></label>
+      <input type="range" id="e2-off" min="-4" max="4" step="0.1" value="-0.4">
+      <div class="hint"><span>沿前 4 ns</span><span>红色窗口</span><span>沿后 4 ns</span></div>
+    </div>
+  </div>
+  <p class="read" id="e2-read"></p>
+  <ul class="explain">
+    <li><b>第二级不是魔法</b>：它只是隔了一整个周期再采样，把 X 的恢复时间留足。X 拖得越久，越过下一个沿的概率越小，这个概率算出来就是 MTBF。</li>
+    <li><b>代价</b>：晚 1 到 2 拍。而且只适合电平信号，也就是变化慢、能保持好几拍的信号。一拍宽的脉冲不行，见实验 3。</li>
+    <li><b>写法</b>：两级都加 ASYNC_REG 属性，工具会把它们放在相邻位置，中间不插任何逻辑。</li>
+  </ul>
+  <details class="code" open>
+    <summary>Verilog：两级同步器</summary>
+<pre><code class="v">// 单比特电平信号：两级同步器
+(* ASYNC_REG = "TRUE" *) reg q1, q2;   // 告诉工具：这两级要挨着放
+always @(posedge clk_b) begin
+  q1 &lt;= d_from_a;   // 第一级可能进入亚稳态
+  q2 &lt;= q1;         // 第二级在下一拍采样，X 已经稳定
+end
+// 下游只能用 q2，绝不能用 q1</code></pre>
+  </details>
+</section>
+
+<!-- ============ 实验 3 ============ -->
+<section class="exp" id="e3">
+  <div class="exp-head">
+    <span class="num">实验 3</span>
+    <h2>脉冲丢失：快时钟发一拍，慢时钟没看见</h2>
+    <p>A 是 250 MHz，周期 4 ns。B 是 100 MHz，每 10 ns 才采样一次。A 发一个只有一拍宽的脉冲，B 的两个沿之间完全可能一个都没赶上。这个实验先不管亚稳态，同步器按实验 2 处理。</p>
+  </div>
+  <div class="controls">
+    <div class="ctl">
+      <label for="e3-t0">脉冲发出的时刻：<output id="e3-t0-v" for="e3-t0">13.0 ns</output></label>
+      <input type="range" id="e3-t0" min="4" max="22" step="0.5" value="13">
+    </div>
+    <label class="check"><input type="checkbox" id="e3-two"> 8 ns 后连发第二个脉冲（间隔比 B 的周期还短）</label>
+  </div>
+
+  <h3 class="sub"><span class="tag bad">方案一</span>直接用 B 的寄存器采</h3>
+  <div class="bench">
+    <div class="ckt" id="e3a-ckt"></div>
+    <div class="scope"><svg id="e3a-scope"></svg></div>
+  </div>
+  <p class="read" id="e3a-read"></p>
+
+  <h3 class="sub"><span class="tag ok">方案二</span>翻转同步器：脉冲先变成电平</h3>
+  <div class="bench">
+    <div class="ckt" id="e3b-ckt"></div>
+    <div class="scope"><svg id="e3b-scope"></svg></div>
+  </div>
+  <p class="read" id="e3b-read"></p>
+  <ul class="explain">
+    <li><b>思路</b>：脉冲会丢，电平不会丢。A 域每来一个脉冲，就把 T 翻转一次。T 是电平，用实验 2 的两级同步器送过去。</li>
+    <li><b>还原</b>：B 域再存一拍得到 s3。s2 和 s3 不同的那一拍，就说明 T 刚翻过，输出一个 B 域宽度的脉冲。</li>
+    <li><b>限制</b>：两个脉冲之间至少隔 2 到 3 个 B 周期。勾上「连发第二个脉冲」就能看到，T 翻上去又翻下来，B 可能一次都没看见。</li>
+  </ul>
+  <details class="code">
+    <summary>Verilog：翻转同步器</summary>
+<pre><code class="v">// A 域：把脉冲变成翻转电平
+reg t_a;
+always @(posedge clk_a) if (pulse_a) t_a &lt;= ~t_a;
+
+// B 域：同步电平，再用异或还原成脉冲
+(* ASYNC_REG = "TRUE" *) reg s1, s2;
+reg s3;
+always @(posedge clk_b) begin
+  s1 &lt;= t_a;  s2 &lt;= s1;  s3 &lt;= s2;
+end
+assign pulse_b = s2 ^ s3;   // s2 和 s3 不同 = 刚翻转过 = 来了一个脉冲
+// 限制：两个脉冲至少隔开 2~3 个 clk_b 周期</code></pre>
+  </details>
+</section>
+
+<!-- ============ 实验 4 ============ -->
+<section class="exp" id="e4">
+  <div class="exp-head">
+    <span class="num">实验 4</span>
+    <h2>多比特撕裂：三根线到得不一样早</h2>
+    <p>A 域一个 3 位计数器从 3 变到 4，三根线的走线长度不同，到 B 的时间差了好几纳秒。B 在中间某一刻采样，就会采到一半新值一半旧值，拼出一个 A 从来没输出过的数。</p>
+  </div>
+  <div class="bench">
+    <div class="ckt" id="e4-ckt"></div>
+    <div class="scope"><svg id="e4-scope"></svg></div>
+  </div>
+  <div class="controls">
+    <div class="ctl">
+      <label for="e4-ts">B 采样的时刻，计数器在 10 ns 处变化：<output id="e4-ts-v" for="e4-ts">12.0 ns</output></label>
+      <input type="range" id="e4-ts" min="8" max="16" step="0.2" value="12">
+    </div>
+    <div class="ctl-row">
+      <div class="seg" role="radiogroup" aria-label="编码方式">
+        <label><input type="radio" name="e4-enc" value="bin" checked><span>二进制</span></label>
+        <label><input type="radio" name="e4-enc" value="gray"><span>格雷码</span></label>
+      </div>
+      <div class="seg" role="radiogroup" aria-label="计数器变化">
+        <label><input type="radio" name="e4-tr" value="3-4" checked><span>3 → 4</span></label>
+        <label><input type="radio" name="e4-tr" value="1-2"><span>1 → 2</span></label>
+        <label><input type="radio" name="e4-tr" value="7-0"><span>7 → 0</span></label>
+      </div>
+    </div>
+  </div>
+  <p class="read" id="e4-read"></p>
+  <ul class="explain">
+    <li><b>二进制</b>：3 是 011，4 是 100，三位全变。采样时刻不同，能拼出 0、2、7 这些根本不存在的中间值。这就是撕裂。</li>
+    <li><b>格雷码</b>：相邻数值只差一位。3 是 010，4 是 110，只有最高位在变。不管什么时候采，结果只能是旧值或新值，都是真的。</li>
+    <li><b>两级同步器为什么不能直接同步总线</b>：它只解决单根线的 X，解决不了几根线到达时间不同的问题。这是面试最常见的追问。</li>
+    <li><b>适用范围</b>：格雷码只保护每次加减 1 的计数器和 FIFO 指针。任意跳变的多比特数据，要用握手或者异步 FIFO，见下一节。</li>
+  </ul>
+  <details class="code">
+    <summary>Verilog：格雷码转换</summary>
+<pre><code class="v">// 二进制 → 格雷码：相邻数值只差一位
+assign gray = bin ^ (bin &gt;&gt; 1);
+
+// 格雷码 → 二进制（3 位展开写法，从高位往下异或）
+assign bin[2] = gray[2];
+assign bin[1] = gray[2] ^ gray[1];
+assign bin[0] = gray[2] ^ gray[1] ^ gray[0];
+
+// 用法：A 域计数器转格雷码 → 每一位各走一个两级同步器 → B 域转回二进制</code></pre>
+  </details>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="exp" id="e5">
+  <div class="exp-head">
+    <span class="num">第 5 节</span>
+    <h2>把它们连起来：选型、约束、检查</h2>
+    <p>前四个实验就是 CDC 的全部底层原理。工程上只剩三件事：按信号类型选方法，把跨域路径告诉工具，最后跑一次检查。</p>
+  </div>
+
+  <div class="tablewrap">
+    <table class="pick">
+      <thead><tr><th>要跨过去的信号</th><th>用什么</th><th>代价</th></tr></thead>
+      <tbody>
+        <tr><td>单比特、变化慢的电平，比如使能、状态标志</td><td>两级同步器</td><td>晚 1 到 2 拍</td></tr>
+        <tr><td>单比特脉冲</td><td>翻转同步器，或 req/ack 握手</td><td>脉冲之间要留间隔</td></tr>
+        <tr><td>计数器、FIFO 读写指针</td><td>格雷码，每位各走两级同步器</td><td>每次只能加减 1</td></tr>
+        <tr><td>任意跳变的多比特数据</td><td>异步 FIFO，或握手加数据保持</td><td>面积、延迟</td></tr>
+        <tr><td>复位</td><td>异步复位、同步释放</td><td>几乎没有</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 240" role="img" aria-label="异步 FIFO：写指针和读指针都用格雷码经两级同步器跨到对方一侧，数据走双端口 RAM">
+      <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z"/></marker></defs>
+      <rect x="16" y="20" width="200" height="200" rx="6" class="dz a"/>
+      <text x="28" y="40" class="dl a">写侧 · 时钟 A 域</text>
+      <rect x="504" y="20" width="200" height="200" rx="6" class="dz b"/>
+      <text x="516" y="40" class="dl b">读侧 · 时钟 B 域</text>
+      <rect x="280" y="84" width="160" height="72" rx="3" class="ffbox n"/>
+      <text x="360" y="116" text-anchor="middle" class="ffname">双端口 RAM</text>
+      <text x="360" y="136" text-anchor="middle" class="pin">写口用 clk_a，读口用 clk_b</text>
+      <line x1="216" y1="120" x2="280" y2="120" class="w" marker-end="url(#ar2)"/>
+      <text x="248" y="112" text-anchor="middle" class="pin">写数据</text>
+      <line x1="440" y1="120" x2="504" y2="120" class="w" marker-end="url(#ar2)"/>
+      <text x="472" y="112" text-anchor="middle" class="pin">读数据</text>
+      <text x="116" y="76" text-anchor="middle" class="lbl a">写指针 wptr，格雷码</text>
+      <line x1="216" y1="56" x2="330" y2="56" class="w"/>
+      <rect x="330" y="42" width="60" height="28" rx="3" class="ffbox b"/>
+      <text x="360" y="61" text-anchor="middle" class="pin">2级同步</text>
+      <line x1="390" y1="56" x2="504" y2="56" class="w" marker-end="url(#ar2)"/>
+      <text x="604" y="76" text-anchor="middle" class="lbl b">和 rptr 比较 → 空</text>
+      <text x="604" y="204" text-anchor="middle" class="lbl b">读指针 rptr，格雷码</text>
+      <line x1="504" y1="184" x2="390" y2="184" class="w"/>
+      <rect x="330" y="170" width="60" height="28" rx="3" class="ffbox a"/>
+      <text x="360" y="189" text-anchor="middle" class="pin">2级同步</text>
+      <line x1="330" y1="184" x2="216" y2="184" class="w" marker-end="url(#ar2)"/>
+      <text x="116" y="204" text-anchor="middle" class="lbl a">和 wptr 比较 → 满</text>
+    </svg>
+    <figcaption>异步 FIFO 就是实验 2 和实验 4 的组合：数据本身不跨域，只有两个格雷码指针各走一套两级同步器去对方那边算空和满。</figcaption>
+  </figure>
+
+  <details class="code" open>
+    <summary>XDC 约束与检查（Vivado）</summary>
+<pre><code class="t"># 1. 同步器两级放在一起，不插逻辑
+set_property ASYNC_REG TRUE [get_cells {u_sync/q1_reg u_sync/q2_reg}]
+
+# 2. 跨域路径不按普通时序分析，但限制走线延迟不超过一个目的时钟周期
+set_max_delay -datapath_only -from [get_clocks clk_a] -to [get_clocks clk_b] 10.0
+
+# 3. 把所有没做同步器的跨域路径列出来
+report_cdc</code></pre>
+  </details>
+
+  <div class="qa">
+    <h3>面试常见追问</h3>
+    <dl>
+      <dt>两级同步器为什么不能直接同步多比特总线？</dt>
+      <dd>各位到达时间不同，撞窗口的可能是任意一位。两级只解决每根线自己的 X，解决不了几根线拼出幻影值，见实验 4。</dd>
+      <dt>两级够不够，什么时候要三级？</dt>
+      <dd>看 MTBF。频率越高、周期越短，留给 X 恢复的时间越少。几百 MHz 以上或者可靠性要求高的地方，加到三级。</dd>
+      <dt>快时钟到慢时钟的脉冲怎么办？</dt>
+      <dd>翻转同步器或握手，见实验 3。或者在 A 域先把脉冲拉宽到至少覆盖 1.5 个 B 周期，再按电平同步。</dd>
+      <dt>set_false_path 和 set_max_delay -datapath_only 有什么区别？</dt>
+      <dd>前者完全不管这条路径，走线再长也不报。后者不做建立保持分析，但限制数据路径延迟，防止走线过长把总线撕得更开。跨域路径优先用后者。</dd>
+    </dl>
+  </div>
+</section>
+
+<footer class="foot">仿真里的时序参数都为了看得清而放大：建立 1 ns、保持 0.5 ns、寄存器延迟 0.7 ns、走线偏差最多 4.2 ns。真实 FPGA 的数字小一到两个量级，但道理一样。</footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const NS = 'http://www.w3.org/2000/svg';
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => (Math.round(n * 10) / 10).toFixed(1);
+
+  function el(tag, attrs, parent) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function txt(parent, x, y, s, cls, anchor) {
+    const t = el('text', { x, y, class: cls || '', 'text-anchor': anchor || 'start' }, parent);
+    t.textContent = s;
+    return t;
+  }
+
+  /* ---------- signal helpers: pieces = [{t, v}] piecewise constant, v = 0 | 1 | 'X' ---------- */
+  function clkPieces(period, phase, t1) {
+    const p = [{ t: 0, v: 0 }];
+    for (let e = phase; e < t1; e += period) { p.push({ t: e, v: 1 }); p.push({ t: e + period / 2, v: 0 }); }
+    return p;
+  }
+  function clkEdges(period, phase, t1) {
+    const r = [];
+    for (let e = phase; e < t1; e += period) r.push(e);
+    return r;
+  }
+  function valueAt(pcs, t) {
+    let v = pcs[0].v;
+    for (const p of pcs) { if (p.t < t) v = p.v; else break; }
+    return v;
+  }
+  // register sampling src at each edge, output changes tcq after the edge
+  function regOf(src, edges, tcq) {
+    const out = [{ t: 0, v: 0 }]; let cur = 0;
+    edges.forEach((e) => { const v = valueAt(src, e); if (v !== cur) { out.push({ t: e + tcq, v }); cur = v; } });
+    return out;
+  }
+  function xorOf(a, b) {
+    const times = [...new Set([0, ...a.map((p) => p.t), ...b.map((p) => p.t)])].sort((x, y) => x - y);
+    const out = []; let cur = null;
+    times.forEach((t) => { const v = valueAt(a, t + 1e-6) ^ valueAt(b, t + 1e-6); if (v !== cur) { out.push({ t, v }); cur = v; } });
+    return out;
+  }
+
+  /* ---------- scope renderer ---------- */
+  function drawScope(svg, o) {
+    const LW = 66, W = 760, RH = 30, PAD = 7, TOP = 20, AX = 24;
+    const rows = o.rows, n = rows.length, H = TOP + n * RH + AX, bodyH = n * RH;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.innerHTML = '';
+    const uid = 'hx-' + svg.id;
+    const defs = el('defs', {}, svg);
+    const pat = el('pattern', { id: uid, patternUnits: 'userSpaceOnUse', width: 6, height: 6 }, defs);
+    el('path', { d: 'M0 6 L6 0 M-1 1 L1 -1 M5 7 L7 5', class: 'hatch' }, pat);
+    const x = (t) => LW + (t / o.t1) * (W - LW - 10);
+
+    for (let t = 0; t <= o.t1 + 1e-9; t += 2) {
+      el('line', { x1: x(t), y1: TOP, x2: x(t), y2: TOP + bodyH, class: 'grid' }, svg);
+      if (t % 10 === 0) txt(svg, x(t), H - 8, t === 0 ? '0 ns' : String(t), 'tick', 'middle');
+    }
+
+    (o.bands || []).forEach((b) => {
+      el('rect', { x: x(b.t0), y: TOP, width: x(b.t1) - x(b.t0), height: bodyH, class: 'band' }, svg);
+      if (b.label) txt(svg, (x(b.t0) + x(b.t1)) / 2, 13, b.label, 'bandl', 'middle');
+    });
+    (o.edges || []).forEach((e) => {
+      el('line', { x1: x(e.t), y1: TOP, x2: x(e.t), y2: TOP + bodyH, class: 'edge' }, svg);
+      if (e.label) txt(svg, x(e.t), 13, e.label, 'edgelbl ' + (e.cls || ''), 'middle');
+    });
+
+    rows.forEach((r, i) => {
+      const y0 = TOP + i * RH, yh = y0 + PAD, yl = y0 + RH - PAD;
+      txt(svg, LW - 8, y0 + RH / 2 + 4, r.name, 'lbl ' + (r.cls || ''), 'end');
+      const pcs = r.pieces; let d = '';
+      for (let k = 0; k < pcs.length; k++) {
+        const a = pcs[k], tEnd = k + 1 < pcs.length ? pcs[k + 1].t : o.t1;
+        if (tEnd <= a.t) continue;
+        if (a.v === 'X') {
+          const rx = x(a.t), rw = x(tEnd) - rx;
+          el('rect', { x: rx, y: yh, width: rw, height: yl - yh, fill: `url(#${uid})`, stroke: 'none' }, svg);
+          el('rect', { x: rx, y: yh, width: rw, height: yl - yh, class: 'xframe' }, svg);
+          if (rw > 14) txt(svg, rx + rw / 2, (yh + yl) / 2 + 4, 'X', 'xlbl', 'middle');
+          continue;
+        }
+        const y = a.v === 1 ? yh : yl;
+        if (k > 0 && pcs[k - 1].v !== 'X' && pcs[k - 1].v !== a.v) d += `M${x(a.t)} ${pcs[k - 1].v === 1 ? yh : yl} L${x(a.t)} ${y} `;
+        else d += `M${x(a.t)} ${y} `;
+        d += `L${x(tEnd)} ${y} `;
+      }
+      el('path', { d, class: 'wave ' + (r.cls || '') }, svg);
+    });
+
+    (o.cursors || []).forEach((c) => {
+      el('line', { x1: x(c.t), y1: TOP - 6, x2: x(c.t), y2: TOP + bodyH, class: 'cursor' }, svg);
+      if (c.label) txt(svg, x(c.t) + 5, 13, c.label, 'curlbl', 'start');
+    });
+  }
+
+  /* ---------- circuit blocks (HTML) ---------- */
+  const ffHTML = (id, name) => `<div class="ffw"><div class="ff"><span class="pin d">D</span><span class="pin q">Q</span><svg class="clk" viewBox="0 0 10 10" aria-hidden="true"><path d="M0 0 L9 5 L0 10Z"/></svg><span class="val v0" id="${id}">0</span></div><span class="name">${name}</span></div>`;
+  const wire = (label) => `<div class="wire">${label ? `<span class="wl">${label}</span>` : ''}</div>`;
+  const dom = (name, cls, inner) => `<div class="dom ${cls}" data-name="${name}">${inner}</div>`;
+  const sink = (id, text) => `<div class="sink" id="${id}">${text}</div>`;
+  function setVal(id, v) {
+    const e = $(id); const s = String(v); e.textContent = s;
+    e.className = 'val ' + (s === 'X' ? 'vx' : s === '0' ? 'v0' : s === '1' ? 'v1' : 'vb');
+  }
+  function setSink(id, cls, big, small) {
+    const e = $(id); e.className = 'sink ' + cls; e.innerHTML = `<span class="big">${big}</span>${small}`;
+  }
+  function setRead(id, cls, html) { const e = $(id); e.className = 'read ' + cls; e.innerHTML = html; }
+
+  /* ---------- shared metastability model ---------- */
+  const TSU = 1.0, TH = 0.5, TCQ = 0.7;
+  function meta(off) {
+    if (off < -TSU) return { state: 'early' };
+    if (off > TH) return { state: 'late' };
+    const c = (-TSU + TH) / 2, half = (TSU + TH) / 2;
+    const depth = 1 - Math.abs(off - c) / half;
+    const tres = 0.6 + 10.5 * Math.pow(depth, 4);
+    const hsh = Math.abs(Math.sin(off * 127.1 + 3.7) * 43758.5453) % 1;
+    return { state: 'meta', depth, tres, final: hsh > 0.5 ? 1 : 0 };
+  }
+  // Q of a flop whose D goes 0->1 at E+off, sampling edges every TB starting at E
+  function q1Pieces(E, off, m, TB) {
+    if (m.state === 'early') return [{ t: 0, v: 0 }, { t: E + TCQ, v: 1 }];
+    if (m.state === 'late') return [{ t: 0, v: 0 }, { t: E + TB + TCQ, v: 1 }];
+    const p = [{ t: 0, v: 0 }, { t: E + TCQ, v: 'X' }];
+    const tEnd = Math.min(E + TCQ + m.tres, E + TB + TCQ);
+    if (E + TCQ + m.tres < E + TB + TCQ) { p.push({ t: tEnd, v: m.final }); if (m.final === 0) p.push({ t: E + TB + TCQ, v: 1 }); }
+    else p.push({ t: tEnd, v: 1 });
+    return p;
+  }
+
+  /* ================= 实验 1 ================= */
+  (function exp1() {
+    const TB = 10, E = 15, T1 = 30, edges = clkEdges(TB, 5, T1);
+    $('e1-ckt').innerHTML = dom('时钟 A 域', 'a', ffHTML('e1-ffa', 'FF_A')) + wire('D') + dom('时钟 B 域', 'b', ffHTML('e1-ffb', 'FF_B')) + wire('Q') + sink('e1-sink', '下游逻辑');
+    setVal('e1-ffa', 1);
+    const sl = $('e1-off'), out = $('e1-off-v');
+    function render() {
+      const off = parseFloat(sl.value); out.value = (off > 0 ? '+' : '') + fmt(off) + ' ns';
+      const m = meta(off);
+      drawScope($('e1-scope'), {
+        t1: T1,
+        rows: [
+          { name: 'clk_b', cls: 'b', pieces: clkPieces(TB, 5, T1) },
+          { name: 'D', cls: 'a', pieces: [{ t: 0, v: 0 }, { t: E + off, v: 1 }] },
+          { name: 'Q', cls: 'b', pieces: q1Pieces(E, off, m, TB) },
+        ],
+        edges: edges.map((t) => ({ t })),
+        bands: [{ t0: E - TSU, t1: E + TH, label: '建立/保持窗口 1.5 ns' }],
+      });
+      if (m.state === 'early') {
+        setVal('e1-ffb', 1); setSink('e1-sink', 'ok', '读到 1', '下游逻辑，正常');
+        setRead('e1-read', 'ok', `D 在沿前 <span class="n">${fmt(-off)} ns</span> 就稳定了，满足建立时间。Q 在这个沿干净地采到 1。`);
+      } else if (m.state === 'late') {
+        setVal('e1-ffb', 0); setSink('e1-sink', 'ok', '读到 0', '下游逻辑，旧值但正确');
+        setRead('e1-read', 'warn', `D 在沿后 <span class="n">${fmt(off)} ns</span> 才变，这个沿采到的还是旧值 0，下一个沿才采到 1。晚一拍，但没有错。`);
+      } else {
+        setVal('e1-ffb', 'X'); setSink('e1-sink', 'bad', '读到 ?', '下游逻辑，读到垃圾');
+        const over = m.tres > TB - TSU;
+        setRead('e1-read', 'bad', `撞上窗口了。Q 变成 <span class="xv">X</span>，拖了 <span class="n">${fmt(m.tres)} ns</span> 才随机落到 ${m.final}。这段时间里下游读到的是垃圾。${over ? ' 这次 X 一直拖到下一个沿还没结束，连下一级寄存器也会被污染。' : ''}`);
+      }
+    }
+    sl.addEventListener('input', render);
+    $('e1-rand').addEventListener('click', () => {
+      let hit = 0;
+      for (let i = 0; i < 200; i++) { const off = -5 + Math.random() * 10; if (off >= -TSU && off <= TH) hit++; }
+      $('e1-rand-v').textContent = `200 次里 ${hit} 次撞进窗口。这里窗口占周期 15%；真芯片只占万分之几，但一秒钟要跨一亿次。`;
+    });
+    render();
+  })();
+
+  /* ================= 实验 2 ================= */
+  (function exp2() {
+    const TB = 10, E = 15, T1 = 40, edges = clkEdges(TB, 5, T1);
+    $('e2-ckt').innerHTML = dom('时钟 A 域', 'a', ffHTML('e2-ffa', 'FF_A')) + wire('D') + dom('时钟 B 域', 'b', ffHTML('e2-ff1', 'FF1') + wire('Q1') + ffHTML('e2-ff2', 'FF2')) + wire('Q2') + sink('e2-sink', '下游只看 Q2');
+    setVal('e2-ffa', 1);
+    const sl = $('e2-off'), out = $('e2-off-v');
+    function render() {
+      const off = parseFloat(sl.value); out.value = (off > 0 ? '+' : '') + fmt(off) + ' ns';
+      const m = meta(off);
+      const q1 = q1Pieces(E, off, m, TB);
+      let q2, q2v, dirty = false;
+      if (m.state !== 'meta' || E + TCQ + m.tres <= E + TB - TSU) {
+        q2 = regOf(q1, edges, TCQ); q2v = valueAt(q1, E + TB);
+      } else {
+        dirty = true;
+        q2 = [{ t: 0, v: 0 }, { t: E + TB + TCQ, v: 'X' }, { t: E + TB + TCQ + 2.5, v: m.final }];
+        if (m.final === 0) q2.push({ t: E + 2 * TB + TCQ, v: 1 });
+        q2v = 'X';
+      }
+      drawScope($('e2-scope'), {
+        t1: T1,
+        rows: [
+          { name: 'clk_b', cls: 'b', pieces: clkPieces(TB, 5, T1) },
+          { name: 'D', cls: 'a', pieces: [{ t: 0, v: 0 }, { t: E + off, v: 1 }] },
+          { name: 'Q1', cls: 'b', pieces: q1 },
+          { name: 'Q2', cls: 'b', pieces: q2 },
+        ],
+        edges: edges.map((t) => ({ t })),
+        bands: [{ t0: E - TSU, t1: E + TH, label: '窗口' }],
+      });
+      setVal('e2-ff1', m.state === 'meta' ? 'X' : m.state === 'early' ? 1 : 0);
+      setVal('e2-ff2', q2v);
+      if (m.state !== 'meta') {
+        setSink('e2-sink', 'ok', `读到 ${q2v}`, '干净');
+        setRead('e2-read', 'ok', 'D 没撞窗口，Q1 本来就干净。Q2 只是把它再晚一拍交给下游。');
+      } else if (!dirty) {
+        setSink('e2-sink', 'ok', `读到 ${q2v}`, '干净，没见到 X');
+        setRead('e2-read', 'ok', `Q1 亚稳态 <span class="n">${fmt(m.tres)} ns</span>，在 25 ns 的沿之前已经稳定成 ${m.final}。Q2 在那个沿干净地采到 <span class="n">${m.final}</span>${m.final === 0 ? '，再下一个沿采到 1' : ''}。下游全程没见到 X，只是晚了 1 到 2 拍。`);
+      } else {
+        setSink('e2-sink', 'bad', '读到 ?', '两级也失败了');
+        setRead('e2-read', 'bad', `X 拖了 <span class="n">${fmt(m.tres)} ns</span>，越过了下一个沿的窗口，Q2 也进入 <span class="xv">X</span>。两级同步器也有失败概率，MTBF 算的就是这个概率有多小。频率越高越危险，必要时加第三级。`);
+      }
+    }
+    sl.addEventListener('input', render);
+    render();
+  })();
+
+  /* ================= 实验 3 ================= */
+  (function exp3() {
+    const TA = 4, TB = 10, PHB = 2, T1 = 56, eB = clkEdges(TB, PHB, T1);
+    $('e3a-ckt').innerHTML = dom('时钟 A 域', 'a', ffHTML('e3a-ffa', 'pulse_a')) + wire('pulse') + dom('时钟 B 域', 'b', ffHTML('e3a-ffb', 'FF_B')) + wire() + sink('e3a-sink', '');
+    $('e3b-ckt').innerHTML = dom('时钟 A 域', 'a', ffHTML('e3b-t', 'T 翻转')) + wire('T') + dom('时钟 B 域', 'b', ffHTML('e3b-s1', 's1') + wire() + ffHTML('e3b-s2', 's2') + wire() + ffHTML('e3b-s3', 's3')) + wire('s2^s3') + sink('e3b-sink', '');
+    const sl = $('e3-t0'), out = $('e3-t0-v'), two = $('e3-two');
+    function render() {
+      const t0 = parseFloat(sl.value), second = two.checked; out.value = fmt(t0) + ' ns';
+      const clkA = clkPieces(TA, ((t0 % TA) + TA) % TA, T1), clkB = clkPieces(TB, PHB, T1);
+      const pulseA = [{ t: 0, v: 0 }, { t: t0, v: 1 }, { t: t0 + TA, v: 0 }];
+      const T = [{ t: 0, v: 0 }, { t: t0, v: 1 }];
+      if (second) { pulseA.push({ t: t0 + 8, v: 1 }, { t: t0 + 12, v: 0 }); T.push({ t: t0 + 8, v: 0 }); }
+      const nPulses = second ? 2 : 1;
+
+      // 方案一
+      const qd = regOf(pulseA, eB, TCQ);
+      const caught = eB.filter((e) => valueAt(pulseA, e) === 1);
+      drawScope($('e3a-scope'), {
+        t1: T1,
+        rows: [
+          { name: 'clk_a', cls: 'a', pieces: clkA },
+          { name: 'pulse_a', cls: 'a', pieces: pulseA },
+          { name: 'clk_b', cls: 'b', pieces: clkB },
+          { name: 'Q 直接采', cls: 'b', pieces: qd },
+        ],
+        edges: eB.map((t) => ({ t, label: caught.includes(t) ? '✓ 采到' : '', cls: 'ok' })),
+      });
+      setVal('e3a-ffb', caught.length ? 1 : 0);
+      if (caught.length === nPulses) {
+        setSink('e3a-sink', 'ok', `采到 ${caught.length} 个`, `发了 ${nPulses} 个`);
+        setRead('e3a-read', 'ok', `运气好。脉冲宽 4 ns，B 的沿 <span class="n">${caught.map(fmt).join('、')} ns</span> 正好落在里面。把滑块往旁边拖一点，再看。`);
+      } else {
+        setSink('e3a-sink', 'bad', `采到 ${caught.length} 个`, `发了 ${nPulses} 个，丢了 ${nPulses - caught.length} 个`);
+        setRead('e3a-read', 'bad', `脉冲只有 4 ns 宽，B 每 10 ns 才看一眼。落在两个沿之间的脉冲直接漏掉，B 域根本不知道发生过。这种位置 10 次里大约会漏 6 次。`);
+      }
+
+      // 方案二
+      const s1 = regOf(T, eB, TCQ), s2 = regOf(s1, eB, TCQ), s3 = regOf(s2, eB, TCQ), pB = xorOf(s2, s3);
+      const got = eB.filter((e) => valueAt(pB, e) === 1);
+      drawScope($('e3b-scope'), {
+        t1: T1,
+        rows: [
+          { name: 'pulse_a', cls: 'a', pieces: pulseA },
+          { name: 'T', cls: 'a', pieces: T },
+          { name: 'clk_b', cls: 'b', pieces: clkB },
+          { name: 's1', cls: 'b', pieces: s1 },
+          { name: 's2', cls: 'b', pieces: s2 },
+          { name: 's3', cls: 'b', pieces: s3 },
+          { name: 'pulse_b', cls: 'b', pieces: pB },
+        ],
+        edges: eB.map((t) => ({ t, label: got.includes(t) ? '✓ 收到' : '', cls: 'ok' })),
+      });
+      setVal('e3b-t', valueAt(T, T1)); setVal('e3b-s1', valueAt(s1, T1)); setVal('e3b-s2', valueAt(s2, T1)); setVal('e3b-s3', valueAt(s3, T1));
+      if (!second) {
+        setSink('e3b-sink', 'ok', `收到 ${got.length} 个`, '发了 1 个');
+        setRead('e3b-read', 'ok', `脉冲先变成电平 T 的一次翻转，电平不会丢。B 域同步两拍后，s2 和 s3 不同的那一拍就是还原出的脉冲，在 <span class="n">${fmt(got[0])} ns</span> 收到，比发出晚 <span class="n">${fmt(got[0] - t0)} ns</span>。不管滑块拖到哪，结果都是恰好 1 个。`);
+      } else if (got.length === 2) {
+        setSink('e3b-sink', 'ok', `收到 ${got.length} 个`, '发了 2 个');
+        setRead('e3b-read', 'warn', `两个脉冲只隔 8 ns，比 B 的周期还短。这次运气好，B 的沿正好夹在两次翻转中间，两个都收到了。往旁边拖一点，就不一定了。`);
+      } else {
+        setSink('e3b-sink', 'bad', `收到 ${got.length} 个`, '发了 2 个');
+        setRead('e3b-read', 'bad', `T 翻上去又翻下来，中间 8 ns 里 B 一个沿都没赶上，s1 从头到尾看到的都是 0，两个脉冲全丢。所以规定：脉冲之间至少隔开 2 到 3 个慢时钟周期。`);
+      }
+    }
+    sl.addEventListener('input', render); two.addEventListener('change', render);
+    render();
+  })();
+
+  /* ================= 实验 4 ================= */
+  (function exp4() {
+    const TC = 10, DEL = [4.2, 2.4, 0.6], T1 = 20, TA = 8, PHA = 2; // DEL index 0 = bit2
+    const TR = { '3-4': [3, 4], '1-2': [1, 2], '7-0': [7, 0] };
+    const gray = (n) => n ^ (n >> 1);
+    const ungray = (g) => { const b2 = (g >> 2) & 1, b1 = b2 ^ ((g >> 1) & 1), b0 = b1 ^ (g & 1); return (b2 << 2) | (b1 << 1) | b0; };
+    const bits = (n) => [(n >> 2) & 1, (n >> 1) & 1, n & 1];
+    const bstr = (n) => n.toString(2).padStart(3, '0');
+    $('e4-ckt').innerHTML = dom('时钟 A 域', 'a', ffHTML('e4-cnt', '计数器')) + wire('3 根线') + dom('时钟 B 域', 'b', ffHTML('e4-b2', 'bit2') + ffHTML('e4-b1', 'bit1') + ffHTML('e4-b0', 'bit0')) + wire() + sink('e4-sink', '');
+    const sl = $('e4-ts'), out = $('e4-ts-v');
+    const pick = (name) => document.querySelector(`input[name="${name}"]:checked`).value;
+    function render() {
+      const ts = parseFloat(sl.value); out.value = fmt(ts) + ' ns';
+      const enc = pick('e4-enc'), [oldV, newV] = TR[pick('e4-tr')];
+      const oldC = enc === 'gray' ? gray(oldV) : oldV, newC = enc === 'gray' ? gray(newV) : newV;
+      const ob = bits(oldC), nb = bits(newC);
+      const smp = ob.map((o, i) => (ts >= TC + DEL[i] ? nb[i] : o));
+      const code = (smp[0] << 2) | (smp[1] << 1) | smp[2];
+      const dec = enc === 'gray' ? ungray(code) : code;
+      const status = dec === oldV ? 'old' : dec === newV ? 'new' : 'phantom';
+      drawScope($('e4-scope'), {
+        t1: T1,
+        rows: [
+          { name: 'clk_a', cls: 'a', pieces: clkPieces(TA, PHA, T1) },
+          { name: 'bit2', cls: 'a', pieces: ob[0] === nb[0] ? [{ t: 0, v: ob[0] }] : [{ t: 0, v: ob[0] }, { t: TC + DEL[0], v: nb[0] }] },
+          { name: 'bit1', cls: 'a', pieces: ob[1] === nb[1] ? [{ t: 0, v: ob[1] }] : [{ t: 0, v: ob[1] }, { t: TC + DEL[1], v: nb[1] }] },
+          { name: 'bit0', cls: 'a', pieces: ob[2] === nb[2] ? [{ t: 0, v: ob[2] }] : [{ t: 0, v: ob[2] }, { t: TC + DEL[2], v: nb[2] }] },
+        ],
+        cursors: [{ t: ts, label: 'B 在这里采样' }],
+        edges: [{ t: TC }],
+      });
+      setVal('e4-cnt', bstr(newC));
+      setVal('e4-b2', smp[0]); setVal('e4-b1', smp[1]); setVal('e4-b0', smp[2]);
+      const codeName = enc === 'gray' ? `格雷码 ${bstr(code)}` : bstr(code);
+      if (status === 'phantom') {
+        setSink('e4-sink', 'bad', `${bstr(code)} = ${dec}`, '幻影值，A 没输出过');
+        setRead('e4-read', 'bad', `B 采到 <span class="n">${codeName}</span>，当成 <span class="n">${dec}</span>。A 只从 ${oldV} 变到 ${newV}，从来没输出过 ${dec}。下游如果拿它做地址或比较，就出错了。`);
+      } else {
+        setSink('e4-sink', 'ok', `${bstr(code)} = ${dec}`, status === 'old' ? '旧值，真实' : '新值，真实');
+        const tail = enc === 'gray'
+          ? `格雷码里 ${oldV} 是 ${bstr(oldC)}，${newV} 是 ${bstr(newC)}，只差一位。不管什么时候采，只可能是这两个之一，都真实存在过。`
+          : `这个时刻三根线${status === 'old' ? '都还没' : '都已经'}变完，所以采到的是真值。把滑块拖到 10.6 到 14.2 ns 之间，再看。`;
+        setRead('e4-read', 'ok', `B 采到 <span class="n">${codeName}</span>，解码是 <span class="n">${dec}</span>，${status === 'old' ? '旧值' : '新值'}，没问题。${tail}`);
+      }
+    }
+    sl.addEventListener('input', render);
+    document.querySelectorAll('input[name="e4-enc"],input[name="e4-tr"]').forEach((r) => r.addEventListener('change', render));
+    render();
+  })();
+
+  /* ---------- tiny syntax highlight ---------- */
+  document.querySelectorAll('pre code').forEach((c) => {
+    let s = c.innerHTML;
+    if (c.classList.contains('v')) {
+      s = s.replace(/(\(\*[^)]*\*\))/g, '<span class="at">$1</span>')
+        .replace(/\b(module|endmodule|input|output|reg|wire|always|posedge|negedge|assign|begin|end|if|else)\b/g, '<span class="kw">$1</span>')
+        .replace(/(\/\/.*)$/gm, '<span class="cm">$1</span>');
+    } else {
+      s = s.replace(/^(#.*)$/gm, '<span class="cm">$1</span>')
+        .replace(/\b(set_property|set_max_delay|report_cdc|get_cells|get_clocks)\b/g, '<span class="kw">$1</span>');
+    }
+    c.innerHTML = s;
+  });
+})();
+</script>
+</body></html>

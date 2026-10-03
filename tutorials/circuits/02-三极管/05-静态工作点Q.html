@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>静态工作点Q</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#bjt">三极管</a><span class="sp"></span><span>05 / 09</span></nav>
+<header>
+  <span class="eyebrow">三极管 · 直流偏置</span>
+  <h1>静态工作点 Q</h1>
+  <p class="lede">没有信号时管子的 Ib、Ic、Uce，叫静态工作点。交流信号是骑在它上面上下晃的，Q 点放在哪，决定了信号能晃多大而不被削掉。</p>
+</header>
+
+<section id="why">
+  <span class="eyebrow">为什么要偏置</span>
+  <h2>交流信号必须骑在直流上</h2>
+  <p>发射结有约 0.6 V 的导通门槛。不加偏置，输入信号的负半周和门槛以下的正半周都进不去，Ib 只剩几个尖顶，输出严重失真。先用直流把管子推到导通，再把交流叠上去，Ib 才能围绕一个直流值完整地上下变化。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 300" role="img" aria-label="上图是基极驱动电压和 0.6 V 导通门槛，下图是基极电流波形">
+        <line class="gl" x1="56" y1="30" x2="456" y2="30"/>
+        <path class="ax" d="M56,30 V130 M56,96.7 H456"/>
+        <line class="ax dash" x1="56" y1="76.7" x2="456" y2="76.7"/>
+        <text x="50" y="34" text-anchor="end" class="v">2</text>
+        <text x="50" y="100.7" text-anchor="end" class="v">0</text>
+        <text x="50" y="134" text-anchor="end" class="v">−1</text>
+        <text x="60" y="22" class="tm">基极驱动电压 / V</text>
+        <text x="452" y="70" text-anchor="end" class="tm">导通门槛 0.6 V</text>
+        <polyline id="q1-u" class="real2" points="56,108 456,108"/>
+        <line class="gl" x1="56" y1="170" x2="456" y2="170"/>
+        <line class="gl" x1="56" y1="220" x2="456" y2="220"/>
+        <path class="ax" d="M56,170 V270 H456"/>
+        <text x="50" y="174" text-anchor="end" class="v">120</text>
+        <text x="50" y="224" text-anchor="end" class="v">60</text>
+        <text x="50" y="274" text-anchor="end" class="v">0</text>
+        <text x="60" y="162" class="tm">Ib / µA</text>
+        <polyline id="q1-ib" class="real" points="56,270 456,270"/>
+        <text x="456" y="290" text-anchor="end" class="tm">时间，两个周期</text>
+      </svg>
+      <figcaption>示意：基极回路等效为一个驱动电压串 10 kΩ，Ib ≈ (驱动电压 − 0.6 V) / 10 kΩ，小于 0 时为 0。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">直流偏置</span>
+        <div class="seg" id="q1-b"><button id="q1-b-0" data-v="0" aria-pressed="false">不加偏置</button><button id="q1-b-1" data-v="1" aria-pressed="true">加偏置，IbQ = 20 µA</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="q1-a">输入信号幅度</label>
+        <span class="rv" id="q1-av">0.15 V</span>
+        <input type="range" id="q1-a" min="5" max="100" step="5" value="15"></div>
+      <dl class="read">
+        <dt>Ib 最小 / 最大</dt><dd id="q1-mm">—</dd>
+        <dt>导通时间占比</dt><dd id="q1-on">—</dd>
+        <dt>波形</dt><dd><span id="q1-st" class="chip on">完整</span></dd>
+      </dl>
+      <p class="note" id="q1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="calc">
+  <span class="eyebrow">固定偏置 · 三步算 Q</span>
+  <h2>固定偏置电路怎么算 Q 点</h2>
+  <p>最简单的偏置：一个大电阻 Rb 从 Vcc 接到基极。三步算完：</p>
+  <p class="eq">Ib = (Vcc − 0.7) / Rb　　Ic = β·Ib　　Uce = Vcc − Ic·Rc</p>
+  <p>算完别忘了验证 Uce 是否大于饱和压降，否则 Ic = β·Ib 不成立，见 <a href="02-三个工作区.html">三个工作区</a>。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 360 280" role="img" aria-label="固定偏置共射电路：Rb 从 Vcc 接到基极，Rc 从 Vcc 接到集电极，发射极接地">
+        <text x="170" y="18" text-anchor="middle" class="v">Vcc 12 V</text>
+        <path class="w" d="M110,26 H232 M110,26 V50 M220,26 V50"/>
+        <rect class="r" x="101" y="50" width="18" height="40" rx="2"/>
+        <text x="94" y="66" text-anchor="end" class="t">Rb</text>
+        <text id="q2-rbt" x="94" y="84" text-anchor="end" class="v">390 kΩ</text>
+        <path class="w" d="M110,90 V172 H198"/>
+        <circle class="dot" cx="110" cy="172" r="3.5"/>
+        <text x="100" y="190" text-anchor="end" class="v">Ub 0.7 V</text>
+        <rect class="r" x="211" y="50" width="18" height="40" rx="2"/>
+        <text x="236" y="66" class="t">Rc</text>
+        <text x="236" y="84" class="v">2 kΩ</text>
+        <path class="w" d="M220,90 V150 M198,164 L220,150 M198,180 L220,194 V250 M206,250 H234 M211,255 H229 M216,260 H224"/>
+        <line class="bar" x1="198" y1="154" x2="198" y2="190"/>
+        <polygon class="ah" points="217,192 208,191 212,184"/>
+        <text x="228" y="158" class="tm">C</text>
+        <text x="228" y="198" class="tm">E</text>
+        <text x="256" y="182" class="t">NPN</text>
+        <path id="q2-ow" class="w s-hi" style="stroke-width:3" d="M220,120 H300"/>
+        <circle class="dot" cx="220" cy="120" r="3.5"/>
+        <text x="306" y="124" class="t">Uce</text>
+        <text id="q2-out" x="298" y="110" text-anchor="end" class="v hi">6.2 V</text>
+        <text id="q2-ict" x="228" y="144" class="v">Ic 2.9 mA</text>
+        <text id="q2-ibt" x="120" y="130" class="v">Ib</text>
+        <path id="q2-f" class="flow" d="M220,30 V150 L202,162 V182 L220,194 V248"/>
+        <path id="q2-fb" class="flow thin" d="M110,30 V172 H196"/>
+      </svg>
+      <figcaption>绿色虚线是直流电流路径。Ube 取 0.7 V，Uces 取 0.2 V。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="q2-rb">基极电阻 Rb</label>
+        <span class="rv" id="q2-rbv">390 kΩ</span>
+        <input type="range" id="q2-rb" min="15" max="100" step="1" value="39"></div>
+      <div class="ctl"><span class="ctl-l">β</span>
+        <div class="seg" id="q2-b"><button id="q2-b-100" data-v="100" aria-pressed="true">100</button><button id="q2-b-200" data-v="200" aria-pressed="false">200</button></div></div>
+      <dl class="read">
+        <dt>① Ib</dt><dd id="q2-ib">—</dd>
+        <dt>② Ic</dt><dd id="q2-ic">—</dd>
+        <dt>③ Uce</dt><dd id="q2-uce">—</dd>
+        <dt>Q 点位置</dt><dd><span id="q2-st" class="chip on">居中</span></dd>
+      </dl>
+      <p class="note" id="q2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="swing">
+  <span class="eyebrow">负载线 · 摆幅余量</span>
+  <h2>Q 点放在负载线中点，摆幅最大</h2>
+  <p>加上信号后，工作点沿负载线来回移动，输出 Uce 围绕 UceQ 上下摆。往上最多摆到 Vcc（管子截止，Ic = 0），往下最多摆到 Uces（管子饱和）。所以：</p>
+  <p class="eq">上余量 = Vcc − UceQ　　下余量 = UceQ − Uces　　最大不失真幅度 = 两者中较小的</p>
+  <p>Q 点放在负载线中点附近，UceQ ≈ (Vcc + Uces) / 2，两边余量相等，输出能摆得最大。本页只考虑空载，接了负载后要看交流负载线，思路相同。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 290" role="img" aria-label="左边是直流负载线和 Q 点及其摆动范围，右边是输出 Uce 波形和上下限">
+        <line class="gl" x1="44" y1="46" x2="224" y2="46"/>
+        <line class="gl" x1="44" y1="146" x2="224" y2="146"/>
+        <path class="ax" d="M44,40 V246 H224"/>
+        <text x="38" y="50" text-anchor="end" class="v">6</text>
+        <text x="38" y="150" text-anchor="end" class="v">3</text>
+        <text x="38" y="250" text-anchor="end" class="v">0</text>
+        <text x="48" y="30" class="tm">Ic / mA</text>
+        <text x="44" y="264" text-anchor="middle" class="v">0</text>
+        <text x="134" y="264" text-anchor="middle" class="v">6</text>
+        <text x="224" y="264" text-anchor="end" class="v">12</text>
+        <text x="224" y="282" text-anchor="end" class="tm">Uce / V</text>
+        <line class="real" x1="44" y1="46" x2="224" y2="246"/>
+        <line id="q3-sw" class="real3" x1="100" y1="100" x2="160" y2="160" style="stroke-width:6;opacity:.7"/>
+        <circle id="q3-q" class="dot" cx="134" cy="146" r="6"/>
+        <text id="q3-qt" x="144" y="140" class="t">Q</text>
+        <line class="gl" x1="268" y1="46" x2="464" y2="46"/>
+        <line class="gl" x1="268" y1="146" x2="464" y2="146"/>
+        <path class="ax" d="M268,40 V246 H464"/>
+        <text x="262" y="50" text-anchor="end" class="v">12</text>
+        <text x="262" y="150" text-anchor="end" class="v">6</text>
+        <text x="262" y="250" text-anchor="end" class="v">0</text>
+        <text x="272" y="30" class="tm">输出 Uce / V</text>
+        <line class="ax dash" x1="268" y1="46" x2="464" y2="46"/>
+        <line class="ax dash" x1="268" y1="242.7" x2="464" y2="242.7"/>
+        <line id="q3-ql" class="gl" x1="268" y1="146" x2="464" y2="146" style="stroke:var(--flow);stroke-dasharray:2 3"/>
+        <text x="460" y="40" text-anchor="end" class="tm">Vcc，截止极限</text>
+        <text x="460" y="238" text-anchor="end" class="tm">Uces，饱和极限</text>
+        <polyline id="q3-id" class="ideal" points="268,146 464,146"/>
+        <polyline id="q3-w" class="real" points="268,146 464,146"/>
+        <text x="464" y="282" text-anchor="end" class="tm">时间</text>
+      </svg>
+      <figcaption>绿色粗段是工作点沿负载线摆动的范围。右图虚线是不受限时应有的波形，橙线是实际输出。Vcc 12 V，Rc 2 kΩ，β 取 100。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="q3-rb">基极电阻 Rb</label>
+        <span class="rv" id="q3-rbv">390 kΩ</span>
+        <input type="range" id="q3-rb" min="20" max="100" step="1" value="39"></div>
+      <div class="ctl"><label class="ctl-l" for="q3-a">输出幅度（希望的峰值）</label>
+        <span class="rv" id="q3-av">4.0 V</span>
+        <input type="range" id="q3-a" min="5" max="60" step="5" value="40"></div>
+      <dl class="read">
+        <dt>UceQ</dt><dd id="q3-u">—</dd>
+        <dt>上余量 Vcc − UceQ</dt><dd id="q3-up">—</dd>
+        <dt>下余量 UceQ − Uces</dt><dd id="q3-dn">—</dd>
+        <dt>最大不失真幅度</dt><dd id="q3-max">—</dd>
+        <dt>输出</dt><dd><span id="q3-st" class="chip on">不失真</span></dd>
+      </dl>
+      <p class="note" id="q3-note"></p>
+    </div>
+  </div>
+  <p>削波的方向和原因，下一步在 <a href="08-饱和失真与截止失真.html">饱和失真与截止失真</a> 里细讲。固定偏置的 Q 点直接跟着 β 走，换管子、温度变化 Q 点就跑，解决办法见 <a href="06-温度稳定性与热漂移.html">温度稳定性与热漂移</a>。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>什么是静态工作点？为什么要设置？</summary>
+      <div class="ans"><p>静态工作点是没有输入信号时的 Ib、Ic、Uce。发射结有约 0.6 V 的死区，不加偏置，小信号根本进不去，大信号也只剩半个周期。设好 Q 点让管子始终工作在放大区，交流信号围绕它变化，才不失真。</p></div></details>
+    <details><summary>固定偏置电路的 Q 点怎么算？</summary>
+      <div class="ans"><p>Ib = (Vcc − 0.7) / Rb，Ic = β·Ib，Uce = Vcc − Ic·Rc。算完验证 Uce 大于饱和压降，确认在放大区。</p></div></details>
+    <details><summary>Q 点应该设在哪里？</summary>
+      <div class="ans"><p>负载线中点附近，UceQ 约为 Vcc 的一半。这样往上到截止、往下到饱和的余量相等，最大不失真输出幅度最大。小信号放大器为了省电可以把 Q 点设低一些，只要余量够用。</p></div></details>
+    <details><summary>固定偏置有什么缺点？</summary>
+      <div class="ans"><p>Ic = β·(Vcc − 0.7) / Rb，Q 点和 β 成正比。β 离散性大、随温度上升，Q 点就会漂，严重时进入饱和。实际常用分压偏置加发射极电阻来稳定。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="04-输入输出特性曲线.html"><span>上一页</span>输入输出特性曲线</a><a class="next" href="06-温度稳定性与热漂移.html"><span>下一页</span>温度稳定性与热漂移</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 为什么要偏置 */
+const q1X=scale(0,2,56,456),q1UY=scale(-1,2,130,30),q1IY=scale(0,120,270,170);
+const q1={bias:true};
+function q1u(){
+  const A=+$('q1-a').value/100,ub=q1.bias?0.8:0,ue=t=>ub+A*Math.sin(2*Math.PI*t),ib=t=>Math.max(0,(ue(t)-0.6)*100);
+  $('q1-u').setAttribute('points',plot(ue,0,2,q1X,q1UY,240));
+  $('q1-ib').setAttribute('points',plot(ib,0,2,q1X,q1IY,240));
+  let on=0,mn=1e9,mx=0;for(let k=0;k<400;k++){const v=ib(k/200);if(v>0)on++;mn=Math.min(mn,v);mx=Math.max(mx,v);}
+  const fr=on/400;
+  $('q1-av').textContent=A.toFixed(2)+' V';$('q1-a').setAttribute('aria-valuetext',A.toFixed(2)+' V');
+  $('q1-mm').textContent=mn.toFixed(0)+' / '+mx.toFixed(0)+' µA';
+  $('q1-on').textContent=(fr*100).toFixed(0)+'%';
+  let note;
+  if(fr===0){chip($('q1-st'),'信号全丢','bad');note='驱动电压最高只有 '+A.toFixed(2)+' V，没越过 0.6 V 门槛，Ib 一直为零，信号完全进不去。';}
+  else if(!q1.bias){chip($('q1-st'),'只剩尖顶','bad');note='只有峰值超过 0.6 V 的那一小段导通，Ib 变成一串尖脉冲，只在 '+(fr*100).toFixed(0)+'% 的时间里有电流。这就是不加偏置的后果。';}
+  else if(fr<1){chip($('q1-st'),'谷底被削','warn');note='信号幅度超过了偏置留出的余量 0.2 V，谷底又掉到门槛以下，Ib 的底部被削平。偏置大小要和信号幅度匹配。';}
+  else{chip($('q1-st'),'完整','on');note='偏置把驱动电压抬到 0.8 V，信号在它上下摆动，始终高于门槛。Ib 围绕 IbQ = 20 µA 完整地上下变化，变化量 ±'+(A*100).toFixed(0)+' µA。';}
+  $('q1-note').textContent=note;
+}
+seg('q1-b',v=>{q1.bias=v==='1';q1u();});
+$('q1-a').addEventListener('input',q1u);
+q1u();
+
+/* 2. 固定偏置计算 */
+const q2={b:100};
+function q2u(){
+  const rb=+$('q2-rb').value*1e4,b=q2.b,ib=11.3/rb;
+  let ic=b*ib,uce=12-ic*2e3;const sat=uce<0.2;
+  if(sat){ic=11.8/2e3;uce=0.2;}
+  const lbl=fmtR(rb);
+  $('q2-rbv').textContent=lbl;$('q2-rb').setAttribute('aria-valuetext',lbl);$('q2-rbt').textContent=lbl;
+  $('q2-ib').textContent='11.3 V / '+lbl+' = '+fmtA(ib);
+  $('q2-ic').textContent=sat?fmtA(ic)+'（饱和，< β·Ib）':b+' × '+fmtA(ib)+' = '+fmtA(ic);
+  $('q2-uce').textContent=sat?'≈ 0.2 V':'12 − '+fmtA(ic)+' × 2 kΩ = '+fmtV(uce);
+  $('q2-out').textContent=fmtV(uce,1);setLv($('q2-out'),$('q2-ow'),uce>6);
+  $('q2-ict').textContent='Ic '+fmtA(ic);$('q2-ibt').textContent='Ib '+fmtA(ib);
+  $('q2-f').classList.toggle('thin',ic<2e-3);
+  let note;
+  if(sat){chip($('q2-st'),'已饱和','bad');note='Rb 太小，β·Ib 超过了 Rc 能给的最大电流 5.9 mA。管子饱和，没法做放大。';}
+  else if(uce<3){chip($('q2-st'),'偏向饱和','warn');note='UceQ 只有 '+fmtV(uce)+'，离饱和很近，输出往下摆的余量小。增大 Rb 可以把 Q 点往右下移。';}
+  else if(uce>9){chip($('q2-st'),'偏向截止','warn');note='Ic 太小，UceQ 接近 Vcc，输出往上摆的余量小。减小 Rb 可以把 Q 点往左上移。';}
+  else{chip($('q2-st'),'居中','on');note='UceQ 在 Vcc 一半附近，上下余量都够。注意 Ic 和 β 成正比：同一个 Rb，把 β 切到 200 看看 Q 点跑到哪。';}
+  $('q2-note').textContent=note;
+}
+seg('q2-b',v=>{q2.b=+v;q2u();});
+$('q2-rb').addEventListener('input',q2u);
+q2u();
+
+/* 3. Q 点与摆幅余量 */
+const q3LX=scale(0,12,44,224),q3LY=scale(0,6,246,46),q3WX=scale(0,2,268,464),q3WY=scale(0,12,246,46);
+function q3u(){
+  const rb=+$('q3-rb').value*1e4,A=+$('q3-a').value/10;
+  let uq=12-100*(11.3/rb)*2e3;if(uq<0.2)uq=0.2;
+  const up=12-uq,dn=uq-0.2,mx=Math.min(up,dn),ulo=Math.max(0.2,uq-A),uhi=Math.min(12,uq+A);
+  $('q3-q').setAttribute('cx',q3LX(uq).toFixed(1));$('q3-q').setAttribute('cy',q3LY((12-uq)/2).toFixed(1));
+  $('q3-qt').setAttribute('x',(q3LX(uq)+10).toFixed(1));$('q3-qt').setAttribute('y',(q3LY((12-uq)/2)-8).toFixed(1));
+  $('q3-sw').setAttribute('x1',q3LX(ulo).toFixed(1));$('q3-sw').setAttribute('y1',q3LY((12-ulo)/2).toFixed(1));
+  $('q3-sw').setAttribute('x2',q3LX(uhi).toFixed(1));$('q3-sw').setAttribute('y2',q3LY((12-uhi)/2).toFixed(1));
+  $('q3-ql').setAttribute('y1',q3WY(uq).toFixed(1));$('q3-ql').setAttribute('y2',q3WY(uq).toFixed(1));
+  const ideal=t=>uq-A*Math.sin(2*Math.PI*t);
+  $('q3-id').setAttribute('points',plot(t=>Math.max(-0.5,Math.min(12.5,ideal(t))),0,2,q3WX,q3WY,200));
+  $('q3-w').setAttribute('points',plot(t=>Math.max(0.2,Math.min(12,ideal(t))),0,2,q3WX,q3WY,200));
+  const lbl=fmtR(rb);$('q3-rbv').textContent=lbl;$('q3-rb').setAttribute('aria-valuetext',lbl);
+  $('q3-av').textContent=A.toFixed(1)+' V';$('q3-a').setAttribute('aria-valuetext',A.toFixed(1)+' V');
+  $('q3-u').textContent=fmtV(uq);$('q3-up').textContent=fmtV(up);$('q3-dn').textContent=fmtV(dn);
+  $('q3-max').textContent=fmtV(mx)+' 峰值';
+  const cu=A>up,cd=A>dn;let note;
+  if(cu&&cd){chip($('q3-st'),'上下都削','bad');note='要求的幅度 '+A.toFixed(1)+' V 比两边余量都大，就算 Q 点在正中，最大也只能摆约 5.9 V。';}
+  else if(cu){chip($('q3-st'),'顶部被削：截止','bad');note='Q 点太靠右（Ic 太小），往上摆时 Ic 先减到零，管子截止，Uce 顶在 Vcc 上。减小 Rb 让 Q 点左移。';}
+  else if(cd){chip($('q3-st'),'底部被削：饱和','bad');note='Q 点太靠左（Ic 太大），往下摆时 Uce 先碰到饱和压降，管子饱和，底部被削平。增大 Rb 让 Q 点右移。';}
+  else{chip($('q3-st'),'不失真','on');note='幅度小于两边余量，波形完整。把幅度往大拖，看哪一边先被削；再调 Rb 把 Q 点挪到 UceQ ≈ 6.1 V，两边同时到极限，摆幅最大。';}
+  $('q3-note').textContent=note;
+}
+$('q3-rb').addEventListener('input',q3u);
+$('q3-a').addEventListener('input',q3u);
+q3u();
+</script>
+</body>
+</html>

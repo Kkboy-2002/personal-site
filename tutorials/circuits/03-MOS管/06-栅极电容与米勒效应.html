@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>栅极电容与米勒效应</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.hl{color:var(--copper)}
+.plate{stroke:currentColor;stroke-width:3;stroke-linecap:round}
+figure svg+svg{margin-top:10px}
+.vth{stroke:var(--danger);stroke-width:1.2;stroke-dasharray:4 4}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#mos">MOS管</a><span class="sp"></span><span>06 / 09</span></nav>
+<header>
+  <span class="eyebrow">MOS管 · 栅极电容 · 米勒平台</span>
+  <h1>栅极电容与米勒效应</h1>
+  <p class="lede">MOS 管开关慢，不是沟道慢，而是栅极电容要充放电。其中 G-D 之间的电容 Cgd 会让 Vgs 在开通途中停下来一段，这就是米勒平台。下面调驱动电阻和 Cgd，看平台怎么变长变短。</p>
+</header>
+
+<section id="caps">
+  <span class="eyebrow">三个极间电容</span>
+  <h2>手册给的是 Ciss、Coss、Crss</h2>
+  <p>物理上 MOS 管有三个极间电容：Cgs、Cgd、Cds。手册不直接给它们，给的是在某个 Vds 下测出的三个组合值。测输入电容时把 D-S 交流短路，从栅极看进去 Cgs 和 Cgd 并联；测输出电容时把 G-S 短路，从漏极看进去 Cds 和 Cgd 并联。</p>
+  <p class="eq">Ciss = Cgs + Cgd　　Coss = Cds + Cgd　　Crss = Cgd</p>
+  <p>这些电容都随 Vds 变化，尤其 Cgd，Vds 低时能比高压时大一个数量级，因为 G-D 之间的耗尽层随 Vds 变宽，相当于电容极板间距变大。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 400 270" role="img" aria-label="NMOS 符号，栅漏之间画出 Cgd，栅源之间画出 Cgs，漏源之间画出 Cds">
+        <path class="w" d="M60,140 H198"/>
+        <text x="52" y="144" text-anchor="end" class="t">G</text>
+        <line class="bar" x1="198" y1="120" x2="198" y2="160"/>
+        <line class="bar" x1="210" y1="116" x2="210" y2="128"/>
+        <line class="bar" x1="210" y1="134" x2="210" y2="146"/>
+        <line class="bar" x1="210" y1="152" x2="210" y2="164"/>
+        <path class="w" d="M210,122 H232 V36 M210,158 H232 M210,140 H232 V246"/>
+        <circle class="dot" cx="232" cy="158" r="3.5"/>
+        <polygon class="ah" points="213,140 222,135 222,145"/>
+        <text x="232" y="28" text-anchor="middle" class="t">D</text>
+        <text x="232" y="262" text-anchor="middle" class="t">S</text>
+        <g id="s1-gd">
+          <path class="w" d="M130,140 V98 M130,88 V60 H232"/>
+          <line class="plate" x1="118" y1="98" x2="142" y2="98"/>
+          <line class="plate" x1="118" y1="88" x2="142" y2="88"/>
+          <circle class="dot" cx="130" cy="140" r="3.5"/>
+          <circle class="dot" cx="232" cy="60" r="3.5"/>
+          <text x="148" y="90" class="t">Cgd</text>
+          <text id="s1-vgd" x="148" y="106" class="v">54 pF</text>
+        </g>
+        <g id="s1-gs">
+          <path class="w" d="M96,140 V182 M96,192 V222 H232"/>
+          <line class="plate" x1="84" y1="182" x2="108" y2="182"/>
+          <line class="plate" x1="84" y1="192" x2="108" y2="192"/>
+          <circle class="dot" cx="96" cy="140" r="3.5"/>
+          <circle class="dot" cx="232" cy="222" r="3.5"/>
+          <text x="114" y="186" class="t">Cgs</text>
+          <text id="s1-vgs" x="114" y="202" class="v">2000 pF</text>
+        </g>
+        <g id="s1-ds">
+          <path class="w" d="M232,74 H310 V132 M310,142 V206 H232"/>
+          <line class="plate" x1="298" y1="132" x2="322" y2="132"/>
+          <line class="plate" x1="298" y1="142" x2="322" y2="142"/>
+          <circle class="dot" cx="232" cy="74" r="3.5"/>
+          <circle class="dot" cx="232" cy="206" r="3.5"/>
+          <text x="330" y="134" class="t">Cds</text>
+          <text id="s1-vds" x="330" y="150" class="v">408 pF</text>
+        </g>
+      </svg>
+      <svg viewBox="0 0 400 206" role="img" aria-label="Ciss、Coss、Crss 随 Vds 变化的曲线，对数纵轴">
+        <line class="gl" x1="50" y1="20" x2="380" y2="20"/>
+        <line class="gl" x1="50" y1="70" x2="380" y2="70"/>
+        <line class="gl" x1="50" y1="120" x2="380" y2="120"/>
+        <path class="ax" d="M50,20 V170 H380"/>
+        <text x="44" y="24" text-anchor="end" class="v">10n</text>
+        <text x="44" y="74" text-anchor="end" class="v">1n</text>
+        <text x="44" y="124" text-anchor="end" class="v">100p</text>
+        <text x="44" y="174" text-anchor="end" class="v">10p</text>
+        <text x="50" y="186" text-anchor="middle" class="v">0</text>
+        <text x="182" y="186" text-anchor="middle" class="v">20</text>
+        <text x="314" y="186" text-anchor="middle" class="v">40</text>
+        <text x="380" y="202" text-anchor="end" class="tm">Vds / V</text>
+        <text x="54" y="14" class="tm">电容 / F</text>
+        <polyline id="s1-ci" class="real" points=""/>
+        <polyline id="s1-co" class="real3" points=""/>
+        <polyline id="s1-cr" class="real2" points=""/>
+        <text x="376" y="44" text-anchor="end" class="t" style="fill:var(--copper)">Ciss</text>
+        <text x="376" y="82" text-anchor="end" class="t" style="fill:var(--flow)">Coss</text>
+        <text x="376" y="130" text-anchor="end" class="t" style="fill:var(--low)">Crss</text>
+        <line id="s1-vl" class="ax dash" x1="0" y1="20" x2="0" y2="170"/>
+      </svg>
+      <figcaption>上：三个极间电容的位置，橙色是当前参数包含的电容。下：三个手册参数随 Vds 的变化，虚线是当前 Vds。示意值，量级接近一颗 60 V、10 mΩ 级的功率 MOS。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">手册参数</span>
+        <div class="seg" id="s1-p"><button id="s1-p-i" data-v="i" aria-pressed="true">Ciss</button><button id="s1-p-o" data-v="o" aria-pressed="false">Coss</button><button id="s1-p-r" data-v="r" aria-pressed="false">Crss</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-vd">测试条件 Vds</label>
+        <span class="rv" id="s1-vdv">25 V</span>
+        <input type="range" id="s1-vd" min="0" max="50" step="1" value="25"></div>
+      <dl class="read">
+        <dt>组成</dt><dd id="s1-f">Cgs + Cgd</dd>
+        <dt>数值</dt><dd id="s1-v">2054 pF</dd>
+        <dt>Cgd 占 Ciss</dt><dd id="s1-pc">2.6 %</dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="miller">
+  <span class="eyebrow">开通四个阶段 · 米勒平台</span>
+  <h2>Vgs 为什么会停在一个平台上</h2>
+  <p>以感性负载的低边开关为例，负载电流由续流二极管维持。驱动器经 Rg 给栅极充电，开通分四个阶段：</p>
+  <ol>
+    <li>Vgs 从 0 升到 Vth：给 Cgs 和 Cgd 充电，管子还没导通，Id = 0，Vds 保持母线电压。这段是开通延迟。</li>
+    <li>Vgs 从 Vth 升到平台电压：Id 按转移特性上升到负载电流。续流二极管还没关断，Vds 仍被钳在母线电压。</li>
+    <li>米勒平台：Id 已满，Vgs 就锁定在对应这个电流的值 Vpl ≈ Vth + Id / gfs。Vds 开始下降，Cgd 两端电压跟着大幅变化，驱动电流全部用来给 Cgd 放电和反向充电，Vgs 不再上升。</li>
+    <li>Vds 降到底后，驱动电流重新给 Cgs 和变大的 Cgd 充电，Vgs 升到驱动电压，Rds(on) 进一步降低。</li>
+  </ol>
+  <p>米勒平台的长度 ≈ Qgd / Ig，Ig = (Vdrv − Vpl) / Rg。平台越长，Vds 和 Id 重叠的时间越长，开关损耗越大。之所以叫"米勒"，是因为 Cgd 跨在一个反相放大器的输入输出之间，从栅极看进去被放大成 (1 + gm·RL)·Cgd，和运放里的米勒电容是同一个道理。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 284" role="img" aria-label="MOS 开通波形：上面 Vgs，下面 Vds 和 Id，按四个阶段着色，Vgs 在第三阶段出现米勒平台">
+        <rect id="s2-z1" class="zone-cut" x="0" y="24" width="0" height="222"/>
+        <rect id="s2-z2" class="zone-ok" x="0" y="24" width="0" height="222"/>
+        <rect id="s2-z3" class="zone-sat" x="0" y="24" width="0" height="222"/>
+        <rect id="s2-z4" class="zone-cut" x="0" y="24" width="0" height="222"/>
+        <text id="s2-l1" x="0" y="132" text-anchor="middle" class="tm">1</text>
+        <text id="s2-l2" x="0" y="132" text-anchor="middle" class="tm">2</text>
+        <text id="s2-l3" x="0" y="132" text-anchor="middle" class="tm">3 平台</text>
+        <text id="s2-l4" x="0" y="132" text-anchor="middle" class="tm">4</text>
+        <path class="ax" d="M60,26 V110 H490 M60,146 V240 H490"/>
+        <line class="gl" x1="60" y1="30" x2="490" y2="30"/>
+        <line class="gl" x1="60" y1="150" x2="490" y2="150"/>
+        <line class="ax dash" x1="60" y1="83.3" x2="490" y2="83.3"/>
+        <text x="54" y="34" text-anchor="end" class="v">12</text>
+        <text x="54" y="87" text-anchor="end" class="v">4</text>
+        <text x="54" y="114" text-anchor="end" class="v">0</text>
+        <text x="54" y="244" text-anchor="end" class="v">0</text>
+        <text x="486" y="22" text-anchor="end" class="t" style="fill:var(--copper)">Vgs / V</text>
+        <polyline id="s2-vg" class="real" points=""/>
+        <polyline id="s2-vd" class="real2" points=""/>
+        <polyline id="s2-id" class="real3" points=""/>
+        <text x="66" y="146" class="t" style="fill:var(--low)">Vds 48 V</text>
+        <text x="486" y="146" text-anchor="end" class="t" style="fill:var(--flow)">Id 10 A</text>
+        <text x="60" y="258" text-anchor="middle" class="v">0</text>
+        <text x="167.5" y="258" text-anchor="middle" class="v">100</text>
+        <text x="275" y="258" text-anchor="middle" class="v">200</text>
+        <text x="382.5" y="258" text-anchor="middle" class="v">300</text>
+        <text x="490" y="258" text-anchor="end" class="v">400</text>
+        <text x="490" y="278" text-anchor="end" class="tm">时间 / ns</text>
+      </svg>
+      <figcaption>条件：母线 48 V，感性负载电流 10 A，驱动 0→12 V，Vth = 3 V，平台 Vpl = 4 V，Cgs = 2 nF，Rds(on) = 10 mΩ。第 4 阶段 Cgd 按低压下变大 5 倍估算。示意计算，忽略寄生电感和二极管反向恢复。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-rg">栅极电阻 Rg（含驱动内阻）</label>
+        <span class="rv" id="s2-rgv">10 Ω</span>
+        <input type="range" id="s2-rg" min="1" max="20" step="1" value="10"></div>
+      <div class="ctl"><span class="ctl-l">Cgd（高压段平均值）</span>
+        <div class="seg" id="s2-c"><button id="s2-c-1" data-v="0.1" aria-pressed="false">0.1 nF</button><button id="s2-c-2" data-v="0.2" aria-pressed="true">0.2 nF</button><button id="s2-c-4" data-v="0.4" aria-pressed="false">0.4 nF</button></div></div>
+      <dl class="read">
+        <dt>平台期栅极电流</dt><dd id="s2-ig">0.80 A</dd>
+        <dt>Qgd = Cgd·ΔVds</dt><dd id="s2-qgd">9.6 nC</dd>
+        <dt>平台时长 Qgd / Ig</dt><dd id="s2-tp">12 ns</dd>
+        <dt>总栅极电荷 Qg</dt><dd id="s2-qg">42 nC</dd>
+        <dt>开通一次损耗</dt><dd id="s2-e">4.2 µJ</dd>
+        <dt>开关速度</dt><dd><span id="s2-st" class="chip on">适中</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="false">
+  <span class="eyebrow">米勒误导通 · 负压关断 · 米勒钳位</span>
+  <h2>关着的管子被 Cgd "拽"开</h2>
+  <p>半桥里下管关断时，上管一开通，下管漏极电压以很高的 dv/dt 上冲。这个电压变化经 Cgd 灌出一股电流 i = Cgd·dv/dt，流过下管的关断电阻到驱动器地，在栅极上抬出一个尖峰。尖峰超过 Vth，下管就被误开通，上下管直通。高温时 Vth 更低，更容易出事。</p>
+  <p>对策有四类：关断电阻取小，让这股电流有低阻通路；负压关断，给尖峰留出余量；米勒钳位，在 Vgs 已经很低时用一个小管子把栅极直接短到源极；降低 dv/dt 或在 G-S 并小电容分压，但会拖慢开关。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 262" role="img" aria-label="左边是半桥下管，Cgd 电流经关断电阻流向驱动器；右边是开关节点电压上升时下管 Vgs 的尖峰波形与 Vth 比较">
+        <text x="150" y="18" text-anchor="middle" class="tm">开关节点，被上管拉高</text>
+        <path class="w" d="M150,26 V112 H128 M128,148 H150 M128,130 H150 V220 M136,220 H164 M141,225 H159 M146,230 H154"/>
+        <line class="bar" x1="116" y1="110" x2="116" y2="150"/>
+        <line class="bar" x1="128" y1="106" x2="128" y2="118"/>
+        <line class="bar" x1="128" y1="124" x2="128" y2="136"/>
+        <line class="bar" x1="128" y1="142" x2="128" y2="154"/>
+        <circle class="dot" cx="150" cy="148" r="3.5"/>
+        <polygon class="ah" points="131,130 140,125 140,135"/>
+        <text x="158" y="178" class="t">下管</text>
+        <path class="w dash" d="M150,60 H96 V92 M96,100 V130"/>
+        <line class="plate" x1="84" y1="92" x2="108" y2="92"/>
+        <line class="plate" x1="84" y1="100" x2="108" y2="100"/>
+        <circle class="dot" cx="150" cy="60" r="3.5"/>
+        <circle class="dot" cx="96" cy="130" r="3.5"/>
+        <text x="80" y="88" text-anchor="end" class="t">Cgd</text>
+        <path class="w" d="M30,150 V130 H40 M80,130 H116"/>
+        <rect class="r" x="40" y="122" width="40" height="16" rx="2"/>
+        <text id="s3-rgt" x="60" y="114" text-anchor="middle" class="v">Rg 10 Ω</text>
+        <rect class="box" x="6" y="150" width="50" height="36" rx="4"/>
+        <text x="31" y="173" text-anchor="middle" class="t">驱动</text>
+        <text id="s3-off" x="31" y="202" text-anchor="middle" class="v lo">0 V</text>
+        <path class="w" d="M31,186 V190 M31,208 V220 H136"/>
+        <g id="s3-clp" hidden>
+          <path class="w" d="M104,130 V160 M104,182 V200 H150"/>
+          <rect class="box" x="92" y="160" width="24" height="22" rx="3"/>
+          <text x="104" y="176" text-anchor="middle" class="tm">钳</text>
+          <circle class="dot" cx="104" cy="130" r="3.5"/>
+          <circle class="dot" cx="150" cy="200" r="3.5"/>
+        </g>
+        <path id="s3-fm" class="flow thin" d="M148,60 H96 V128 H30 V148"/>
+        <path id="s3-fs" class="flow bad" d="M150,28 V112 H132 V148 H150 V218"/>
+
+        <path class="ax" d="M250,30 V96 H510 M250,120 V236 H510"/>
+        <text x="244" y="34" text-anchor="end" class="v">48</text>
+        <text x="244" y="100" text-anchor="end" class="v">0</text>
+        <text x="256" y="24" class="t" style="fill:var(--low)">Vds 下管 / V</text>
+        <polyline id="s3-wd" class="real2" points=""/>
+        <line id="s3-th" class="vth" x1="250" y1="0" x2="510" y2="0"/>
+        <text id="s3-tht" x="506" y="0" text-anchor="end" class="tm" style="fill:var(--danger)">Vth 高温 2.2 V</text>
+        <line class="gl" x1="250" y1="196" x2="510" y2="196"/>
+        <text x="244" y="124" text-anchor="end" class="v">+8</text>
+        <text x="244" y="200" text-anchor="end" class="v">0</text>
+        <text x="244" y="240" text-anchor="end" class="v">−6</text>
+        <text x="256" y="138" class="t" style="fill:var(--copper)">Vgs 下管 / V</text>
+        <polyline id="s3-wg" class="real" points=""/>
+        <text x="250" y="252" text-anchor="middle" class="v">0</text>
+        <text x="380" y="252" text-anchor="middle" class="v">20</text>
+        <text x="510" y="252" text-anchor="end" class="v">40 ns</text>
+      </svg>
+      <figcaption>绿色细虚线是 Cgd 灌出的电流路径；红色粗虚线表示下管被误开通、与上管直通。示意：Cgd = 0.2 nF，Cgs = 2 nF，母线 48 V，高温 Vth 取 2.2 V，钳位管导通电阻取 1 Ω。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">关断方式</span>
+        <div class="seg" id="s3-m"><button id="s3-m-0" data-v="0" aria-pressed="true">0 V 关断</button><button id="s3-m-n" data-v="n" aria-pressed="false">−5 V 负压</button><button id="s3-m-c" data-v="c" aria-pressed="false">米勒钳位</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s3-rg">关断电阻 Rg(off)</label>
+        <span class="rv" id="s3-rgv">10 Ω</span>
+        <input type="range" id="s3-rg" min="1" max="30" step="1" value="10"></div>
+      <div class="ctl"><span class="ctl-l">开关节点 dv/dt</span>
+        <div class="seg" id="s3-dv"><button id="s3-dv-2" data-v="2" aria-pressed="false">2 V/ns</button><button id="s3-dv-5" data-v="5" aria-pressed="true">5 V/ns</button><button id="s3-dv-10" data-v="10" aria-pressed="false">10 V/ns</button></div></div>
+      <dl class="read">
+        <dt>Cgd 电流 = Cgd·dv/dt</dt><dd id="s3-i">1.00 A</dd>
+        <dt>Vgs 尖峰</dt><dd id="s3-pk">3.5 V</dd>
+        <dt>离 Vth 的余量</dt><dd id="s3-mg">−1.3 V</dd>
+        <dt>结果</dt><dd><span id="s3-st" class="chip bad">误导通</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>什么是米勒效应？米勒平台是怎么产生的？</summary>
+      <div class="ans"><p>Cgd 跨在栅极和漏极之间，而漏极电压和栅极电压反相变化，从栅极看进去 Cgd 被放大了 (1 + 增益) 倍，这就是米勒效应。开通时 Id 达到负载电流后，Vgs 被锁定在对应这个电流的平台电压上，驱动电流全部用来给 Cgd 充放电让 Vds 下降，Vgs 停住不动，形成平台。平台长度 ≈ Qgd / Ig。</p></div></details>
+    <details><summary>Ciss、Coss、Crss 分别是什么？各影响什么？</summary>
+      <div class="ans"><p>Ciss = Cgs + Cgd，决定驱动要充多少电、开通延迟多长。Coss = Cds + Cgd，决定每次开关储存和损耗的能量 0.5·Coss·V^2，也决定软开关需要的换流能量。Crss = Cgd，决定米勒平台长度和抗 dv/dt 误导通的能力，越小越好。</p></div></details>
+    <details><summary>栅极电阻取大还是取小？</summary>
+      <div class="ans"><p>是折中。Rg 小，平台短、开关损耗小，但 di/dt 和 dv/dt 大，振铃、EMI、电压尖峰都更严重。Rg 大则相反。常用做法是开通和关断分开：开通电阻稍大控制 EMI，关断用二极管旁路一个小电阻，关得快，也降低米勒误导通风险。</p></div></details>
+    <details><summary>什么是米勒误导通？怎么解决？</summary>
+      <div class="ans"><p>半桥中一个管子开通时，另一个关断管的漏极电压快速上升，dv/dt 经 Cgd 注入电流，在关断电阻上产生压降抬高 Vgs，超过 Vth 就误开通，造成直通。解决办法：减小关断电阻；负压关断，比如 −3 ~ −5 V；加米勒钳位；G-S 并小电容；适当降低 dv/dt；选 Crss / Ciss 比值小、Vth 高的管子。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="05-跨导gm.html"><span>上一页</span>跨导gm</a><a class="next" href="07-体二极管.html"><span>下一页</span>体二极管</a></nav>
+</div>
+
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 极间电容 */
+const cGS=2000e-12,cGD=v=>20e-12+780e-12/Math.pow(1+v/2,1.2),cDS=v=>1500e-12/Math.sqrt(1+v/2);
+const s1={p:'i'},Xc=scale(0,50,50,380),Yc=scale(-11,-8,170,20),lg=v=>Math.log10(v);
+$('s1-ci').setAttribute('points',plot(v=>lg(cGS+cGD(v)),0,50,Xc,Yc,100));
+$('s1-co').setAttribute('points',plot(v=>lg(cDS(v)+cGD(v)),0,50,Xc,Yc,100));
+$('s1-cr').setAttribute('points',plot(v=>lg(cGD(v)),0,50,Xc,Yc,100));
+const pF=c=>(c*1e12).toFixed(0)+' pF';
+const s1N={
+  i:'Ciss 是驱动器"看到"的电容。它决定开通延迟和驱动要送多少电荷。Cgd 在 Ciss 里占比很小，但开关过程中它两端电压变化几十伏，米勒平台的电荷 Qgd 往往和 Qgs 差不多大。',
+  o:'Coss 是漏极"看到"的电容。每次硬开通，Coss 上储存的 0.5·Coss·V^2 都在沟道里烧掉。软开关电路靠电感电流先把 Coss 放电，实现零电压开通。',
+  r:'Crss 就是 Cgd，也叫反向传输电容，它把漏极的电压变化耦合回栅极。它越小，米勒平台越短，抗 dv/dt 误导通能力越强。注意它在低压时急剧变大。'
+};
+function s1u(){
+  const v=+$('s1-vd').value,gs=cGS,gd=cGD(v),ds=cDS(v),p=s1.p;
+  $('s1-vdv').textContent=v+' V';$('s1-vd').setAttribute('aria-valuetext',v+' V');
+  $('s1-vgs').textContent=pF(gs);$('s1-vgd').textContent=pF(gd);$('s1-vds').textContent=pF(ds);
+  $('s1-gs').classList.toggle('hl',p==='i');$('s1-gd').classList.toggle('hl',true);$('s1-ds').classList.toggle('hl',p==='o');
+  $('s1-f').textContent=p==='i'?'Cgs + Cgd':p==='o'?'Cds + Cgd':'Cgd';
+  $('s1-v').textContent=pF(p==='i'?gs+gd:p==='o'?ds+gd:gd);
+  $('s1-pc').textContent=(gd/(gs+gd)*100).toFixed(1)+' %';
+  const x=Xc(v).toFixed(1);$('s1-vl').setAttribute('x1',x);$('s1-vl').setAttribute('x2',x);
+  $('s1-note').textContent=s1N[p]+(v<5?' 当前 Vds 很低，Cgd 已涨到 '+pF(gd)+'。':'');
+}
+seg('s1-p',v=>{s1.p=v;s1u();});
+$('s1-vd').addEventListener('input',s1u);
+s1u();
+
+/* 2. 开通四阶段 */
+const s2={cgd:0.2e-9},VDRV=12,VTHm=3,VPL=4,VBUS=48,IO=10,RON=0.01,T0=20e-9;
+const Xt=scale(0,400e-9,60,490),Yg=scale(0,12,110,30),Yv=scale(0,VBUS,240,150),Yi=scale(0,IO,240,150);
+function s2u(){
+  const rg=+$('s2-rg').value,cgd=s2.cgd,t1c=rg*(cGS+cgd),ig=(VDRV-VPL)/rg;
+  const t1=T0+t1c*Math.log(VDRV/(VDRV-VTHm)),t2=T0+t1c*Math.log(VDRV/(VDRV-VPL));
+  const qgd=cgd*(VBUS-IO*RON),tp=qgd/ig,t3=t2+tp,t2c=rg*(cGS+5*cgd),t4=t3+3*t2c;
+  const vg=t=>t<T0?0:t<t2?VDRV*(1-Math.exp(-(t-T0)/t1c)):t<t3?VPL:VDRV-(VDRV-VPL)*Math.exp(-(t-t3)/t2c);
+  const idt=t=>{const g=vg(t);return t>=t2?IO:g>VTHm?IO*Math.pow((g-VTHm)/(VPL-VTHm),2):0;};
+  const vdt=t=>t<t2?VBUS:t<t3?VBUS-(VBUS-IO*RON)*(t-t2)/tp:IO*RON;
+  const tmax=400e-9;
+  $('s2-vg').setAttribute('points',plot(vg,0,tmax,Xt,Yg,600));
+  $('s2-vd').setAttribute('points',plot(vdt,0,tmax,Xt,Yv,600));
+  $('s2-id').setAttribute('points',plot(idt,0,tmax,Xt,Yi,600));
+  const edges=[T0,t1,t2,t3,Math.min(t4,tmax)];
+  for(let k=1;k<=4;k++){
+    const a=Math.min(Xt(edges[k-1]),490),b=Math.min(Xt(edges[k]),490),z=$('s2-z'+k),l=$('s2-l'+k);
+    z.setAttribute('x',a.toFixed(1));z.setAttribute('width',Math.max(0,b-a).toFixed(1));
+    l.setAttribute('x',((a+b)/2).toFixed(1));show(l,b-a>(k===3?44:12));
+  }
+  const qgs=(cGS+cgd)*VPL,qg=qgs+qgd+(cGS+5*cgd)*(VDRV-VPL);
+  const eon=0.5*VBUS*IO*(t2-t1)+0.5*VBUS*IO*tp;
+  $('s2-rgv').textContent=rg+' Ω';$('s2-rg').setAttribute('aria-valuetext',rg+' Ω');
+  $('s2-ig').textContent=fmtA(ig);
+  $('s2-qgd').textContent=(qgd*1e9).toFixed(1)+' nC';
+  $('s2-tp').textContent=fmtT(tp);
+  $('s2-qg').textContent=(qg*1e9).toFixed(0)+' nC';
+  $('s2-e').textContent=(eon*1e6).toFixed(1)+' µJ';
+  const sw=t3-t1;
+  if(sw<8e-9)chip($('s2-st'),'很快，注意振铃','warn');else if(sw<30e-9)chip($('s2-st'),'适中','on');else chip($('s2-st'),'偏慢，损耗大','bad');
+  $('s2-note').textContent='开通延迟（阶段 1）'+fmtT(t1-T0)+'，电流上升（阶段 2）'+fmtT(t2-t1)+'，米勒平台（阶段 3）'+fmtT(tp)+'。平台期驱动电流 (12 − 4) / '+rg+' Ω = '+fmtA(ig)+'，全部用来搬运 Qgd = '+(qgd*1e9).toFixed(1)+' nC。'
+    +(rg>=15?'Rg 大，平台被拉长，Vds 和 Id 重叠时间长，开关损耗大。':rg<=3?'Rg 很小，开关很快，但实际电路里 di/dt、dv/dt 大，寄生电感会引起振铃和电压尖峰。':'')
+    +(cgd>=0.4e-9?'Cgd 翻倍，Qgd 翻倍，平台也翻倍。':'');
+}
+$('s2-rg').addEventListener('input',s2u);
+seg('s2-c',v=>{s2.cgd=+v*1e-9;s2u();});
+s2u();
+
+/* 3. 米勒误导通 */
+const s3={m:'0',dv:5},CGD3=0.2e-9,VTHH=2.2,Xw=scale(0,40e-9,250,510),Yw=scale(0,48,96,30),Yq=scale(-6,8,236,120),T03=4e-9;
+$('s3-th').setAttribute('y1',Yq(VTHH).toFixed(1));$('s3-th').setAttribute('y2',Yq(VTHH).toFixed(1));
+$('s3-tht').setAttribute('y',(Yq(VTHH)-5).toFixed(1));
+function s3u(){
+  const rgIn=+$('s3-rg').value,dv=s3.dv*1e9,m=s3.m,voff=m==='n'?-5:0,rg=m==='c'?1:rgIn;
+  const tr=VBUS/dv,tau=rg*(cGS+CGD3),i=CGD3*dv,a=i*rg;
+  const vs=t=>t<T03?0:t<T03+tr?(t-T03)*dv:VBUS;
+  const vq=t=>t<T03?voff:t<T03+tr?voff+a*(1-Math.exp(-(t-T03)/tau)):voff+a*(1-Math.exp(-tr/tau))*Math.exp(-(t-T03-tr)/tau);
+  const pk=voff+a*(1-Math.exp(-tr/tau)),mg=VTHH-pk;
+  $('s3-wd').setAttribute('points',plot(vs,0,40e-9,Xw,Yw,300));
+  $('s3-wg').setAttribute('points',plot(t=>Math.min(8,vq(t)),0,40e-9,Xw,Yq,300));
+  $('s3-rgv').textContent=rgIn+' Ω';$('s3-rg').setAttribute('aria-valuetext',rgIn+' Ω');
+  $('s3-rgt').textContent=m==='c'?'Rg '+rgIn+' Ω，被钳位旁路':'Rg '+rgIn+' Ω';
+  $('s3-off').textContent=voff+' V';
+  show($('s3-clp'),m==='c');
+  $('s3-fm').setAttribute('d',m==='c'?'M148,60 H96 V128 H104 V198 H148':'M148,60 H96 V128 H30 V148');
+  const bad=mg<0,warn=!bad&&mg<1;
+  show($('s3-fs'),bad);$('s3-fm').classList.toggle('bad',bad);
+  $('s3-i').textContent=fmtA(i);
+  $('s3-pk').textContent=fmtV(pk,2);
+  $('s3-mg').textContent=(mg>=0?'+':'')+fmtV(mg,2);
+  chip($('s3-st'),bad?'误导通，直通':warn?'临界，余量小':'安全',bad?'bad':warn?'warn':'on');
+  let n='dv/dt = '+s3.dv+' V/ns 时 Cgd 灌出 '+fmtA(i)+' 电流，';
+  if(m==='c')n+='但米勒钳位管把栅极经约 1 Ω 直接短到源极，绕开了 Rg，尖峰只剩 '+fmtV(pk,2)+'。钳位只在关断后 Vgs 已低于约 2 V 时才启用，不影响正常开关。';
+  else if(m==='n')n+='在 '+(m==='c'?1:rgIn)+' Ω 上最多抬高 '+fmtV(pk-voff,2)+'，但起点是 −5 V，峰值只到 '+fmtV(pk,2)+'。负压给尖峰留了 5 V 的余量，代价是驱动要双电源，而且负压不能超过 Vgs 的负向极限。';
+  else n+=bad?'在 '+rgIn+' Ω 的关断电阻上抬出 '+fmtV(pk,2)+' 的尖峰，超过高温 Vth '+VTHH+' V，下管被打开，与上管直通。试试减小 Rg、换负压或米勒钳位。'
+    :'在 '+rgIn+' Ω 上抬出 '+fmtV(pk,2)+'，Cgs 也分走一部分，没到 Vth。'+(warn?'但余量不足 1 V，温度、批次一变就可能出事。':'');
+  $('s3-note').textContent=n;
+}
+seg('s3-m',v=>{s3.m=v;s3u();});
+seg('s3-dv',v=>{s3.dv=+v;s3u();});
+$('s3-rg').addEventListener('input',s3u);
+s3u();
+</script>
+</body>
+</html>

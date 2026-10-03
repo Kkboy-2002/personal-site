@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>驱动要求正负压</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.plate{stroke:currentColor;stroke-width:3;stroke-linecap:round}
+.lim{stroke:var(--danger);stroke-width:1.2;stroke-dasharray:4 4}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#igbt">IGBT</a><span class="sp"></span><span>06 / 07</span></nav>
+<header>
+  <span class="eyebrow">IGBT · 栅极驱动</span>
+  <h1>IGBT 驱动：+15 V 开，负压关</h1>
+  <p class="lede">IGBT 的栅极一般用 +15 V 开通、−5 ~ −10 V 关断。开通电压管饱和深度，关断负压管抗干扰余量，门极电阻 Rg 管开关快慢，隔离和自举解决上管的驱动从哪来。</p>
+</header>
+
+<section id="lv">
+  <span class="eyebrow">两个电平 · 各管一件事</span>
+  <h2>开通 +15 V，关断 −5 ~ −10 V</h2>
+  <p>开通电压决定管子饱和得够不够深。IGBT 的 Vth 约 5 ~ 6.5 V，额定电流下的米勒平台在 9 ~ 11 V 左右（典型值）。栅压只比平台高一点，沟道开得不够宽，Vce(sat) 偏大；到 +15 V 时压降已接近最低，再往上加收益很小，短路电流却一直涨。所以数据手册里的 Vce(sat) 和短路耐受时间都是按 Vge = 15 V 给的。</p>
+  <p>关断电压决定抗干扰余量。0 V 关断时，栅极离 Vth 只有 5 V 左右，高温下 Vth 还会再降 1 V 多。负压把起点往下拉，干扰尖峰要先爬过这段负压才能碰到 Vth。负压也不是越深越好：Vge 的极限一般是 ±20 V，负压越深，每次开关要搬的栅极电荷越多，驱动功耗越大。</p>
+  <p class="eq">驱动功耗 P = Qg · (Von − Voff) · fsw</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 300" role="img" aria-label="栅极电压电平图：±20 V 极限、开通电平、米勒平台、Vth 区间、0 V 和关断电平，左侧是一段栅极驱动波形">
+        <g id="a-ax"></g>
+        <rect x="60" y="107.2" width="440" height="7.2" style="fill:var(--danger);fill-opacity:.14"/>
+        <line class="lim" x1="60" y1="22" x2="500" y2="22"/>
+        <line class="lim" x1="60" y1="262" x2="500" y2="262"/>
+        <line class="ax dash" x1="60" y1="88" x2="500" y2="88"/>
+        <line id="a-lon" class="w s-hi" x1="60" y1="52" x2="500" y2="52" style="stroke-width:1.2;stroke-dasharray:2 3"/>
+        <line id="a-loff" class="w s-lo" x1="60" y1="190" x2="500" y2="190" style="stroke-width:1.2;stroke-dasharray:2 3"/>
+        <polyline id="a-wave" class="real" points=""/>
+        <line id="a-br" class="w s-ok" x1="308" y1="190" x2="308" y2="114.4" style="stroke-width:4"/>
+        <text id="a-brt" x="316" y="156" class="tm" style="fill:var(--flow)">余量 12.6 V</text>
+        <text x="500" y="17" text-anchor="end" class="tm" style="fill:var(--danger)">+20 V 极限</text>
+        <text id="a-tont" x="316" y="47" class="t hi">开通 +15 V</text>
+        <text x="316" y="83" class="tm">米勒平台 ≈ 9 V</text>
+        <text x="316" y="103" class="tm" style="fill:var(--danger)">Vth 4.6 ~ 5.8 V</text>
+        <text id="a-tofft" x="316" y="206" class="t lo">关断 −8 V</text>
+        <text x="500" y="256" text-anchor="end" class="tm" style="fill:var(--danger)">−20 V 极限</text>
+      </svg>
+      <figcaption>橙线是栅极电压波形（Rg = 5 Ω），上升和下降途中各有一段米勒平台。红色窄带是 Vth，25 °C 约 5.8 V，150 °C 约 4.6 V。绿色竖条是关断电平到高温 Vth 的距离，即静态抗干扰余量。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">开通电压 Von</span>
+        <div class="seg" id="a-on"><button id="a-on-12" data-v="12" aria-pressed="false">+12 V</button><button id="a-on-15" data-v="15" aria-pressed="true">+15 V</button><button id="a-on-18" data-v="18" aria-pressed="false">+18 V</button></div></div>
+      <div class="ctl"><span class="ctl-l">关断电压 Voff</span>
+        <div class="seg" id="a-off"><button id="a-off-0" data-v="0" aria-pressed="false">0 V</button><button id="a-off-5" data-v="-5" aria-pressed="false">−5 V</button><button id="a-off-8" data-v="-8" aria-pressed="true">−8 V</button><button id="a-off-10" data-v="-10" aria-pressed="false">−10 V</button></div></div>
+      <dl class="read">
+        <dt>Vce(sat)，100 A</dt><dd id="a-vs"></dd>
+        <dt>短路电流 / tsc</dt><dd id="a-sc"></dd>
+        <dt>关断余量（150 °C）</dt><dd id="a-mg"></dd>
+        <dt>离 ±20 V 极限</dt><dd id="a-mx"></dd>
+        <dt>Qg / 驱动功率 10 kHz</dt><dd id="a-p"></dd>
+        <dt>评价</dt><dd><span id="a-chip" class="chip on">合适</span></dd>
+      </dl>
+      <p class="note" id="a-note"></p>
+      <p class="note">示意：1200 V / 100 A 模块，Vce(sat) 按 1.55 + 1.8 / (Vge − 9) 拟合典型曲线；短路电流和 tsc 的估算方法同上一页；Qg 按平台前 10 nF、平台 0.3 µC、平台后 25 nF 估算。</p>
+    </div>
+  </div>
+</section>
+
+<section id="miller">
+  <span class="eyebrow">米勒效应 · 寄生导通</span>
+  <h2>对管的 dv/dt 会把关着的管子拽开</h2>
+  <p>半桥里下管关断、电流走续流二极管时，上管一开通，开关节点电压就以几 kV/µs 的速度往上冲。下管的集电极跟着上冲，这个电压变化经 Cgc 灌进下管栅极，电流 i = Cgc·dv/dt。它从栅极经关断电阻 Rg(off) 流回驱动器，在 Rg 上抬出一个尖峰。尖峰超过 Vth，下管被误开通，和上管直通。</p>
+  <p>0 V 关断时尖峰从 0 V 起跳；负压关断时从 −8 V 起跳，同样高的尖峰就够不到 Vth。高温时 Vth 还要再低 1 V 多，是最危险的工况。原理和 <a href="../03-MOS管/06-栅极电容与米勒效应.html">MOS 管的米勒误导通</a> 相同，只是 IGBT 模块电流大、Cgc 大，问题更突出。</p>
+  <p class="eq">Vge峰 ≈ Voff + Cgc·(dv/dt)·Rg·(1 − e^(−tr/τ))，τ = Rg·(Cge + Cgc)，tr = Vbus / (dv/dt)</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 274" role="img" aria-label="左边是半桥下管，集电极经 Cgc 耦合到栅极，电流经关断电阻流回驱动器；右边是下管 Vce 上升时 Vge 的尖峰波形与 Vth 比较">
+        <text x="190" y="16" text-anchor="middle" class="tm">开关节点，被上管拉高</text>
+        <path class="w" d="M222,24 V118 L200,132 M200,148 L222,162 V236 M208,236 H236 M213,241 H231 M218,246 H226 M150,150 H192"/>
+        <line class="bar" x1="200" y1="122" x2="200" y2="158"/>
+        <line class="w" x1="192" y1="126" x2="192" y2="154"/>
+        <polygon class="ah" points="219,160 210,159 214,152"/>
+        <text x="230" y="110" class="tm">C</text>
+        <text x="230" y="180" class="tm">E</text>
+        <text x="230" y="146" class="t">下管</text>
+        <circle class="dot" cx="222" cy="60" r="3.5"/>
+        <path class="w dash" d="M222,60 H150 V86 M150,94 V150 M150,150 V178 M150,186 V226"/>
+        <line class="plate" x1="138" y1="86" x2="162" y2="86"/><line class="plate" x1="138" y1="94" x2="162" y2="94"/>
+        <line class="plate" x1="138" y1="178" x2="162" y2="178"/><line class="plate" x1="138" y1="186" x2="162" y2="186"/>
+        <text x="132" y="88" text-anchor="end" class="t">Cgc</text>
+        <text x="132" y="104" text-anchor="end" class="v">0.2 nF</text>
+        <text x="132" y="184" text-anchor="end" class="t">Cge</text>
+        <text x="132" y="200" text-anchor="end" class="v">10 nF</text>
+        <circle class="dot" cx="150" cy="150" r="3.5"/>
+        <path class="w" d="M150,150 H126 M86,150 H56 M31,168 V226 H222"/>
+        <rect class="r" x="86" y="142" width="40" height="16" rx="2"/>
+        <text id="b-rgt" x="106" y="136" text-anchor="middle" class="v">Rg 10 Ω</text>
+        <rect class="box" x="6" y="132" width="50" height="36" rx="4"/>
+        <text x="31" y="155" text-anchor="middle" class="t">驱动</text>
+        <text id="b-off" x="38" y="192" class="v lo">Voff 0 V</text>
+        <circle class="dot" cx="150" cy="226" r="3.5"/><circle class="dot" cx="222" cy="226" r="3.5"/>
+        <path id="b-fm" class="flow thin" d="M220,60 H150 V148 H58 M31,170 V224 H220"/>
+        <path id="b-fs" class="flow bad" d="M222,26 V116 L204,128 V152 L222,164 V234" hidden/>
+
+        <path class="ax" d="M270,30 V96 H510 M270,120 V236 H510"/>
+        <line class="gl" x1="270" y1="30" x2="510" y2="30"/>
+        <line class="gl" x1="270" y1="178" x2="510" y2="178"/>
+        <text x="264" y="34" text-anchor="end" class="v">600</text>
+        <text x="264" y="100" text-anchor="end" class="v">0</text>
+        <text x="276" y="24" class="t" style="fill:var(--low)">Vce 下管 / V</text>
+        <polyline id="b-wd" class="real2" points=""/>
+        <text x="264" y="124" text-anchor="end" class="v">+10</text>
+        <text x="264" y="182" text-anchor="end" class="v">0</text>
+        <text x="264" y="240" text-anchor="end" class="v">−10</text>
+        <text x="276" y="114" class="t" style="fill:var(--copper)">Vge 下管 / V</text>
+        <line id="b-th" class="lim" x1="270" y1="0" x2="510" y2="0"/>
+        <text id="b-tht" x="506" y="114" text-anchor="end" class="tm" style="fill:var(--danger)">红虚线 Vth</text>
+        <polyline id="b-wg" class="real" points=""/>
+        <circle id="b-pkd" class="hi" r="4"/>
+        <text x="270" y="252" text-anchor="middle" class="v">0</text>
+        <text x="366" y="252" text-anchor="middle" class="v">200</text>
+        <text x="462" y="252" text-anchor="middle" class="v">400</text>
+        <text x="510" y="268" text-anchor="end" class="tm">时间 / ns</text>
+      </svg>
+      <figcaption>绿色细虚线是 Cgc 灌出的电流路径，红色粗虚线表示下管被误开通、和上管直通。示意：600 V 母线，Cgc 取高压段等效值 0.2 nF，Cge 10 nF，Rg 含驱动器内阻；Vge 超过 +10 V 的部分不画。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">关断电压</span>
+        <div class="seg" id="b-m"><button id="b-m-0" data-v="0" aria-pressed="true">0 V 关断</button><button id="b-m-5" data-v="-5" aria-pressed="false">−5 V</button><button id="b-m-8" data-v="-8" aria-pressed="false">−8 V 负压</button></div></div>
+      <div class="ctl"><span class="ctl-l">上管开通的 dv/dt</span>
+        <div class="seg" id="b-dv"><button id="b-dv-2" data-v="2" aria-pressed="false">2 kV/µs</button><button id="b-dv-5" data-v="5" aria-pressed="true">5 kV/µs</button><button id="b-dv-10" data-v="10" aria-pressed="false">10 kV/µs</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="b-rg">关断电阻 Rg(off)</label>
+        <span class="rv" id="b-rgv">10 Ω</span>
+        <input type="range" id="b-rg" min="1" max="30" step="1" value="10"></div>
+      <div class="ctl"><span class="ctl-l">结温</span>
+        <div class="seg" id="b-t"><button id="b-t-25" data-v="25" aria-pressed="false">25 °C</button><button id="b-t-150" data-v="150" aria-pressed="true">150 °C</button></div></div>
+      <dl class="read">
+        <dt>Cgc 电流 = Cgc·dv/dt</dt><dd id="b-i"></dd>
+        <dt>Vge 峰值</dt><dd id="b-pk"></dd>
+        <dt>离 Vth 的余量</dt><dd id="b-mg"></dd>
+        <dt>结果</dt><dd><span id="b-st" class="chip bad">误导通</span></dd>
+      </dl>
+      <p class="note" id="b-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="rg">
+  <span class="eyebrow">门极电阻 Rg · 快与稳的折中</span>
+  <h2>Rg 小开关快，Rg 大 EMI 小</h2>
+  <p>Rg 串在驱动器和栅极之间，决定栅极充放电电流。Rg 小，米勒平台短，开关快，开关损耗小；但 di/dt、dv/dt 都大：续流二极管的反向恢复电流变大，关断过压 Ls·di/dt 变高，EMI 变重，电机绕组绝缘也受冲击。Rg 大则反过来，损耗变大。</p>
+  <p>常见做法是开通、关断分开：Rg(on) 稍大，控制开通 di/dt 和二极管恢复；Rg(off) 稍小，关得快，也压住上一节的寄生导通。两个电阻各串一个二极管，或者直接用带独立 OUTH / OUTL 引脚的驱动芯片。</p>
+  <p class="eq">Ig ≈ (Von − Vpl) / Rg　　dv/dt ≈ Ig / Cgc　　关断过压 ΔV ≈ Ls·di/dt</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="开关损耗和关断 dv/dt 随门极电阻 Rg 变化的曲线：Rg 越大损耗越大，dv/dt 越小">
+        <g id="c-ax"></g>
+        <g id="c-ax2"></g>
+        <polyline id="c-e" class="real" points=""/>
+        <polyline id="c-d" class="real2" points=""/>
+        <text id="c-et" x="462" y="0" text-anchor="end" class="t" style="fill:var(--copper)">开关损耗 Eon + Eoff</text>
+        <text id="c-dt" x="462" y="0" text-anchor="end" class="t" style="fill:var(--low)">关断 dv/dt</text>
+        <line id="c-vl" class="ax dash" x1="0" y1="36" x2="0" y2="246"/>
+        <circle id="c-pe" class="hi" r="4.5"/>
+        <circle id="c-pd" class="lo" r="4.5"/>
+      </svg>
+      <figcaption>橙线看左轴，蓝线看右轴，虚线是当前 Rg。示意：600 V、100 A 感性负载，Eon ≈ 4 + 0.35·Rg mJ，Eoff ≈ 6 + 0.12·Rg mJ；dv/dt、di/dt 按平台期栅极电流估算，并计入器件自身的速度上限；杂散电感 Ls 取 40 nH。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="c-rg">门极电阻 Rg</label>
+        <span class="rv" id="c-rgv">6 Ω</span>
+        <input type="range" id="c-rg" min="1" max="30" step="1" value="6"></div>
+      <dl class="read">
+        <dt>开通 di/dt</dt><dd id="c-di"></dd>
+        <dt>关断 dv/dt</dt><dd id="c-dv"></dd>
+        <dt>关断过压 Ls·di/dt</dt><dd id="c-ov"></dd>
+        <dt>10 kHz 开关损耗</dt><dd id="c-p"></dd>
+        <dt>驱动峰值电流 23 V / Rg</dt><dd id="c-ip"></dd>
+        <dt>评价</dt><dd><span id="c-chip" class="chip on">折中</span></dd>
+      </dl>
+      <p class="note" id="c-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="iso">
+  <span class="eyebrow">隔离驱动 · 自举</span>
+  <h2>上管的"地"在跳：信号要隔离，电源要浮起来</h2>
+  <p>下管的发射极接地，驱动很好办。上管的发射极接在开关节点上，开关节点在 0 V 和母线电压之间来回跳。上管的 +15 V 和负压都必须以它自己的发射极为参考，所以上管驱动要解决两件事：控制信号怎么跨过几百伏的共模电压传过去，驱动电源从哪来。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>信号隔离方式</th><th>原理</th><th>优点</th><th>缺点</th></tr></thead>
+    <tbody>
+      <tr><td>光耦</td><td>LED 发光，光敏器件接收</td><td>简单便宜，隔离耐压高</td><td>传输延迟较大（几十到几百 ns），LED 会老化，CMTI 一般</td></tr>
+      <tr><td>磁隔离</td><td>芯片内微型变压器传调制信号</td><td>延迟小、一致性好，CMTI 高，寿命长</td><td>价格稍高</td></tr>
+      <tr><td>容隔离</td><td>芯片内电容传调制信号</td><td>同磁隔离，是现在隔离驱动芯片的主流</td><td>价格稍高</td></tr>
+      <tr><td>脉冲变压器</td><td>分立变压器同时传信号和部分能量</td><td>可以不要浮地电源，结构简单</td><td>占空比受限，体积大</td></tr>
+    </tbody>
+  </table></div>
+  <p>CMTI 是共模瞬态抗扰度，指隔离两侧之间能承受多快的电压跳变而不误动作。开关节点 dv/dt 有几 kV/µs 到几十 kV/µs，隔离器件的 CMTI 必须比它高，数字隔离器典型可到 100 kV/µs 以上（典型值）。</p>
+  <p>浮地电源有两种。隔离 DC-DC 给每个上管单独供 +15 V / −8 V，任何占空比都能用，大功率模块基本都这样做。自举最省：一个二极管加一个电容，靠下管导通的间隙给电容充电，缺点是只能给正压、不能长时间 100% 占空比。下面看自举是怎么工作的。</p>
+  <p class="eq">导通期间自举电容压降 ΔV = (Qg + Iq·ton) / Cboot</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 290" role="img" aria-label="自举电路：Vcc 经自举二极管给 Cboot 充电，Cboot 接在上管驱动的 VB 和 VS 之间，VS 接开关节点">
+        <text x="330" y="16" text-anchor="middle" class="v hi">600 V</text>
+        <path class="w" d="M318,24 H342 M330,24 V66 L308,80 M308,96 L330,110 V186 L308,200 M308,216 L330,230 V270 M316,270 H344 M321,275 H339 M326,280 H334"/>
+        <line class="bar" x1="308" y1="70" x2="308" y2="106"/><line class="w" x1="300" y1="74" x2="300" y2="102"/>
+        <polygon class="ah" points="327,108 318,107 322,100"/>
+        <line class="bar" x1="308" y1="190" x2="308" y2="226"/><line class="w" x1="300" y1="194" x2="300" y2="222"/>
+        <polygon class="ah" points="327,228 318,227 322,220"/>
+        <text x="338" y="90" class="t">上管</text>
+        <text x="338" y="210" class="t">下管</text>
+        <circle class="dot" cx="330" cy="150" r="3.5"/>
+        <path class="w" d="M330,150 H396"/>
+        <text x="400" y="155" class="t">负载</text>
+        <text id="d-vs" x="340" y="142" class="v hi">VS 600 V</text>
+        <text x="60" y="18" text-anchor="middle" class="v">Vcc 15 V</text>
+        <path class="w" d="M48,26 H72 M60,26 V40 H96 M110,40 H225 V60 M160,40 V84 M160,92 V150 H330 M225,130 V150 M260,98 H300 M260,218 H300 M225,236 V270 H316"/>
+        <polygon class="ah" points="96,32 96,48 110,40"/>
+        <line class="w" x1="110" y1="31" x2="110" y2="49"/>
+        <text x="103" y="24" text-anchor="middle" class="tm">Dboot</text>
+        <text id="d-dst" x="103" y="64" text-anchor="middle" class="tm">反偏，挡住 600 V</text>
+        <circle class="dot" cx="160" cy="40" r="3.5"/><circle class="dot" cx="160" cy="150" r="3.5"/><circle class="dot" cx="225" cy="150" r="3.5"/>
+        <line class="plate" x1="146" y1="84" x2="174" y2="84"/><line class="plate" x1="146" y1="92" x2="174" y2="92"/>
+        <text x="140" y="90" text-anchor="end" class="t">Cboot</text>
+        <text id="d-cv" x="140" y="106" text-anchor="end" class="v">1 µF</text>
+        <text id="d-vcap" x="140" y="122" text-anchor="end" class="v">13.6 V</text>
+        <text id="d-vb" x="232" y="34" class="v">VB 613.6 V</text>
+        <rect class="box" x="190" y="60" width="70" height="70" rx="4"/>
+        <text x="225" y="92" text-anchor="middle" class="t">上管驱动</text>
+        <text x="225" y="110" text-anchor="middle" class="tm">以 VS 为地</text>
+        <text x="196" y="74" class="tm">VB</text>
+        <text x="196" y="126" class="tm">VS</text>
+        <rect class="box" x="190" y="200" width="70" height="36" rx="4"/>
+        <text x="225" y="223" text-anchor="middle" class="t">下管驱动</text>
+        <path id="d-fc" class="flow thin" d="M60,28 V40 H158 V148 H328 V186 L312,198 V218 L330,230 V268" hidden/>
+        <path id="d-fl" class="flow" d="M330,26 V66 L312,78 V98 L330,110 V148 H394"/>
+        <path id="d-fd" class="flow thin" d="M162,82 V42 H223 V58 M262,98 H298"/>
+      </svg>
+      <figcaption>粗绿线是上管导通时的负载电流；细线在充电阶段是 Vcc → Dboot → Cboot → 下管 → 地，在上管导通阶段是 Cboot 给上管驱动供电。示意：忽略下管压降，Cboot 充满约 14.3 V。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">当前阶段</span>
+        <div class="seg" id="d-m"><button id="d-m-lo" data-v="lo" aria-pressed="false">下管导通，充电</button><button id="d-m-up" data-v="up" aria-pressed="true">上管导通</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="d-t">上管连续导通时间 ton</label>
+        <span class="rv" id="d-tv">100 µs</span>
+        <input type="range" id="d-t" min="0" max="5" step="1" value="2"></div>
+      <div class="ctl"><span class="ctl-l">自举电容 Cboot</span>
+        <div class="seg" id="d-c"><button id="d-c-047" data-v="0.47" aria-pressed="false">0.47 µF</button><button id="d-c-1" data-v="1" aria-pressed="true">1 µF</button><button id="d-c-22" data-v="2.2" aria-pressed="false">2.2 µF</button></div></div>
+      <dl class="read">
+        <dt>开关节点 VS</dt><dd id="d-rs"></dd>
+        <dt>自举二极管</dt><dd id="d-rd"></dd>
+        <dt>导通末尾 Cboot 电压</dt><dd id="d-re"></dd>
+        <dt>驱动欠压锁定 UVLO</dt><dd>约 12 V（典型值）</dd>
+        <dt>结果</dt><dd><span id="d-chip" class="chip on">够用</span></dd>
+      </dl>
+      <p class="note" id="d-note"></p>
+      <p class="note">示意：Qg 取 0 → 15 V 的 0.54 µC，Iq 取 2 mA，含驱动静态电流和 G-E 间 10 kΩ 下拉电阻的电流。</p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>IGBT 驱动为什么开通用 +15 V、关断用负压？</summary>
+      <div class="ans"><p>开通 +15 V 让管子充分饱和，Vce(sat) 接近最低，同时短路电流被限制在额定的 5 倍左右，tsc 约 10 µs，手册参数也按 15 V 标定。栅压再高，压降降得很少，短路电流却明显变大，还逼近 ±20 V 的栅极极限。关断用 −5 ~ −10 V，是给米勒效应引起的栅极尖峰留余量，防止误导通；负压还能加快关断。</p></div></details>
+    <details><summary>什么是米勒寄生导通？怎么抑制？</summary>
+      <div class="ans"><p>半桥中一个管子开通，另一个关断管的集电极电压快速上升，dv/dt 经 Cgc 向栅极注入电流 Cgc·dv/dt，在关断电阻上产生压降把 Vge 抬高，超过 Vth 就误导通，造成直通。抑制方法：负压关断；减小 Rg(off)，开关电阻分开；加米勒钳位；G-E 间并小电容；适当降低 dv/dt；驱动回路走线短，用开尔文发射极。</p></div></details>
+    <details><summary>门极电阻 Rg 怎么选？</summary>
+      <div class="ans"><p>Rg 是开关损耗和 EMI、电压应力之间的折中。Rg 小，开关快、损耗小，但 di/dt、dv/dt 大，二极管反向恢复电流、关断过压和 EMI 都变大；Rg 大则相反。一般从手册测试条件的 Rg 起步，用双脉冲测试看过压、振铃和损耗再微调。还要核对驱动芯片的峰值电流能否达到 (Von − Voff) / Rg。</p></div></details>
+    <details><summary>自举电路是怎么工作的？有什么局限？</summary>
+      <div class="ans"><p>下管导通时开关节点接地，Vcc 经二极管给自举电容充电；上管导通时开关节点升到母线电压，电容下端跟着抬高，上端比开关节点高约 14 V，给上管驱动供电，二极管反偏挡住高压。局限：只能提供正压；上管不能长时间连续导通，电容会被抽到欠压；二极管要耐母线电压、恢复要快；上电要先预充电。</p></div></details>
+    <details><summary>IGBT 驱动为什么要隔离？</summary>
+      <div class="ans"><p>一是安全：控制侧是低压，功率侧有几百上千伏，必须电气隔离。二是上管的发射极在跳变，驱动必须以它为参考，控制信号要跨过高压、高 dv/dt 的共模电压传过去。光耦便宜但延迟大、会老化；磁隔离、容隔离延迟小、CMTI 高，是现在隔离驱动芯片的主流。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="05-短路耐受时间.html"><span>上一页</span>短路耐受时间</a><a class="next" href="07-应用场景与选型.html"><span>下一页</span>应用场景与选型</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+function mkAxes(gid,X,Y,xs,ys,xl,yl,fx){
+  const g=$(gid),x0=X(xs[0]),x1=X(xs[xs.length-1]),y0=Y(ys[0]),y1=Y(ys[ys.length-1]);
+  ys.forEach(v=>g.append(svgEl('line',{class:'gl',x1:x0,x2:x1,y1:Y(v),y2:Y(v)}),svgEl('text',{x:x0-6,y:Y(v)+4,'text-anchor':'end',class:'v'},String(v).replace('-','−'))));
+  if(xs.length>2||fx)xs.forEach(v=>g.append(svgEl('text',{x:X(v),y:y0+18,'text-anchor':'middle',class:'v'},fx?fx(v):v)));
+  g.append(svgEl('path',{class:'ax',d:`M${x0},${y1} V${y0} H${x1}`}));
+  if(xl)g.append(svgEl('text',{x:x1,y:y0+34,'text-anchor':'end',class:'tm'},xl));
+  if(yl)g.append(svgEl('text',{x:x0+4,y:y1-10,class:'tm'},yl));
+}
+const setVL=(el,x)=>{el.setAttribute('x1',x.toFixed(1));el.setAttribute('x2',x.toFixed(1));};
+const setHL=(el,y)=>{el.setAttribute('y1',y.toFixed(1));el.setAttribute('y2',y.toFixed(1));};
+const sgn=v=>v>0?'+'+v:v<0?'−'+(-v):'0';
+
+/* 1. 开通与关断电平 */
+const aX=scale(0,2.5,60,300),aY=scale(-20,20,262,22);
+mkAxes('a-ax',aX,aY,[0,0.5,1,1.5,2,2.5],[-20,-10,0,10,20],'时间 / µs','Vge / V');
+const VPL=9,VTH25=5.8,VTHH=4.6,CG1=10e-9,CG2=25e-9,QPL=0.3e-6,a={on:15,off:-8};
+const iscOf=v=>v<=6?0:500*Math.pow((v-6)/9,1.5);
+const vsatOf=v=>1.55+1.8/(v-VPL);
+const qgOf=(on,off)=>CG1*(VPL-off)+QPL+CG2*(on-VPL);
+/* 栅极波形：平台前按 CG1 充电，平台期电流 (Von − 9)/Rg 搬运 QPL，平台后按 CG2 充电；关断反过来 */
+function gateWave(on,off,rg,tOn,tOff){
+  const k1=rg*CG1,k2=rg*CG2,ta=k1*Math.log((on-off)/(on-VPL)),tp=QPL*rg/(on-VPL);
+  const tb=k2*Math.log((on-off)/(VPL-off)),tq=QPL*rg/(VPL-off);
+  return t=>{
+    if(t<tOn)return off;
+    let u;
+    if(t<tOff){u=t-tOn;if(u<ta)return on-(on-off)*Math.exp(-u/k1);u-=ta;if(u<tp)return VPL;u-=tp;return on-(on-VPL)*Math.exp(-u/k2);}
+    u=t-tOff;if(u<tb)return off+(on-off)*Math.exp(-u/k2);u-=tb;if(u<tq)return VPL;u-=tq;return off+(VPL-off)*Math.exp(-u/k1);
+  };
+}
+function aU(){
+  const on=a.on,off=a.off,f=gateWave(on,off,5,0.2e-6,1.3e-6),yOn=aY(on),yOff=aY(off),yT=aY(VTHH);
+  $('a-wave').setAttribute('points',plot(t=>f(t*1e-6),0,2.5,aX,aY,500));
+  setHL($('a-lon'),yOn);setHL($('a-loff'),yOff);
+  $('a-tont').setAttribute('y',(yOn-5).toFixed(1));$('a-tont').textContent='开通 '+sgn(on)+' V';
+  $('a-tofft').setAttribute('y',(yOff+16).toFixed(1));$('a-tofft').textContent='关断 '+sgn(off)+' V';
+  $('a-br').setAttribute('y1',yOff.toFixed(1));$('a-br').setAttribute('y2',yT.toFixed(1));
+  $('a-brt').setAttribute('y',((yOff+yT)/2+4).toFixed(1));$('a-brt').textContent='余量 '+(VTHH-off).toFixed(1)+' V';
+  const vs=vsatOf(on),d=(vs/vsatOf(15)-1)*100,I=iscOf(on),tsc=10*iscOf(15)/I,qg=qgOf(on,off),p=qg*(on-off)*10e3;
+  $('a-vs').textContent=fmtV(vs)+(on===15?'':'，比 15 V 时'+(d>0?'高 ':'低 ')+Math.abs(d).toFixed(0)+'%');
+  $('a-sc').textContent=fmtA(I)+'（'+(I/100).toFixed(1)+' 倍）/ '+fmtT(tsc*1e-6);
+  $('a-mg').textContent=(VTHH-off).toFixed(1)+' V';
+  $('a-mx').textContent='正向 '+(20-on)+' V，负向 '+(20+off)+' V';
+  $('a-p').textContent=(qg*1e6).toFixed(2)+' µC / '+fmtP(p);
+  const n=[];let c='on',ct='合适';
+  if(on>=18){c='warn';ct='短路电流大';n.push('+18 V 时 Vce(sat) 只再降 '+Math.abs(d).toFixed(0)+'%，短路电流却涨到额定的 '+(I/100).toFixed(1)+' 倍，tsc 缩到 '+fmtT(tsc*1e-6)+'。离 +20 V 极限只剩 2 V，驱动电源波动或栅极振铃就可能超限。');}
+  else if(on<=12){c='warn';ct='压降偏大';n.push('+12 V 离米勒平台只有 3 V，沟道开得不够宽，Vce(sat) 高了 '+d.toFixed(0)+'%，导通损耗跟着涨。驱动电压再掉一点就会退饱和，所以驱动芯片都带欠压锁定 UVLO。');}
+  else n.push('+15 V 时压降已接近最低，短路电流约为额定的 5 倍，tsc 约 10 µs，手册里的参数也按这个电压标定。');
+  if(off===0){if(c==='on'){c='warn';ct='关断余量小';}n.push('0 V 关断只有 '+VTHH.toFixed(1)+' V 余量（高温 Vth），桥臂里对管开通的 dv/dt 很容易把栅极顶过去，见下一节。');}
+  else if(off<=-10)n.push('−10 V 余量最大，代价是每次要多搬电荷，驱动功率更大；负压也不宜再深，要给 Vge 负向极限留余量。');
+  else n.push(sgn(off)+' V 关断把起点压低，干扰要先爬 '+(VTHH-off).toFixed(1)+' V 才碰到高温 Vth。负压还让关断更快：平台期放电电流 (9 − Voff) / Rg 更大。');
+  chip($('a-chip'),ct,c);$('a-note').textContent=n.join('');
+}
+seg('a-on',v=>{a.on=+v;aU();});
+seg('a-off',v=>{a.off=+v;aU();});
+aU();
+/* 2. 米勒寄生导通，时间单位 ns */
+const bX=scale(0,500,270,510),bV=scale(0,600,96,30),bG=scale(-10,10,236,120),CGC=0.2e-9,CGE=10e-9,VBUS=600,TB0=40,b={off:0,dv:5,T:150};
+function bU(){
+  const rg=+$('b-rg').value,off=b.off,dv=b.dv*1e9,vth=b.T>100?VTHH:VTH25;
+  const tr=VBUS/dv*1e9,tau=rg*(CGE+CGC)*1e9,i=CGC*dv,A=i*rg,pk=off+A*(1-Math.exp(-tr/tau)),mg=vth-pk;
+  const vce=t=>t<TB0?0:t<TB0+tr?(t-TB0)/tr*VBUS:VBUS;
+  const vge=t=>t<TB0?off:t<TB0+tr?off+A*(1-Math.exp(-(t-TB0)/tau)):off+(pk-off)*Math.exp(-(t-TB0-tr)/tau);
+  $('b-wd').setAttribute('points',plot(vce,0,500,bX,bV,400));
+  $('b-wg').setAttribute('points',plot(t=>Math.min(10,vge(t)),0,500,bX,bG,400));
+  setHL($('b-th'),bG(vth));$('b-tht').textContent='红虚线 Vth（'+b.T+' °C）'+vth.toFixed(1)+' V';
+  const pd=$('b-pkd');pd.setAttribute('cx',bX(TB0+tr).toFixed(1));pd.setAttribute('cy',bG(Math.min(10,pk)).toFixed(1));
+  $('b-rgv').textContent=rg+' Ω';$('b-rg').setAttribute('aria-valuetext',rg+' Ω');
+  $('b-rgt').textContent='Rg '+rg+' Ω';$('b-off').textContent='Voff '+sgn(off)+' V';
+  const bad=mg<0,warn=!bad&&mg<1;
+  show($('b-fs'),bad);$('b-fm').classList.toggle('bad',bad);
+  $('b-i').textContent=fmtA(i);
+  $('b-pk').textContent=fmtV(pk)+(off?'，从 '+sgn(off)+' V 抬高 '+fmtV(pk-off):'');
+  $('b-mg').textContent=(mg>=0?'+':'')+fmtV(mg);
+  chip($('b-st'),bad?'误导通，直通':warn?'临界，余量小':'安全',bad?'bad':warn?'warn':'on');
+  let n='上管开通时开关节点以 '+b.dv+' kV/µs 上升，Cgc 灌出 '+fmtA(i)+'，流过 '+rg+' Ω 关断电阻，把栅极抬高 '+fmtV(pk-off)+'。';
+  if(bad)n+='起点是 '+sgn(off)+' V，峰值到了 '+fmtV(pk)+'，超过 Vth '+vth.toFixed(1)+' V，下管被打开，和上管直通。试试换负压关断，或减小 Rg(off)。';
+  else if(off<0)n+='起点是 '+sgn(off)+' V，峰值只到 '+fmtV(pk)+'，离 Vth 还有 '+fmtV(mg)+'。负压把整个尖峰往下平移，这就是 IGBT 模块普遍用负压关断的原因。';
+  else n+=(warn?'峰值 '+fmtV(pk)+' 离 Vth 不到 1 V，温度、批次、布线一变就可能出事。':'峰值 '+fmtV(pk)+' 没到 Vth，是因为 dv/dt 低或 Rg(off) 小。')+'所以小功率单管常用 0 V 关断加米勒钳位，大模块基本都用负压。';
+  $('b-note').textContent=n;
+}
+seg('b-m',v=>{b.off=+v;bU();});
+seg('b-dv',v=>{b.dv=+v;bU();});
+seg('b-t',v=>{b.T=+v;bU();});
+$('b-rg').addEventListener('input',bU);
+bU();
+/* 3. 门极电阻折中 */
+const cX=scale(0,30,56,466),cY=scale(0,30,246,36);
+mkAxes('c-ax',cX,cY,[0,5,10,15,20,25,30],[0,10,20,30],'Rg / Ω','Eon + Eoff / mJ');
+$('c-ax2').append(svgEl('path',{class:'ax',d:'M466,36 V246'}),svgEl('text',{x:466,y:26,'text-anchor':'end',class:'tm'},'dv/dt / kV/µs'));
+[0,5,10,15].forEach(v=>$('c-ax2').append(svgEl('text',{x:472,y:cY(2*v)+4,class:'v',style:'fill:var(--low)'},v)));
+const eOf=r=>4+0.35*r+6+0.12*r,dvOf=r=>1/(1/15+r/68),diOn=r=>1/(1/5+r/30),diOff=r=>1/(1/3+r/60);
+$('c-e').setAttribute('points',plot(eOf,1,30,cX,cY,120));
+$('c-d').setAttribute('points',plot(r=>2*dvOf(r),1,30,cX,cY,120));
+$('c-et').setAttribute('y',(cY(eOf(30))-8).toFixed(1));
+$('c-dt').setAttribute('y',(cY(2*dvOf(30))-10).toFixed(1));
+function cU(){
+  const r=+$('c-rg').value,E=eOf(r),dv=dvOf(r),di=diOn(r),ov=40e-9*diOff(r)*1e9,P=E*1e-3*10e3,ip=23/r,x=cX(r);
+  setVL($('c-vl'),x);
+  $('c-pe').setAttribute('cx',x.toFixed(1));$('c-pe').setAttribute('cy',cY(E).toFixed(1));
+  $('c-pd').setAttribute('cx',x.toFixed(1));$('c-pd').setAttribute('cy',cY(2*dv).toFixed(1));
+  $('c-rgv').textContent=r+' Ω';$('c-rg').setAttribute('aria-valuetext',r+' Ω');
+  $('c-di').textContent=di.toFixed(2)+' kA/µs';
+  $('c-dv').textContent=dv.toFixed(1)+' kV/µs';
+  $('c-ov').textContent=ov.toFixed(0)+' V，峰值 '+(600+ov).toFixed(0)+' V';
+  $('c-p').textContent=P.toFixed(0)+' W（'+E.toFixed(1)+' mJ / 次）';
+  $('c-ip').textContent=fmtA(ip);
+  let n;
+  if(r<3){chip($('c-chip'),'快，应力大','warn');n='Rg 只有 '+r+' Ω，开关损耗最低，但开通 di/dt 达 '+di.toFixed(1)+' kA/µs，续流二极管反向恢复电流大；关断 dv/dt '+dv.toFixed(1)+' kV/µs，EMI 和电机绝缘压力都大，过压也最高。驱动芯片还得能输出 '+fmtA(ip)+' 的峰值电流。';}
+  else if(r>15){chip($('c-chip'),'慢，损耗大','warn');n='Rg '+r+' Ω 时 dv/dt 只有 '+dv.toFixed(1)+' kV/µs，EMI 小、过压小，可每次开关要 '+E.toFixed(1)+' mJ，比 Rg = 3 Ω 时多 '+((E/eOf(3)-1)*100).toFixed(0)+'%。关断电阻这么大，还更容易被对管的 dv/dt 顶开，见上一节。';}
+  else{chip($('c-chip'),'折中','on');n='损耗、dv/dt、过压都在中间。实际取值先从手册测试条件里的 Rg 起步，再用双脉冲测试看过压、振铃和损耗，微调 Rg(on) 和 Rg(off)。';}
+  $('c-note').textContent=n;
+}
+$('c-rg').addEventListener('input',cU);
+cU();
+/* 4. 自举 */
+const dT=[10e-6,50e-6,100e-6,500e-6,1e-3,5e-3],dTL=['10 µs','50 µs','100 µs','500 µs','1 ms','5 ms'],QGB=qgOf(15,0),IQ=2e-3,VB0=14.3,UVLO=12,d={up:true,C:1e-6};
+function dU(){
+  const up=d.up,C=d.C,i=+$('d-t').value,ton=dT[i],dv=(QGB+IQ*ton)/C,vend=VB0-dv,vs=up?600:0,vcap=up?vend:VB0;
+  $('d-tv').textContent=dTL[i];$('d-t').setAttribute('aria-valuetext',dTL[i]);
+  $('d-vs').textContent='VS '+vs+' V';setLv($('d-vs'),null,up);
+  $('d-vb').textContent='VB '+(vs+vcap).toFixed(1)+' V';
+  $('d-vcap').textContent=vcap.toFixed(1)+' V';$('d-cv').textContent=(+(C*1e6).toFixed(2))+' µF';
+  $('d-dst').textContent=up?'反偏，挡住 600 V':'正偏，充电';
+  show($('d-fc'),!up);show($('d-fl'),up);show($('d-fd'),up);
+  $('d-rs').textContent=up?'600 V，跟着上管发射极':'≈ 0 V，下管导通';
+  $('d-rd').textContent=up?'反偏截止，承受约 600 V':'导通，给 Cboot 充电';
+  $('d-re').textContent=fmtV(vend,1)+'，掉了 '+fmtV(dv,2);
+  let n;
+  if(vend<UVLO)chip($('d-chip'),'欠压，驱动封锁','bad');else if(vend<UVLO+1)chip($('d-chip'),'接近 UVLO','warn');else chip($('d-chip'),'够用','on');
+  if(!up)n='下管导通，开关节点被拉到地。Vcc 经自举二极管给 Cboot 充到约 15 − 0.7 = 14.3 V。这一步必须周期性发生，所以自举不能长时间 100% 占空比，上电时也要先开一下下管预充电。';
+  else if(vend<UVLO)n='上管导通 '+dTL[i]+'，Cboot 被栅极电荷和静态电流抽走 '+fmtV(dv,2)+'，掉到 UVLO 以下，驱动芯片封锁输出，上管被迫关断。要加大 Cboot、限制最长导通时间，或者改用隔离 DC-DC。';
+  else n='上管导通，开关节点跳到 600 V，Cboot 下端跟着跳上去，上端 VB 约 '+(600+vend).toFixed(0)+' V，二极管反偏，把 Vcc 和高压隔开。上管驱动靠 Cboot 里存的电荷工作，'+dTL[i]+' 内掉了 '+fmtV(dv,2)+(vend<UVLO+1?'，离 UVLO 已经不远。':'。');
+  $('d-note').textContent=n;
+}
+seg('d-m',v=>{d.up=v==='up';dU();});
+seg('d-c',v=>{d.C=+v*1e-6;dU();});
+$('d-t').addEventListener('input',dU);
+dU();
+</script>
+</body>
+</html>

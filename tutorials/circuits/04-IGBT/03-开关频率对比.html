@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>开关频率对比</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.zone-sic{fill:var(--muted);fill-opacity:.1}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#igbt">IGBT</a><span class="sp"></span><span>03 / 07</span></nav>
+<header>
+  <span class="eyebrow">IGBT · 开关频率</span>
+  <h1>开关频率对比</h1>
+  <p class="lede">为什么 IGBT 一般只跑几 kHz 到几十 kHz，MOS 能跑到几百 kHz 甚至 MHz？答案是少子：谁靠少子导电，谁关断就慢，频率一高开关损耗就压不住。</p>
+</header>
+
+<section id="why">
+  <span class="eyebrow">关断波形 · 少子存储</span>
+  <h2>慢在哪：关断时要清理少子</h2>
+  <p>MOS 只靠多子导电，栅极电压一撤，沟道消失，电流几十纳秒就断了。BJT 基区里存满了少子，要先把它们抽走，这段叫存储时间，常有一两微秒。IGBT 居中：MOS 部分关得很快，但漂移区里注入的空穴抽不走，只能靠复合慢慢消失，于是电流先快速掉一截，再拖一条尾巴。</p>
+  <p class="eq">每次关断的损耗 Eoff = ∫ Vce·Ic dt，就是下图阴影的面积</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="感性负载关断波形：栅极关断后 Vce 上升到母线电压，Ic 下降，阴影为瞬时功率">
+        <g id="w1-ax"></g>
+        <polygon id="w1-p" class="zone-sat" points=""/>
+        <line id="w1-cmd" class="ax dash" x1="0" y1="36" x2="0" y2="246"/>
+        <text id="w1-cmdt" x="0" y="30" class="tm">栅极关断</text>
+        <polyline id="w1-v" class="real" points=""/>
+        <polyline id="w1-i" class="real2" points=""/>
+        <text id="w1-lv" x="466" y="30" text-anchor="end" class="t" style="fill:var(--copper)">Vce</text>
+        <text id="w1-li" x="0" y="0" class="t" style="fill:var(--low)">Ic</text>
+        <text x="476" y="50" class="v" style="fill:var(--low)">20 A</text>
+        <text x="476" y="250" class="v" style="fill:var(--low)">0 A</text>
+      </svg>
+      <figcaption>示意波形：感性负载，母线 600 V，电流 20 A。橙线 Vce 看左轴，蓝线 Ic 看右轴，阴影是瞬时功率 Vce·Ic。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">器件</span>
+        <div class="seg" id="w1-d"><button id="w1-d-bjt" data-v="bjt" aria-pressed="false">BJT</button><button id="w1-d-igbt" data-v="igbt" aria-pressed="true">IGBT</button><button id="w1-d-mos" data-v="mos" aria-pressed="false">MOSFET</button></div></div>
+      <dl class="read">
+        <dt>关断延迟 / 存储时间</dt><dd id="w1-td"></dd>
+        <dt>电流下降时间</dt><dd id="w1-tf"></dd>
+        <dt>拖尾</dt><dd id="w1-tail"></dd>
+        <dt>Eoff</dt><dd id="w1-e"></dd>
+        <dt>20 kHz 时关断损耗</dt><dd id="w1-p20"></dd>
+      </dl>
+      <p class="note" id="w1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="freq">
+  <span class="eyebrow">总损耗 · 最优区间</span>
+  <h2>拖动频率，看谁的总损耗最低</h2>
+  <p>总损耗 = 导通损耗 + 开关损耗。导通损耗和频率无关；开关损耗等于每次开关的能量乘以频率。所以每个器件的损耗随频率都是一条上升的线，起点由导通压降决定，斜率由开关能量决定。</p>
+  <p class="eq">P总 = P导通 + fsw·(Eon + Eoff)</p>
+  <p>BJT 起点低但斜率最陡；MOS 起点高（高压管 Rds(on) 大）但斜率最缓；IGBT 在两者之间。所以频率由低到高，最优器件依次是 BJT、IGBT、MOS。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="三种器件总损耗随开关频率变化的曲线，横轴对数刻度，底色标出每个频率区间损耗最低的器件">
+        <g id="f1-z"></g>
+        <g id="f1-ax"></g>
+        <polyline id="f1-b" class="real3" points=""/>
+        <polyline id="f1-g" class="real" points=""/>
+        <polyline id="f1-m" class="real2" points=""/>
+        <polyline id="f1-s" class="cv dash" points=""/>
+        <text id="f1-lb" x="0" y="66" text-anchor="end" class="t" style="fill:var(--flow)">BJT</text>
+        <text id="f1-lg" x="0" y="66" text-anchor="end" class="t" style="fill:var(--copper)">IGBT</text>
+        <text id="f1-lm" x="0" y="66" text-anchor="end" class="t" style="fill:var(--low)">Si MOS</text>
+        <text id="f1-ls" x="492" y="0" text-anchor="end" class="t">SiC MOSFET</text>
+        <line id="f1-cur" class="ax dash" x1="0" y1="36" x2="0" y2="246"/>
+        <circle id="f1-pb" class="dot" style="fill:var(--flow)" r="4.5"/>
+        <circle id="f1-pg" class="hi" r="4.5"/>
+        <circle id="f1-pm" class="lo" r="4.5"/>
+        <circle id="f1-ps" class="dot" r="4.5"/>
+      </svg>
+      <figcaption>示意数据：600 V 母线，20 A，占空比 50%。导通损耗 BJT 12 W（含基极驱动）、IGBT 17 W、Si MOS 50 W、SiC MOS 10 W；每周期开关能量依次 8、1.5、0.3、0.08 mJ。底色是该频段损耗最低的器件，超出 200 W 的部分不画。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="f1-f">开关频率 fsw</label>
+        <span class="rv" id="f1-fv">20 kHz</span>
+        <input type="range" id="f1-f" min="0" max="40" step="1" value="23"></div>
+      <div class="ctl"><span class="ctl-l">参与比较</span>
+        <div class="seg" id="f1-c"><button id="f1-c-si" data-v="si" aria-pressed="true">三种硅器件</button><button id="f1-c-sic" data-v="sic" aria-pressed="false">再加 SiC MOS</button></div></div>
+      <dl class="read">
+        <dt>BJT</dt><dd id="f1-rb"></dd>
+        <dt>IGBT</dt><dd id="f1-rg"></dd>
+        <dt>Si MOSFET</dt><dd id="f1-rm"></dd>
+        <dt id="f1-rsl">SiC MOSFET</dt><dd id="f1-rs"></dd>
+        <dt>损耗最低</dt><dd><span id="f1-chip" class="chip on">IGBT</span></dd>
+      </dl>
+      <p class="note" id="f1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="tbl">
+  <span class="eyebrow">对比表</span>
+  <h2>四类开关器件，一张表</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>器件</th><th>导电方式</th><th>常用开关频率（典型值）</th><th>限制频率的原因</th><th>常见电压 / 电流</th></tr></thead>
+    <tbody>
+      <tr><td>功率 BJT</td><td>双极</td><td class="n">几 kHz ~ 几十 kHz</td><td>基区少子存储时间长，还要持续的基极电流</td><td>已基本被 IGBT 取代</td></tr>
+      <tr><td>IGBT</td><td>双极</td><td class="n">约 2 ~ 50 kHz</td><td>漂移区少子只能复合，关断有拖尾，Eoff 大</td><td>600 V ~ 6.5 kV，几十 A ~ 几 kA</td></tr>
+      <tr><td>Si MOSFET</td><td>单极</td><td class="n">几十 kHz ~ MHz</td><td>主要是栅极电荷和结电容充放电</td><td>低压到 900 V 左右，高压时 Rds(on) 大</td></tr>
+      <tr><td>SiC MOSFET</td><td>单极</td><td class="n">几十 kHz ~ 几百 kHz</td><td>同 MOS，同耐压下 Rds(on) 小得多</td><td>650 V ~ 3.3 kV，价格较高</td></tr>
+      <tr><td>GaN HEMT</td><td>单极</td><td class="n">几百 kHz ~ 几 MHz</td><td>几乎没有反向恢复，电容极小</td><td>以 650 V 以下为主</td></tr>
+    </tbody>
+  </table></div>
+  <p>频率范围都是工程上常见的典型值，边界并不绝对。同一个 IGBT，母线电压低、电流小时也能跑得更高；模块越大，一般频率越低。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>IGBT 为什么不能像 MOS 一样工作在很高的频率？</summary>
+      <div class="ans"><p>因为 IGBT 导通时 P+ 层往漂移区注入了大量空穴。关断时 MOS 沟道先关了，这些少子没有出口，只能靠复合慢慢消失，形成拖尾电流，Eoff 大。开关损耗等于每次开关能量乘频率，频率一高损耗就压不住，所以一般在几 kHz 到几十 kHz。</p></div></details>
+    <details><summary>BJT、IGBT、MOSFET 的开关速度排序和原因？</summary>
+      <div class="ans"><p>MOSFET 最快，是多子器件，只需给栅极电容充放电。IGBT 其次，MOS 部分快，但漂移区少子要复合。BJT 最慢，基区存满少子，关断前要先抽走，存储时间长。本质都是少子存储问题。</p></div></details>
+    <details><summary>选开关器件时，频率和导通损耗怎么权衡？</summary>
+      <div class="ans"><p>写出总损耗 P = P导通 + fsw·(Eon + Eoff)。低频时导通损耗占大头，选压降低的 IGBT；高频时开关损耗占大头，选开关能量小的 MOS。交叉频率随电压、电流变化，要按实际工况算。</p></div></details>
+    <details><summary>开关频率提高有什么好处，为什么不一直往高走？</summary>
+      <div class="ans"><p>好处是电感、电容、变压器能做小，电机电流纹波和噪声更小。代价是开关损耗和 EMI 增加，散热要求变高。IGBT 电机驱动常用 8~20 kHz，高于 20 kHz 主要是为了避开人耳可听噪声。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="02-导通压降Vcesat.html"><span>上一页</span>导通压降 Vce(sat)</a><a class="next" href="04-拖尾电流.html"><span>下一页</span>拖尾电流</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+function mkAxes(gid,X,Y,xs,ys,xl,yl,fx){
+  const g=$(gid),x0=X(xs[0]),x1=X(xs[xs.length-1]),y0=Y(ys[0]),y1=Y(ys[ys.length-1]);
+  ys.forEach(v=>g.append(svgEl('line',{class:'gl',x1:x0,x2:x1,y1:Y(v),y2:Y(v)}),svgEl('text',{x:x0-6,y:Y(v)+4,'text-anchor':'end',class:'v'},v)));
+  xs.forEach(v=>g.append(svgEl('text',{x:X(v),y:y0+18,'text-anchor':'middle',class:'v'},fx?fx(v):v)));
+  g.append(svgEl('path',{class:'ax',d:`M${x0},${y1} V${y0} H${x1}`}),
+    svgEl('text',{x:x1,y:y0+34,'text-anchor':'end',class:'tm'},xl),svgEl('text',{x:x0+4,y:y1-12,class:'tm'},yl));
+}
+const setP=(el,x,y)=>{el.setAttribute('cx',x.toFixed(1));el.setAttribute('cy',y.toFixed(1));};
+const setVL=(el,x)=>{el.setAttribute('x1',x.toFixed(1));el.setAttribute('x2',x.toFixed(1));};
+
+/* 1. 关断波形 */
+const w1X=scale(0,3.5,56,470),w1V=scale(0,600,246,46),w1I=scale(0,20,246,46),w1={d:'igbt'};
+mkAxes('w1-ax',w1X,w1V,[0,0.5,1,1.5,2,2.5,3,3.5],[0,200,400,600],'时间 / µs','Vce / V');
+/* td 延迟, tv 电压上升, tf 电流快速下降, k 拖尾比例, tau 拖尾时间常数，单位 µs */
+const w1M={
+  bjt:{td:1.5,tv:0.3,tf:0.4,k:0.05,tau:0.3,n:'BJT 先要把基区里的少子抽走，存储时间长达 1.5 µs，这段时间里管子仍然导通。之后电压、电流都慢慢变化，阴影面积最大。'},
+  igbt:{td:0.3,tv:0.05,tf:0.06,k:0.2,tau:0.2,n:'MOS 沟道关断后，电流先快速掉到约 20%，剩下的是漂移区少子复合形成的拖尾。此时 Vce 已经是 600 V，拖尾虽小，乘上高压，占了 Eoff 的一大块。'},
+  mos:{td:0.1,tv:0.02,tf:0.02,k:0,tau:0.1,n:'MOS 没有少子，栅极放完电，沟道一关电流就断，几十纳秒完成，没有拖尾。阴影几乎只是一条细线。'}
+};
+const T0=0.6;
+function w1wave(m){
+  const vt=[],it=[],pt=[],dt=0.002;let E=0;
+  for(let t=0;t<=3.5+1e-9;t+=dt){
+    const a=T0+m.td,b=a+m.tv,c=b+m.tf;
+    const v=t<a?1.5:t<b?1.5+(600-1.5)*(t-a)/m.tv:600;
+    const i=t<b?20:t<c?20-(20*(1-m.k))*(t-b)/m.tf:20*m.k*Math.exp(-(t-c)/m.tau);
+    E+=v*i*dt*1e-6;
+    vt.push(w1X(t).toFixed(1)+','+w1V(v).toFixed(1));it.push(w1X(t).toFixed(1)+','+w1I(i).toFixed(1));
+    pt.push(w1X(t).toFixed(1)+','+(246-v*i/12000*200).toFixed(1));
+  }
+  return {vt,it,pt,E};
+}
+function w1u(){
+  const m=w1M[w1.d],r=w1wave(m);
+  $('w1-v').setAttribute('points',r.vt.join(' '));$('w1-i').setAttribute('points',r.it.join(' '));
+  $('w1-p').setAttribute('points','56,246 '+r.pt.join(' ')+' 470,246');
+  setVL($('w1-cmd'),w1X(T0));$('w1-cmdt').setAttribute('x',(w1X(T0)+4).toFixed(1));
+  $('w1-li').setAttribute('x',(w1X(T0+m.td)-26).toFixed(1));$('w1-li').setAttribute('y',(w1I(20)+18).toFixed(1));
+  $('w1-td').textContent=fmtT(m.td*1e-6);$('w1-tf').textContent=fmtT(m.tf*1e-6);
+  $('w1-tail').textContent=m.k?(m.k*100).toFixed(0)+'% 电流，τ ≈ '+fmtT(m.tau*1e-6):'无';
+  $('w1-e').textContent=(r.E*1e3).toFixed(2)+' mJ';
+  $('w1-p20').textContent=fmtP(r.E*20e3);
+  $('w1-note').textContent=m.n;
+}
+seg('w1-d',v=>{w1.d=v;w1u();});
+w1u();
+
+/* 2. 总损耗 vs 频率 */
+const f1X=scale(2,6,56,496),f1Y=scale(0,200,246,36),f1={sic:false};
+const f1D=[
+  {k:'b',n:'BJT',pc:12,e:8,z:'zone-ok'},
+  {k:'g',n:'IGBT',pc:17,e:1.5,z:'zone-sat'},
+  {k:'m',n:'Si MOSFET',pc:50,e:0.3,z:'zone-cut'},
+  {k:'s',n:'SiC MOSFET',pc:10,e:0.08,z:'zone-sic'}
+];
+const f1P=(d,f)=>d.pc+d.e*f/1000;  /* e 单位 mJ，f 单位 Hz */
+const f1Fmt=v=>['100 Hz','1 k','10 k','100 k','1 MHz'][v-2];
+mkAxes('f1-ax',f1X,f1Y,[2,3,4,5,6],[0,50,100,150,200],'开关频率（对数）','总损耗 / W',f1Fmt);
+f1D.forEach(d=>{
+  $('f1-'+d.k).setAttribute('points',plot(lf=>{const p=f1P(d,Math.pow(10,lf));return p>200?NaN:p;},2,6,f1X,f1Y,240));
+  if(d.k==='s'){$('f1-ls').setAttribute('y',(f1Y(f1P(d,1e6))-10).toFixed(1));return;}
+  const fl=(177-d.pc)/d.e*1000;$('f1-l'+d.k).setAttribute('x',(f1X(Math.log10(fl))-8).toFixed(1));
+});
+function f1zones(){
+  const g=$('f1-z');g.replaceChildren();
+  const act=f1D.filter(d=>f1.sic||d.k!=='s');let cur=null,st=2;
+  const best=lf=>act.reduce((a,d)=>f1P(d,Math.pow(10,lf))<f1P(a,Math.pow(10,lf))?d:a);
+  for(let k=0;k<=400;k++){const lf=2+4*k/400,b=best(lf);
+    if(cur&&(b!==cur||k===400)){const x0=f1X(st),x1=f1X(lf);
+      g.append(svgEl('rect',{class:cur.z,x:x0.toFixed(1),y:36,width:(x1-x0).toFixed(1),height:210}));
+      if(x1-x0>44)g.append(svgEl('text',{x:((x0+x1)/2).toFixed(1),y:52,'text-anchor':'middle',class:'tm'},cur.n+' 最省'));
+      st=lf;}
+    cur=b;}
+}
+function f1u(){
+  const v=+$('f1-f').value,f=100*Math.pow(10,v/10),lf=Math.log10(f),x=f1X(lf);
+  $('f1-fv').textContent=fmtF(f);$('f1-f').setAttribute('aria-valuetext',fmtF(f));
+  setVL($('f1-cur'),x);
+  const act=f1D.filter(d=>f1.sic||d.k!=='s');let best=act[0];
+  f1D.forEach(d=>{const p=f1P(d,f),on=f1.sic||d.k!=='s';
+    const pt=$('f1-p'+d.k);show(pt,on&&p<=200);if(p<=200)setP(pt,x,f1Y(p));
+    $('f1-r'+d.k).textContent=on?fmtP(p)+'，开关占 '+(d.e*f/1000/p*100).toFixed(0)+'%':'—';
+    if(on&&p<f1P(best,f))best=d;});
+  show($('f1-s'),f1.sic);show($('f1-ls'),f1.sic);$('f1-rsl').style.opacity=f1.sic?1:.4;
+  chip($('f1-chip'),best.n,'on');
+  const tip={b:'频率很低时开关损耗可以忽略，谁导通压降低谁赢。BJT 饱和压降低，但驱动要持续给基极电流，实际上工频以外已很少用。',
+    g:'这一段 IGBT 的低导通压降优势还压得住开关损耗，是电机驱动、逆变器最常见的工作区。',
+    m:'频率高了，IGBT 的开关能量乘上频率迅速变大，MOS 虽然导通损耗大，但开关能量小，总损耗反超。',
+    s:'SiC MOS 同耐压下 Rds(on) 小，开关又快，两头都占优，只是价格更高。这正是新能源车主驱逐步从 IGBT 换成 SiC 的原因。'};
+  $('f1-note').textContent=tip[best.k];
+}
+$('f1-f').addEventListener('input',f1u);
+seg('f1-c',v=>{f1.sic=v==='sic';f1zones();f1u();});
+f1zones();f1u();
+</script>
+</body>
+</html>

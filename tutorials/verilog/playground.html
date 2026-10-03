@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="逐拍查看 Verilog 寄存器、存储单元和波形；对照时钟沿前后的值理解硬件。">
+  <title>Verilog 寄存器步进台</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230e6b89'/%3E%3Cpath d='M5 22h6V10h10v12h6' fill='none' stroke='white' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/lab.css">
+</head>
+<body data-root="">
+<div class="lab-wrap">
+  <header class="lab-heading">
+    <div>
+      <p class="eyebrow">VERILOG / 逐拍观察</p>
+      <h1>寄存器步进台</h1>
+      <p class="subtitle">左侧读代码，右侧看数值。把一个时钟沿放慢，看清寄存器怎样一起更新。</p>
+    </div>
+    <nav class="header-links" aria-label="页面导航">
+      <a href="index.html">课程首页</a>
+      <a id="lesson-link" href="lessons/lesson00.html">本课讲解</a>
+      <button class="themer button quiet" type="button">主题</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="example-bar" aria-label="选择示例">
+      <div class="example-picker">
+        <label for="scene-select">观察哪个电路</label>
+        <select id="scene-select"></select>
+      </div>
+      <p id="parameters" class="parameters"></p>
+      <span id="service-status" class="service-status">示例回放</span>
+    </section>
+    <p id="service-note" class="service-note" hidden></p>
+    <noscript><p class="notice">请启用浏览器 JavaScript 后使用步进台。</p></noscript>
+    <div id="load-error" class="notice error" role="alert" hidden></div>
+
+    <section class="playback panel" aria-label="步进控制">
+      <div class="playback-actions">
+        <button id="reset" class="button quiet" type="button" title="回到仿真起点">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 5v5h5M4.5 9a6 6 0 1 1 1 5"/></svg>重置
+        </button>
+        <button id="previous" class="button" type="button" aria-keyshortcuts="Shift+F10">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4v12M15 4l-7 6 7 6z"/></svg>上一步
+        </button>
+        <button id="next" class="button primary" type="button" aria-keyshortcuts="F10">
+          下一拍<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M14 4v12M5 4l7 6-7 6z"/></svg>
+        </button>
+        <button id="play" class="button" type="button" aria-pressed="false">连续播放</button>
+        <label class="compact-label" for="speed">速度
+          <select id="speed" aria-label="播放速度"><option value="1200">慢速</option><option value="600" selected>正常</option><option value="180">快速</option></select>
+        </label>
+        <label class="compact-label" for="step-mode">步进
+          <select id="step-mode" aria-label="步进方式"><option value="clock">时钟上升沿</option><option value="event">每次信号变化</option></select>
+        </label>
+      </div>
+      <div class="position">
+        <span id="step-counter">第 0 步</span><strong id="time-label">0 ns</strong>
+        <span id="edge-label" class="edge-label">仿真起点</span>
+      </div>
+      <div class="scrubber">
+        <input id="timeline" type="range" min="0" max="1" value="0" aria-label="仿真进度">
+        <span id="duration-label"></span>
+      </div>
+    </section>
+
+    <div class="lab-grid">
+      <section class="panel source-panel" aria-labelledby="source-heading">
+        <div class="panel-toolbar">
+          <h2 id="source-heading">源码</h2>
+          <label class="sr-only" for="file-select">查看文件</label><select id="file-select"></select>
+          <button id="copy" class="button small quiet" type="button">复制</button>
+        </div>
+        <div class="source-caption"><span class="legend-mark"></span><span id="source-caption">点击右侧信号，定位相关代码</span></div>
+        <div id="code-view" class="code-view" tabindex="0" aria-label="Verilog 源码"></div>
+        <textarea id="code-editor" class="code-editor" spellcheck="false" aria-label="编辑 Verilog 源码" hidden></textarea>
+        <div id="compile-error" class="compile-error" role="alert" hidden></div>
+        <div class="source-actions">
+          <button id="edit" class="button" type="button">编辑代码</button>
+          <button id="compile" class="button primary" type="button" hidden>编译并更新波形</button>
+          <button id="cancel-edit" class="button quiet" type="button" hidden>返回波形</button>
+          <button id="restore" class="button quiet small" type="button">恢复示例</button>
+          <span id="draft-status" class="muted"></span>
+        </div>
+      </section>
+
+      <section class="panel state-panel" aria-labelledby="state-heading">
+        <div class="panel-toolbar">
+          <h2 id="state-heading">寄存器与信号</h2>
+          <span id="changed-count" class="changed-count"></span>
+          <label class="sr-only" for="radix">数值进制</label>
+          <select id="radix"><option value="bin">二进制</option><option value="hex">十六进制</option><option value="dec">十进制（无符号）</option></select>
+        </div>
+        <div class="state-tools">
+          <label><input id="changed-only" type="checkbox"> 只看变化</label>
+          <span><span class="change-dot"></span> 本步变化</span>
+          <span class="muted">x 未知 · z 高阻</span>
+        </div>
+        <div id="stale-notice" class="notice compact" hidden>编辑中：右侧保留上次波形，重新编译后更新。</div>
+        <div id="registers" class="registers"></div>
+        <div class="focus-bar">
+          <span>关注 <strong id="focused-name"></strong></span>
+          <button id="next-change" class="button small" type="button">跳到下次变化</button>
+        </div>
+        <aside class="insight">
+          <h3 id="insight-title">这一拍发生了什么</h3>
+          <p id="step-description" aria-live="polite"></p>
+          <p id="scene-note" class="scene-note"></p>
+        </aside>
+      </section>
+    </div>
+
+    <section class="panel wave-panel" aria-labelledby="wave-heading">
+      <div class="panel-toolbar">
+        <h2 id="wave-heading">波形</h2>
+        <span class="muted wave-help">点击时间点跳转 · 信号名前的圆点决定是否显示</span>
+        <label class="sr-only" for="wave-window">波形范围</label>
+        <select id="wave-window"><option value="12">附近 12 步</option><option value="32">附近 32 步</option><option value="all">全部</option></select>
+      </div>
+      <div id="waveform" class="waveform"></div>
+    </section>
+
+    <details class="output-panel">
+      <summary><span id="result-status" class="result-status"></span><span>仿真输出</span><span class="muted">展开查看 Testbench 检查结果</span></summary>
+      <pre id="simulation-output"></pre>
+    </details>
+    <footer class="lab-footer">
+      <p><kbd>F10</kbd> 下一步 · <kbd>Shift</kbd> + <kbd>F10</kbd> 回退 · <kbd>空格</kbd> 播放 / 暂停</p>
+      <p>沿前 / 沿后取自同一时刻更新前后的稳定值；高亮标出变化的变量及其引用，多个时序块在同一时钟沿一起更新。</p>
+    </footer>
+  </main>
+</div>
+<script src="assets/app.js"></script>
+<script src="assets/lab-traces.js"></script>
+<script src="assets/lab.js"></script>
+</body>
+</html>

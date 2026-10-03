@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>电感选型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#power">电源相关</a><span class="sp"></span><span>07 / 08</span></nav>
+<header>
+  <span class="eyebrow">电源相关 · 感值 · Isat · Irms · DCR</span>
+  <h1>电感选型</h1>
+  <p class="lede">选电感只看四个参数：感值定纹波，饱和电流 Isat 管峰值，温升电流 Irms 管发热，直流电阻 DCR 管导通损耗。最容易踩的坑是只看感值和额定电流，峰值电流一碰到 Isat，感量骤降，电流失控。</p>
+</header>
+
+<section id="lval">
+  <span class="eyebrow">感值 · 纹波比例</span>
+  <h2>感值由纹波电流决定</h2>
+  <p>电感把 SW 节点的方波电压变成平滑的电流。电压一定时，感值越大电流变化越慢，纹波越小。所以先定允许的纹波 ΔIL，再反推感值：</p>
+  <p class="eq">L = (Vin − Vout)·D / (f·ΔIL)　　ΔIL 一般取 Iout 的 20%~40%</p>
+  <p>纹波取太小，电感要很大，体积大、DCR 大，负载突变时电流也爬得慢；纹波取太大，峰值电流高，输出纹波和磁芯损耗都大，轻载时更早进入 DCM。输入电压有范围时按最高 Vin 算，那时纹波最大。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 240" role="img" aria-label="Buck 电感电流三角波，中心线为负载电流，峰值和谷值随纹波比例变化">
+        <rect id="s1-band" class="zone-ok" x="56" y="80" width="444" height="40"/>
+        <g id="s1-ax"></g>
+        <line id="s1-io" class="ideal" x1="56" y1="100" x2="500" y2="100"/>
+        <text id="s1-iot" x="496" y="94" text-anchor="end" class="tm">Iout 3 A</text>
+        <polyline id="s1-wave" class="real" points=""/>
+        <text id="s1-pkt" x="0" y="0" class="v hi">Ipk</text>
+        <text id="s1-dit" x="0" y="0" class="v">ΔIL</text>
+      </svg>
+      <figcaption>示例：Buck 12 V 转 3.3 V，500 kHz，负载 3 A。绿色带是纹波 ΔIL 的范围。感值按公式算出后取最近的 E12 标准值（…3.3、3.9、4.7、5.6、6.8…µH），波形按标准值画。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s1-r">目标纹波 ΔIL / Iout</label>
+        <span class="rv" id="s1-rv">30%</span>
+        <input type="range" id="s1-r" min="10" max="60" step="5" value="30"></div>
+      <dl class="read">
+        <dt>算出的感值</dt><dd id="s1-lc">—</dd>
+        <dt>取标准值</dt><dd id="s1-ls">—</dd>
+        <dt>实际纹波 ΔIL</dt><dd id="s1-di">—</dd>
+        <dt>峰值 Iout + ΔIL/2</dt><dd id="s1-pk">—</dd>
+        <dt>负载突加时电流爬升</dt><dd id="s1-sl">—</dd>
+        <dt>储能 ½·L·Ipk²</dt><dd id="s1-e">—</dd>
+        <dt>评价</dt><dd><span id="s1-st" class="chip on">常用范围</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="isat">
+  <span class="eyebrow">饱和电流 Isat · 峰值</span>
+  <h2>峰值电流一碰 Isat，感量骤降</h2>
+  <p>感量来自磁芯。电流越大磁通越大，磁芯一饱和，导磁率骤降，感量跟着掉。厂家把感量下降到某个比例（常见 20%~30%，各家定义不同）时的电流标为 Isat。要拿来比较的是峰值电流，不是平均电流：</p>
+  <p class="eq">Ipk = Iout + ΔIL / 2 < Isat，留余量，并且要大于芯片的限流值</p>
+  <p>感量一掉，同样的电压下 di/dt = V / L 变大，电流斜率变陡，峰值冲得更高，磁芯饱和得更深，这是正反馈。铁氧体饱和得很"硬"，过了拐点感量断崖式下跌；合金粉芯是"软"饱和，感量随电流慢慢降，过载时不容易失控。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 424" role="img" aria-label="上图为电感感量随电流下降的饱和曲线，标出 Isat；下图为电感电流波形，峰值超过 Isat 后波形变尖变陡">
+        <g id="s2-axl"></g>
+        <polyline id="s2-lc" class="cv" points=""/>
+        <polyline id="s2-lu" class="real" style="stroke-width:5" points=""/>
+        <line id="s2-isl" class="ax dash" x1="0" y1="30" x2="0" y2="150"/>
+        <text id="s2-ist" x="0" y="44" class="v">Isat</text>
+        <circle id="s2-dot" class="dot" cx="0" cy="0" r="4.5" style="fill:var(--copper)"/>
+        <g id="s2-axw"></g>
+        <line id="s2-ish" style="stroke:var(--danger);stroke-width:1.5;stroke-dasharray:6 4" x1="56" y1="0" x2="500" y2="0"/>
+        <text id="s2-isht" x="496" y="0" text-anchor="end" class="tm" style="fill:var(--danger)">Isat</text>
+        <polyline id="s2-id" class="ideal" points=""/>
+        <polyline id="s2-w" class="real" points=""/>
+        <text id="s2-pkt" x="0" y="0" class="v hi">Ipk</text>
+      </svg>
+      <figcaption>上图粗线是一个周期里电感实际走过的那段曲线。下图虚线按标称感量画，橙线按实际感量随电流下降画。示意电感：4.7 µH，Isat 4.2 A（感量降 30%），Irms 3.6 A（温升 40 °C），DCR 30 mΩ；电路同上一节。饱和模型为示意。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">磁芯</span>
+        <div class="seg" id="s2-t"><button id="s2-t-fe" data-v="10" aria-pressed="true">铁氧体（硬饱和）</button><button id="s2-t-pw" data-v="3" aria-pressed="false">合金粉芯（软饱和）</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s2-i">负载电流 Iout</label>
+        <span class="rv" id="s2-iv">2.5 A</span>
+        <input type="range" id="s2-i" min="1" max="5.5" step="0.1" value="2.5"></div>
+      <dl class="read">
+        <dt>按标称感量的峰值</dt><dd id="s2-pn">—</dd>
+        <dt>实际峰值</dt><dd id="s2-pa">—</dd>
+        <dt>峰值处感量</dt><dd id="s2-lp">—</dd>
+        <dt>Isat 余量</dt><dd id="s2-mg">—</dd>
+        <dt>电流有效值 Irms</dt><dd id="s2-rms">—</dd>
+        <dt>DCR 损耗 Irms²·DCR</dt><dd id="s2-pl">—</dd>
+        <dt>结论</dt><dd><span id="s2-st" class="chip on">安全</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="irms">
+  <span class="eyebrow">Irms · DCR · 选型步骤</span>
+  <h2>Isat 和 Irms 不是一回事</h2>
+  <p>Isat 是磁的指标，看峰值，超了感量掉。Irms 是热的指标，看有效值，超了温升过高，厂家常按温升 40 °C 标定。两个都要满足，数据手册里两个值可能差很多，以较紧的那个为准。</p>
+  <p class="eq">Irms = √(Iout² + ΔIL²/12)　　P_DCR = Irms²·DCR</p>
+  <p>DCR 是绕组的直流电阻，损耗和电流平方成正比，大电流时是电感损耗的大头。同样尺寸下感值越大，匝数越多、线越细，DCR 越大。纹波电流还会带来磁芯损耗和绕组交流损耗，纹波越大、频率越高越明显，要用厂家的损耗计算工具核对。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>参数</th><th>管什么</th><th>怎么核对</th></tr></thead>
+    <tbody>
+      <tr><td>感值 L</td><td>纹波电流</td><td>ΔIL 在 Iout 的 20%~40%，按最高 Vin 算；感值容差常见 ±20%</td></tr>
+      <tr><td>饱和电流 Isat</td><td>峰值时不饱和</td><td>Isat > Iout(max) + ΔIL/2，最好大于芯片限流值</td></tr>
+      <tr><td>温升电流 Irms</td><td>发热</td><td>额定值大于实际有效值，注意按多少温升标定</td></tr>
+      <tr><td>直流电阻 DCR</td><td>导通损耗、效率</td><td>Irms²·DCR 占总损耗的比例</td></tr>
+      <tr><td>屏蔽方式</td><td>EMI</td><td>非屏蔽电感漏磁大，靠近敏感电路用屏蔽或一体成型</td></tr>
+    </tbody>
+  </table></div>
+  <p>选型步骤：</p>
+  <ol>
+    <li>按最高 Vin、纹波取 Iout 的 20%~40% 算出感值，取相近的标准值。</li>
+    <li>用选定的感值重算 ΔIL 和峰值 Ipk = Iout(max) + ΔIL/2。</li>
+    <li>选 Isat 大于 Ipk 并留 20%~30% 余量的型号。芯片有逐周期限流时，最好 Isat 大于限流值，输出短路时也不饱和。</li>
+    <li>核对 Irms 额定值大于实际有效值，算 DCR 损耗和温升。</li>
+    <li>最后看尺寸、屏蔽和成本；频率高时再核对磁芯损耗。</li>
+  </ol>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>Buck 的电感怎么选？</summary>
+      <div class="ans"><p>先定纹波，ΔIL 取 Iout 的 20%~40%，按最高 Vin 用 L = (Vin − Vout)·D / (f·ΔIL) 算感值。再算峰值 Iout + ΔIL/2，选 Isat 比它大并留余量的型号，最好大于芯片限流值。然后核对 Irms 额定值和 DCR 损耗，最后看尺寸和屏蔽。</p></div></details>
+    <details><summary>Isat 和 Irms 有什么区别？</summary>
+      <div class="ans"><p>Isat 是饱和电流，磁芯的指标，感量降到规定比例（常见 20%~30%）时的电流，要和峰值电流比。Irms 是温升电流，发热的指标，通常指温升 40 °C 时的有效值电流，要和有效值比。两个都得满足。</p></div></details>
+    <details><summary>电感饱和了会发生什么？</summary>
+      <div class="ans"><p>感量骤降，di/dt = V / L 变大，电流斜率变陡，峰值冲得更高，磁芯饱和得更深，形成正反馈。结果是开关管过流、芯片频繁触发限流、纹波和发热变大，严重时烧管子。铁氧体是硬饱和，过了拐点感量断崖式下跌，更危险。</p></div></details>
+    <details><summary>感值选大一点好还是小一点好？</summary>
+      <div class="ans"><p>不是越大越好。感值大，纹波和峰值电流小，输出纹波小，但体积大、DCR 大，负载突变时电流爬升 (Vin − Vout)/L 慢，瞬态响应差。感值小则相反。所以取 ΔIL 为 Iout 的 20%~40% 这个折中。</p></div></details>
+    <details><summary>为什么 DC-DC 常用一体成型电感？</summary>
+      <div class="ans"><p>一体成型多用合金粉芯，是软饱和，过载时感量慢慢降，不会突然失控；磁芯把线圈包住，屏蔽好、漏磁小；体积小、耐冲击。代价是磁芯损耗一般比铁氧体大，高频时要核对。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="06-反馈环路稳定性.html"><span>上一页</span>反馈环路稳定性</a><a class="next" href="08-续流二极管选择.html"><span>下一页</span>续流二极管选择</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 共用电路：Buck 12 V → 3.3 V，500 kHz */
+const BK={vin:12,vo:3.3,f:500e3};BK.D=BK.vo/BK.vin;
+const LE12=[1,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2,10,12,15,18,22];
+function axInit(g,yv,Y,xv,X,x0,x1,y0,y1,yn,xn){
+  yv.forEach(v=>g.append(svgEl('line',{class:'gl',x1:x0,y1:Y(v),x2:x1,y2:Y(v)}),svgEl('text',{x:x0-6,y:Y(v)+4,'text-anchor':'end',class:'v'},v)));
+  xv.forEach((v,i)=>g.append(svgEl('text',{x:X(v),y:y1+16,'text-anchor':i===xv.length-1?'end':'middle',class:'v'},v)));
+  g.append(svgEl('path',{class:'ax',d:`M${x0},${y0} V${y1} H${x1}`}),svgEl('text',{x:x0+4,y:y0-8,class:'tm'},yn),svgEl('text',{x:x1,y:y1+32,'text-anchor':'end',class:'tm'},xn));
+}
+
+/* 1. 感值与纹波 */
+const S1IO=3,s1X=scale(0,4,56,500),s1Y=scale(0,5,200,30);
+axInit($('s1-ax'),[0,1,2,3,4,5],s1Y,[0,1,2,3,4],s1X,56,500,30,200,'电感电流 iL / A','时间 / µs');
+function s1u(){
+  const r=+$('s1-r').value/100,lcu=(BK.vin-BK.vo)*BK.D/(BK.f*r*S1IO)*1e6;
+  const ls=LE12.reduce((b,x)=>Math.abs(Math.log(x/lcu))<Math.abs(Math.log(b/lcu))?x:b,LE12[0]);
+  const L=ls*1e-6,di=(BK.vin-BK.vo)*BK.D/(BK.f*L),ipk=S1IO+di/2,iv=S1IO-di/2,ra=di/S1IO;
+  const pts=[];for(let k=0;k<2;k++)pts.push(s1X(2*k).toFixed(1)+','+s1Y(iv).toFixed(1),s1X(2*k+2*BK.D).toFixed(1)+','+s1Y(ipk).toFixed(1));
+  pts.push(s1X(4)+','+s1Y(iv).toFixed(1));
+  $('s1-wave').setAttribute('points',pts.join(' '));
+  const b=$('s1-band');b.setAttribute('y',s1Y(ipk).toFixed(1));b.setAttribute('height',(s1Y(iv)-s1Y(ipk)).toFixed(1));
+  const pk=$('s1-pkt');pk.setAttribute('x',(s1X(2+2*BK.D)+8).toFixed(1));pk.setAttribute('y',(s1Y(ipk)-6).toFixed(1));pk.textContent='Ipk '+fmtA(ipk);
+  const dt=$('s1-dit');dt.setAttribute('x','62');dt.setAttribute('y',(s1Y(ipk)-6).toFixed(1));dt.textContent='ΔIL '+fmtA(di);
+  $('s1-rv').textContent=(r*100).toFixed(0)+'%';$('s1-r').setAttribute('aria-valuetext',(r*100).toFixed(0)+'%');
+  $('s1-lc').textContent=lcu.toFixed(2)+' µH';$('s1-ls').textContent=ls+' µH';
+  $('s1-di').textContent=fmtA(di)+'，Iout 的 '+(ra*100).toFixed(0)+'%';
+  $('s1-pk').textContent=fmtA(ipk);
+  const sl=(BK.vin-BK.vo)/L/1e6;$('s1-sl').textContent=sl.toFixed(2)+' A/µs';
+  $('s1-e').textContent=(0.5*L*ipk*ipk*1e6).toFixed(1)+' µJ';
+  let n;
+  if(ra<0.2){chip($('s1-st'),'电感偏大','off');n='纹波只有 '+(ra*100).toFixed(0)+'%，要 '+ls+' µH。储能 ½·L·Ipk² 基本决定磁芯尺寸，感值大了电感又大又贵，DCR 也大；负载突加时电感电流每微秒最多只能爬 '+sl.toFixed(2)+' A，瞬态下冲更大。';}
+  else if(ra>0.4){chip($('s1-st'),'纹波偏大','warn');n='纹波 '+(ra*100).toFixed(0)+'%，峰值 '+fmtA(ipk)+'。电感小巧、瞬态快，但输出纹波和磁芯损耗大，Isat 要跟着选大；负载降到 ΔIL/2 = '+fmtA(di/2)+' 以下就进入 DCM。';}
+  else{chip($('s1-st'),'常用范围','on');n='纹波 '+(ra*100).toFixed(0)+'%，在 20%~40% 的常用范围，输出纹波、瞬态响应和电感体积比较均衡。算出 '+lcu.toFixed(2)+' µH，取最近的标准值 '+ls+' µH 后要用它重算纹波和峰值。';}
+  $('s1-note').textContent=n;
+}
+$('s1-r').addEventListener('input',s1u);
+s1u();
+
+/* 2. 饱和：感量 L(i) 示意模型，按磁链 λ = ∫L·di 随时间线性变化求电流波形 */
+const S2={L0:4.7e-6,isat:4.2,irms:3.6,dcr:0.03,n:10,Lf:0.05};
+const s2Xl=scale(0,8,56,500),s2Yl=scale(0,5,150,30),s2Xt=scale(0,4,56,500),s2Yt=scale(0,9,380,200);
+axInit($('s2-axl'),[0,1,2,3,4,5],s2Yl,[0,1,2,3,4,5,6,7,8],s2Xl,56,500,30,150,'感量 L / µH','电流 / A');
+axInit($('s2-axw'),[0,3,6,9],s2Yt,[0,1,2,3,4],s2Xt,56,500,200,380,'电感电流 iL / A','时间 / µs');
+const s2L=i=>S2.L0*(S2.Lf+(1-S2.Lf)/(1+3/7*Math.pow(Math.abs(i)/S2.isat,S2.n)));
+let s2Tab;
+function s2Build(){const h=0.002,N=7000,lam=new Float64Array(N+1);
+  for(let k=1;k<=N;k++)lam[k]=lam[k-1]+(s2L((k-1)*h)+s2L(k*h))/2*h;s2Tab={h,N,lam};}
+const s2Lam=i=>{const {h,N,lam}=s2Tab,x=i/h,k=Math.min(N-1,Math.floor(x));return lam[k]+(lam[k+1]-lam[k])*(x-k);};
+const s2Inv=l=>{const {h,N,lam}=s2Tab;if(l>=lam[N])return N*h;let a=0,b=N;
+  while(b-a>1){const m=(a+b)>>1;if(lam[m]<=l)a=m;else b=m;}return (a+(l-lam[a])/(lam[b]-lam[a]))*h;};
+function s2u(){
+  const io=+$('s2-i').value,dl=(BK.vin-BK.vo)*BK.D/BK.f,M=80;
+  const samp=iv=>{const l0=s2Lam(iv),a=[];for(let j=0;j<=M;j++)a.push(s2Inv(l0+dl*j/M));return a;};
+  const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+  let a=0,b=io;for(let k=0;k<36;k++){const m=(a+b)/2;if(mean(samp(m))<io)a=m;else b=m;}
+  const iv=(a+b)/2,sm=samp(iv),ip=sm[M],l0=s2Lam(iv),T=2,D=BK.D;
+  const di0=dl/S2.L0,ip0=io+di0/2,iv0=io-di0/2,P=(t,i)=>s2Xt(t).toFixed(1)+','+s2Yt(Math.min(i,9)).toFixed(1);
+  const pw=[];for(let k=0;k<2;k++){for(let j=0;j<=40;j++)pw.push(P(k*T+j/40*D*T,s2Inv(l0+dl*j/40)));
+    for(let j=1;j<=40;j++)pw.push(P(k*T+D*T+j/40*(1-D)*T,s2Inv(l0+dl*(1-j/40))));}
+  $('s2-w').setAttribute('points',pw.join(' '));
+  $('s2-id').setAttribute('points',[P(0,iv0),P(D*T,ip0),P(T,iv0),P(T+D*T,ip0),P(2*T,iv0)].join(' '));
+  $('s2-lc').setAttribute('points',plot(i=>s2L(i)*1e6,0,8,s2Xl,s2Yl,200));
+  $('s2-lu').setAttribute('points',plot(i=>s2L(i)*1e6,iv,Math.min(ip,8),s2Xl,s2Yl,60));
+  const d=$('s2-dot');d.setAttribute('cx',s2Xl(Math.min(ip,8)).toFixed(1));d.setAttribute('cy',s2Yl(s2L(Math.min(ip,8))*1e6).toFixed(1));
+  const xs=s2Xl(S2.isat).toFixed(1);['x1','x2'].forEach(k=>$('s2-isl').setAttribute(k,xs));
+  $('s2-ist').setAttribute('x',(+xs+6).toFixed(1));$('s2-ist').textContent='Isat '+S2.isat+' A';
+  const yh=s2Yt(S2.isat).toFixed(1);['y1','y2'].forEach(k=>$('s2-ish').setAttribute(k,yh));
+  $('s2-isht').setAttribute('y',(+yh-6).toFixed(1));$('s2-isht').textContent='Isat '+S2.isat+' A';
+  const pk=$('s2-pkt');pk.setAttribute('x',(s2Xt(T+D*T)+8).toFixed(1));pk.setAttribute('y',(s2Yt(Math.min(ip,9))+(ip>8.3?14:-6)).toFixed(1));
+  pk.textContent=ip>9?'Ipk > 9 A':'Ipk '+fmtA(ip);
+  const irms=Math.sqrt(mean(sm.map(x=>x*x))),lr=s2L(ip)/S2.L0,mg=(S2.isat-ip)/S2.isat,hard=S2.n>5,run=ip>=13.9;
+  $('s2-iv').textContent=io.toFixed(1)+' A';$('s2-i').setAttribute('aria-valuetext',io.toFixed(1)+' A');
+  $('s2-pn').textContent=fmtA(ip0);
+  $('s2-pa').textContent=run?'> 14 A，失控':fmtA(ip)+(ip-ip0>0.05?'，多出 '+fmtA(ip-ip0):'');
+  $('s2-lp').textContent=(lr*100).toFixed(0)+'%，'+(s2L(ip)*1e6).toFixed(2)+' µH';
+  $('s2-mg').textContent=mg>=0?'余 '+(mg*100).toFixed(0)+'%':'超出 '+(-mg*100).toFixed(0)+'%';
+  $('s2-rms').textContent=fmtA(irms)+(irms>S2.irms?'，超过额定 3.6 A':'，额定 3.6 A');
+  $('s2-pl').textContent=fmtP(irms*irms*S2.dcr);
+  let n;
+  if(ip>S2.isat){chip($('s2-st'),run?'饱和，电流失控':'饱和','bad');
+    n=hard?'峰值超过 Isat，感量掉到标称的 '+(lr*100).toFixed(0)+'%，di/dt = V/L 变大，波形尖端翘起来，'+(run?'电流冲出坐标，已经失控，只能靠芯片逐周期限流。':'比按标称感量算的峰值多出 '+fmtA(ip-ip0)+'。')+'铁氧体过了拐点感量断崖式下跌，再加一点负载峰值就失控。'
+      :'峰值超过 Isat，但合金粉芯是软饱和，感量慢慢降，峰值比标称估算多出 '+fmtA(ip-ip0)+'，不会突然失控。不过感量掉了，纹波和损耗也变大，设计时仍要让峰值低于 Isat。';}
+  else if(irms>S2.irms){chip($('s2-st'),'温升超标','warn');n='没饱和，但有效值 '+fmtA(irms)+' 超过了 Irms 额定值，温升会超过 40 °C。Isat 和 Irms 要分别核对。';}
+  else if(mg<0.2){chip($('s2-st'),'余量不足','warn');n='峰值离 Isat 只剩 '+(mg*100).toFixed(0)+'%。感值容差、温度升高（铁氧体的 Isat 随温度下降）、启动和负载跳变时的峰值都可能碰到 Isat，一般留 20%~30% 余量。';}
+  else{chip($('s2-st'),'安全','on');n='峰值 '+fmtA(ip)+'，离 Isat 还有 '+(mg*100).toFixed(0)+'% 余量，感量几乎不变，实际波形和按标称感量算的重合。往右拖负载电流，看峰值碰到 Isat 以后波形怎么变。';}
+  $('s2-note').textContent=n;
+}
+seg('s2-t',v=>{S2.n=+v;s2Build();s2u();});
+$('s2-i').addEventListener('input',s2u);
+s2Build();s2u();
+</script>
+</body>
+</html>

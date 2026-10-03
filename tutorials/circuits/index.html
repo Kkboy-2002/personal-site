@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>硬件电路图解</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="_assets/style.css">
+<style>
+.wrap{gap:40px}
+.toc{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px}
+.toc a{text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="eyebrow">硬件工程师面试 · 10 个大类 · 81 页</span>
+  <h1>硬件电路图解</h1>
+  <p class="lede">每页只讲一个知识点。图里的开关、滑块都能动，切换之后电流路径、波形和读数会跟着变。每页末尾有面试常见追问。</p>
+  <nav class="toc"><a href="#diode">二极管</a><a href="#bjt">三极管</a><a href="#mos">MOS管</a><a href="#igbt">IGBT</a><a href="#opamp">运放</a><a href="#basic">基本电路</a><a href="#power">电源相关</a><a href="#pcb">PCB与调试</a><a href="#bus">通信接口</a><a href="#protect">保护电路</a></nav>
+</header>
+<section class="cat" id="diode">
+  <span class="eyebrow">01 · 8 页</span>
+  <h2>二极管</h2>
+  <p class="lede" style="font-size:14px">单向导电、击穿、续流钳位稳压、反向恢复、肖特基</p>
+  <ol>
+      <li><a href="01-二极管/01-单向导电性与PN结.html"><span class="k">01</span>单向导电性与PN结</a></li>
+      <li><a href="01-二极管/02-伏安特性与正向压降.html"><span class="k">02</span>伏安特性与正向压降</a></li>
+      <li><a href="01-二极管/03-反向击穿齐纳与雪崩.html"><span class="k">03</span>反向击穿齐纳与雪崩</a></li>
+      <li><a href="01-二极管/04-续流二极管.html"><span class="k">04</span>续流二极管</a></li>
+      <li><a href="01-二极管/05-钳位电路.html"><span class="k">05</span>钳位电路</a></li>
+      <li><a href="01-二极管/06-稳压二极管应用.html"><span class="k">06</span>稳压二极管应用</a></li>
+      <li><a href="01-二极管/07-反向恢复时间.html"><span class="k">07</span>反向恢复时间</a></li>
+      <li><a href="01-二极管/08-肖特基与普通二极管.html"><span class="k">08</span>肖特基与普通二极管</a></li>
+  </ol>
+</section>
+<section class="cat" id="bjt">
+  <span class="eyebrow">02 · 9 页</span>
+  <h2>三极管</h2>
+  <p class="lede" style="font-size:14px">结构、三个工作区、β、Q 点、热漂移、三种组态、失真</p>
+  <ol>
+      <li><a href="02-三极管/01-NPN与PNP结构.html"><span class="k">01</span>NPN与PNP结构</a></li>
+      <li><a href="02-三极管/02-三个工作区.html"><span class="k">02</span>三个工作区</a></li>
+      <li><a href="02-三极管/03-β放大倍数.html"><span class="k">03</span>β放大倍数</a></li>
+      <li><a href="02-三极管/04-输入输出特性曲线.html"><span class="k">04</span>输入输出特性曲线</a></li>
+      <li><a href="02-三极管/05-静态工作点Q.html"><span class="k">05</span>静态工作点Q</a></li>
+      <li><a href="02-三极管/06-温度稳定性与热漂移.html"><span class="k">06</span>温度稳定性与热漂移</a></li>
+      <li><a href="02-三极管/07-三种组态对比.html"><span class="k">07</span>三种组态对比</a></li>
+      <li><a href="02-三极管/08-饱和失真与截止失真.html"><span class="k">08</span>饱和失真与截止失真</a></li>
+      <li><a href="02-三极管/09-上拉电阻配三极管.html"><span class="k">09</span>上拉电阻配三极管</a></li>
+  </ol>
+</section>
+<section class="cat" id="mos">
+  <span class="eyebrow">03 · 9 页</span>
+  <h2>MOS管</h2>
+  <p class="lede" style="font-size:14px">沟道类型、Vth、工作区、gm、米勒效应、体二极管、Rds(on)</p>
+  <ol>
+      <li><a href="03-MOS管/01-N沟道与P沟道.html"><span class="k">01</span>N沟道与P沟道</a></li>
+      <li><a href="03-MOS管/02-增强型与耗尽型.html"><span class="k">02</span>增强型与耗尽型</a></li>
+      <li><a href="03-MOS管/03-阈值电压与转移特性.html"><span class="k">03</span>阈值电压与转移特性</a></li>
+      <li><a href="03-MOS管/04-输出特性与三个工作区.html"><span class="k">04</span>输出特性与三个工作区</a></li>
+      <li><a href="03-MOS管/05-跨导gm.html"><span class="k">05</span>跨导gm</a></li>
+      <li><a href="03-MOS管/06-栅极电容与米勒效应.html"><span class="k">06</span>栅极电容与米勒效应</a></li>
+      <li><a href="03-MOS管/07-体二极管.html"><span class="k">07</span>体二极管</a></li>
+      <li><a href="03-MOS管/08-导通电阻Rdson.html"><span class="k">08</span>导通电阻Rdson</a></li>
+      <li><a href="03-MOS管/09-驱动功耗.html"><span class="k">09</span>驱动功耗</a></li>
+  </ol>
+</section>
+<section class="cat" id="igbt">
+  <span class="eyebrow">04 · 7 页</span>
+  <h2>IGBT</h2>
+  <p class="lede" style="font-size:14px">复合结构、Vce(sat)、拖尾电流、短路耐受、负压驱动</p>
+  <ol>
+      <li><a href="04-IGBT/01-结构BJT加MOS复合.html"><span class="k">01</span>结构BJT加MOS复合</a></li>
+      <li><a href="04-IGBT/02-导通压降Vcesat.html"><span class="k">02</span>导通压降Vcesat</a></li>
+      <li><a href="04-IGBT/03-开关频率对比.html"><span class="k">03</span>开关频率对比</a></li>
+      <li><a href="04-IGBT/04-拖尾电流.html"><span class="k">04</span>拖尾电流</a></li>
+      <li><a href="04-IGBT/05-短路耐受时间.html"><span class="k">05</span>短路耐受时间</a></li>
+      <li><a href="04-IGBT/06-驱动要求正负压.html"><span class="k">06</span>驱动要求正负压</a></li>
+      <li><a href="04-IGBT/07-应用场景与选型.html"><span class="k">07</span>应用场景与选型</a></li>
+  </ol>
+</section>
+<section class="cat" id="opamp">
+  <span class="eyebrow">05 · 12 页</span>
+  <h2>运放</h2>
+  <p class="lede" style="font-size:14px">虚短虚断、六种基本电路、GBW、SR、失调、CMRR、单电源</p>
+  <ol>
+      <li><a href="05-运放/01-虚短与虚断.html"><span class="k">01</span>虚短与虚断</a></li>
+      <li><a href="05-运放/02-反相放大器.html"><span class="k">02</span>反相放大器</a></li>
+      <li><a href="05-运放/03-同相放大器.html"><span class="k">03</span>同相放大器</a></li>
+      <li><a href="05-运放/04-差分放大器.html"><span class="k">04</span>差分放大器</a></li>
+      <li><a href="05-运放/05-积分电路.html"><span class="k">05</span>积分电路</a></li>
+      <li><a href="05-运放/06-微分电路.html"><span class="k">06</span>微分电路</a></li>
+      <li><a href="05-运放/07-增益带宽积GBW.html"><span class="k">07</span>增益带宽积GBW</a></li>
+      <li><a href="05-运放/08-压摆率SR.html"><span class="k">08</span>压摆率SR</a></li>
+      <li><a href="05-运放/09-失调电压与偏置电流.html"><span class="k">09</span>失调电压与偏置电流</a></li>
+      <li><a href="05-运放/10-CMRR与PSRR.html"><span class="k">10</span>CMRR与PSRR</a></li>
+      <li><a href="05-运放/11-轨到轨输出.html"><span class="k">11</span>轨到轨输出</a></li>
+      <li><a href="05-运放/12-单电源供电.html"><span class="k">12</span>单电源供电</a></li>
+  </ol>
+</section>
+<section class="cat" id="basic">
+  <span class="eyebrow">06 · 7 页</span>
+  <h2>基本电路</h2>
+  <p class="lede" style="font-size:14px">整流、滤波、稳压、分压偏置、负反馈</p>
+  <ol>
+      <li><a href="06-基本电路/01-整流电路半波全波桥式.html"><span class="k">01</span>整流电路半波全波桥式</a></li>
+      <li><a href="06-基本电路/02-电容滤波.html"><span class="k">02</span>电容滤波</a></li>
+      <li><a href="06-基本电路/03-LC滤波.html"><span class="k">03</span>LC滤波</a></li>
+      <li><a href="06-基本电路/04-稳压电路齐纳LDO开关.html"><span class="k">04</span>稳压电路齐纳LDO开关</a></li>
+      <li><a href="06-基本电路/05-分压偏置.html"><span class="k">05</span>分压偏置</a></li>
+      <li><a href="06-基本电路/06-负反馈四种组态.html"><span class="k">06</span>负反馈四种组态</a></li>
+      <li><a href="06-基本电路/07-负反馈的作用.html"><span class="k">07</span>负反馈的作用</a></li>
+  </ol>
+</section>
+<section class="cat" id="power">
+  <span class="eyebrow">07 · 8 页</span>
+  <h2>电源相关</h2>
+  <p class="lede" style="font-size:14px">LDO 与开关电源、Buck、Boost、效率、纹波、环路、电感</p>
+  <ol>
+      <li><a href="07-电源相关/01-LDO与开关电源对比.html"><span class="k">01</span>LDO与开关电源对比</a></li>
+      <li><a href="07-电源相关/02-Buck拓扑.html"><span class="k">02</span>Buck拓扑</a></li>
+      <li><a href="07-电源相关/03-Boost拓扑.html"><span class="k">03</span>Boost拓扑</a></li>
+      <li><a href="07-电源相关/04-开关频率与效率.html"><span class="k">04</span>开关频率与效率</a></li>
+      <li><a href="07-电源相关/05-纹波与噪声.html"><span class="k">05</span>纹波与噪声</a></li>
+      <li><a href="07-电源相关/06-反馈环路稳定性.html"><span class="k">06</span>反馈环路稳定性</a></li>
+      <li><a href="07-电源相关/07-电感选型.html"><span class="k">07</span>电感选型</a></li>
+      <li><a href="07-电源相关/08-续流二极管选择.html"><span class="k">08</span>续流二极管选择</a></li>
+  </ol>
+</section>
+<section class="cat" id="pcb">
+  <span class="eyebrow">08 · 8 页</span>
+  <h2>PCB与调试</h2>
+  <p class="lede" style="font-size:14px">去耦、地平面、分地、反射、串扰、热设计、仪器</p>
+  <ol>
+      <li><a href="08-PCB与调试/01-去耦电容布局.html"><span class="k">01</span>去耦电容布局</a></li>
+      <li><a href="08-PCB与调试/02-地平面与电源平面.html"><span class="k">02</span>地平面与电源平面</a></li>
+      <li><a href="08-PCB与调试/03-模拟地与数字地.html"><span class="k">03</span>模拟地与数字地</a></li>
+      <li><a href="08-PCB与调试/04-反射与阻抗匹配.html"><span class="k">04</span>反射与阻抗匹配</a></li>
+      <li><a href="08-PCB与调试/05-串扰.html"><span class="k">05</span>串扰</a></li>
+      <li><a href="08-PCB与调试/06-热设计.html"><span class="k">06</span>热设计</a></li>
+      <li><a href="08-PCB与调试/07-示波器带宽与采样率.html"><span class="k">07</span>示波器带宽与采样率</a></li>
+      <li><a href="08-PCB与调试/08-逻辑分析仪触发.html"><span class="k">08</span>逻辑分析仪触发</a></li>
+  </ol>
+</section>
+<section class="cat" id="bus">
+  <span class="eyebrow">09 · 5 页</span>
+  <h2>通信接口</h2>
+  <p class="lede" style="font-size:14px">UART、SPI、I2C、CAN、RS485</p>
+  <ol>
+      <li><a href="09-通信接口/01-UART.html"><span class="k">01</span>UART</a></li>
+      <li><a href="09-通信接口/02-SPI.html"><span class="k">02</span>SPI</a></li>
+      <li><a href="09-通信接口/03-I2C.html"><span class="k">03</span>I2C</a></li>
+      <li><a href="09-通信接口/04-CAN.html"><span class="k">04</span>CAN</a></li>
+      <li><a href="09-通信接口/05-RS485.html"><span class="k">05</span>RS485</a></li>
+  </ol>
+</section>
+<section class="cat" id="protect">
+  <span class="eyebrow">10 · 8 页</span>
+  <h2>保护电路</h2>
+  <p class="lede" style="font-size:14px">保险丝、过流采样、TVS、压敏、防反接、ESD、缓启动</p>
+  <ol>
+      <li><a href="10-保护电路/01-保险丝与自恢复保险丝.html"><span class="k">01</span>保险丝与自恢复保险丝</a></li>
+      <li><a href="10-保护电路/02-采样电阻加比较器过流保护.html"><span class="k">02</span>采样电阻加比较器过流保护</a></li>
+      <li><a href="10-保护电路/03-TVS与齐纳过压保护.html"><span class="k">03</span>TVS与齐纳过压保护</a></li>
+      <li><a href="10-保护电路/04-压敏电阻.html"><span class="k">04</span>压敏电阻</a></li>
+      <li><a href="10-保护电路/05-二极管防反接.html"><span class="k">05</span>二极管防反接</a></li>
+      <li><a href="10-保护电路/06-PMOS防反接.html"><span class="k">06</span>PMOS防反接</a></li>
+      <li><a href="10-保护电路/07-ESD防护.html"><span class="k">07</span>ESD防护</a></li>
+      <li><a href="10-保护电路/08-缓启动.html"><span class="k">08</span>缓启动</a></li>
+  </ol>
+</section>
+</div>
+</body>
+</html>

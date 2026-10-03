@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>同相放大器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#opamp">运放</a><span class="sp"></span><span>03 / 12</span></nav>
+<header>
+  <span class="eyebrow">运放 · 基本放大电路</span>
+  <h1>同相放大器</h1>
+  <p class="lede">信号从同相端进，输出和输入同相，输入阻抗极高。把 Rf 短路、Rg 断开，就成了电压跟随器，专门用来隔离和缓冲。</p>
+</header>
+
+<section id="ni">
+  <span class="eyebrow">推导 · 同相放大与跟随器</span>
+  <h2>Vo = (1 + Rf / Rg)·Vin</h2>
+  <p>信号直接接同相端，Rf 从输出接回反相端，Rg 从反相端接地。反馈仍然接在反相端，是负反馈。</p>
+  <ol>
+    <li>虚短：V− ≈ V+ = Vin。注意这里反相端不是虚地，而是跟着 Vin 走。</li>
+    <li>Rg 上的电流 I = Vin / Rg，方向从反相端流向地。</li>
+    <li>虚断：这个电流全部来自 Rf，所以 Vo = Vin + I·Rf = (1 + Rf / Rg)·Vin。</li>
+  </ol>
+  <p>信号源只接在运放的同相输入脚上，而输入脚几乎不取电流，所以输入阻抗就是运放自身的输入阻抗，MΩ 到 TΩ 级。增益最小是 1，不能做衰减。</p>
+  <p>Rf = 0、Rg 开路时，增益 = 1 + 0 = 1，这就是电压跟随器：输出等于输入，输入阻抗极高，输出阻抗极低。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 240" role="img" aria-label="同相放大器：Vin 接同相端，Rf 从输出接回反相端，Rg 从反相端接地；可切换为电压跟随器">
+        <text x="215" y="80" text-anchor="middle" class="v">+12 V</text>
+        <path class="w" d="M215,86 V105"/>
+        <path class="w" d="M215,155 V174"/>
+        <text x="215" y="188" text-anchor="middle" class="v">−12 V</text>
+        <path class="r" d="M170,80 L260,130 L170,180 Z"/>
+        <text x="177" y="110" class="t">−</text>
+        <text x="177" y="160" class="t">+</text>
+        <g id="n1-g-amp">
+          <path class="w" d="M170,105 H70 V122 M70,162 V200 M56,200 H84 M61,205 H79 M66,210 H74"/>
+          <rect class="r" x="61" y="122" width="18" height="40" rx="2"/>
+          <text x="54" y="140" text-anchor="end" class="t">Rg</text>
+          <text id="n1-rgt" x="54" y="156" text-anchor="end" class="v">10 kΩ</text>
+          <path class="w" d="M100,105 V40 H200 M250,40 H320 V130"/>
+          <rect class="r" x="200" y="32" width="50" height="16" rx="2"/>
+          <text id="n1-rft" x="225" y="24" text-anchor="middle" class="v">Rf 47 kΩ</text>
+          <circle class="dot" cx="100" cy="105" r="3.5"/>
+          <path class="flow thin" d="M320,126 V40 H100 V105 H70 V198"/>
+        </g>
+        <g id="n1-g-fol" hidden>
+          <path class="w" d="M170,105 H100 V40 H320 V130"/>
+          <text x="210" y="32" text-anchor="middle" class="tm">输出直接接回反相端</text>
+        </g>
+        <circle class="dot" cx="320" cy="130" r="3.5"/>
+        <path class="w" d="M170,155 H130 V172 M130,204 V220 M116,220 H144 M121,225 H139 M126,230 H134"/>
+        <circle class="r" cx="130" cy="188" r="16"/>
+        <text x="130" y="193" text-anchor="middle" class="t">~</text>
+        <text x="152" y="198" class="t">Vin</text>
+        <text id="n1-vmt" x="164" y="98" text-anchor="end" class="tm">V− ≈ Vin</text>
+        <path class="w s-hi" style="stroke-width:3" d="M260,130 H392"/>
+        <text x="392" y="120" text-anchor="end" class="t">Vo</text>
+      </svg>
+      <svg viewBox="0 0 420 210" role="img" aria-label="同相放大器输入与输出波形，同相放大，超过饱和电压时削顶">
+        <line class="gl" x1="44" y1="100" x2="400" y2="100"/>
+        <line class="gl" x1="222" y1="20" x2="222" y2="180"/>
+        <line class="ax dash" x1="44" y1="44" x2="400" y2="44"/>
+        <line class="ax dash" x1="44" y1="156" x2="400" y2="156"/>
+        <path class="ax" d="M44,20 V180 H400"/>
+        <text x="38" y="24" text-anchor="end" class="v">15</text>
+        <text x="38" y="48" text-anchor="end" class="v">10.5</text>
+        <text x="38" y="104" text-anchor="end" class="v">0</text>
+        <text x="38" y="160" text-anchor="end" class="v">−10.5</text>
+        <text x="38" y="184" text-anchor="end" class="v">−15</text>
+        <text x="50" y="14" class="tm">电压 / V</text>
+        <text x="396" y="40" text-anchor="end" class="tm">+Vsat</text>
+        <text x="44" y="196" text-anchor="middle" class="v">0</text>
+        <text x="222" y="196" text-anchor="middle" class="v">1</text>
+        <text x="400" y="196" text-anchor="end" class="v">2</text>
+        <text x="384" y="196" text-anchor="end" class="tm">时间 ms</text>
+        <polyline id="n1-vin" class="real2" points="44,100 400,100"/>
+        <polyline id="n1-vo" class="real" points="44,100 400,100"/>
+        <text id="n1-lin" x="96" y="110" class="t" style="fill:var(--low)">Vin</text>
+        <text id="n1-lo" x="96" y="60" class="t" style="fill:var(--copper)">Vo</text>
+      </svg>
+      <figcaption>上：±12 V 供电的同相放大器，绿色为正半周电流路径。下：1 kHz 正弦输入（蓝）与输出（橙），两者同相。饱和电压 ±10.5 V 为示意值。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">接法</span>
+        <div class="seg" id="n1-m"><button id="n1-m-amp" data-v="amp" aria-pressed="true">同相放大</button><button id="n1-m-fol" data-v="fol" aria-pressed="false">电压跟随器</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="n1-rf">反馈电阻 Rf</label>
+        <span class="rv" id="n1-rfv">47 kΩ</span>
+        <input type="range" id="n1-rf" min="0" max="7" step="1" value="5"></div>
+      <div class="ctl"><label class="ctl-l" for="n1-rg">接地电阻 Rg</label>
+        <span class="rv" id="n1-rgv">10 kΩ</span>
+        <input type="range" id="n1-rg" min="0" max="7" step="1" value="3"></div>
+      <div class="ctl"><label class="ctl-l" for="n1-a">输入幅度（峰值）</label>
+        <span class="rv" id="n1-av">1.0 V</span>
+        <input type="range" id="n1-a" min="1" max="50" step="1" value="10"></div>
+      <dl class="read">
+        <dt>增益 1 + Rf / Rg</dt><dd id="n1-g">5.70</dd>
+        <dt>理想输出峰值</dt><dd id="n1-vp">5.70 V</dd>
+        <dt>反相端电压</dt><dd id="n1-vm">跟随 Vin</dd>
+        <dt>输入阻抗</dt><dd>极高，运放本身决定</dd>
+        <dt>输出</dt><dd><span id="n1-st" class="chip on">不失真</span></dd>
+      </dl>
+      <p class="note" id="n1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="buf">
+  <span class="eyebrow">跟随器 · 缓冲隔离</span>
+  <h2>增益只有 1，为什么还要用跟随器</h2>
+  <p>跟随器不放大电压，它的作用是阻抗变换：输入端几乎不取电流，输出端能提供几十毫安。高内阻的信号源，比如电阻分压出来的参考电压，直接接重负载会被拉垮；中间隔一个跟随器，源只看到运放的高输入阻抗，负载电流改由运放的电源提供。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 230" role="img" aria-label="5 V 经 R1、R2 分压得到 2.5 V，可直接接负载 RL，也可以经电压跟随器再接负载">
+        <text x="60" y="18" text-anchor="middle" class="v">+5 V</text>
+        <path class="w" d="M48,26 H72 M60,26 V40 M60,80 V120 M60,160 V190 M46,190 H74 M51,195 H69 M56,200 H64"/>
+        <rect class="r" x="51" y="40" width="18" height="40" rx="2"/>
+        <rect class="r" x="51" y="120" width="18" height="40" rx="2"/>
+        <text x="76" y="58" class="t">R1</text>
+        <text x="76" y="74" class="v">10 kΩ</text>
+        <text x="76" y="138" class="t">R2</text>
+        <text x="76" y="154" class="v">10 kΩ</text>
+        <circle class="dot" cx="60" cy="100" r="3.5"/>
+        <path class="w" d="M60,100 H120"/>
+        <text id="b-vn" x="92" y="92" text-anchor="middle" class="v">2.50 V</text>
+        <g id="b-g-buf">
+          <text x="225" y="72" text-anchor="middle" class="v">+5 V</text>
+          <path class="w" d="M225,78 V95 M225,145 V162 M211,162 H239 M216,167 H234 M221,172 H229"/>
+          <path class="w" d="M120,100 V145 H180 M180,95 H160 V50 H300 V120"/>
+          <path class="r" d="M180,70 L270,120 L180,170 Z"/>
+          <text x="187" y="100" class="t">−</text>
+          <text x="187" y="150" class="t">+</text>
+          <circle class="dot" cx="300" cy="120" r="3.5"/>
+          <path class="w" d="M270,120 H360"/>
+          <path id="b-f-op" class="flow thin" d="M272,120 H360 V198"/>
+        </g>
+        <g id="b-g-dir" hidden>
+          <path class="w" d="M120,100 H360 V120"/>
+          <path class="flow thin" d="M60,28 V100 H360 V198"/>
+        </g>
+        <path id="b-f-div" class="flow thin" d="M60,28 V188"/>
+        <path class="w" d="M360,120 V140 M360,180 V200 M346,200 H374 M351,205 H369 M356,210 H364"/>
+        <rect id="b-rl" class="r" x="351" y="140" width="18" height="40" rx="2"/>
+        <text x="378" y="156" class="t">RL</text>
+        <text id="b-rlt" x="378" y="172" class="v">1 kΩ</text>
+        <text id="b-vl" x="378" y="112" class="v hi">2.50 V</text>
+      </svg>
+      <figcaption>绿色为电流路径。直接连接时负载电流全部要穿过 R1；加跟随器后分压器只流过自身的 0.25 mA，负载电流由运放输出提供。运放输出电流上限按 20 mA 示意。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">连接方式</span>
+        <div class="seg" id="b-m"><button id="b-m-buf" data-v="buf" aria-pressed="true">经跟随器</button><button id="b-m-dir" data-v="dir" aria-pressed="false">直接接负载</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="b-r">负载电阻 RL</label>
+        <span class="rv" id="b-rv">1 kΩ</span>
+        <input type="range" id="b-r" min="0" max="5" step="1" value="2"></div>
+      <dl class="read">
+        <dt>空载时分压点</dt><dd>2.50 V</dd>
+        <dt>分压点实际电压</dt><dd id="b-rn">2.50 V</dd>
+        <dt>负载电压</dt><dd id="b-rvl">2.50 V</dd>
+        <dt>负载电流</dt><dd id="b-ri">2.50 mA</dd>
+        <dt>结论</dt><dd><span id="b-st" class="chip on">电压保持</span></dd>
+      </dl>
+      <p class="note" id="b-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="cmp">
+  <span class="eyebrow">对比</span>
+  <h2>同相、反相、跟随器怎么选</h2>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>反相放大器</th><th>同相放大器</th><th>电压跟随器</th></tr></thead>
+    <tbody>
+      <tr><td>增益</td><td>−Rf / Rin，可小于 1</td><td>1 + Rf / Rg，至少为 1</td><td>1</td></tr>
+      <tr><td>输出相位</td><td>反相 180°</td><td>同相</td><td>同相</td></tr>
+      <tr><td>输入阻抗</td><td>Rin，较低</td><td>极高</td><td>极高</td></tr>
+      <tr><td>输入端共模电压</td><td>0，虚地</td><td>等于 Vin</td><td>等于 Vin，最大</td></tr>
+      <tr><td>典型用途</td><td>加法器、积分器、电流转电压</td><td>高内阻传感器放大</td><td>缓冲、隔离、驱动 ADC 或参考电压</td></tr>
+    </tbody>
+  </table></div>
+  <p>同相接法的代价是输入端有共模电压：两个输入脚都跟着 Vin 上下走。所以 Vin 必须落在运放的输入共模范围内，而且有限的 CMRR 会带来额外误差，详见 <a href="10-CMRR与PSRR.html">CMRR 与 PSRR</a>。跟随器的共模摆幅最大，单电源场合要特别留意 <a href="11-轨到轨输出.html">轨到轨</a> 问题。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>推一下同相放大器的增益。</summary>
+      <div class="ans"><p>虚短 V− = Vin；Rg 上电流 Vin / Rg；虚断，这个电流全部流过 Rf；所以 Vo = Vin + (Vin / Rg)·Rf = (1 + Rf / Rg)·Vin。</p></div></details>
+    <details><summary>同相放大器和反相放大器的区别？</summary>
+      <div class="ans"><p>同相输出同相、输入阻抗极高、增益至少为 1，但输入端有共模电压。反相输出反相、输入阻抗等于 Rin、增益可以小于 1，两个输入端都在 0 V，没有共模问题。</p></div></details>
+    <details><summary>电压跟随器增益是 1，有什么用？</summary>
+      <div class="ans"><p>做阻抗变换。输入阻抗极高，不拖累前级；输出阻抗极低，能带负载。典型用法是缓冲电阻分压出来的参考电压、驱动 ADC 输入，或者隔离前后级。</p></div></details>
+    <details><summary>跟随器的反相端能不能串一个电阻？</summary>
+      <div class="ans"><p>可以。因为虚断，反馈电阻上没有电流，增益仍是 1。有时故意串一个和源内阻相等的电阻，用来平衡偏置电流；或者限制输入保护二极管的电流。</p></div></details>
+    <details><summary>跟随器直接驱动大电容负载会怎样？</summary>
+      <div class="ans"><p>容易振荡。跟随器是 100% 反馈，环路带宽最宽，相位裕度最小，输出电阻和负载电容再加一个极点就可能不稳。常见做法是输出串一个几十欧的隔离电阻。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="02-反相放大器.html"><span>上一页</span>反相放大器</a><a class="next" href="04-差分放大器.html"><span>下一页</span>差分放大器</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 同相放大 / 跟随器 */
+const n1={fol:false},n1R=[1e3,2.2e3,4.7e3,10e3,22e3,47e3,100e3,220e3],n1S=10.5;
+const n1X=scale(0,2,44,400),n1Y=scale(-15,15,180,20);
+function n1u(){
+  const fol=n1.fol,rf=n1R[+$('n1-rf').value],rg=n1R[+$('n1-rg').value],a=+$('n1-a').value/10;
+  const g=fol?1:1+rf/rg,vp=g*a,clip=vp>n1S;
+  $('n1-rf').disabled=fol;$('n1-rg').disabled=fol;
+  $('n1-rfv').textContent=fol?'0（短路）':fmtR(rf);$('n1-rgv').textContent=fol?'开路':fmtR(rg);
+  $('n1-rf').setAttribute('aria-valuetext',fmtR(rf));$('n1-rg').setAttribute('aria-valuetext',fmtR(rg));
+  $('n1-av').textContent=a.toFixed(1)+' V';$('n1-a').setAttribute('aria-valuetext',a.toFixed(1)+' V');
+  $('n1-rft').textContent='Rf '+fmtR(rf);$('n1-rgt').textContent=fmtR(rg);
+  show($('n1-g-amp'),!fol);show($('n1-g-fol'),fol);
+  const vi=t=>a*Math.sin(2*Math.PI*t),vo=t=>Math.max(-n1S,Math.min(n1S,g*vi(t)));
+  $('n1-vin').setAttribute('points',plot(vi,0,2,n1X,n1Y,240));
+  $('n1-vo').setAttribute('points',plot(vo,0,2,n1X,n1Y,240));
+  $('n1-lin').setAttribute('y',(n1Y(a*0.9)+16).toFixed(1));
+  $('n1-lo').setAttribute('y',(n1Y(Math.min(vp,n1S)*0.9)-6).toFixed(1));
+  $('n1-lo').setAttribute('x',fol?130:96);
+  $('n1-g').textContent=g.toFixed(2);
+  $('n1-vp').textContent=fmtV(vp)+(clip?'，超出 ±10.5 V':'');
+  $('n1-vm').textContent=clip?'削顶期间跟不上 Vin':'≈ Vin，不是虚地';
+  if(clip){chip($('n1-st'),'削顶','bad');
+    $('n1-note').textContent='理想输出峰值 '+fmtV(vp)+' 超过饱和电压，输出被削平，削顶期间虚短失效。减小输入或降低 Rf / Rg。';}
+  else if(fol){chip($('n1-st'),'跟随','on');
+    $('n1-note').textContent='输出直接接回反相端，V− = Vo，虚短又要求 V− = Vin，所以 Vo = Vin。蓝线和橙线重合，增益正好是 1。';}
+  else{chip($('n1-st'),'不失真','on');
+    $('n1-note').textContent='输出和输入同相，放大 '+g.toFixed(2)+' 倍。增益里的 1 来自反相端本身就等于 Vin，Rf / Rg 是在这基础上多出来的部分，所以同相放大器增益不可能小于 1。';}
+}
+seg('n1-m',v=>{n1.fol=v==='fol';n1u();});
+['n1-rf','n1-rg','n1-a'].forEach(id=>$(id).addEventListener('input',n1u));
+n1u();
+/* 2. 跟随器驱动重负载 */
+const bS={dir:false},bRL=[100,330,1e3,3.3e3,10e3,100e3],bImax=0.02;
+function bu(){
+  const rl=bRL[+$('b-r').value],dir=bS.dir;
+  let vn,vl,il,n;
+  if(dir){const p=1e4*rl/(1e4+rl);vn=5*p/(1e4+p);vl=vn;il=vl/rl;}
+  else{vn=2.5;il=Math.min(2.5/rl,bImax);vl=il*rl;}
+  $('b-rv').textContent=fmtR(rl);$('b-r').setAttribute('aria-valuetext',fmtR(rl));$('b-rlt').textContent=fmtR(rl);
+  show($('b-g-buf'),!dir);show($('b-g-dir'),dir);show($('b-f-div'),!dir);
+  $('b-vn').textContent=fmtV(vn);$('b-vl').textContent=fmtV(vl);
+  $('b-rn').textContent=fmtV(vn);$('b-rvl').textContent=fmtV(vl);$('b-ri').textContent=fmtA(il);
+  $('b-rl').classList.toggle('lit',il>5e-3);
+  const drop=(2.5-vl)/2.5*100;
+  if(dir){
+    if(drop<2){chip($('b-st'),'基本不掉','on');n='负载 '+fmtR(rl)+' 远大于分压器的等效内阻 R1 ∥ R2 = 5 kΩ，直接接也只掉 '+drop.toFixed(1)+' %。';}
+    else{chip($('b-st'),'被拉低 '+drop.toFixed(0)+' %','bad');n='分压器的戴维南等效是 2.5 V 串 5 kΩ。RL 并在 R2 上，负载电流只能穿过 R1 来，电压被拉到 '+fmtV(vl)+'。切到"经跟随器"对比。';}
+  }else{
+    if(2.5/rl>bImax){chip($('b-st'),'超出输出电流','warn');n='跟随器把分压点保护住了，仍是 2.50 V。但负载要 '+fmtA(2.5/rl)+'，超过运放约 20 mA 的输出能力，输出被限流拉低。这么重的负载要加三极管扩流，或换大电流运放。';}
+    else{chip($('b-st'),'电压保持','on');n='分压器只接运放同相端，几乎不被取电流，分压点稳在 2.50 V。负载电流 '+fmtA(il)+' 由运放从自己的电源里拿，这就是缓冲隔离。';}
+  }
+  $('b-note').textContent=n;
+}
+seg('b-m',v=>{bS.dir=v==='dir';bu();});
+$('b-r').addEventListener('input',bu);
+bu();
+</script>
+</body>
+</html>

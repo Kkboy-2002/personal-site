@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>LC滤波</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#basic">基本电路</a><span class="sp"></span><span>03 / 07</span></nav>
+<header>
+  <span class="eyebrow">基本电路 · LC 滤波</span>
+  <h1>LC 滤波</h1>
+  <p class="lede">电感串在路上挡交流，电容并在后面把交流旁路到地。两者组成二阶低通，截止频率以上每十倍频衰减 40 dB，代价是在截止频率附近可能出现谐振峰。</p>
+</header>
+
+<section id="lc">
+  <span class="eyebrow">原理 · 感抗与容抗</span>
+  <h2>电感阻交流，电容通交流</h2>
+  <p>感抗 XL = 2π·f·L，频率越高越大；容抗 XC = 1 / (2π·f·C)，频率越高越小。所以直流畅通无阻地穿过电感到负载，而高频纹波被电感挡住一部分、剩下的又被电容短路到地。π 型（CLC）就是在电感前面再并一个电容：C1 先做电容滤波把电压抬高、纹波压下来，后面的 LC 再衰减一次。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 240" role="img" aria-label="整流输出经串联电感到负载，负载前并联电容到地；π 型时电感前再并一个电容">
+        <text x="26" y="60" class="t">整流输出</text>
+        <path class="w" d="M30,70 H120 M200,70 H340 V110 M340,150 V190 H30 M250,70 V124 M250,136 V190"/>
+        <circle class="r" cx="30" cy="70" r="3.5"/><circle class="r" cx="30" cy="190" r="3.5"/>
+        <path class="w" d="M120,70 a10,10 0 0 1 20,0 a10,10 0 0 1 20,0 a10,10 0 0 1 20,0 a10,10 0 0 1 20,0"/>
+        <text x="160" y="94" text-anchor="middle" class="t">L</text><text x="160" y="110" text-anchor="middle" class="v">100 mH</text>
+        <line class="bar" x1="236" y1="124" x2="264" y2="124"/><line class="bar" x1="236" y1="136" x2="264" y2="136"/>
+        <text x="270" y="126" class="t">C</text><text x="270" y="142" class="v">1000 µF</text>
+        <circle class="dot" cx="250" cy="70" r="3.5"/><circle class="dot" cx="250" cy="190" r="3.5"/>
+        <rect class="r" x="331" y="110" width="18" height="40" rx="2"/>
+        <text x="356" y="126" class="t">RL</text><text x="356" y="142" class="v">22 Ω</text>
+        <g id="s1-c1">
+          <path class="w" d="M80,70 V124 M80,136 V190"/>
+          <line class="bar" x1="66" y1="124" x2="94" y2="124"/><line class="bar" x1="66" y1="136" x2="94" y2="136"/>
+          <text x="100" y="126" class="t">C1</text><text x="100" y="142" class="v">1000 µF</text>
+          <circle class="dot" cx="80" cy="70" r="3.5"/><circle class="dot" cx="80" cy="190" r="3.5"/>
+        </g>
+        <path class="w" d="M176,190 V206 M164,206 H188 M168,211 H184 M172,216 H180"/>
+        <path id="s1-fdc" class="flow" d="M34,70 H340 V190 H34"/>
+        <path id="s1-fac" class="flow thin" style="stroke:var(--copper)" d="M34,64 H244 V120 M256,140 V184 H34"/>
+        <text id="s1-xl" x="160" y="44" text-anchor="middle" class="v hi">XL = 62.8 Ω</text>
+        <text id="s1-xc" x="250" y="172" text-anchor="end" class="v lo">XC = 1.59 Ω</text>
+      </svg>
+      <figcaption>绿线是直流负载电流，橙线是纹波的交流电流。橙线越粗说明越多的纹波电流被电容旁路掉。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">结构</span>
+        <div class="seg" id="s1-m"><button id="s1-m-lc" data-v="lc" aria-pressed="true">LC 型</button><button id="s1-m-pi" data-v="pi" aria-pressed="false">π 型 CLC</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-f">信号频率</label>
+        <span class="rv" id="s1-fv">100 Hz</span>
+        <input type="range" id="s1-f" min="0" max="40" step="1" value="10"></div>
+      <dl class="read">
+        <dt>感抗 XL</dt><dd id="s1-rxl">—</dd>
+        <dt>容抗 XC</dt><dd id="s1-rxc">—</dd>
+        <dt>LC 段衰减</dt><dd id="s1-att">—</dd>
+        <dt>判断</dt><dd><span id="s1-st" class="chip on">—</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="bode">
+  <span class="eyebrow">伯德图 · 谐振峰</span>
+  <h2>截止频率、−40 dB/十倍频与谐振峰</h2>
+  <p class="eq">fc = 1 / (2π·√(L·C))　　Q = RL·√(C / L)</p>
+  <p>频率低于 fc 时，输出几乎等于输入；高于 fc 后，电感和电容各贡献 −20 dB/十倍频，合起来 −40 dB/十倍频，比 RC 一阶滤波陡一倍。在 fc 处电感和电容发生谐振，阻尼只来自负载电阻：负载越轻（RL 越大），Q 越高，谐振峰越尖，fc 附近的干扰反而被放大。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 300" role="img" aria-label="LC 低通滤波器幅频特性曲线，标出截止频率、谐振峰和 40 dB 每十倍频渐近线">
+        <g id="s2-grid"></g>
+        <path class="ax" d="M60,20 V260 H490"/>
+        <text x="64" y="14" class="tm">增益 / dB</text>
+        <text x="490" y="294" text-anchor="end" class="tm">频率 / Hz</text>
+        <line id="s2-rip" class="ax dash" x1="203" x2="203" y1="20" y2="260"/>
+        <text x="207" y="252" class="tm">100 Hz</text>
+        <polyline id="s2-asy" class="ideal" points=""/>
+        <polyline id="s2-h" class="real" points=""/>
+        <line id="s2-fcl" class="real2 dash" x1="100" x2="100" y1="20" y2="260"/>
+        <text id="s2-fct" x="104" y="34" class="t" style="fill:var(--low)">fc</text>
+        <text id="s2-slt" x="400" y="200" class="tm">−40 dB/十倍频</text>
+      </svg>
+      <figcaption>橙线为实际幅频曲线，灰色虚线为渐近线，蓝色虚线标出截止频率 fc。理想元件，未计电感直流电阻和电容 ESR。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-l">电感 L</label><span class="rv" id="s2-lv">—</span>
+        <input type="range" id="s2-l" min="0" max="12" step="1" value="12"></div>
+      <div class="ctl"><label class="ctl-l" for="s2-c">电容 C</label><span class="rv" id="s2-cv">—</span>
+        <input type="range" id="s2-c" min="0" max="11" step="1" value="9"></div>
+      <div class="ctl"><label class="ctl-l" for="s2-r">负载电阻 RL</label><span class="rv" id="s2-rv">—</span>
+        <input type="range" id="s2-r" min="0" max="9" step="1" value="4"></div>
+      <dl class="read">
+        <dt>截止频率 fc</dt><dd id="s2-fc">—</dd>
+        <dt>品质因数 Q</dt><dd id="s2-q">—</dd>
+        <dt>谐振峰</dt><dd id="s2-pk">—</dd>
+        <dt>100 Hz 处</dt><dd id="s2-a100">—</dd>
+        <dt>阻尼状态</dt><dd><span id="s2-st" class="chip on">—</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="time">
+  <span class="eyebrow">时域 · 纹波衰减</span>
+  <h2>同一组 L、C，纹波能衰减多少</h2>
+  <p>把电容滤波后的锯齿纹波送进上面的 LC。锯齿波由基波和一串谐波组成，每个分量按伯德图上对应频率的增益衰减。纹波频率比 fc 高得越多，衰减越狠。开关电源纹波在几十到几百 kHz，所以用 µH 级电感、µF 级电容就够；工频 100 Hz 纹波要 mH 级电感，体积大得多。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 220" role="img" aria-label="LC 滤波前后的纹波波形对比">
+        <line class="gl" x1="50" y1="46.7" x2="490" y2="46.7"/><line class="gl" x1="50" y1="153.3" x2="490" y2="153.3"/>
+        <path class="ax" d="M50,20 V180 M50,100 H490"/>
+        <text x="44" y="50.7" text-anchor="end" class="v">1</text><text x="44" y="104" text-anchor="end" class="v">0</text>
+        <text x="44" y="157.3" text-anchor="end" class="v">−1</text>
+        <text x="54" y="14" class="tm">纹波（交流分量）/ V</text>
+        <text x="50" y="198" text-anchor="middle" class="v">0</text>
+        <text id="s3-t1" x="270" y="198" text-anchor="middle" class="v">T</text>
+        <text id="s3-t2" x="490" y="198" text-anchor="end" class="v">2T</text>
+        <text x="490" y="214" text-anchor="end" class="tm">时间</text>
+        <polyline id="s3-in" class="ideal" points=""/>
+        <polyline id="s3-out" class="real" points=""/>
+        <text x="486" y="34" text-anchor="end" class="tm">输入 2 Vpp 锯齿</text>
+        <text id="s3-ot" x="486" y="172" text-anchor="end" class="t" style="fill:var(--copper)">输出</text>
+      </svg>
+      <figcaption>只画交流分量，直流分量无衰减地通过（未计电感直流电阻）。输出太小时会放大显示，倍数标在橙线旁。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">纹波频率</span>
+        <div class="seg" id="s3-f"><button id="s3-f-100" data-v="100" aria-pressed="true">100 Hz 工频整流</button><button id="s3-f-20k" data-v="20000" aria-pressed="false">20 kHz</button><button id="s3-f-200k" data-v="200000" aria-pressed="false">200 kHz 开关电源</button></div></div>
+      <dl class="read">
+        <dt>当前 L / C / RL</dt><dd id="s3-par">—</dd>
+        <dt>输入纹波</dt><dd>2.00 Vpp</dd>
+        <dt>输出纹波</dt><dd id="s3-vo">—</dd>
+        <dt>衰减</dt><dd id="s3-db">—</dd>
+        <dt>结果</dt><dd><span id="s3-st" class="chip on">—</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>LC 滤波的截止频率和衰减斜率是多少？</summary>
+      <div class="ans"><p>fc = 1 / (2π·√(L·C))。它是二阶低通，fc 以上每十倍频衰减 40 dB，也就是每倍频 12 dB。RC 一阶低通只有 20 dB/十倍频。</p></div></details>
+    <details><summary>为什么 LC 滤波会有谐振峰？怎么抑制？</summary>
+      <div class="ans"><p>在 fc 处感抗和容抗大小相等、相位相反，互相抵消，回路只剩电阻限流，电容上的电压会高于输入，放大倍数约为 Q = RL·√(C/L)。负载越轻 Q 越高。抑制方法是加阻尼：电容上串一个 RC 阻尼支路，或者利用电容 ESR、电感直流电阻，也可以在电感上并电阻。</p></div></details>
+    <details><summary>LC 滤波和电容滤波比，好在哪里？</summary>
+      <div class="ans"><p>衰减更陡，纹波小；而且电感限制了二极管的电流尖峰，导通角变大，整流管和变压器的电流应力小。缺点是电感体积大、有直流压降，负载突变时 LC 还可能振荡。工频场合用得少，开关电源输出几乎都是 LC。</p></div></details>
+    <details><summary>π 型滤波是什么结构？为什么常用？</summary>
+      <div class="ans"><p>C-L-C：电感前后各一个电容。C1 先把整流输出滤成较平的直流，再由 L 和 C2 组成的二阶低通继续衰减剩余纹波，总的衰减更大。缺点是 C1 仍会让整流管有较大的冲击电流。EMI 滤波和电源输入口也常用 π 型。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="02-电容滤波.html"><span>上一页</span>电容滤波</a><a class="next" href="04-稳压电路齐纳LDO开关.html"><span>下一页</span>稳压电路齐纳LDO开关</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 传递函数：负载 RL 并联 C，电感串联。返回 {m 幅值, p 相位} */
+function hLC(f,L,C,R){const w=2*Math.PI*f,re=1-w*w*L*C,im=w*L/R;return {m:1/Math.hypot(re,im),p:-Math.atan2(im,re)};}
+const dB=x=>20*Math.log10(x);
+
+/* 1. 感抗容抗 */
+const s1={pi:false};
+function s1u(){
+  const f=Math.pow(10,1+(+$('s1-f').value)/10),w=2*Math.PI*f,L=0.1,C=1e-3,xl=w*L,xc=1/(w*C),h=hLC(f,L,C,22).m;
+  $('s1-fv').textContent=fmtF(f);$('s1-f').setAttribute('aria-valuetext',fmtF(f));
+  $('s1-xl').textContent='XL = '+fmtR(xl);$('s1-xc').textContent='XC = '+fmtR(xc);
+  $('s1-rxl').textContent=fmtR(xl);$('s1-rxc').textContent=fmtR(xc);
+  $('s1-att').textContent='× '+(h>=0.1?h.toFixed(2):h.toExponential(1))+'（'+dB(h).toFixed(1)+' dB）';
+  show($('s1-c1'),s1.pi);
+  const fac=$('s1-fac');fac.style.strokeWidth=(1.5+3*Math.min(1,Math.max(0,1-h))).toFixed(1);
+  let st,cls,note;
+  if(h>1.05){st='谐振放大';cls='bad';note='接近 fc ≈ 15.9 Hz，XL 与 XC 大小接近、相位相反，互相抵消，输出反而比输入大。这就是谐振峰。';}
+  else if(h>0.5){st='基本通过';cls='off';note='频率低，XL 很小、XC 很大：电感像导线，电容像开路，这个频率的分量几乎原样通过。直流就是频率为 0 的极端情况。';}
+  else{st='被滤除';cls='on';note='XL 远大于 XC：电感挡住大部分交流，漏过来的一点又被电容短路到地。粗略看，衰减倍数 ≈ XC / XL = 1 / (ω²·L·C)，频率每高 10 倍，衰减多 100 倍。';}
+  if(s1.pi)note+=' π 型的 C1 先做一次电容滤波，把纹波压到 I / (f·C1) 的量级，LC 段再乘上面这个衰减。';
+  chip($('s1-st'),st,cls);$('s1-note').textContent=note;
+}
+seg('s1-m',v=>{s1.pi=v==='pi';s1u();});
+$('s1-f').addEventListener('input',s1u);
+s1u();
+
+/* 2. 伯德图 */
+const LV=[10e-6,22e-6,47e-6,100e-6,220e-6,470e-6,1e-3,2.2e-3,4.7e-3,10e-3,22e-3,47e-3,100e-3];
+const CV=[1e-6,2.2e-6,4.7e-6,10e-6,22e-6,47e-6,100e-6,220e-6,470e-6,1e-3,2.2e-3,4.7e-3];
+const RV=[1,2.2,4.7,10,22,47,100,220,470,1000];
+const bX=v=>60+(Math.log10(v))*430/6,bY=scale(30,-90,20,260);
+const fmtL=l=>l>=1e-3?+(l*1e3).toFixed(1)+' mH':+(l*1e6).toFixed(1)+' µH';
+const fmtC=c=>+(c*1e6).toFixed(1)+' µF';
+(function(){const g=$('s2-grid');
+  for(let d=0;d<=6;d++){const x=bX(Math.pow(10,d));g.append(svgEl('line',{class:'gl',x1:x,x2:x,y1:20,y2:260}),
+    svgEl('text',{x,y:276,'text-anchor':d===6?'end':'middle',class:'v'},['1','10','100','1k','10k','100k','1M'][d]));}
+  [30,0,-30,-60,-90].forEach(v=>{const y=bY(v);g.append(svgEl('line',{class:'gl',x1:60,x2:490,y1:y,y2:y}),
+    svgEl('text',{x:54,y:y+4,'text-anchor':'end',class:'v'},v));});})();
+const s2P={L:0.1,C:1e-3,R:22};
+function s2u(){
+  const L=LV[+$('s2-l').value],C=CV[+$('s2-c').value],R=RV[+$('s2-r').value];Object.assign(s2P,{L,C,R});
+  $('s2-lv').textContent=fmtL(L);$('s2-cv').textContent=fmtC(C);$('s2-rv').textContent=fmtR(R);
+  $('s2-l').setAttribute('aria-valuetext',fmtL(L));$('s2-c').setAttribute('aria-valuetext',fmtC(C));$('s2-r').setAttribute('aria-valuetext',fmtR(R));
+  const fc=1/(2*Math.PI*Math.sqrt(L*C)),Q=R*Math.sqrt(C/L);
+  const yc=v=>bY(Math.max(-90,Math.min(30,v)));
+  $('s2-h').setAttribute('points',plot(lf=>dB(hLC(Math.pow(10,lf),L,C,R).m),0,6,lf=>bX(Math.pow(10,lf)),yc,600));
+  const asy=lf=>{const f=Math.pow(10,lf);return f<fc?0:-40*Math.log10(f/fc);};
+  $('s2-asy').setAttribute('points',plot(asy,0,6,lf=>bX(Math.pow(10,lf)),yc,300));
+  const xc=bX(fc).toFixed(1);$('s2-fcl').setAttribute('x1',xc);$('s2-fcl').setAttribute('x2',xc);
+  $('s2-fct').setAttribute('x',(+xc+4).toFixed(1));$('s2-fct').textContent='fc = '+fmtF(fc);
+  const fs=Math.min(fc*10,1e5);$('s2-slt').setAttribute('x',(bX(fs)+6).toFixed(1));$('s2-slt').setAttribute('y',Math.min(250,yc(-40*Math.log10(fs/fc))-4).toFixed(1));
+  let pk=0;for(let k=0;k<=400;k++){const m=hLC(fc*Math.pow(10,-1+k/200),L,C,R).m;if(m>pk)pk=m;}
+  $('s2-fc').textContent=fmtF(fc);$('s2-q').textContent=Q.toFixed(2)+'，阻尼比 ζ = '+(1/(2*Q)).toFixed(2);
+  $('s2-pk').textContent=pk>1.001?'+'+dB(pk).toFixed(1)+' dB':'无';
+  const a=hLC(100,L,C,R).m;$('s2-a100').textContent=dB(a).toFixed(1)+' dB';
+  let st,cls,note;
+  if(Q>2){st='欠阻尼，峰很尖';cls='bad';note='Q = '+Q.toFixed(1)+'，fc 附近的干扰会被放大约 Q 倍，负载跳变时输出还会振荡。要么减小 RL（加重负载或并假负载），要么加 RC 阻尼支路。';}
+  else if(Q>0.707){st='轻微谐振峰';cls='warn';note='Q 在 0.707 到 2 之间，有一个不太高的峰。Q = 0.707 时幅频最平坦，这就是巴特沃斯响应。';}
+  else{st='过阻尼，无峰';cls='on';note='负载电阻小，阻尼足，没有谐振峰，但 fc 附近的拐弯比较圆钝，过渡带变宽。';}
+  if(fc>100/3&&fc<300)note+=' 另外 fc 离 100 Hz 纹波太近，衰减很有限。';
+  chip($('s2-st'),st,cls);$('s2-note').textContent=note;
+  s3u();
+}
+['s2-l','s2-c','s2-r'].forEach(id=>$(id).addEventListener('input',s2u));
+
+/* 3. 时域纹波 */
+const s3={f:100},s3X=scale(0,2,50,490),s3Y=scale(-1.5,1.5,180,20);
+function s3u(){
+  const {L,C,R}=s2P,fr=s3.f,N=40,H=[];
+  for(let n=1;n<=N;n++)H.push(hLC(n*fr,L,C,R));
+  const vin=x=>{let s=0;for(let n=1;n<=N;n++)s+=Math.sin(2*Math.PI*n*x)/n;return s*2/Math.PI;};
+  const vout=x=>{let s=0;for(let n=1;n<=N;n++)s+=H[n-1].m*Math.sin(2*Math.PI*n*x+H[n-1].p)/n;return s*2/Math.PI;};
+  let mx=-1e9,mn=1e9;for(let k=0;k<=800;k++){const v=vout(k/400);if(v>mx)mx=v;if(v<mn)mn=v;}
+  const pp=mx-mn,gain=pp>1.5?1:[1,10,100,1e3,1e4,1e5,1e6,1e7].find(g=>pp*g>=0.3)||1e7;
+  $('s3-in').setAttribute('points',plot(vin,0,2,s3X,s3Y,600));
+  $('s3-out').setAttribute('points',plot(x=>Math.max(-1.5,Math.min(1.5,vout(x)*gain)),0,2,s3X,s3Y,600));
+  $('s3-ot').textContent=gain>1?'输出 ×'+(gain>=1e4?'1e'+Math.round(Math.log10(gain)):gain):'输出';
+  const T=1/fr;$('s3-t1').textContent=fmtT(T);$('s3-t2').textContent=fmtT(2*T);
+  $('s3-par').textContent=fmtL(L)+' / '+fmtC(C)+' / '+fmtR(R);
+  $('s3-vo').textContent=(pp>=1?pp.toFixed(2)+' V':pp>=1e-3?(pp*1e3).toFixed(2)+' mV':(pp*1e6).toFixed(2)+' µV')+'pp';
+  const db=dB(pp/2);$('s3-db').textContent=db.toFixed(1)+' dB';
+  const fc=1/(2*Math.PI*Math.sqrt(L*C));
+  if(pp>2.05){chip($('s3-st'),'纹波被放大','bad');$('s3-note').textContent='纹波频率落在谐振峰附近，LC 不但没滤掉，还把纹波放大了。fc 必须远低于纹波频率，一般低 10 倍以上。';}
+  else if(db>-20){chip($('s3-st'),'衰减不足','warn');$('s3-note').textContent='纹波频率只比 fc（'+fmtF(fc)+'）高一点，衰减不到 20 dB。加大 L 或 C 把 fc 往下压。';}
+  else{chip($('s3-st'),'滤除干净','on');$('s3-note').textContent='纹波频率是 fc 的 '+(fr/fc).toFixed(0)+' 倍，基波按约 (f/fc)² 倍衰减，高次谐波衰减更多，所以输出锯齿变成了近似正弦的小波动。';}
+}
+seg('s3-f',v=>{s3.f=+v;s3u();});
+s2u();
+</script>
+</body>
+</html>

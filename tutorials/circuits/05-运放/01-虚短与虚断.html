@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>虚短与虚断</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#opamp">运放</a><span class="sp"></span><span>01 / 12</span></nav>
+<header>
+  <span class="eyebrow">运放 · 分析方法</span>
+  <h1>虚短与虚断</h1>
+  <p class="lede">所有运放电路都靠这两条规则来推。它们从哪来、什么时候能用、什么时候不能用，下面两张图拖一拖就清楚。</p>
+</header>
+
+<section id="vs">
+  <span class="eyebrow">虚短 · 来自极大的开环增益</span>
+  <h2>虚短：负反馈把 V+ 和 V− 拉到一起</h2>
+  <p>运放本身只做一件事：Vo = A·(V+ − V−)。开环增益 A 非常大，典型值 10^5 到 10^6。输出最多只能摆到电源轨附近，所以只要输出没饱和，输入端的差值就只有 Vo / A，是微伏级。</p>
+  <p class="eq">V+ − V− = Vo / A ≈ 0，即 V+ ≈ V−</p>
+  <p>但这个差值能一直保持在微伏级，是因为有负反馈。输出偏大，反馈就把 V− 抬高，差值变小，输出又被拉回来。去掉负反馈，差值就等于外面加进来的电压，输出立刻撞到电源轨。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 240" role="img" aria-label="运放同相放大电路，Rf 与 Rg 构成负反馈；可切换为开环比较器，反相端接 1 V 参考">
+        <text x="215" y="80" text-anchor="middle" class="v">+5 V</text>
+        <path class="w" d="M215,86 V105"/>
+        <path class="w" d="M215,155 V174"/>
+        <text x="215" y="188" text-anchor="middle" class="v">−5 V</text>
+        <path class="r" d="M170,80 L260,130 L170,180 Z"/>
+        <text x="177" y="110" class="t">−</text>
+        <text x="177" y="160" class="t">+</text>
+        <text x="196" y="135" class="tm">A=10⁵</text>
+        <g id="s1-g-fb">
+          <path class="w" d="M170,105 H70 V122 M70,162 V200 M56,200 H84 M61,205 H79 M66,210 H74"/>
+          <rect class="r" x="61" y="122" width="18" height="40" rx="2"/>
+          <text x="54" y="140" text-anchor="end" class="t">Rg</text>
+          <text x="54" y="156" text-anchor="end" class="v">10 kΩ</text>
+          <path class="w" d="M100,105 V40 H200 M250,40 H320 V130"/>
+          <rect class="r" x="200" y="32" width="50" height="16" rx="2"/>
+          <text x="225" y="24" text-anchor="middle" class="v">Rf 10 kΩ</text>
+          <circle class="dot" cx="100" cy="105" r="3.5"/>
+          <circle class="dot" cx="320" cy="130" r="3.5"/>
+          <path id="s1-flow" class="flow thin" d="M320,126 V40 H100 V105 H70 V198"/>
+        </g>
+        <g id="s1-g-ol" hidden>
+          <path class="w" d="M170,105 H110"/>
+          <text x="104" y="109" text-anchor="end" class="v">Vref 1 V</text>
+        </g>
+        <path class="w" d="M170,155 H130 V172 M130,204 V220 M116,220 H144 M121,225 H139 M126,230 H134"/>
+        <circle class="r" cx="130" cy="188" r="16"/>
+        <text x="130" y="193" text-anchor="middle" class="t">Vin</text>
+        <text id="s1-vm" x="164" y="98" text-anchor="end" class="v">V− 1.000 V</text>
+        <text id="s1-vp" x="164" y="148" text-anchor="end" class="v">V+ 1.000 V</text>
+        <path id="s1-ow" class="w s-hi" style="stroke-width:3" d="M260,130 H392"/>
+        <text id="s1-vo" x="392" y="120" text-anchor="end" class="v hi">Vo 2.00 V</text>
+      </svg>
+      <svg viewBox="0 0 420 230" role="img" aria-label="传输特性：负反馈时 Vo 等于 2 倍 Vin 直到饱和；开环时在 Vin 等于 1 V 处几乎垂直跳变">
+        <line class="gl" x1="50" y1="105" x2="390" y2="105"/>
+        <line class="gl" x1="220" y1="20" x2="220" y2="190"/>
+        <line class="ax dash" x1="50" y1="28.5" x2="390" y2="28.5"/>
+        <line class="ax dash" x1="50" y1="181.5" x2="390" y2="181.5"/>
+        <text x="386" y="23" text-anchor="end" class="tm">+Vsat ≈ 4.5 V</text>
+        <text x="386" y="176" text-anchor="end" class="tm">−Vsat ≈ −4.5 V</text>
+        <path class="ax" d="M50,20 V190 H390"/>
+        <text x="44" y="32" text-anchor="end" class="v">4.5</text>
+        <text x="44" y="109" text-anchor="end" class="v">0</text>
+        <text x="44" y="186" text-anchor="end" class="v">−4.5</text>
+        <text x="56" y="14" class="tm">Vo / V</text>
+        <text x="50" y="206" text-anchor="middle" class="v">−3</text>
+        <text x="135" y="206" text-anchor="middle" class="v">−1.5</text>
+        <text x="220" y="206" text-anchor="middle" class="v">0</text>
+        <text x="305" y="206" text-anchor="middle" class="v">1.5</text>
+        <text x="390" y="206" text-anchor="end" class="v">3</text>
+        <text x="390" y="224" text-anchor="end" class="tm">Vin / V</text>
+        <polyline id="s1-curve" class="real" points="50,190 390,20"/>
+        <text id="s1-cl" x="256" y="100" class="t">斜率 = 2</text>
+        <circle id="s1-pt" class="dot" cx="220" cy="105" r="5"/>
+      </svg>
+      <figcaption>上：电路；下：输出随 Vin 的变化，黑点是当前工作点。饱和电压 ±4.5 V 为示意值，实际取决于运放和负载。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">接法</span>
+        <div class="seg" id="s1-m"><button id="s1-m-fb" data-v="fb" aria-pressed="true">负反馈，增益 2</button><button id="s1-m-ol" data-v="ol" aria-pressed="false">开环比较器</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-rng">输入电压 Vin</label>
+        <span class="rv" id="s1-vin">1.00 V</span>
+        <input type="range" id="s1-rng" min="-300" max="300" step="5" value="100"></div>
+      <dl class="read">
+        <dt>V+</dt><dd id="s1-rp">1.000 V</dd>
+        <dt>V−</dt><dd id="s1-rm">1.000 V</dd>
+        <dt>差值 V+ − V−</dt><dd id="s1-rd">20.0 µV</dd>
+        <dt>输出 Vo</dt><dd id="s1-ro">2.00 V</dd>
+        <dt>虚短</dt><dd><span id="s1-st" class="chip on">成立</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="vb">
+  <span class="eyebrow">虚断 · 来自极大的输入阻抗</span>
+  <h2>虚断：输入端几乎不取电流</h2>
+  <p>运放输入级是差分对管，输入阻抗很高，流进输入脚的只有很小的偏置电流 Ib。双极型输入是 nA 级，JFET 和 CMOS 输入是 pA 级。和外面电阻上走的 µA 到 mA 级电流比，可以当作零，这就是虚断。</p>
+  <p>虚断和反馈无关，是器件自身的性质，所以比较器里也成立。它唯一的前提是：外部电阻上的电流要远大于 Ib。电阻取得太大，这个前提就会被打破。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 240" role="img" aria-label="同相放大电路，Vin 为 1 V，Rf 等于 Rg 等于 R，偏置电流 Ib 流入反相输入端">
+        <path class="r" d="M170,80 L260,130 L170,180 Z"/>
+        <text x="177" y="110" class="t">−</text>
+        <text x="177" y="160" class="t">+</text>
+        <path class="w" d="M170,105 H70 V122 M70,162 V200 M56,200 H84 M61,205 H79 M66,210 H74"/>
+        <rect class="r" x="61" y="122" width="18" height="40" rx="2"/>
+        <text x="54" y="140" text-anchor="end" class="t">Rg</text>
+        <text id="s2-rg" x="54" y="156" text-anchor="end" class="v">10 kΩ</text>
+        <path class="w" d="M100,105 V40 H200 M250,40 H320 V130"/>
+        <rect class="r" x="200" y="32" width="50" height="16" rx="2"/>
+        <text id="s2-rf" x="225" y="24" text-anchor="middle" class="v">Rf 10 kΩ</text>
+        <circle class="dot" cx="100" cy="105" r="3.5"/>
+        <circle class="dot" cx="320" cy="130" r="3.5"/>
+        <path class="w" d="M170,155 H130 V172 M130,204 V220 M116,220 H144 M121,225 H139 M126,230 H134"/>
+        <circle class="r" cx="130" cy="188" r="16"/>
+        <text x="130" y="193" text-anchor="middle" class="t">1 V</text>
+        <path class="w s-hi" style="stroke-width:3" d="M260,130 H392"/>
+        <text id="s2-vo" x="392" y="120" text-anchor="end" class="v hi">Vo 2.00 V</text>
+        <path id="s2-flow" class="flow thin" d="M320,126 V40 H100 V105 H70 V198"/>
+        <path class="flow thin bad" d="M104,105 H166"/>
+        <text x="136" y="97" text-anchor="middle" class="t" style="fill:var(--danger)">Ib</text>
+        <text id="s2-it" x="336" y="88" class="tm">I = 100 µA</text>
+      </svg>
+      <figcaption>绿色是流过 Rf、Rg 的电流，红色是流进反相端的偏置电流 Ib。虚断成立时，Rf 和 Rg 上是同一个电流。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">运放输入级（Ib 取典型值）</span>
+        <div class="seg" id="s2-t"><button id="s2-t-bjt" data-v="bjt" aria-pressed="true">双极型 741</button><button id="s2-t-jfet" data-v="jfet" aria-pressed="false">JFET TL072</button><button id="s2-t-cmos" data-v="cmos" aria-pressed="false">CMOS</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s2-rng">Rf = Rg = R</label>
+        <span class="rv" id="s2-r">10 kΩ</span>
+        <input type="range" id="s2-rng" min="0" max="5" step="1" value="1"></div>
+      <dl class="read">
+        <dt>电阻上的电流 I = V− / Rg</dt><dd id="s2-i">100 µA</dd>
+        <dt>偏置电流 Ib</dt><dd id="s2-ib">80 nA</dd>
+        <dt>Ib / I</dt><dd id="s2-ratio">0.08 %</dd>
+        <dt>输出误差 ≈ Ib·Rf</dt><dd id="s2-err">0.8 mV</dd>
+        <dt>虚断</dt><dd><span id="s2-st" class="chip on">成立</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="when">
+  <span class="eyebrow">适用条件</span>
+  <h2>什么时候能用，什么时候不能用</h2>
+  <p>面试时最容易被追问的就是这一点。记住一句话：虚断看器件，虚短看反馈。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>电路状态</th><th>虚断</th><th>虚短</th><th>原因</th></tr></thead>
+    <tbody>
+      <tr><td>负反馈，输出在线性区</td><td>成立</td><td>成立</td><td>反馈把差值压到 Vo / A，微伏级</td></tr>
+      <tr><td>负反馈，但输出已饱和</td><td>成立</td><td>不成立</td><td>输出不能再变，反馈失去调节能力，差值不再被压小</td></tr>
+      <tr><td>开环比较器</td><td>成立</td><td>不成立</td><td>没有反馈，差值就是外加的两个输入之差</td></tr>
+      <tr><td>正反馈，如施密特触发器</td><td>成立</td><td>不成立</td><td>正反馈把差值越推越大，输出锁在电源轨</td></tr>
+      <tr><td>信号频率高到环路增益不够</td><td>成立</td><td>近似变差</td><td>A 随频率下降，见 <a href="07-增益带宽积GBW.html">增益带宽积</a></td></tr>
+      <tr><td>外部电阻取到 MΩ 以上，配双极型运放</td><td>变差</td><td>成立</td><td>Ib 与电阻电流可比，Ib·R 带来明显误差</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">判断能不能用虚短，先找反馈支路接到哪个输入端。接到反相端是负反馈；接到同相端是正反馈；没有支路就是开环。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>虚短和虚断分别是什么，从哪来？</summary>
+      <div class="ans"><p>虚短是 V+ ≈ V−，来自极大的开环增益加负反馈：输出有限，差值只有 Vo / A。虚断是输入电流 ≈ 0，来自极高的输入阻抗。</p></div></details>
+    <details><summary>比较器能用虚短分析吗？</summary>
+      <div class="ans"><p>不能。比较器是开环或正反馈，输出总在电源轨附近，两个输入端的电压可以差很多。但虚断仍然成立，输入端照样不取电流。</p></div></details>
+    <details><summary>虚短是说两个输入端真的短路了吗？</summary>
+      <div class="ans"><p>不是。两端电位近似相等，但中间没有电流，所以叫"虚"短。虚地是虚短的特例：同相端接地时，反相端也近似为 0 V，但它不是真接地。</p></div></details>
+    <details><summary>负反馈电路里虚短什么时候会失效？</summary>
+      <div class="ans"><p>输出饱和时失效，比如输入太大、增益太高、电源轨太低。另外信号频率高了开环增益下降，差值也会变大，近似变差。</p></div></details>
+    <details><summary>反馈电阻为什么不能随便取很大？</summary>
+      <div class="ans"><p>电阻越大，上面的电流越小，偏置电流 Ib 就不再能忽略，输出多出 Ib·Rf 的误差，虚断变差。电阻大还会带来更大的热噪声，并和寄生电容形成极点。通用场合常取 1 kΩ 到 100 kΩ。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="next" href="02-反相放大器.html"><span>下一页</span>反相放大器</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 虚短 */
+const s1={fb:true},s1A=1e5,s1S=4.5;
+const s1X=scale(-3,3,50,390),s1Y=scale(-4.5,4.5,181.5,28.5);
+const s1c=v=>Math.max(-s1S,Math.min(s1S,v));
+const s1d=v=>Math.abs(v)<1e-3?(v<0?'−':'')+Math.abs(v*1e6).toFixed(1)+' µV':fmtV(v,3);
+function s1u(){
+  const vin=+$('s1-rng').value/100,fb=s1.fb;
+  let vo,vm;
+  if(fb){vo=s1c(s1A*vin/(1+s1A*0.5));vm=0.5*vo;}
+  else{vm=1;vo=s1c(s1A*(vin-vm));}
+  const sat=Math.abs(vo)>=s1S-1e-9,vd=vin-vm;
+  show($('s1-g-fb'),fb);show($('s1-g-ol'),!fb);
+  const f=$('s1-flow');show(f,fb&&Math.abs(vo)>0.02);f.classList.toggle('rev',vo<0);
+  $('s1-vin').textContent=fmtV(vin);$('s1-rng').setAttribute('aria-valuetext',fmtV(vin));
+  $('s1-vp').textContent='V+ '+fmtV(vin,3);$('s1-vm').textContent='V− '+fmtV(vm,3);
+  $('s1-vo').textContent='Vo '+fmtV(vo);setLv($('s1-vo'),$('s1-ow'),vo>=0);
+  $('s1-rp').textContent=fmtV(vin,3);$('s1-rm').textContent=fmtV(vm,3);
+  $('s1-rd').textContent=s1d(vd);$('s1-ro').textContent=fmtV(vo)+(sat?'，饱和':'');
+  const cl=$('s1-cl');
+  if(fb){
+    $('s1-curve').setAttribute('points',plot(v=>s1c(2*v),-3,3,s1X,s1Y,120));
+    cl.textContent='负反馈：斜率 = 2';cl.setAttribute('x',246);cl.setAttribute('y',118);
+  }else{
+    $('s1-curve').setAttribute('points',[[-3,-s1S],[1,-s1S],[1,s1S],[3,s1S]].map(p=>s1X(p[0]).toFixed(1)+','+s1Y(p[1]).toFixed(1)).join(' '));
+    cl.textContent='开环：在 1 V 处直接跳变';cl.setAttribute('x',112);cl.setAttribute('y',60);
+  }
+  $('s1-pt').setAttribute('cx',s1X(vin).toFixed(1));$('s1-pt').setAttribute('cy',s1Y(vo).toFixed(1));
+  let n;
+  if(fb&&!sat){chip($('s1-st'),'成立','on');
+    n='输出 '+fmtV(vo)+' 没碰到电源轨，差值只剩 Vo / A = '+s1d(vd)+'。V− 被反馈拉得紧紧跟着 V+，所以 Vo = (1 + Rf/Rg)·Vin = 2·Vin。';}
+  else if(fb){chip($('s1-st'),'饱和，失效','bad');
+    n='2·Vin 超过了 ±4.5 V，输出卡在电源轨上不能再变。V− 停在 Vo / 2 = '+fmtV(vm)+'，差值变成 '+fmtV(vd,3)+'，虚短不再成立，Vo = 2·Vin 这个公式也失效了。';}
+  else if(!sat){chip($('s1-st'),'线性区极窄','warn');
+    n='开环时只有差值在 ±45 µV 以内输出才不饱和，这个窗口窄到实际电路里根本停不住。';}
+  else{chip($('s1-st'),'不成立','bad');
+    n='没有反馈，差值就是 Vin − Vref = '+fmtV(vd,3)+'，乘上 10⁵ 远超电源轨，输出直接饱和到 '+fmtV(vo,1)+'。比较器就是这样工作的，不能用虚短分析。';}
+  $('s1-note').textContent=n;
+}
+seg('s1-m',v=>{s1.fb=v==='fb';s1u();});
+$('s1-rng').addEventListener('input',s1u);
+s1u();
+/* 2. 虚断 */
+const s2={t:'bjt'},s2Ib={bjt:80e-9,jfet:65e-12,cmos:1e-12},s2R=[1e3,1e4,1e5,1e6,1e7,1e8];
+const s2Tn={bjt:'741 类双极型输入，Ib 典型约 80 nA。',jfet:'TL072 这类 JFET 输入，Ib 典型约 65 pA，结温每升 10 °C 约翻倍。',cmos:'CMOS 输入，Ib 典型在 pA 级，主要是输入保护二极管的漏电。'};
+const s2I=a=>a<1e-9?(a*1e12).toFixed(a<1e-11?1:0)+' pA':fmtA(a);
+const s2V=v=>v<1e-3?(v*1e6).toFixed(v<1e-5?2:1)+' µV':v<1?(v*1e3).toFixed(1)+' mV':fmtV(v);
+function s2u(){
+  const R=s2R[+$('s2-rng').value],ib=s2Ib[s2.t],I=1/R,ratio=ib/I,err=ib*R,pc=ratio*100;
+  $('s2-r').textContent=fmtR(R);$('s2-rng').setAttribute('aria-valuetext',fmtR(R));
+  $('s2-rg').textContent=fmtR(R);$('s2-rf').textContent='Rf '+fmtR(R);
+  $('s2-i').textContent=s2I(I);$('s2-it').textContent='I = '+s2I(I);$('s2-ib').textContent=s2I(ib);
+  $('s2-ratio').textContent=(pc<0.001?'< 0.001':pc.toFixed(pc<0.1?3:1))+' %';
+  $('s2-err').textContent=s2V(err);
+  $('s2-vo').textContent='Vo ≈ '+fmtV(2+err,err>0.01?2:3);
+  let n;
+  if(ratio<1e-3){chip($('s2-st'),'成立','on');n=s2Tn[s2.t]+'电阻电流是 Ib 的一千倍以上，Rf 和 Rg 上的电流可以认为相等，输出误差 '+s2V(err)+'，可以忽略。';}
+  else if(ratio<1e-2){chip($('s2-st'),'勉强','warn');n=s2Tn[s2.t]+'Ib 已占电阻电流的千分之几，精密电路里要考虑，常见做法是在同相端串一个等于 Rf∥Rg 的电阻来抵消。';}
+  else{chip($('s2-st'),'不成立','bad');n=s2Tn[s2.t]+'电阻电流只比 Ib 大不到一百倍，输出多出 '+s2V(err)+' 误差。要么把电阻减小，要么换 JFET 或 CMOS 输入的运放。';}
+  $('s2-note').textContent=n;
+}
+seg('s2-t',v=>{s2.t=v;s2u();});
+$('s2-rng').addEventListener('input',s2u);
+s2u();
+</script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>常用通信协议 · 动态图解总览</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>常用通信协议<span>动态图解</span></h1>
+  <p>UART · RS-232 · RS-485 · CAN · SPI · I²C —— 每个协议一页,动画讲透工作流程</p>
+</header>
+
+<main>
+
+<div class="proto-grid">
+  <a class="proto" href="uart.html">
+    <h3>UART 异步串口</h3>
+    <p>一切串口的逻辑内核:起始位对表、约定波特率、位中间采样。先学它,后面全通。</p>
+    <div class="chips"><span>点对点</span><span>全双工</span><span>无时钟线</span><span>入门必学</span></div>
+    <span class="go">▶ 进入学习:全双工收发 / 帧格式 / 采样动画</span>
+  </a>
+
+  <a class="proto" href="rs232.html">
+    <h3>RS-232 串行接口</h3>
+    <p>UART 时序 + ±12V 负逻辑电平 + DB9 接口。经典点对点串口,Console 口至今在用。</p>
+    <div class="chips"><span>点对点</span><span>±12V 负逻辑</span><span>≤15m</span><span>DB9</span></div>
+    <span class="go">▶ 进入学习:电平对比 / DB9 引脚 / RTS·CTS 流控动画</span>
+  </a>
+
+  <a class="proto" href="rs485.html">
+    <h3>RS-485 差分总线</h3>
+    <p>把 UART 字节流搬上差分线:千米级距离、一主多从轮询,Modbus 的物理载体。</p>
+    <div class="chips"><span>总线型</span><span>差分</span><span>~1200m</span><span>半双工</span><span>工控主力</span></div>
+    <span class="go">▶ 进入学习:主从轮询 / 差分电平 / DE·RE 换向动画</span>
+  </a>
+
+  <a class="proto" href="can.html">
+    <h3>CAN 控制器局域网</h3>
+    <p>多主总线的巅峰设计:显性压隐性、逐位仲裁定优先级、CRC+ACK+错误计数保可靠。</p>
+    <div class="chips"><span>多主</span><span>逐位仲裁</span><span>差分</span><span>汽车/工业</span><span>高可靠</span></div>
+    <span class="go">▶ 进入学习:广播滤波 / 帧结构 / 逐位仲裁动画</span>
+  </a>
+
+  <a class="proto" href="spi.html">
+    <h3>SPI 同步串行</h3>
+    <p>主机摇时钟、片选点名,两个移位寄存器围成环交换数据。板级高速通信首选。</p>
+    <div class="chips"><span>一主多从</span><span>全双工</span><span>数十 MHz</span><span>四线+CS</span></div>
+    <span class="go">▶ 进入学习:片选切换 / 移位交换 / CPOL·CPHA 动画</span>
+  </a>
+
+  <a class="proto" href="i2c.html">
+    <h3>I²C 两线总线</h3>
+    <p>SDA+SCL 两根线,开漏线与,7 位地址寻址,逐字节 ACK。省引脚挂满一板外设。</p>
+    <div class="chips"><span>两线</span><span>地址寻址</span><span>开漏上拉</span><span>多主可仲裁</span></div>
+    <span class="go">▶ 进入学习:地址寻址 / START·STOP 时序波形动画</span>
+  </a>
+
+  <a class="proto" href="lab.html" style="border-color:var(--gold)">
+    <h3>🔌 接线实验台</h3>
+    <p>动手环节:拖拽 MCU、OLED、Flash、电表等器件,亲手连线并通电测试——接对了看数据流动,接错了看针对性讲解。</p>
+    <div class="chips"><span>拖拽摆位</span><span>引脚连线</span><span>通电测试</span><span>错误诊断</span></div>
+    <span class="go">▶ 进入实验:串口交叉 / I²C 共享总线 / SPI 直连 / 485 差分</span>
+  </a>
+</div>
+
+<section>
+  <h2><span class="num">表</span>六大协议横向对比</h2>
+  <table class="cmp">
+    <tr><th>维度</th><th>UART</th><th>RS-232</th><th>RS-485</th><th>CAN</th><th>SPI</th><th>I²C</th></tr>
+    <tr><td>线数</td><td>2+地</td><td>3(全配 9)</td><td>2(A/B)</td><td>2(H/L)</td><td>4+每从机CS̅</td><td>2(SDA/SCL)</td></tr>
+    <tr><td>时钟</td><td>异步</td><td>异步</td><td>异步</td><td>异步(位同步)</td><td>同步</td><td>同步</td></tr>
+    <tr><td>信号</td><td>单端 TTL</td><td>单端 ±12V</td><td>差分</td><td>差分</td><td>单端 TTL</td><td>单端 开漏</td></tr>
+    <tr><td>拓扑</td><td>点对点</td><td>点对点</td><td>总线 一主多从</td><td>总线 多主</td><td>星型 一主多从</td><td>总线 多主</td></tr>
+    <tr><td>双工</td><td>全双工</td><td>全双工</td><td>半双工</td><td>半双工</td><td>全双工</td><td>半双工</td></tr>
+    <tr><td>典型速率</td><td>≤1 Mbps</td><td>≤115.2 kbps</td><td>≤10 Mbps</td><td>≤1 Mbps</td><td>10~50 MHz</td><td>0.1~3.4 Mbps</td></tr>
+    <tr><td>距离</td><td>&lt;1 m</td><td>≤15 m</td><td>~1200 m</td><td>~1000 m</td><td>板级</td><td>板级</td></tr>
+    <tr><td>寻址/仲裁</td><td>无</td><td>无</td><td>软件地址轮询</td><td>硬件逐位仲裁</td><td>片选线</td><td>7位地址+线与仲裁</td></tr>
+    <tr><td>差错控制</td><td>奇偶校验</td><td>奇偶校验</td><td>上层(CRC16)</td><td>CRC+ACK+重发</td><td>无</td><td>逐字节 ACK</td></tr>
+    <tr><td>典型场景</td><td>调试打印</td><td>仪器 Console</td><td>工控 Modbus</td><td>汽车 ECU</td><td>Flash/屏幕</td><td>EEPROM/传感器</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2><span class="num">路</span>建议学习路线</h2>
+  <p class="desc" style="margin-bottom:6px">
+    ① 先学 <b>UART</b>,掌握「异步 + 起始位 + 波特率」的底层逻辑;<br>
+    ② 再看 <b>RS-232 / RS-485</b>——它们只是给 UART 换了「电平外衣」,分别解决点对点和长距离组网;<br>
+    ③ 然后看 <b>SPI / I²C</b>,理解「有时钟线」的同步通信如何免去波特率约定,以及两种截然不同的点名方式;<br>
+    ④ 最后攻 <b>CAN</b>——它把差分、仲裁、校验、容错整合到极致,是前面所有概念的集大成者。
+  </p>
+</section>
+
+</main>
+<footer>常用通信协议动态图解 · 纯 HTML / SVG / JavaScript · 离线可用</footer>
+</body>
+</html>

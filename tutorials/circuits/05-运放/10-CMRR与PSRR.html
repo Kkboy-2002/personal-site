@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CMRR 与 PSRR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#opamp">运放</a><span class="sp"></span><span>10 / 12</span></nav>
+<header>
+  <span class="eyebrow">运放 · 抗干扰能力</span>
+  <h1>CMRR 与 PSRR</h1>
+  <p class="lede">理想运放只放大两个输入端的差，对两端一起变的电压、对电源上的波动都不理会。实际运放会漏过来一点，漏多少就用 CMRR 和 PSRR 衡量，而且频率越高漏得越多。</p>
+</header>
+
+<section id="cmrr">
+  <span class="eyebrow">共模抑制比 · CMRR</span>
+  <h2>两个输入一起动，输出也会动一点</h2>
+  <p>两个输入端的平均电压叫共模电压 Vcm。理想情况下它对输出没有影响，实际上会以一个很小的共模增益 Ac 漏到输出。CMRR 就是差模增益和共模增益之比：</p>
+  <p class="eq">Vo = Ad·Vd + Ac·Vcm，CMRR = 20·log(Ad / Ac)</p>
+  <p>更好用的理解方式是把它折算到输入端：共模电压 Vcm 相当于在输入端加了一个 Vcm / CMRR 的误差电压，再和信号一起被放大。例如 CMRR 80 dB 即 1 万倍，1 V 共模就相当于 100 µV 的输入误差。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="CMRR 随频率变化曲线，低频平坦，高频按每十倍频 20 dB 下降">
+        <g id="a-ax"></g>
+        <polyline id="a-c0" class="real" points=""/>
+        <polyline id="a-c1" class="ideal" points=""/>
+        <text id="a-l0" x="62" y="0" class="t hi">通用 80 dB</text>
+        <text id="a-l1" x="62" y="0" class="tm">精密 110 dB</text>
+        <line id="a-vl" class="ax dash" x1="0" x2="0" y1="0" y2="250"/>
+        <circle id="a-pt" cx="0" cy="0" r="4.5" style="fill:var(--copper)"/>
+        <text id="a-ptt" x="0" y="0" class="v hi"></text>
+      </svg>
+      <figcaption>通用运放取直流 80 dB、1 kHz 起下降；精密运放取直流 110 dB、100 Hz 起下降，都是示意值。场景：10 mV 差分信号叠在共模电压上，放大 100 倍。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">运放</span>
+        <div class="seg" id="a-t"><button id="a-t-0" data-v="0" aria-pressed="true">通用</button><button id="a-t-1" data-v="1" aria-pressed="false">精密</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="a-f">共模干扰频率</label>
+        <span class="rv" id="a-fv">50 Hz</span>
+        <input type="range" id="a-f" min="0" max="10" step="1" value="1"></div>
+      <div class="ctl"><label class="ctl-l" for="a-v">共模电压幅度</label>
+        <span class="rv" id="a-vv">1 V</span>
+        <input type="range" id="a-v" min="0" max="6" step="1" value="3"></div>
+      <dl class="read">
+        <dt>该频率 CMRR</dt><dd id="a-db">80 dB</dd>
+        <dt>折算输入误差</dt><dd id="a-ei">100 µV</dd>
+        <dt>输出误差 ×100</dt><dd id="a-eo">10 mV</dd>
+        <dt>占有用输出 1 V</dt><dd id="a-pc">1 %</dd>
+        <dt>评价</dt><dd><span id="a-chip" class="chip warn">勉强</span></dd>
+      </dl>
+      <p class="note" id="a-note"></p>
+    </div>
+  </div>
+  <p>实际的差分放大电路里，外接四个电阻的匹配往往比运放本身的 CMRR 更要命。最坏情况下 CMRR ≈ (1 + G) / (4·ε)，ε 是电阻相对误差。增益 1、用 1% 电阻，最坏只有约 50 倍，即 34 dB。详见 <a href="04-差分放大器.html">差分放大器</a>。</p>
+</section>
+
+<section id="psrr">
+  <span class="eyebrow">电源抑制比 · PSRR</span>
+  <h2>电源上的纹波会漏到输出</h2>
+  <p>PSRR 衡量电源电压变化对运放的影响，通常折算到输入端：电源变化 ΔVs 引起的等效输入失调变化为 ΔVs / PSRR，再按噪声增益放大到输出。</p>
+  <p class="eq">PSRR = 20·log(ΔVs / ΔVos)，输出纹波 ≈ 电源纹波 / PSRR · 噪声增益</p>
+  <p>和 CMRR 一样，PSRR 在低频很高，到几十 kHz 以后就只剩几十 dB。开关电源的纹波恰好在 100 kHz 到 MHz 这一段，运放自己挡不住，要靠电源引脚旁边的去耦电容和滤波把高频纹波先吃掉。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 430" role="img" aria-label="带纹波的 5 V 电源经 10 欧电阻和去耦电容给运放供电；下方是运放自身 PSRR 与加去耦后总抑制随频率的曲线">
+        <text x="94" y="41" text-anchor="end" class="v">5 V + 纹波</text>
+        <path class="w" d="M100,28 V44 M100,36 H120 M170,36 H300 M300,36 V87 M300,133 V150 M288,150 H312 M293,155 H307 M298,160 H302 M250,90 H270 M250,130 H270 M340,110 H420"/>
+        <rect class="r" x="120" y="28" width="50" height="16" rx="2"/>
+        <text x="145" y="20" text-anchor="middle" class="v">R 10 Ω</text>
+        <circle class="dot" cx="230" cy="36" r="3.5"/>
+        <text id="b-vp" x="238" y="24" class="v hi">引脚纹波 50 mV</text>
+        <g id="b-g-c">
+          <path class="w" d="M230,36 V60 M214,60 H246 M214,68 H246 M230,68 V92 M218,92 H242 M223,97 H237 M228,102 H232"/>
+          <text x="208" y="68" text-anchor="end" class="v">C 10 µF</text>
+        </g>
+        <polygon class="r" points="270,70 270,150 340,110"/>
+        <text x="276" y="95" class="t">−</text>
+        <text x="276" y="136" class="t">+</text>
+        <text x="244" y="114" text-anchor="end" class="tm">噪声增益 10，输入为 0</text>
+        <text x="426" y="115" class="t">Vo</text>
+        <text id="b-vot" x="418" y="100" text-anchor="end" class="v hi"></text>
+        <g id="b-ax"></g>
+        <polyline id="b-c0" class="real2" points=""/>
+        <polyline id="b-c1" class="real3" points=""/>
+        <text id="b-l0" x="0" y="0" class="t" style="fill:var(--low)">运放自身 PSRR</text>
+        <text id="b-l1" x="0" y="0" class="t" style="fill:var(--flow)">加 RC 去耦后总抑制</text>
+        <line id="b-vl" class="ax dash" x1="0" x2="0" y1="0" y2="390"/>
+        <circle id="b-pt" cx="0" cy="0" r="4.5" style="fill:var(--copper)"/>
+      </svg>
+      <figcaption>运放 PSRR 取直流 100 dB、100 Hz 起下降，示意。R 代表电源走线或磁珠的等效电阻，和 C 组成低通，转折频率 1/(2π·R·C) ≈ 1.6 kHz。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">电源引脚</span>
+        <div class="seg" id="b-c"><button id="b-c-0" data-v="0" aria-pressed="false">不加电容</button><button id="b-c-1" data-v="1" aria-pressed="true">加 10 µF 去耦</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="b-f">纹波频率</label>
+        <span class="rv" id="b-fv">100 kHz</span>
+        <input type="range" id="b-f" min="0" max="10" step="1" value="8"></div>
+      <div class="ctl"><label class="ctl-l" for="b-a">电源纹波峰峰值</label>
+        <span class="rv" id="b-av">50 mV</span>
+        <input type="range" id="b-a" min="0" max="4" step="1" value="2"></div>
+      <dl class="read">
+        <dt>运放 PSRR</dt><dd id="b-ps">40 dB</dd>
+        <dt>RC 去耦衰减</dt><dd id="b-rc">36 dB</dd>
+        <dt>总抑制</dt><dd id="b-tot">76 dB</dd>
+        <dt>引脚上的纹波</dt><dd id="b-pin">0.8 mV</dd>
+        <dt>输出纹波</dt><dd id="b-out">79 µV</dd>
+        <dt>评价</dt><dd><span id="b-chip" class="chip on">干净</span></dd>
+      </dl>
+      <p class="note" id="b-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="cmp">
+  <span class="eyebrow">对比 · 记忆</span>
+  <h2>两个指标放在一起记</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>对比</th><th>CMRR</th><th>PSRR</th></tr></thead>
+    <tbody>
+      <tr><td>干扰从哪来</td><td>两个输入端一起变的共模电压</td><td>正负电源上的波动和纹波</td></tr>
+      <tr><td>定义</td><td class="n">20·log(Ad / Ac)</td><td class="n">20·log(ΔVs / ΔVos)</td></tr>
+      <tr><td>低频典型值</td><td>通用 70~100 dB，精密 110 dB 以上</td><td>通用 80~100 dB，精密 110 dB 以上</td></tr>
+      <tr><td>随频率</td><td colspan="2">都从几十 Hz 到几 kHz 开始下降，约 −20 dB / 十倍频</td></tr>
+      <tr><td>怎么补救</td><td>电阻精密匹配，或直接用仪表放大器</td><td>电源引脚就近放去耦电容，必要时加 RC 或 LC 滤波、LDO</td></tr>
+    </tbody>
+  </table></div>
+  <p>去耦电容一般是 0.1 µF 陶瓷电容紧贴电源引脚，再并一个几 µF 到 10 µF 的电容。小电容寄生电感小，管高频；大电容容量大，管中低频。电容走线越长，寄生电感越大，高频效果越差。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>什么是 CMRR？</summary>
+      <div class="ans"><p>共模抑制比，差模增益和共模增益之比，用 dB 表示，CMRR = 20·log(Ad / Ac)。它表示运放对两个输入端同时变化的电压有多不敏感。折算到输入端，共模电压 Vcm 相当于 Vcm / CMRR 的误差电压。</p></div></details>
+    <details><summary>用运放搭的差分放大器，CMRR 主要由什么决定？</summary>
+      <div class="ans"><p>通常由外接四个电阻的匹配决定，而不是运放本身。最坏情况 CMRR ≈ (1 + G) / (4·ε)，增益 1、1% 电阻时只有约 34 dB。要高 CMRR，就用 0.1% 以下的精密电阻、匹配电阻网络，或者直接用仪表放大器。</p></div></details>
+    <details><summary>PSRR 是什么？为什么高频时要靠去耦电容？</summary>
+      <div class="ans"><p>电源抑制比，衡量电源波动漏到输出的程度。它在低频很高，但随频率大约按 20 dB / 十倍频下降，100 kHz 时可能只剩几十 dB。开关电源纹波正好在这一段，运放自己挡不住。去耦电容在高频阻抗很低，和电源走线阻抗组成低通，把高频纹波在进引脚之前就旁路到地。</p></div></details>
+    <details><summary>为什么 CMRR 和 PSRR 会随频率下降？</summary>
+      <div class="ans"><p>它们都靠运放内部的高增益和电路对称来抑制干扰。频率升高后开环增益下降，内部寄生电容又让两边不再对称，所以抑制能力变差。</p></div></details>
+    <details><summary>正电源和负电源的 PSRR 一样吗？</summary>
+      <div class="ans"><p>常常不一样，数据手册会分开给出 PSRR+ 和 PSRR−，高频时差别更明显。设计时按较差的那一路算，两路电源都要去耦。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="09-失调电压与偏置电流.html"><span>上一页</span>失调电压与偏置电流</a><a class="next" href="11-轨到轨输出.html"><span>下一页</span>轨到轨输出</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+function axGrid(gid,o){
+  const g=$(gid);g.textContent='';
+  o.yt.forEach(([py,l])=>g.append(svgEl('line',{class:'gl',x1:o.x0,y1:py,x2:o.x1,y2:py}),svgEl('text',{x:o.x0-6,y:py+4,'text-anchor':'end',class:'v'},l)));
+  o.xt.forEach(([px,l],i)=>g.append(svgEl('line',{class:'gl',x1:px,y1:o.y0,x2:px,y2:o.y1}),svgEl('text',{x:px,y:o.y1+16,'text-anchor':i===o.xt.length-1&&px>=o.x1-2?'end':'middle',class:'v'},l)));
+  g.append(svgEl('path',{class:'ax',d:`M${o.x0},${o.y0} V${o.y1} H${o.x1}`}));
+  if(o.yn)g.append(svgEl('text',{x:o.x0+4,y:o.y0-6,class:'tm'},o.yn));
+  if(o.xn)g.append(svgEl('text',{x:o.x1,y:o.y1+32,'text-anchor':'end',class:'tm'},o.xn));
+}
+const decLab=['1','10','100','1k','10k','100k','1M'];
+const FQ=[10,50,100,500,1e3,5e3,1e4,5e4,1e5,5e5,1e6];
+const fmtVy=v=>v>=1?+v.toFixed(2)+' V':v>=1e-3?+(v*1e3).toFixed(v>=0.01?1:2)+' mV':v>=1e-6?+(v*1e6).toFixed(v>=1e-5?0:1)+' µV':+(v*1e9).toFixed(0)+' nV';
+const roll=(db0,fc)=>f=>db0-10*Math.log10(1+(f/fc)**2);
+
+/* a. CMRR */
+const aT=[roll(80,1e3),roll(110,100)],aV=[0.1,0.2,0.5,1,2,5,10];
+const aX=scale(1,6,56,500),aY=scale(0,120,250,30),a={t:0};
+axGrid('a-ax',{x0:56,x1:500,y0:30,y1:250,xt:[1,2,3,4,5,6].map(d=>[aX(d),decLab[d]]),
+  yt:[0,20,40,60,80,100,120].map(v=>[aY(v),String(v)]),yn:'CMRR dB',xn:'频率 Hz（对数）'});
+aT.forEach((fn,i)=>$('a-c'+i).setAttribute('points',plot(x=>fn(10**x),1,6,aX,aY,200)));
+$('a-l0').setAttribute('y',(aY(80)-8).toFixed(1));$('a-l1').setAttribute('y',(aY(110)-8).toFixed(1));
+function aU(){
+  const fn=aT[a.t],f=FQ[+$('a-f').value],vcm=aV[+$('a-v').value],db=fn(f),lin=10**(db/20);
+  [0,1].forEach(i=>{$('a-c'+i).setAttribute('class',i===a.t?'real':'ideal');$('a-l'+i).setAttribute('class',i===a.t?'t hi':'tm');});
+  const px=aX(Math.log10(f)),py=aY(db);
+  $('a-pt').setAttribute('cx',px.toFixed(1));$('a-pt').setAttribute('cy',py.toFixed(1));
+  $('a-vl').setAttribute('x1',px.toFixed(1));$('a-vl').setAttribute('x2',px.toFixed(1));$('a-vl').setAttribute('y1',py.toFixed(1));
+  const t=$('a-ptt'),r=px>400;t.textContent=db.toFixed(0)+' dB';t.setAttribute('text-anchor',r?'end':'start');
+  t.setAttribute('x',(px+(r?-8:8)).toFixed(1));t.setAttribute('y',(py+(py<70?22:-10)).toFixed(1));
+  const ei=vcm/lin,eo=100*ei,pc=eo/1*100;
+  $('a-fv').textContent=fmtF(f);$('a-f').setAttribute('aria-valuetext',fmtF(f));
+  $('a-vv').textContent=vcm+' V';$('a-v').setAttribute('aria-valuetext',vcm+' V');
+  $('a-db').textContent=db.toFixed(1)+' dB，即 '+(lin>=100?Math.round(lin).toLocaleString('en-US'):lin.toFixed(1))+' 倍';
+  $('a-ei').textContent=fmtVy(ei);$('a-eo').textContent=fmtVy(eo);
+  $('a-pc').textContent=(pc<0.01?'< 0.01':+pc.toFixed(pc<1?2:1))+' %';
+  chip($('a-chip'),pc<0.1?'可以忽略':pc<1?'可接受':pc<10?'误差明显':'被干扰淹没',pc<0.1?'on':pc<1?'on':pc<10?'warn':'bad');
+  $('a-note').textContent='频率 '+fmtF(f)+' 处 CMRR 只剩 '+db.toFixed(0)+' dB，'+vcm+' V 共模相当于在输入端串了 '+fmtVy(ei)+' 的误差，放大 100 倍后是 '+fmtVy(eo)+'。'
+    +(f>=5e3?'高频共模干扰要特别小心，低频时的 CMRR 指标在这里已经不管用了。':'频率再往上拖，CMRR 按每十倍频 20 dB 下降，误差成比例变大。');
+}
+seg('a-t',v=>{a.t=+v;aU();});
+$('a-f').addEventListener('input',aU);$('a-v').addEventListener('input',aU);
+aU();
+
+/* b. PSRR 与去耦 */
+const bP=roll(100,100),bRC=f=>10*Math.log10(1+(2*Math.PI*f*10*10e-6)**2),bA=[0.01,0.02,0.05,0.1,0.2];
+const bX=scale(1,6,56,500),bY=scale(0,120,390,200),b={c:true};
+axGrid('b-ax',{x0:56,x1:500,y0:200,y1:390,xt:[1,2,3,4,5,6].map(d=>[bX(d),decLab[d]]),
+  yt:[0,20,40,60,80,100,120].map(v=>[bY(v),String(v)]),yn:'抑制 dB',xn:'频率 Hz（对数）'});
+$('b-c0').setAttribute('points',plot(x=>bP(10**x),1,6,bX,bY,200));
+$('b-c1').setAttribute('points',plot(x=>Math.min(120,bP(10**x)+bRC(10**x)),1,6,bX,bY,200));
+$('b-l0').setAttribute('x',bX(4.3).toFixed(1));$('b-l0').setAttribute('y',(bY(bP(10**4.3))+22).toFixed(1));
+$('b-l1').setAttribute('x',bX(3.6).toFixed(1));$('b-l1').setAttribute('y',(bY(bP(10**3.6)+bRC(10**3.6))-10).toFixed(1));
+function bU(){
+  const f=FQ[+$('b-f').value],vr=bA[+$('b-a').value],ps=bP(f),rc=b.c?bRC(f):0,tot=ps+rc;
+  const pin=vr/10**(rc/20),out=pin/10**(ps/20)*10;
+  show($('b-g-c'),b.c);
+  $('b-c1').setAttribute('opacity',b.c?1:0.35);
+  const px=bX(Math.log10(f)),py=bY(Math.min(120,tot));
+  $('b-pt').setAttribute('cx',px.toFixed(1));$('b-pt').setAttribute('cy',py.toFixed(1));
+  $('b-vl').setAttribute('x1',px.toFixed(1));$('b-vl').setAttribute('x2',px.toFixed(1));$('b-vl').setAttribute('y1',py.toFixed(1));
+  $('b-fv').textContent=fmtF(f);$('b-f').setAttribute('aria-valuetext',fmtF(f));
+  $('b-av').textContent=fmtVy(vr);$('b-a').setAttribute('aria-valuetext',fmtVy(vr));
+  $('b-ps').textContent=ps.toFixed(1)+' dB';$('b-rc').textContent=b.c?rc.toFixed(1)+' dB':'0，没有电容';
+  $('b-tot').textContent=tot.toFixed(1)+' dB';
+  $('b-pin').textContent=fmtVy(pin)+' 峰峰';$('b-out').textContent=fmtVy(out)+' 峰峰';
+  $('b-vp').textContent='引脚纹波 '+fmtVy(pin);$('b-vot').textContent='纹波 '+fmtVy(out);
+  chip($('b-chip'),out<1e-4?'干净':out<1e-3?'可接受':'纹波明显',out<1e-4?'on':out<1e-3?'warn':'bad');
+  $('b-note').textContent=!b.c
+    ?'没有电容时 R 上没有压降，纹波原封不动加到电源引脚。'+fmtF(f)+' 处运放 PSRR 只有 '+ps.toFixed(0)+' dB，输出纹波 '+fmtVy(out)+'。'+(f>=1e4?'高频段光靠运放自己挡不住。':'低频时 PSRR 还很高，运放自己就能挡住。')
+    :(f<1e3?'低频时 RC 几乎不衰减，主要靠运放自己的 PSRR。':'电容在 '+fmtF(f)+' 的阻抗只有 '+fmtR(1/(2*Math.PI*f*10e-6))+'，比 R 小得多，纹波大部分被旁路到地，再加上运放 PSRR，总抑制 '+tot.toFixed(0)+' dB。PSRR 往下掉的地方正是 RC 开始起作用的地方，两者互补。');
+}
+seg('b-c',v=>{b.c=v==='1';bU();});
+$('b-f').addEventListener('input',bU);$('b-a').addEventListener('input',bU);
+bU();
+</script>
+</body>
+</html>

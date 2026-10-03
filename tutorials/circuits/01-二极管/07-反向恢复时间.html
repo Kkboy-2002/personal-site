@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>反向恢复时间</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.tank{fill:var(--chip);stroke:var(--line)}
+.qfill{fill:var(--copper);fill-opacity:.6}
+.ls-c{fill:var(--copper)}.ls-r{fill:var(--danger)}
+figure svg+svg{margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#diode">二极管</a><span class="sp"></span><span>07 / 08</span></nav>
+<header>
+  <span class="eyebrow">二极管 · 反向恢复</span>
+  <h1>反向恢复时间</h1>
+  <p class="lede">二极管从导通切到反偏，并不会立刻关断。结里存着的电荷要先被抽走，这段时间电流是反着流的。开关频率一高，这点"关不断"的时间就会变成大损耗和电压尖峰。</p>
+</header>
+
+<section id="store">
+  <span class="eyebrow">存储电荷 · trr = ta + tb</span>
+  <h2>电流为什么会反着流一段</h2>
+  <p>正向导通时，P 区的空穴注入 N 区，N 区的电子注入 P 区。这些少数载流子来不及复合，堆在结两侧，叫存储电荷。电流越大、少子寿命 τ 越长，存得越多，粗略有 Qs ≈ IF·τ。</p>
+  <p>外电路突然加上反压，存储电荷不会瞬间消失，只能靠复合，或者被反向电流抽走。抽完之前结附近仍堆满载流子，结还处在导通状态，挡不住反压。所以电流按外电路决定的 di/dt 一路下降、过零、变成反向。</p>
+  <p>ta 是从电流过零到反向电流达到峰值 IRM 的时间，这段在抽存储电荷，二极管两端电压仍接近零。tb 是结附近的少子被抽空、耗尽层重新建立之后，反向电流从 IRM 回落的时间，这时二极管才开始承受反压。</p>
+  <p class="eq">trr = ta + tb　　IRM ≈ ta·(di/dt)　　Qrr ≈ ½·IRM·trr</p>
+  <p>trr 的终点，手册一般取反向电流回落到 0.25·IRM 或 0.1·IRM。测试条件不同，数值能差好几倍，比较两颗管子时要看同一条件。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 300" role="img" aria-label="二极管关断时的电流和电压波形，标出正向导通、电流下降、ta、tb 四个阶段，右上角是剩余存储电荷">
+        <rect id="s1-hl" class="zone-sat" x="0" y="26" width="0" height="254"/>
+        <text x="332" y="18" class="tm">剩余存储电荷</text>
+        <rect class="tank" x="410" y="8" width="90" height="12" rx="2"/>
+        <rect id="s1-q" class="qfill" x="410" y="8" width="90" height="12" rx="2"/>
+        <line class="gl" x1="56" y1="30" x2="500" y2="30"/>
+        <line class="gl" x1="56" y1="110" x2="500" y2="110"/>
+        <line class="gl" x1="56" y1="150" x2="500" y2="150"/>
+        <path class="ax" d="M56,26 V150 M56,70 H500"/>
+        <text x="50" y="34" text-anchor="end" class="v">5</text>
+        <text x="50" y="74" text-anchor="end" class="v">0</text>
+        <text x="50" y="114" text-anchor="end" class="v">−5</text>
+        <text x="50" y="154" text-anchor="end" class="v">−10</text>
+        <text x="62" y="20" class="tm">iD / A</text>
+        <line class="gl" x1="56" y1="240" x2="500" y2="240"/>
+        <path class="ax" d="M56,176 V280 M56,190 H500"/>
+        <line class="ax dash" x1="56" y1="214" x2="500" y2="214"/>
+        <text x="50" y="194" text-anchor="end" class="v">0</text>
+        <text x="50" y="218" text-anchor="end" class="v">−24</text>
+        <text x="50" y="244" text-anchor="end" class="v">−50</text>
+        <text x="62" y="172" class="tm">vD / V</text>
+        <text x="56" y="294" text-anchor="middle" class="v">0</text>
+        <text x="167" y="294" text-anchor="middle" class="v">50</text>
+        <text x="278" y="294" text-anchor="middle" class="v">100</text>
+        <text x="389" y="294" text-anchor="middle" class="v">150</text>
+        <text x="500" y="294" text-anchor="end" class="v">200 ns</text>
+        <polyline id="s1-i" class="real" points="56,70"/>
+        <polyline id="s1-v" class="real2" points="56,190"/>
+        <text id="s1-ift" x="62" y="50" class="v hi">IF 2 A</text>
+        <line id="s1-irml" class="ax dash" x1="56" y1="100" x2="500" y2="100"/>
+        <text id="s1-irmt" x="496" y="96" text-anchor="end" class="t hi">IRM</text>
+        <path id="s1-br" class="ax" d="M0,0"/>
+        <text id="s1-tat" x="0" y="168" text-anchor="middle" class="tm">ta</text>
+        <text id="s1-tbt" x="0" y="168" text-anchor="middle" class="tm">tb</text>
+      </svg>
+      <figcaption>上：二极管电流；下：二极管两端电压；橙色底是所选阶段。右上角是该阶段结束时还剩多少能被抽出的存储电荷（占 Qrr）。示意：快恢复管，Qrr 按 IF × 60 ns 估算，外电路 di/dt = 100 A/µs，反压 24 V，软度 S = tb / ta = 0.6，按三角形近似。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">阶段</span>
+        <div class="seg" id="s1-ph"><button id="s1-ph-on" data-v="on" aria-pressed="false">正向导通</button><button id="s1-ph-fall" data-v="fall" aria-pressed="false">电流下降</button><button id="s1-ph-ta" data-v="ta" aria-pressed="true">ta 抽电荷</button><button id="s1-ph-tb" data-v="tb" aria-pressed="false">tb 恢复阻断</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-if">正向电流 IF</label>
+        <span class="rv" id="s1-ifv">2 A</span>
+        <input type="range" id="s1-if" min="0.5" max="4" step="0.5" value="2"></div>
+      <dl class="read">
+        <dt>阶段</dt><dd><span id="s1-st" class="chip warn">抽存储电荷</span></dd>
+        <dt>结的状态</dt><dd id="s1-jn">仍导通</dd>
+        <dt>二极管两端</dt><dd id="s1-vd">≈ 0 V</dd>
+        <dt>Qrr</dt><dd id="s1-qrr">120 nC</dd>
+        <dt>IRM</dt><dd id="s1-irm">3.87 A</dd>
+        <dt>ta / tb</dt><dd id="s1-tab">39 ns / 23 ns</dd>
+        <dt>trr = ta + tb</dt><dd id="s1-trr">62 ns</dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="soft">
+  <span class="eyebrow">软恢复 · 硬恢复</span>
+  <h2>tb 太短，电压尖峰就来了</h2>
+  <p>软度 S = tb / ta，描述反向电流回落得有多"温柔"。硬恢复的管子 tb 很短，反向电流从 IRM 被突然掐断，di/dt 极大。回路里总有几十 nH 的寄生电感，它产生的 L·di/dt 叠加在反压上，形成电压尖峰和高频振铃。尖峰可能超过耐压，振铃是 EMI 的主要来源。</p>
+  <p>软恢复的管子电流慢慢回落，尖峰小得多。Qrr 相同时，因为 Qrr = ½·IRM·ta·(1 + S)，软恢复的 IRM 反而略小。外电路开关越快，di/dt 越大，IRM 越大、ta 越短，硬恢复的尖峰也越明显。</p>
+  <p class="eq">Vpk ≈ VR + Ls·IRM / tb</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 300" role="img" aria-label="同样 Qrr 下硬恢复与软恢复的电流和电压波形，硬恢复时 tb 短，电压出现尖峰和振铃">
+        <rect id="s2-tbz" class="zone-sat" x="0" y="26" width="0" height="254"/>
+        <line class="gl" x1="56" y1="30" x2="500" y2="30"/>
+        <line class="gl" x1="56" y1="110" x2="500" y2="110"/>
+        <line class="gl" x1="56" y1="150" x2="500" y2="150"/>
+        <path class="ax" d="M56,26 V150 M56,70 H500"/>
+        <text x="50" y="34" text-anchor="end" class="v">5</text>
+        <text x="50" y="74" text-anchor="end" class="v">0</text>
+        <text x="50" y="114" text-anchor="end" class="v">−5</text>
+        <text x="50" y="154" text-anchor="end" class="v">−10</text>
+        <text x="62" y="20" class="tm">iD / A</text>
+        <line class="gl" x1="56" y1="240" x2="500" y2="240"/>
+        <path class="ax" d="M56,176 V280 M56,190 H500"/>
+        <line class="ax dash" x1="56" y1="214" x2="500" y2="214"/>
+        <text x="50" y="194" text-anchor="end" class="v">0</text>
+        <text x="50" y="218" text-anchor="end" class="v">−24</text>
+        <text x="50" y="244" text-anchor="end" class="v">−50</text>
+        <text x="62" y="172" class="tm">vD / V</text>
+        <text x="56" y="294" text-anchor="middle" class="v">0</text>
+        <text x="167" y="294" text-anchor="middle" class="v">50</text>
+        <text x="278" y="294" text-anchor="middle" class="v">100</text>
+        <text x="389" y="294" text-anchor="middle" class="v">150</text>
+        <text x="500" y="294" text-anchor="end" class="v">200 ns</text>
+        <polyline id="s2-i" class="real" points="56,70"/>
+        <polyline id="s2-v" class="real2" points="56,190"/>
+        <line id="s2-irml" class="ax dash" x1="56" y1="100" x2="500" y2="100"/>
+        <text id="s2-irmt" x="496" y="96" text-anchor="end" class="t hi">IRM</text>
+        <line id="s2-vpl" class="leak dash" x1="56" y1="250" x2="500" y2="250" style="stroke-width:1.2"/>
+        <text id="s2-vpt" x="496" y="262" text-anchor="end" class="t" style="fill:var(--danger)">Vpk</text>
+        <text id="s2-tbt" x="0" y="44" text-anchor="middle" class="tm">tb</text>
+      </svg>
+      <figcaption>橙色底是 tb 段。红色虚线是二极管承受的反向电压峰值 Vpk，底部虚线是正常反压 24 V。示意：IF = 2 A，Qrr 固定 120 nC，回路寄生电感 Ls = 30 nH，按三角形近似；实际 Qrr 还会随 di/dt 增大。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">恢复特性</span>
+        <div class="seg" id="s2-s"><button id="s2-s-h" data-v="0.2" aria-pressed="true">硬 S = 0.2</button><button id="s2-s-m" data-v="0.6" aria-pressed="false">适中 S = 0.6</button><button id="s2-s-s" data-v="1.2" aria-pressed="false">软 S = 1.2</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s2-di">外电路 di/dt</label>
+        <span class="rv" id="s2-div">200 A/µs</span>
+        <input type="range" id="s2-di" min="50" max="400" step="25" value="200"></div>
+      <dl class="read">
+        <dt>IRM</dt><dd id="s2-irm">6.32 A</dd>
+        <dt>ta / tb</dt><dd id="s2-tab">32 ns / 6 ns</dd>
+        <dt>trr</dt><dd id="s2-trr">38 ns</dd>
+        <dt>tb 段电流变化率</dt><dd id="s2-dit">1.0 A/ns</dd>
+        <dt>反压峰值 Vpk</dt><dd id="s2-vpk">54 V</dd>
+        <dt>评价</dt><dd><span id="s2-st" class="chip bad">尖峰大</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+<section id="buck">
+  <span class="eyebrow">四类二极管 · 100 kHz Buck</span>
+  <h2>Buck 续流为什么不能用 1N4007</h2>
+  <p>异步 Buck 里，上管关断时电感电流走续流二极管；上管再开通时，二极管要从导通切换到承受 Vin 的反压。二极管还没恢复，上管就等于隔着它把 Vin 短路到地：上管电流先冲到 Io + IRM，而它两端电压还没降下来，这块重叠就是额外损耗，大部分落在上管上。</p>
+  <p class="eq">P恢复 ≈ Qrr·Vin·fsw　　P导通 ≈ VF·Io·(1 − D)</p>
+  <p>反向恢复损耗和频率成正比，每开关一次就交一次。1N4007 是给 50 Hz 工频整流设计的，trr 是 µs 级，Qrr 是 µC 级，放到 100 kHz 下每秒要交 10 万次。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 196" role="img" aria-label="上管开通时的电流波形，续流二极管反向恢复使电流冲到 Io + IRM">
+        <line class="gl" x1="56" y1="26" x2="500" y2="26"/>
+        <line class="gl" x1="56" y1="74" x2="500" y2="74"/>
+        <line class="gl" x1="56" y1="122" x2="500" y2="122"/>
+        <path class="ax" d="M56,22 V170 H500"/>
+        <text x="50" y="30" text-anchor="end" class="v">18</text>
+        <text x="50" y="78" text-anchor="end" class="v">12</text>
+        <text x="50" y="126" text-anchor="end" class="v">6</text>
+        <text x="50" y="174" text-anchor="end" class="v">0</text>
+        <text x="62" y="16" class="tm">上管电流 / A</text>
+        <text x="56" y="188" text-anchor="middle" class="v">0</text>
+        <text x="167" y="188" text-anchor="middle" class="v">100</text>
+        <text x="278" y="188" text-anchor="middle" class="v">200</text>
+        <text x="389" y="188" text-anchor="middle" class="v">300</text>
+        <text x="500" y="188" text-anchor="end" class="v">400 ns</text>
+        <line class="ax dash" x1="56" y1="162" x2="500" y2="162"/>
+        <text x="496" y="156" text-anchor="end" class="tm">Io 1 A</text>
+        <polyline id="s3-w" class="real" points="56,170"/>
+        <text id="s3-pkt" x="100" y="40" class="t hi">Io + IRM</text>
+      </svg>
+      <svg viewBox="0 0 520 200" role="img" aria-label="四类二极管在 100 kHz Buck 中的导通损耗和反向恢复损耗堆叠柱状图">
+        <rect class="ls-c" x="56" y="7" width="10" height="10"/><text x="70" y="16" class="tm">导通 VF·Io·(1 − D)</text>
+        <rect class="ls-r" x="216" y="7" width="10" height="10"/><text x="230" y="16" class="tm">反向恢复 Qrr·Vin·fsw</text>
+        <line class="gl" x1="56" y1="34" x2="500" y2="34"/>
+        <line class="gl" x1="56" y1="76" x2="500" y2="76"/>
+        <line class="gl" x1="56" y1="118" x2="500" y2="118"/>
+        <path class="ax" d="M56,30 V160 H500"/>
+        <text x="50" y="38" text-anchor="end" class="v">6</text>
+        <text x="50" y="80" text-anchor="end" class="v">4</text>
+        <text x="50" y="122" text-anchor="end" class="v">2</text>
+        <text x="50" y="164" text-anchor="end" class="v">0</text>
+        <text x="500" y="16" text-anchor="end" class="tm">损耗 / W</text>
+        <g id="s3-bars"></g>
+        <text x="111.5" y="178" text-anchor="middle" class="t">1N4007</text>
+        <text x="222.5" y="178" text-anchor="middle" class="t">快恢复</text>
+        <text x="333.5" y="178" text-anchor="middle" class="t">超快恢复</text>
+        <text x="444.5" y="178" text-anchor="middle" class="t">肖特基</text>
+        <text x="278" y="196" text-anchor="middle" class="tm">24 V 转 5 V，Io = 1 A，fsw = 100 kHz</text>
+      </svg>
+      <figcaption>上：上管开通时的电流，虚线是负载电流 Io，多出来的尖峰就是续流二极管的反向恢复电流。下：四类二极管的损耗对比，当前所选的一根不透明。示意：外电路 di/dt 取 100 A/µs，各管参数见右侧。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">续流二极管</span>
+        <div class="seg" id="s3-d"><button id="s3-d-n" data-v="n" aria-pressed="true">1N4007</button><button id="s3-d-f" data-v="f" aria-pressed="false">快恢复</button><button id="s3-d-u" data-v="u" aria-pressed="false">超快恢复</button><button id="s3-d-s" data-v="s" aria-pressed="false">肖特基</button></div></div>
+      <dl class="read">
+        <dt>代表型号</dt><dd id="s3-nm">1N4007</dd>
+        <dt>手册 trr</dt><dd id="s3-trr">约 2 µs</dd>
+        <dt>Qrr（示意）</dt><dd id="s3-q">2 µC</dd>
+        <dt>本图 IRM</dt><dd id="s3-irm">14.9 A</dd>
+        <dt>反向恢复损耗</dt><dd id="s3-pr">4.80 W</dd>
+        <dt>导通损耗</dt><dd id="s3-pc">0.79 W</dd>
+        <dt>合计，对比输出 5 W</dt><dd id="s3-pt">5.59 W</dd>
+        <dt>结论</dt><dd><span id="s3-st" class="chip bad">不能用</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+  <ul>
+    <li>低压（几十伏以内）优先肖特基：几乎没有反向恢复，VF 也最低。</li>
+    <li>一两百伏以上硅肖特基耐压不够，用超快恢复；更高压、更高频用 SiC 肖特基。</li>
+    <li>低压大电流输出直接上同步整流，用下管 MOS 代替二极管，见 <a href="../03-MOS管/07-体二极管.html">体二极管</a>。</li>
+    <li>1N4007 只适合工频整流、继电器续流、防反接这类几乎不开关的地方。</li>
+  </ul>
+  <div class="tbl"><table>
+    <thead><tr><th>类型</th><th>代表型号</th><th>trr（典型值）</th><th>VF @ 1 A（典型值）</th><th>该类常见耐压</th><th>典型用途</th></tr></thead>
+    <tbody>
+      <tr><td>普通整流</td><td>1N4007</td><td class="n">约 2 µs</td><td class="n">约 1.0 V</td><td class="n">50~1000 V</td><td>50 Hz 整流、继电器续流</td></tr>
+      <tr><td>快恢复</td><td>FR107</td><td class="n">150~500 ns</td><td class="n">约 1.1 V</td><td class="n">50~1000 V</td><td>几十 kHz 以下的开关电路</td></tr>
+      <tr><td>超快恢复</td><td>MUR120、ES1D</td><td class="n">25~75 ns</td><td class="n">约 0.9 V</td><td class="n">50~1000 V</td><td>高压 Buck、反激次级、PFC</td></tr>
+      <tr><td>肖特基</td><td>1N5819、SS34</td><td>几乎为 0，只有结电容</td><td class="n">0.3~0.5 V</td><td class="n">20~200 V</td><td>低压 Buck 续流、防倒灌</td></tr>
+    </tbody>
+  </table></div>
+</section>
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>什么是二极管的反向恢复时间？</summary>
+      <div class="ans"><p>二极管正向导通时，PN 结两侧存着少子电荷。突然加反压，这些电荷要先被反向电流抽走，结才能恢复阻断。从电流过零开始，到反向电流回落到规定值（如 0.25·IRM）为止，这段时间就是 trr。它分两段：ta 抽存储电荷，反向电流增大到峰值 IRM；tb 结已恢复，反向电流回落。trr = ta + tb。</p></div></details>
+    <details><summary>为什么 Buck 的续流二极管不能用 1N4007？</summary>
+      <div class="ans"><p>1N4007 是工频整流管，trr 约 2 µs，Qrr 是 µC 级。Buck 上管每次开通，二极管都要先反向导通一段，相当于上管隔着它把输入短路，电流冲到 Io + IRM，额外损耗约 Qrr·Vin·fsw。100 kHz 下这部分能到几瓦，和输出功率一个量级，上管严重发热，还有很大的电压尖峰和 EMI。应该用肖特基、超快恢复管，或者同步整流。</p></div></details>
+    <details><summary>软恢复和硬恢复有什么区别？</summary>
+      <div class="ans"><p>区别在 tb 段反向电流回落的快慢，用软度 S = tb / ta 表示。硬恢复 tb 短，电流被突然掐断，在回路寄生电感上产生 L·di/dt 的电压尖峰和振铃，容易过压，EMI 也大。软恢复电流平缓回落，尖峰小。电机驱动里 IGBT 的反并二极管就特别要求软恢复。</p></div></details>
+    <details><summary>反向恢复带来的问题怎么解决？</summary>
+      <div class="ans"><p>第一选 Qrr 小的管子：低压用肖特基，高压用超快恢复或 SiC 肖特基。第二用同步整流代替二极管。第三适当减慢开关速度，di/dt 小了 IRM 就小，代价是开关损耗增加。第四在二极管两端加 RC 吸收抑制振铃，同时把功率回路布得紧凑，减小寄生电感。</p></div></details>
+    <details><summary>肖特基二极管为什么没有反向恢复问题？</summary>
+      <div class="ans"><p>肖特基是金属-半导体结，靠多子导电，正向导通时不向对面注入少子，也就没有存储电荷。关断时只需要给结电容充电，时间是 ns 级，而且和正向电流基本无关。代价是漏电大、耐压低，下一页细讲。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="06-稳压二极管应用.html"><span>上一页</span>稳压二极管应用</a><a class="next" href="08-肖特基与普通二极管.html"><span>下一页</span>肖特基与普通二极管</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 共用：三角形近似的反向恢复模型（示意） */
+const VR=24,LS=30e-9,DI1=100e6,TAU1=60e-9,TQ=20e-9;
+const XT=scale(0,200e-9,56,500),YI=scale(-10,5,150,30),YV=scale(-90,10,280,180);
+const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+const nC=q=>q>=1e-6?+(q*1e6).toFixed(2)+' µC':(q*1e9).toFixed(q<1e-8?1:0)+' nC';
+function rr(q,s,di){const irm=Math.sqrt(2*q*di/(1+s)),ta=irm/di;return {irm,ta,tb:s*ta,trr:ta*(1+s)};}
+function rrWave(IF,q,s,di){
+  const r=rr(q,s,di),t1=TQ+IF/di,t2=t1+r.ta,t3=t2+r.tb,vpk=VR+LS*r.irm/r.tb;
+  const iF=t=>t<TQ?IF:t<t2?IF-di*(t-TQ):t<t3?-r.irm*(t3-t)/r.tb:0;
+  const vF=t=>t<t1?0.9:t<t2?0.9*(t2-t)/r.ta:t<t3?-vpk*(t-t2)/r.tb:-VR-(vpk-VR)*Math.exp(-(t-t3)/12e-9)*Math.cos(2*Math.PI*(t-t3)/14e-9);
+  return {r,t1,t2,t3,vpk,ip:plot(t=>cl(iF(t),-10,5),0,200e-9,XT,YI,400),vp:plot(t=>cl(vF(t),-90,10),0,200e-9,XT,YV,400)};
+}
+function irmMark(pre,irm){const y=YI(-Math.min(irm,10));
+  $(pre+'-irml').setAttribute('y1',y.toFixed(1));$(pre+'-irml').setAttribute('y2',y.toFixed(1));
+  $(pre+'-irmt').setAttribute('y',(y+15).toFixed(1));$(pre+'-irmt').textContent='IRM '+fmtA(irm);}
+
+/* 1. 存储电荷与四个阶段 */
+const s1={ph:'ta'};
+const s1S={on:['正向导通','on'],fall:['电流下降','off'],ta:['抽存储电荷','warn'],tb:['恢复阻断','on']};
+const s1J={on:'正偏导通',fall:'正偏导通',ta:'仍导通，电荷没抽完',tb:'耗尽层建立，开始阻断'};
+const s1N={
+  on:'正向导通，电流 IF 稳定流过。结两侧不断注入少子，也不断复合，存储电荷保持在 Qs ≈ IF·τ。二极管两端是正向压降，约 0.9 V。',
+  fall:'外电路开始反转，电流以 100 A/µs 往下降，但方向仍是正向。存储电荷还在，结照样导通，二极管两端仍是零点几伏的正压。',
+  ta:'电流过零后继续往负方向走，这股反向电流就是在把存储电荷抽回去。电荷没抽完，结仍导通，两端电压接近零，挡不住反压，所以反向电流一直增大到 IRM。',
+  tb:'结附近的少子被抽空，耗尽层重新建立，二极管开始承受反压，反向电流从 IRM 回落，剩下的电荷一边被抽走一边复合。回落得越急，寄生电感上的尖峰越高，下一节细看。'
+};
+function s1u(){
+  const IF=+$('s1-if').value,q=IF*TAU1,w=rrWave(IF,q,0.6,DI1),r=w.r,ph=s1.ph;
+  $('s1-i').setAttribute('points',w.ip);$('s1-v').setAttribute('points',w.vp);
+  const ed={on:[0,TQ],fall:[TQ,w.t1],ta:[w.t1,w.t2],tb:[w.t2,w.t3]}[ph],a=XT(ed[0]),b=XT(ed[1]);
+  $('s1-hl').setAttribute('x',a.toFixed(1));$('s1-hl').setAttribute('width',Math.max(2,b-a).toFixed(1));
+  const left={on:1,fall:1,ta:r.tb/r.trr,tb:0}[ph];$('s1-q').setAttribute('width',(90*left).toFixed(1));
+  irmMark('s1',r.irm);
+  const x1=XT(w.t1),x2=XT(w.t2),x3=XT(w.t3);
+  $('s1-br').setAttribute('d',`M${x1.toFixed(1)},154 V162 M${x1.toFixed(1)},158 H${x3.toFixed(1)} M${x2.toFixed(1)},154 V162 M${x3.toFixed(1)},154 V162`);
+  $('s1-tat').setAttribute('x',((x1+x2)/2).toFixed(1));$('s1-tbt').setAttribute('x',((x2+x3)/2).toFixed(1));
+  $('s1-tat').setAttribute('y','171');$('s1-tbt').setAttribute('y','171');show($('s1-tbt'),x3-x2>14);
+  $('s1-ift').setAttribute('y',(YI(IF)-6).toFixed(1));$('s1-ift').textContent='IF '+IF+' A';
+  $('s1-ifv').textContent=IF+' A';$('s1-if').setAttribute('aria-valuetext',IF+' A');
+  chip($('s1-st'),s1S[ph][0],s1S[ph][1]);$('s1-jn').textContent=s1J[ph];
+  $('s1-vd').textContent=ph==='ta'?'≈ 0 V，还挡不住反压':ph==='tb'?'升向 −24 V，峰值约 '+fmtV(-w.vpk,1):'≈ +0.9 V';
+  $('s1-qrr').textContent=nC(q);$('s1-irm').textContent=fmtA(r.irm);
+  $('s1-tab').textContent=fmtT(r.ta)+' / '+fmtT(r.tb);$('s1-trr').textContent=fmtT(r.trr);
+  $('s1-note').textContent=s1N[ph]+(ph==='ta'||ph==='tb'?' 现在 IF = '+IF+' A，Qrr ≈ '+nC(q)+'，IRM = '+fmtA(r.irm)+'。IF 越大存得越多，IRM 和 trr 都跟着变大。':'');
+}
+seg('s1-ph',v=>{s1.ph=v;s1u();});
+$('s1-if').addEventListener('input',s1u);
+s1u();
+/* 2. 软恢复与硬恢复 */
+const s2={s:0.2},Q2=120e-9;
+function s2u(){
+  const di=+$('s2-di').value*1e6,s=s2.s,w=rrWave(2,Q2,s,di),r=w.r,dib=r.irm/r.tb,k=w.vpk/VR;
+  $('s2-i').setAttribute('points',w.ip);$('s2-v').setAttribute('points',w.vp);
+  const a=XT(w.t2),b=XT(w.t3);$('s2-tbz').setAttribute('x',a.toFixed(1));$('s2-tbz').setAttribute('width',Math.max(2,b-a).toFixed(1));
+  $('s2-tbt').setAttribute('x',((a+b)/2).toFixed(1));
+  irmMark('s2',r.irm);
+  const yp=YV(-Math.min(w.vpk,90));$('s2-vpl').setAttribute('y1',yp.toFixed(1));$('s2-vpl').setAttribute('y2',yp.toFixed(1));
+  $('s2-vpt').setAttribute('y',(yp>250?yp-5:yp+13).toFixed(1));$('s2-vpt').textContent='Vpk '+fmtV(-w.vpk,0);
+  $('s2-div').textContent=(di/1e6)+' A/µs';$('s2-di').setAttribute('aria-valuetext',(di/1e6)+' A/µs');
+  $('s2-irm').textContent=fmtA(r.irm);$('s2-tab').textContent=fmtT(r.ta)+' / '+fmtT(r.tb);$('s2-trr').textContent=fmtT(r.trr);
+  $('s2-dit').textContent=(dib*1e-9).toFixed(2)+' A/ns';
+  $('s2-vpk').textContent=fmtV(w.vpk,1)+'，是反压的 '+k.toFixed(1)+' 倍';
+  if(k>1.8)chip($('s2-st'),'尖峰大','bad');else if(k>1.3)chip($('s2-st'),'尖峰明显','warn');else chip($('s2-st'),'平缓','on');
+  const dv=fmtV(LS*dib,1);
+  $('s2-note').textContent=s<0.5?'硬恢复：tb 只有 '+fmtT(r.tb)+'，'+fmtA(r.irm)+' 的反向电流几乎被瞬间掐断。30 nH 寄生电感上产生 Ls·di/dt ≈ '+dv+'，叠加在 24 V 反压上，还激起高频振铃。把 di/dt 往大拖，尖峰涨得更快。'
+    :s>1?'软恢复：tb 比 ta 还长，电流缓缓回落，尖峰只多出 '+dv+'。Qrr 没变，IRM 反而比硬恢复小一些。代价是 trr 变长，恢复期间的损耗略多。'
+    :'软度适中：尖峰多出 '+dv+'。di/dt 由外电路决定，开关管开得越快，IRM 越大，尖峰也越高。';
+}
+seg('s2-s',v=>{s2.s=+v;s2u();});
+$('s2-di').addEventListener('input',s2u);
+s2u();
+
+/* 3. 四类二极管在 100 kHz Buck 中 */
+const VIN3=24,IO3=1,D3=5/24,FS3=100e3,DI3=100e6,TON3=40e-9;
+const D3P={
+  n:{nm:'1N4007，普通整流',trr:'约 2 µs',q:2e-6,s:0.8,vf:1.0},
+  f:{nm:'FR107，快恢复',trr:'≤ 500 ns',q:0.25e-6,s:0.5,vf:1.1},
+  u:{nm:'MUR120，超快恢复',trr:'≤ 25~35 ns',q:20e-9,s:0.5,vf:0.85},
+  s:{nm:'1N5819，肖特基',trr:'几乎为 0',q:2e-9,s:1,vf:0.45}
+};
+function loss3(p){const pc=p.vf*IO3*(1-D3),pr=p.q*VIN3*FS3;return {pc,pr,pt:pc+pr};}
+const X3=scale(0,400e-9,56,500),Y3=scale(0,18,170,26),YB=scale(0,6,160,34),CX3=[111.5,222.5,333.5,444.5],K3=['n','f','u','s'];
+const s3={d:'n'};
+function s3u(){
+  const p=D3P[s3.d],r=rr(p.q,p.s,DI3),L=loss3(p),t2=TON3+(IO3+r.irm)/DI3,t3=t2+r.tb;
+  const isw=t=>t<TON3?0:t<t2?DI3*(t-TON3):t<t3?IO3+r.irm*(t3-t)/r.tb:IO3;
+  $('s3-w').setAttribute('points',plot(t=>Math.min(18,isw(t)),0,400e-9,X3,Y3,800));
+  const pk=$('s3-pkt');pk.setAttribute('x',(X3(t2)+6).toFixed(1));pk.setAttribute('y',Math.max(40,Y3(IO3+r.irm)-4).toFixed(1));
+  pk.textContent='Io + IRM = '+fmtA(IO3+r.irm);
+  const g=$('s3-bars');g.replaceChildren();
+  K3.forEach((k,i)=>{const l=loss3(D3P[k]),op=k===s3.d?1:0.35,x=CX3[i]-22,yc=YB(Math.min(l.pc,6)),yt=YB(Math.min(l.pt,6));
+    g.append(svgEl('rect',{x,y:yc.toFixed(1),width:44,height:(160-yc).toFixed(1),class:'ls-c','fill-opacity':op}));
+    g.append(svgEl('rect',{x,y:yt.toFixed(1),width:44,height:Math.max(0,yc-yt).toFixed(1),class:'ls-r','fill-opacity':op}));
+    g.append(svgEl('text',{x:CX3[i],y:(yt-5).toFixed(1),'text-anchor':'middle',class:'v'},fmtP(l.pt)));});
+  $('s3-nm').textContent=p.nm;$('s3-trr').textContent=p.trr;
+  $('s3-q').textContent=nC(p.q)+(s3.d==='s'?'，是结电容电荷':'');
+  $('s3-irm').textContent=fmtA(r.irm);$('s3-pr').textContent=fmtP(L.pr);$('s3-pc').textContent=fmtP(L.pc);
+  $('s3-pt').textContent=fmtP(L.pt)+'，效率上限约 '+(5/(5+L.pt)*100).toFixed(0)+'%';
+  const n={
+    n:['不能用','bad','1N4007 的 Qrr 按 2 µC 估算。上管每次开通都要先把这些电荷抽走，电流冲到 '+fmtA(IO3+r.irm)+'，持续约 '+fmtT(r.trr)+'。恢复损耗 '+fmtP(L.pr)+'，是导通损耗的好几倍，和 5 W 输出同一量级，上管很快过热。'],
+    f:['勉强','warn','快恢复管的 Qrr 小了一个数量级，但 100 kHz 下恢复损耗仍有 '+fmtP(L.pr)+'，VF 也偏高，二极管相关损耗合计 '+fmtP(L.pt)+'。几十 kHz 以下还行，频率再高就吃力。'],
+    u:['可以用','on','超快恢复管的 Qrr 只有几十 nC，恢复损耗降到 '+fmtP(L.pr)+'，主要剩下导通损耗。输入电压高、肖特基耐压不够时首选它。'],
+    s:['最合适','on','肖特基没有少子存储，只有约 2 nC 的结电容电荷，恢复损耗只有 '+fmtP(L.pr)+'。VF 最低，导通损耗也最小。24 V 输入配 40 V 的 1N5819 正合适，所以低压 Buck 都用肖特基续流。']
+  }[s3.d];
+  chip($('s3-st'),n[0],n[1]);$('s3-note').textContent=n[2];
+}
+seg('s3-d',v=>{s3.d=v;s3u();});
+s3u();
+</script>
+</body>
+</html>

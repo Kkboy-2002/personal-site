@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>β放大倍数</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#bjt">三极管</a><span class="sp"></span><span>03 / 09</span></nav>
+<header>
+  <span class="eyebrow">三极管 · 电流放大系数</span>
+  <h1>β 放大倍数</h1>
+  <p class="lede">β 是三极管最出名的参数，但它一点都不"准"：随电流变、随温度变、同型号之间还差好几倍。这页讲清 β 从哪来、怎么量、为什么设计时不能指望它。</p>
+</header>
+
+<section id="ab">
+  <span class="eyebrow">定义 · α 与 β</span>
+  <h2>β 和 α：同一件事的两种说法</h2>
+  <p>发射极流出的电流 Ie 在管子里分成两股：绝大部分被集电极收走，成为 Ic；一小部分在基区复合掉，由基极补上，成为 Ib。</p>
+  <p class="eq">Ie = Ib + Ic　　α = Ic / Ie　　β = Ic / Ib</p>
+  <p class="eq">β = α / (1 − α)　　α = β / (1 + β)</p>
+  <p>α 总是略小于 1，典型 0.98~0.998。因为 β 的分母是 1 − α，α 只要往 1 靠近一点点，β 就翻倍。这就是为什么 β 对工艺这么敏感。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 280" role="img" aria-label="β 随 α 变化的曲线：α 越接近 1，β 增长越快">
+        <line class="gl" x1="56" y1="36" x2="456" y2="36"/>
+        <line class="gl" x1="56" y1="76" x2="456" y2="76"/>
+        <line class="gl" x1="56" y1="116" x2="456" y2="116"/>
+        <line class="gl" x1="56" y1="156" x2="456" y2="156"/>
+        <line class="gl" x1="56" y1="196" x2="456" y2="196"/>
+        <path class="ax" d="M56,36 V236 H456"/>
+        <text x="50" y="40" text-anchor="end" class="v">500</text>
+        <text x="50" y="120" text-anchor="end" class="v">300</text>
+        <text x="50" y="200" text-anchor="end" class="v">100</text>
+        <text x="50" y="240" text-anchor="end" class="v">0</text>
+        <text x="60" y="26" class="tm">β</text>
+        <text x="56" y="254" text-anchor="middle" class="v">0.90</text>
+        <text x="256" y="254" text-anchor="middle" class="v">0.95</text>
+        <text x="376" y="254" text-anchor="middle" class="v">0.98</text>
+        <text x="456" y="254" text-anchor="end" class="v">1.00</text>
+        <text x="456" y="272" text-anchor="end" class="tm">α = Ic / Ie</text>
+        <polyline id="b1-cv" class="real" points="56,236 456,236"/>
+        <text x="80" y="70" class="t" style="fill:var(--copper)">β = α / (1 − α)</text>
+        <line id="b1-gx" class="ax dash" x1="56" y1="196" x2="416" y2="196"/>
+        <line id="b1-gy" class="ax dash" x1="416" y1="196" x2="416" y2="236"/>
+        <circle id="b1-q" cx="416" cy="196" r="6" style="fill:var(--flow)"/>
+        <text id="b1-qt" x="406" y="186" text-anchor="end" class="v">β = 99</text>
+      </svg>
+      <figcaption>横轴只画了 0.90~1.00 这一段。越往右，同样的 α 变化带来的 β 变化越大。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="b1-a">α（到达集电极的比例）</label>
+        <span class="rv" id="b1-av">0.990</span>
+        <input type="range" id="b1-a" min="900" max="998" step="1" value="990"></div>
+      <dl class="read">
+        <dt>基区复合比例 1 − α</dt><dd id="b1-r">1.0%</dd>
+        <dt>β = α / (1 − α)</dt><dd id="b1-b">99</dd>
+        <dt>Ie = 1 mA 时 Ic</dt><dd id="b1-ic">0.99 mA</dd>
+        <dt>Ie = 1 mA 时 Ib</dt><dd id="b1-ib">10 µA</dd>
+        <dt>档次</dt><dd><span id="b1-st" class="chip on">常见小信号管</span></dd>
+      </dl>
+      <p class="note" id="b1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="hfe">
+  <span class="eyebrow">直流 hFE · 交流 β</span>
+  <h2>hFE 看比值，交流 β 看斜率</h2>
+  <p>手册里的 hFE 是直流电流增益：在某个工作点上 Ic 除以 Ib，几何上是原点到工作点连线的斜率。交流 β（也写作 hfe）是小信号增益：ΔIc / ΔIb，几何上是曲线在工作点的切线斜率。Ic–Ib 曲线如果是直线，两者相等；实际曲线会弯，两者就不同。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 290" role="img" aria-label="Ic 对 Ib 的曲线，工作点处的割线斜率是 hFE，切线斜率是交流 β">
+        <line class="gl" x1="56" y1="36" x2="456" y2="36"/>
+        <line class="gl" x1="56" y1="106" x2="456" y2="106"/>
+        <line class="gl" x1="56" y1="176" x2="456" y2="176"/>
+        <line class="gl" x1="206" y1="36" x2="206" y2="246"/>
+        <line class="gl" x1="356" y1="36" x2="356" y2="246"/>
+        <path class="ax" d="M56,36 V246 H456"/>
+        <text x="50" y="40" text-anchor="end" class="v">60</text>
+        <text x="50" y="110" text-anchor="end" class="v">40</text>
+        <text x="50" y="180" text-anchor="end" class="v">20</text>
+        <text x="50" y="250" text-anchor="end" class="v">0</text>
+        <text x="60" y="26" class="tm">Ic / mA</text>
+        <text x="56" y="264" text-anchor="middle" class="v">0</text>
+        <text x="206" y="264" text-anchor="middle" class="v">0.3</text>
+        <text x="356" y="264" text-anchor="middle" class="v">0.6</text>
+        <text x="456" y="282" text-anchor="end" class="tm">Ib / mA</text>
+        <polyline id="b2-cv" class="cv" points="56,246 456,36"/>
+        <line id="b2-ch" class="real2" x1="56" y1="246" x2="100" y2="200"/>
+        <line id="b2-tg" class="real" x1="56" y1="246" x2="100" y2="200"/>
+        <circle id="b2-q" cx="100" cy="200" r="6" style="fill:var(--flow)"/>
+        <text x="236" y="210" class="t" style="fill:var(--low)">蓝：割线，斜率 = hFE</text>
+        <text x="236" y="230" class="t" style="fill:var(--copper)">橙：切线，斜率 = 交流 β</text>
+      </svg>
+      <figcaption>曲线由下一节的 β–Ic 模型算出，为示意，量级接近常见小信号 NPN。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="b2-i">工作点 Ic</label>
+        <span class="rv" id="b2-iv">10 mA</span>
+        <input type="range" id="b2-i" min="1" max="55" step="1" value="10"></div>
+      <dl class="read">
+        <dt>对应 Ib</dt><dd id="b2-ib">—</dd>
+        <dt>hFE = Ic / Ib</dt><dd id="b2-h">—</dd>
+        <dt>交流 β = ΔIc / ΔIb</dt><dd id="b2-b">—</dd>
+        <dt>两者关系</dt><dd><span id="b2-st" class="chip on">接近</span></dd>
+      </dl>
+      <p class="note" id="b2-note"></p>
+    </div>
+  </div>
+  <p>估算直流偏置用 hFE，算小信号放大倍数用交流 β。中等电流下两者差别不大，面试手算时通常不区分，但要知道它们定义不同。</p>
+</section>
+
+<section id="var">
+  <span class="eyebrow">β 会变 · 电流与温度</span>
+  <h2>β 随 Ic 和温度变化</h2>
+  <p>β 只在中等电流时比较平坦。小电流时，发射结耗尽区和表面的复合电流在 Ib 里占比变大，β 下降；大电流时出现大注入效应和基区展宽（Kirk 效应），β 也下降。温度升高，少子寿命变长、复合变少，β 增大，教材常用的数字是每升高 1 °C 增加 0.5%~1%。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 290" role="img" aria-label="β 随集电极电流变化的曲线，三条曲线对应 -40、25、125 摄氏度">
+        <rect class="zone-cut" x="56" y="36" width="148" height="210"/>
+        <rect class="zone-cut" x="386" y="36" width="70" height="210"/>
+        <line class="gl" x1="56" y1="106" x2="456" y2="106"/>
+        <line class="gl" x1="56" y1="176" x2="456" y2="176"/>
+        <line class="gl" x1="156" y1="36" x2="156" y2="246"/>
+        <line class="gl" x1="256" y1="36" x2="256" y2="246"/>
+        <line class="gl" x1="356" y1="36" x2="356" y2="246"/>
+        <path class="ax" d="M56,36 V246 H456"/>
+        <text x="50" y="40" text-anchor="end" class="v">300</text>
+        <text x="50" y="110" text-anchor="end" class="v">200</text>
+        <text x="50" y="180" text-anchor="end" class="v">100</text>
+        <text x="50" y="250" text-anchor="end" class="v">0</text>
+        <text x="60" y="26" class="tm">β</text>
+        <text x="56" y="264" text-anchor="middle" class="v">0.01</text>
+        <text x="156" y="264" text-anchor="middle" class="v">0.1</text>
+        <text x="256" y="264" text-anchor="middle" class="v">1</text>
+        <text x="356" y="264" text-anchor="middle" class="v">10</text>
+        <text x="456" y="264" text-anchor="end" class="v">100</text>
+        <text x="456" y="282" text-anchor="end" class="tm">Ic / mA（对数）</text>
+        <polyline id="b3-c0" class="real2" points="56,246 456,246"/>
+        <polyline id="b3-c1" class="real" points="56,246 456,246"/>
+        <polyline id="b3-c2" class="real3" points="56,246 456,246"/>
+        <text id="b3-l0" x="300" y="160" text-anchor="middle" class="v" style="fill:var(--low)">−40 °C</text>
+        <text id="b3-l1" x="300" y="120" text-anchor="middle" class="v" style="fill:var(--copper)">25 °C</text>
+        <text id="b3-l2" x="300" y="60" text-anchor="middle" class="v" style="fill:var(--flow)">125 °C</text>
+        <text x="64" y="232" class="tm">小电流 β 降</text>
+        <text x="450" y="232" text-anchor="end" class="tm">大电流 β 降</text>
+        <circle id="b3-q" cx="256" cy="130" r="6" class="dot"/>
+      </svg>
+      <figcaption>示意曲线：25 °C 峰值约 170，温度系数按 +0.6%/°C 线性近似。蓝底是 β 明显下降的两端。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="b3-i">集电极电流 Ic</label>
+        <span class="rv" id="b3-iv">1 mA</span>
+        <input type="range" id="b3-i" min="0" max="40" step="1" value="20"></div>
+      <div class="ctl"><span class="ctl-l">结温</span>
+        <div class="seg" id="b3-t"><button id="b3-t-m40" data-v="-40" aria-pressed="false">−40 °C</button><button id="b3-t-25" data-v="25" aria-pressed="true">25 °C</button><button id="b3-t-125" data-v="125" aria-pressed="false">125 °C</button></div></div>
+      <dl class="read">
+        <dt>此时 β</dt><dd id="b3-b">—</dd>
+        <dt>相对 25 °C 峰值</dt><dd id="b3-rel">—</dd>
+        <dt>需要的 Ib</dt><dd id="b3-ib">—</dd>
+        <dt>所在区段</dt><dd><span id="b3-st" class="chip on">平坦区</span></dd>
+      </dl>
+      <p class="note" id="b3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="design">
+  <span class="eyebrow">设计原则</span>
+  <h2>为什么设计不能依赖精确的 β</h2>
+  <p>除了电流和温度，β 还有很大的离散性。同一型号、同一批次，β 也可能差几倍。以 2N3904 为例，手册在 Ic = 10 mA 时给的 hFE 是 100~300（最小值到最大值）。所以好电路的指标不应该跟着 β 走：</p>
+  <div class="tbl"><table>
+    <thead><tr><th>用途</th><th>怎么摆脱 β</th><th>结果</th></tr></thead>
+    <tbody>
+      <tr><td>开关</td><td>按最小 β 设计，再让基极电流过驱动，强制 β = Ic / Ib 取 10~20（经验值）</td><td>β 再小也能饱和</td></tr>
+      <tr><td>偏置</td><td>分压偏置加发射极电阻 Re，让 Ic ≈ (Ub − 0.7) / Re</td><td>工作点由电阻决定，见 <a href="05-静态工作点Q.html">静态工作点</a>、<a href="06-温度稳定性与热漂移.html">热漂移</a></td></tr>
+      <tr><td>放大</td><td>发射极串电阻做负反馈，电压增益 ≈ −Rc / Re</td><td>增益由电阻比决定，见 <a href="../06-基本电路/05-分压偏置.html">分压偏置</a></td></tr>
+    </tbody>
+  </table></div>
+  <p>面试时这样说：β 是个"大而不准"的数。我们利用它大，靠负反馈让结果和它的具体值无关。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>β 和 α 是什么关系？</summary>
+      <div class="ans"><p>α = Ic / Ie，β = Ic / Ib。因为 Ie = Ib + Ic，所以 β = α / (1 − α)。α 典型 0.98~0.998，对应 β 约 50~500。α 接近 1 时，α 一点点变化就让 β 大幅变化。</p></div></details>
+    <details><summary>hFE 和 β 有什么区别？</summary>
+      <div class="ans"><p>hFE 是直流增益，某一工作点的 Ic / Ib；交流 β 是小信号增益，ΔIc / ΔIb，是特性曲线在工作点的斜率。偏置计算用 hFE，小信号分析用交流 β，中等电流下两者接近。</p></div></details>
+    <details><summary>β 受哪些因素影响？</summary>
+      <div class="ans"><p>三个：一是 Ic，小电流和大电流时都下降，中间有峰值；二是温度，温度升高 β 增大，约每度 0.5%~1%；三是个体离散性，同型号能差几倍。</p></div></details>
+    <details><summary>既然 β 这么不稳定，电路怎么保证性能一致？</summary>
+      <div class="ans"><p>开关电路按最小 β 设计并过驱动，保证深度饱和。放大电路用分压偏置加发射极电阻做负反馈，让工作点和增益由电阻决定，基本不受 β 影响。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="02-三个工作区.html"><span>上一页</span>三个工作区</a><a class="next" href="04-输入输出特性曲线.html"><span>下一页</span>输入输出特性曲线</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. α 与 β */
+const bAX=scale(0.9,1,56,456),bAY=scale(0,500,236,36);
+$('b1-cv').setAttribute('points',plot(a=>a/(1-a),0.9,0.998,bAX,bAY,200));
+function b1u(){
+  const a=+$('b1-a').value/1000,b=a/(1-a),qx=bAX(a),qy=bAY(b);
+  $('b1-av').textContent=a.toFixed(3);$('b1-a').setAttribute('aria-valuetext','α = '+a.toFixed(3));
+  $('b1-q').setAttribute('cx',qx.toFixed(1));$('b1-q').setAttribute('cy',qy.toFixed(1));
+  $('b1-gx').setAttribute('x2',qx.toFixed(1));$('b1-gx').setAttribute('y1',qy.toFixed(1));$('b1-gx').setAttribute('y2',qy.toFixed(1));
+  $('b1-gy').setAttribute('x1',qx.toFixed(1));$('b1-gy').setAttribute('x2',qx.toFixed(1));$('b1-gy').setAttribute('y1',qy.toFixed(1));
+  const t=$('b1-qt');t.textContent='β = '+b.toFixed(0);
+  if(qx<300){t.setAttribute('x',(qx+10).toFixed(1));t.setAttribute('text-anchor','start');}
+  else{t.setAttribute('x',(qx-10).toFixed(1));t.setAttribute('text-anchor','end');}
+  t.setAttribute('y',(qy-10).toFixed(1));
+  $('b1-r').textContent=((1-a)*100).toFixed(1)+'%';
+  $('b1-b').textContent=b.toFixed(0);
+  $('b1-ic').textContent=fmtA(a*1e-3);$('b1-ib').textContent=fmtA((1-a)*1e-3);
+  if(b<50)chip($('b1-st'),'偏低，功率管常见','warn');
+  else if(b<=300)chip($('b1-st'),'常见小信号管','on');
+  else chip($('b1-st'),'高 β 管','on');
+  const a2=Math.min(a+(1-a)/2,0.999),b2=a2/(1-a2);
+  $('b1-note').textContent='每 1000 个从发射区出发的载流子，有 '+((1-a)*1000).toFixed(0)+' 个在基区复合掉，变成 Ib。只要把复合再减半，α 从 '+a.toFixed(3)+' 变成 '+a2.toFixed(4)+'，看起来几乎没变，β 却从 '+b.toFixed(0)+' 涨到 '+b2.toFixed(0)+'。';
+}
+$('b1-a').addEventListener('input',b1u);
+b1u();
+
+/* β–Ic 模型（示意）：Ic 单位 mA */
+const bBeta=(ic,T)=>200/(1+Math.pow(0.05/ic,0.6)+ic/40)*(1+0.006*(T-25));
+const bIb=ic=>ic/bBeta(ic,25);
+
+/* 2. hFE 与交流 β */
+const bHX=scale(0,0.8,56,456),bHY=scale(0,60,246,36);
+(function(){const p=[];for(let k=0;k<=200;k++){const ic=0.001*Math.pow(60000,k/200);p.push(bHX(bIb(ic)).toFixed(1)+','+bHY(ic).toFixed(1));}
+  $('b2-cv').setAttribute('points',p.join(' '));})();
+function b2u(){
+  const ic=+$('b2-i').value,ib=bIb(ic),h=ic/ib,d=ic*0.01,bac=2*d/(bIb(ic+d)-bIb(ic-d));
+  const qx=bHX(ib),qy=bHY(ic);
+  $('b2-q').setAttribute('cx',qx.toFixed(1));$('b2-q').setAttribute('cy',qy.toFixed(1));
+  $('b2-ch').setAttribute('x2',qx.toFixed(1));$('b2-ch').setAttribute('y2',qy.toFixed(1));
+  const w=0.12,x1=ib-w,x2=ib+w;
+  $('b2-tg').setAttribute('x1',bHX(x1).toFixed(1));$('b2-tg').setAttribute('y1',bHY(ic-bac*w).toFixed(1));
+  $('b2-tg').setAttribute('x2',bHX(x2).toFixed(1));$('b2-tg').setAttribute('y2',bHY(ic+bac*w).toFixed(1));
+  $('b2-iv').textContent=ic+' mA';$('b2-i').setAttribute('aria-valuetext',ic+' mA');
+  $('b2-ib').textContent=fmtA(ib*1e-3);$('b2-h').textContent=h.toFixed(0);$('b2-b').textContent=bac.toFixed(0);
+  const r=bac/h;
+  if(Math.abs(r-1)<0.1){chip($('b2-st'),'基本相等','on');}
+  else chip($('b2-st'),'交流 β 比 hFE 小 '+((1-r)*100).toFixed(0)+'%','warn');
+  $('b2-note').textContent=Math.abs(r-1)<0.1
+    ?'这一段曲线接近直线，割线和切线几乎重合，hFE ≈ 交流 β，手算时可以不区分。'
+    :'电流越大，β 越往下掉，曲线往右弯。切线比割线平，交流 β 小于 hFE。反过来在很小的电流下 β 随电流上升，曲线往上弯，交流 β 会大于 hFE。';
+}
+$('b2-i').addEventListener('input',b2u);
+b2u();
+
+/* 3. β 随 Ic、温度变化 */
+const bLX=scale(-2,2,56,456),bLY=scale(0,300,246,36),bTs=[-40,25,125];
+bTs.forEach((T,i)=>{
+  $('b3-c'+i).setAttribute('points',plot(lg=>bBeta(Math.pow(10,lg),T),-2,2,bLX,bLY,160));
+  $('b3-l'+i).setAttribute('y',(bLY(bBeta(3,T))-8).toFixed(1));
+});
+const b3={T:25};
+function b3u(){
+  const k=+$('b3-i').value,lg=-2+k*0.1,ic=Math.pow(10,lg),b=bBeta(ic,b3.T),pk=bBeta(3,25);
+  $('b3-q').setAttribute('cx',bLX(lg).toFixed(1));$('b3-q').setAttribute('cy',bLY(b).toFixed(1));
+  const lbl=fmtA(ic*1e-3);
+  $('b3-iv').textContent=lbl;$('b3-i').setAttribute('aria-valuetext',lbl);
+  $('b3-b').textContent=b.toFixed(0);
+  $('b3-rel').textContent=(b/pk*100).toFixed(0)+'%';
+  $('b3-ib').textContent=fmtA(ic/b*1e-3);
+  let note;
+  if(ic<0.3){chip($('b3-st'),'小电流区，β 下降','warn');note='电流很小时，发射结耗尽区里的复合电流在 Ib 中占的比例变大，这部分电流不产生 Ic，β 随之下降。';}
+  else if(ic>20){chip($('b3-st'),'大电流区，β 下降','warn');note='电流很大时，注入基区的载流子浓度接近甚至超过基区掺杂（大注入），集电结附近基区还会展宽，β 明显下降。功率管手册常给出大电流时的最小 hFE。';}
+  else{chip($('b3-st'),'平坦区','on');note='中等电流时 β 最大、变化最慢，放大电路的工作点通常设在这一段。';}
+  const lo=bBeta(ic,-40),hi=bBeta(ic,125);
+  note+=' 同一电流下，从 −40 °C 到 125 °C，β 从 '+lo.toFixed(0)+' 变到 '+hi.toFixed(0)+'，相差 '+(hi/lo).toFixed(1)+' 倍。';
+  $('b3-note').textContent=note;
+}
+seg('b3-t',v=>{b3.T=+v;b3u();});
+$('b3-i').addEventListener('input',b3u);
+b3u();
+</script>
+</body>
+</html>

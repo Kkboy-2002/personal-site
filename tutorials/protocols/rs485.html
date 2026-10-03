@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RS-485 工作流程 · 动态图解</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>RS-485 <span>差分总线</span>工作流程</h1>
+  <p>工业现场的主力总线 —— 差分传输、千米级距离、一主多从</p>
+</header>
+
+<nav>
+  <a href="index.html" class="home">🏠 协议总览</a>
+  <a href="#s1">① 总线拓扑</a>
+  <a href="#s2">② 差分电平</a>
+  <a href="#s3">③ 半双工切换</a>
+  <a href="#s4">④ 轮询流程</a>
+  <a href="#s5">⑤ 三兄弟对比</a>
+</nav>
+
+<main>
+
+<!-- ① 拓扑 -->
+<section id="s1">
+  <h2><span class="num">1</span>总线拓扑:一对差分线挂一串设备</h2>
+  <p class="desc">
+    RS-485 用 <b>A、B 两根差分线</b>把最多 32 个(新型收发器可 256 个)节点串成总线型网络,两端接 120Ω 终端电阻。
+    电气标准本身不规定协议,工程上几乎都跑<b>一主多从轮询</b>(如 Modbus RTU):
+    主机点名,被点到的从机才说话,其余保持沉默。点击播放一轮「点名—应答」。
+  </p>
+  <div class="stage">
+    <svg id="svgTopo" viewBox="0 0 900 320" width="900" height="320">
+      <line x1="60" y1="160" x2="840" y2="160" stroke="#4cc9f0" stroke-width="5"/>
+      <line x1="60" y1="180" x2="840" y2="180" stroke="#f0a04c" stroke-width="5"/>
+      <text x="38" y="165" fill="#4cc9f0" font-size="13">A</text>
+      <text x="38" y="190" fill="#f0a04c" font-size="13">B</text>
+      <g fill="#1b2440" stroke="#8fa0c0">
+        <rect x="52" y="158" width="16" height="24" rx="3"/>
+        <rect x="832" y="158" width="16" height="24" rx="3"/>
+      </g>
+      <text x="40" y="215" fill="#8fa0c0" font-size="12">120Ω</text>
+      <text x="822" y="215" fill="#8fa0c0" font-size="12">120Ω</text>
+      <g id="nodes"></g>
+      <g id="pkt" opacity="0">
+        <rect x="-40" y="-13" width="80" height="26" rx="7" fill="#fbbf24"/>
+        <text id="pktT" y="5" fill="#0d1220" font-size="12" text-anchor="middle" font-weight="bold"></text>
+      </g>
+    </svg>
+  </div>
+  <div class="controls"><button id="btnTopo">▶ 播放:主机轮询 2 号从机</button></div>
+  <div class="status" id="stTopo">规则:总线上同一时刻只允许一个节点发送(半双工),靠「主机点名」保证不撞车。</div>
+  <div class="cards">
+    <div class="card"><b>为什么能传千米级?</b><br>差分传输 + 双绞线:噪声同时耦合到 A、B 两线,相减后被抵消;100kbps 下可达约 1200 米。</div>
+    <div class="card"><b>协议自己定</b><br>485 只管电气层。帧格式通常直接用 UART 字节流,上层跑 Modbus、DMX512、Profibus 等。</div>
+    <div class="card"><b>无冲突仲裁</b><br>不像 CAN 有硬件仲裁——两个节点同时发就「撞线」,所以必须靠主从轮询等软件规则避让。</div>
+  </div>
+</section>
+
+<!-- ② 差分电平 -->
+<section id="s2">
+  <h2><span class="num">2</span>差分电平:看 A−B 的符号,不看对地电压</h2>
+  <p class="desc">
+    发送时驱动器把 A、B 推向相反方向;接收方只比较两线差值:
+    <b>V(A−B) &gt; +200mV → 逻辑 1</b>,<b>V(A−B) &lt; −200mV → 逻辑 0</b>。
+    门限只有 ±200mV,而驱动摆幅有 ±2V 以上,余量极大,这就是它抗干扰的本钱。
+  </p>
+  <div class="stage">
+    <svg id="svgDiff" viewBox="0 0 940 330" width="940" height="330">
+      <g stroke="#2a3654" stroke-width="1">
+        <line x1="80" y1="70" x2="900" y2="70"/>
+        <line x1="80" y1="130" x2="900" y2="130"/>
+        <line x1="80" y1="190" x2="900" y2="190"/>
+      </g>
+      <text x="30" y="74" fill="#8fa0c0" font-size="12">3.5V</text>
+      <text x="30" y="134" fill="#8fa0c0" font-size="12">2.5V</text>
+      <text x="30" y="194" fill="#8fa0c0" font-size="12">1.5V</text>
+      <path id="wA" fill="none" stroke="#4cc9f0" stroke-width="3"/>
+      <path id="wB" fill="none" stroke="#f0a04c" stroke-width="3"/>
+      <g id="dGrid"></g>
+      <line id="dScan" x1="0" y1="45" x2="0" y2="230" stroke="#fbbf24" stroke-width="2" opacity="0"/>
+      <text x="80" y="34" fill="#4cc9f0" font-size="13">A 线</text>
+      <text x="140" y="34" fill="#f0a04c" font-size="13">B 线</text>
+      <text id="dCur" x="480" y="300" fill="#fbbf24" font-size="18" text-anchor="middle" font-weight="bold"></text>
+    </svg>
+  </div>
+  <div class="controls"><button id="btnDiff">▶ 播放:位序列 1 0 0 1 1 0 1 0</button></div>
+  <div class="legend">
+    <span><i style="background:#4ade80"></i>逻辑 1:A 高 B 低,A−B ≈ +2V</span>
+    <span><i style="background:#ff6b6b"></i>逻辑 0:A 低 B 高,A−B ≈ −2V</span>
+  </div>
+  <div class="status" id="stDiff">和 CAN 一样是差分,但 485 的 1/0 都是「主动驱动」的,没有 CAN 那种显性压隐性的线与关系。</div>
+</section>
+
+<!-- ③ 半双工 -->
+<section id="s3">
+  <h2><span class="num">3</span>半双工方向切换:DE/RE 使能脚是关键</h2>
+  <p class="desc">
+    一对线只能有一个方向的数据,每个节点的收发器芯片(如 MAX485)有<b>驱动器使能 DE</b> 和<b>接收器使能 RE̅</b>:
+    发送前拉高 DE 占用总线,发完必须<b>立刻释放</b>回接收态,否则别人永远发不了——
+    「发完不撒手」是 485 通信最经典的故障。点击播放一次方向切换。
+  </p>
+  <div class="stage">
+    <svg id="svgHD" viewBox="0 0 900 280" width="900" height="280">
+      <rect x="60" y="50" width="220" height="180" rx="14" fill="#1b2440" stroke="#2a3654" stroke-width="2"/>
+      <text x="170" y="82" fill="#e8edf7" font-size="16" text-anchor="middle" font-weight="bold">主机收发器</text>
+      <text id="mDE" x="170" y="120" fill="#5b6b8c" font-size="14" text-anchor="middle">DE=0(驱动器关)</text>
+      <text id="mRE" x="170" y="150" fill="#4ade80" font-size="14" text-anchor="middle">RE̅=0(接收器开)</text>
+      <text id="mState" x="170" y="200" fill="#8fa0c0" font-size="14" text-anchor="middle">状态:监听</text>
+      <rect x="620" y="50" width="220" height="180" rx="14" fill="#1b2440" stroke="#2a3654" stroke-width="2"/>
+      <text x="730" y="82" fill="#e8edf7" font-size="16" text-anchor="middle" font-weight="bold">从机收发器</text>
+      <text id="sDE" x="730" y="120" fill="#5b6b8c" font-size="14" text-anchor="middle">DE=0(驱动器关)</text>
+      <text id="sRE" x="730" y="150" fill="#4ade80" font-size="14" text-anchor="middle">RE̅=0(接收器开)</text>
+      <text id="sState" x="730" y="200" fill="#8fa0c0" font-size="14" text-anchor="middle">状态:监听</text>
+      <line x1="280" y1="140" x2="620" y2="140" stroke="#4cc9f0" stroke-width="5"/>
+      <text id="busDir" x="450" y="125" fill="#fbbf24" font-size="15" text-anchor="middle" font-weight="bold">总线空闲</text>
+      <circle id="hdBall" r="8" fill="#fbbf24" opacity="0"/>
+    </svg>
+  </div>
+  <div class="controls"><button id="btnHD">▶ 播放:请求 → 换向 → 应答</button></div>
+  <div class="status" id="stHD">换向之间要留几十微秒到几毫秒的「静默时间」,保证前一个发送者已经释放总线。</div>
+</section>
+
+<!-- ④ 轮询流程 -->
+<section id="s4">
+  <h2><span class="num">4</span>一次 Modbus 式主从轮询的完整流程</h2>
+  <p class="desc">以主机读 2 号从机的温度寄存器为例:</p>
+  <div class="stage">
+    <svg id="svgFlow" viewBox="0 0 940 430" width="940" height="430"><g id="flowSteps"></g></svg>
+  </div>
+  <div class="controls"><button id="btnFlow">▶ 播放完整流程</button></div>
+  <div class="status" id="stFlow">点击播放,高亮框会依次走完 6 个步骤。</div>
+</section>
+
+<!-- ⑤ 对比 -->
+<section id="s5">
+  <h2><span class="num">5</span>串口三兄弟 + CAN 对比速查</h2>
+  <table class="cmp">
+    <tr><th>维度</th><th>UART(TTL)</th><th>RS-232</th><th>RS-485</th><th>CAN</th></tr>
+    <tr><td>信号方式</td><td>单端 0/3.3V</td><td>单端 ±12V 负逻辑</td><td>差分 A−B</td><td>差分 H−L</td></tr>
+    <tr><td>拓扑</td><td>点对点</td><td>点对点</td><td>总线 32~256 节点</td><td>总线 多主</td></tr>
+    <tr><td>双工</td><td>全双工</td><td>全双工</td><td>半双工(2线)</td><td>半双工</td></tr>
+    <tr><td>距离</td><td>&lt;1 m</td><td>≤15 m</td><td>~1200 m</td><td>~1000 m(低速)</td></tr>
+    <tr><td>速率</td><td>常用 ≤1 Mbps</td><td>≤115.2 kbps</td><td>≤10 Mbps</td><td>≤1 Mbps(FD 5M)</td></tr>
+    <tr><td>冲突处理</td><td>—</td><td>—</td><td>软件轮询避让</td><td>硬件逐位仲裁</td></tr>
+    <tr><td>典型应用</td><td>芯片间调试</td><td>仪器 Console</td><td>Modbus 工控/电表</td><td>汽车/工业控制</td></tr>
+  </table>
+  <div class="status" style="margin-top:16px">
+    一句话总结:RS-485 = UART 字节流 + 差分长距离电气层 + 一主多从软件协议;要硬件级多主仲裁与可靠性,才需要上 CAN。
+  </div>
+</section>
+
+</main>
+<footer>RS-485 工作流程动态图解 · <a href="index.html" style="color:var(--accent)">返回协议总览</a></footer>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const SVGNS="http://www.w3.org/2000/svg";
+function el(t,a,p){const e=document.createElementNS(SVGNS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ① 拓扑 */
+const nodes=[
+  {x:140,name:"主机",addr:"Master"},
+  {x:360,name:"从机 1",addr:"地址 01"},
+  {x:580,name:"从机 2",addr:"地址 02"},
+  {x:780,name:"从机 3",addr:"地址 03"},
+];
+(function build(){
+  const g=$("nodes");
+  nodes.forEach(n=>{
+    el("line",{x1:n.x,y1:110,x2:n.x,y2:160,stroke:"#8fa0c0","stroke-width":3},g);
+    n.rect=el("rect",{x:n.x-58,y:60,width:116,height:50,rx:10,fill:"#1b2440",stroke:"#2a3654","stroke-width":2},g);
+    const t=el("text",{x:n.x,y:82,fill:"#e8edf7","font-size":14,"text-anchor":"middle","font-weight":"bold"},g);
+    t.textContent=n.name;
+    const t2=el("text",{x:n.x,y:101,fill:"#5b6b8c","font-size":11,"text-anchor":"middle"},g);
+    t2.textContent=n.addr;
+    n.badge=el("text",{x:n.x,y:245,fill:"#4ade80","font-size":13,"text-anchor":"middle",opacity:0,"font-weight":"bold"},g);
+  });
+})();
+async function movePkt(x1,x2,label){
+  const pk=$("pkt");$("pktT").textContent=label;
+  pk.setAttribute("opacity",1);
+  const t0=performance.now(),dur=1800;
+  await new Promise(res=>{(function s(now){
+    const p=Math.min((now-t0)/dur,1);
+    pk.setAttribute("transform",`translate(${x1+(x2-x1)*p},170)`);
+    p<1?requestAnimationFrame(s):res();
+  })(t0);});
+  pk.setAttribute("opacity",0);
+}
+let tB=false;
+$("btnTopo").onclick=async()=>{
+  if(tB)return;tB=true;
+  const st=$("stTopo");
+  nodes.forEach(n=>{n.rect.setAttribute("stroke","#2a3654");n.badge.setAttribute("opacity",0);});
+  st.textContent="① 主机广播查询帧:「02 号,把温度寄存器读给我」(帧内含从机地址 02)…";
+  nodes[0].rect.setAttribute("stroke","#fbbf24");
+  await movePkt(nodes[0].x,nodes[3].x,"询问:02号");
+  nodes.slice(1).forEach(n=>n.rect.setAttribute("stroke","#4cc9f0"));
+  st.textContent="② 所有从机都收到了这一帧,各自核对地址……";
+  await sleep(1400);
+  nodes[1].badge.textContent="地址不符,沉默";nodes[1].badge.setAttribute("fill","#8fa0c0");
+  nodes[3].badge.textContent="地址不符,沉默";nodes[3].badge.setAttribute("fill","#8fa0c0");
+  nodes[2].badge.textContent="是叫我!准备应答";nodes[2].badge.setAttribute("fill","#4ade80");
+  nodes[2].rect.setAttribute("stroke","#4ade80");
+  nodes.forEach(n=>n.badge.setAttribute("opacity",1));
+  await sleep(1600);
+  st.textContent="③ 从机 2 切换为发送态,把温度数据发回主机(其他节点只听不发)…";
+  await movePkt(nodes[2].x,nodes[0].x,"应答:25.6℃");
+  nodes[0].rect.setAttribute("stroke","#4ade80");
+  st.textContent="④ 主机校验 CRC 无误,本次轮询结束;接着可以点名下一台。整个过程一问一答,永不撞线。";
+  tB=false;
+};
+
+/* ② 差分波形 */
+const dBits=[1,0,0,1,1,0,1,0];
+(function grid(){
+  const g=$("dGrid"),x0=80,bw=(900-80)/dBits.length;
+  dBits.forEach((b,i)=>{
+    el("line",{x1:x0+i*bw,y1:45,x2:x0+i*bw,y2:230,stroke:"#2a3654","stroke-dasharray":"4 4"},g);
+    const t=el("text",{x:x0+i*bw+bw/2,y:255,"font-size":16,"text-anchor":"middle",
+      fill:b?"#4ade80":"#ff6b6b","font-weight":"bold"},g);
+    t.textContent=b;
+  });
+})();
+let dB=false;
+$("btnDiff").onclick=async()=>{
+  if(dB)return;dB=true;
+  const wA=$("wA"),wB=$("wB"),scan=$("dScan"),cur=$("dCur"),st=$("stDiff");
+  wA.setAttribute("d","");wB.setAttribute("d","");
+  const x0=80,bw=(900-80)/dBits.length;
+  const yA=b=>b?70:190, yB=b=>b?190:70;
+  let dA=`M ${x0} ${yA(dBits[0])}`,dBp=`M ${x0} ${yB(dBits[0])}`;
+  scan.setAttribute("opacity",1);
+  for(let i=0;i<dBits.length;i++){
+    const b=dBits[i];
+    cur.textContent=b?`第 ${i+1} 位:1(A=3.5V B=1.5V,A−B=+2V)`:`第 ${i+1} 位:0(A=1.5V B=3.5V,A−B=−2V)`;
+    cur.setAttribute("fill",b?"#4ade80":"#ff6b6b");
+    if(i>0){dA+=` L ${x0+i*bw} ${yA(b)}`;dBp+=` L ${x0+i*bw} ${yB(b)}`;}
+    const t0=performance.now(),dur=620;
+    await new Promise(res=>{(function s(now){
+      const p=Math.min((now-t0)/dur,1),x=x0+i*bw+bw*p;
+      wA.setAttribute("d",dA+` L ${x} ${yA(b)}`);
+      wB.setAttribute("d",dBp+` L ${x} ${yB(b)}`);
+      scan.setAttribute("x1",x);scan.setAttribute("x2",x);
+      p<1?requestAnimationFrame(s):res();
+    })(t0);});
+    dA+=` L ${x0+(i+1)*bw} ${yA(b)}`;dBp+=` L ${x0+(i+1)*bw} ${yB(b)}`;
+  }
+  scan.setAttribute("opacity",0);
+  cur.textContent="发送完毕:两线始终镜像对称";
+  cur.setAttribute("fill","#fbbf24");
+  st.textContent="干扰同时抬高/压低 A 和 B,相减后差值不变 —— 这就是差分抗干扰的原理,与 CAN 相同。";
+  dB=false;
+};
+
+/* ③ 半双工 */
+let hB=false;
+function setTrx(prefix,tx){
+  $(prefix+"DE").textContent=tx?"DE=1(驱动器开)":"DE=0(驱动器关)";
+  $(prefix+"DE").setAttribute("fill",tx?"#fbbf24":"#5b6b8c");
+  $(prefix+"RE").textContent=tx?"RE̅=1(接收器关)":"RE̅=0(接收器开)";
+  $(prefix+"RE").setAttribute("fill",tx?"#5b6b8c":"#4ade80");
+  $(prefix+"State").textContent=tx?"状态:发送中":"状态:监听";
+  $(prefix+"State").setAttribute("fill",tx?"#fbbf24":"#8fa0c0");
+}
+async function hdMove(x1,x2){
+  const b=$("hdBall");
+  b.setAttribute("opacity",1);b.setAttribute("cy",140);
+  const t0=performance.now(),dur=1500;
+  await new Promise(res=>{(function s(now){
+    const p=Math.min((now-t0)/dur,1);
+    b.setAttribute("cx",x1+(x2-x1)*p);
+    p<1?requestAnimationFrame(s):res();
+  })(t0);});
+  b.setAttribute("opacity",0);
+}
+$("btnHD").onclick=async()=>{
+  if(hB)return;hB=true;
+  const st=$("stHD"),dir=$("busDir");
+  setTrx("m",false);setTrx("s",false);dir.textContent="总线空闲";
+  st.textContent="① 主机要发请求:先拉高自己的 DE,占用总线(此时它听不到线上数据)。";
+  setTrx("m",true);dir.textContent="方向:主机 → 从机";
+  await sleep(1400);
+  st.textContent="② 请求帧逐字节发出……";
+  await hdMove(300,600);
+  st.textContent="③ 发送完毕,主机必须马上把 DE 拉低、释放总线,回到监听态!";
+  setTrx("m",false);dir.textContent="静默时间(换向间隙)";
+  await sleep(1600);
+  st.textContent="④ 从机确认总线空闲后拉高自己的 DE,开始回发应答……";
+  setTrx("s",true);dir.textContent="方向:从机 → 主机";
+  await hdMove(600,300);
+  st.textContent="⑤ 从机发完同样立刻释放。一次「请求-应答」完成,总线重回空闲。";
+  setTrx("s",false);dir.textContent="总线空闲";
+  hB=false;
+};
+
+/* ④ 流程 */
+const flowSteps=[
+  {t:"① 主机组帧",d:"按 Modbus 规则组包:地址02 + 功能码03 + 寄存器地址 + 数量 + CRC16。"},
+  {t:"② 占线发送",d:"拉高 DE,把整帧经 UART 逐字节发到 A/B 差分线,发完立即释放总线。"},
+  {t:"③ 从机核对地址",d:"全部从机都收到帧;只有地址=02 的从机继续处理,其余静默丢弃。"},
+  {t:"④ 校验并执行",d:"从机 2 校验 CRC,读出温度寄存器的值,组好应答帧。"},
+  {t:"⑤ 换向应答",d:"等静默间隔后从机 2 占线,把应答帧发回;发完释放总线。"},
+  {t:"⑥ 主机收尾",d:"主机校验应答 CRC;超时未答则重发或报警,然后轮询下一台设备。"},
+];
+(function buildFlow(){
+  const g=$("flowSteps");
+  const cols=3,cw=290,ch=150,gapx=18,gapy=44,x0=30,y0=30;
+  flowSteps.forEach((s,i)=>{
+    const r=Math.floor(i/cols),c=i%cols;
+    const x=x0+c*(cw+gapx),y=y0+r*(ch+gapy);
+    s.box=el("rect",{x,y,width:cw,height:ch,rx:12,fill:"#1b2440",stroke:"#2a3654","stroke-width":2},g);
+    const t1=el("text",{x:x+16,y:y+34,"font-size":17,fill:"#4cc9f0","font-weight":"bold"},g);
+    t1.textContent=s.t;
+    const L=17;
+    for(let l=0;l*L<s.d.length&&l<5;l++){
+      const t2=el("text",{x:x+16,y:y+62+l*22,"font-size":13,fill:"#8fa0c0"},g);
+      t2.textContent=s.d.slice(l*L,(l+1)*L);
+    }
+    if(i<flowSteps.length-1){
+      if(c<cols-1)
+        el("path",{d:`M ${x+cw+2} ${y+ch/2} l 12 0 m 0 0 l -6 -5 m 6 5 l -6 5`,stroke:"#5b6b8c","stroke-width":2,fill:"none"},g);
+      else
+        el("path",{d:`M ${x+cw/2} ${y+ch+4} l 0 34 L ${x0+cw/2} ${y+ch+38} l 0 -34 m 0 34 l -5 -8 m 5 8 l 5 -8`,stroke:"#5b6b8c","stroke-width":2,fill:"none"},g);
+    }
+  });
+})();
+let fB=false;
+$("btnFlow").onclick=async()=>{
+  if(fB)return;fB=true;
+  const st=$("stFlow");
+  flowSteps.forEach(s=>{s.box.setAttribute("stroke","#2a3654");s.box.setAttribute("fill","#1b2440");});
+  for(const s of flowSteps){
+    s.box.setAttribute("stroke","#fbbf24");s.box.setAttribute("fill","#26304f");
+    st.textContent=s.t+" —— "+s.d;
+    await sleep(2400);
+    s.box.setAttribute("stroke","#4ade80");
+  }
+  st.textContent="流程走完!485 网络的秩序完全靠「主机点名 + 从机应答 + 静默换向」维持。";
+  fB=false;
+};
+</script>
+</body>
+</html>

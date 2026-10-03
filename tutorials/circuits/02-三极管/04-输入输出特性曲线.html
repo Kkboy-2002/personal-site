@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>输入输出特性曲线</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#bjt">三极管</a><span class="sp"></span><span>04 / 09</span></nav>
+<header>
+  <span class="eyebrow">三极管 · 特性曲线</span>
+  <h1>输入输出特性曲线</h1>
+  <p class="lede">输入特性看基极：Ube 加多少，Ib 有多大。输出特性看集电极：给定 Ib，Ic 和 Uce 什么关系。三个工作区、负载线、Early 效应都画在这两张图上。</p>
+</header>
+
+<section id="in">
+  <span class="eyebrow">输入特性 · Ib–Ube</span>
+  <h2>输入特性：就是一只二极管</h2>
+  <p>基极到发射极就是一个 PN 结，所以 Ib–Ube 曲线和二极管伏安特性一个样：有死区，硅管约 0.5 V 以下几乎没电流；导通后 Ube 约 0.6~0.7 V，电流按指数上升。</p>
+  <p>Uce 的影响：Uce = 0 时集电结也正偏，相当于两个二极管并联，同样的 Ube 下 Ib 更大，曲线靠左。Uce 增大，集电结反偏变宽，基区有效宽度变窄，复合减少，同样的 Ube 下 Ib 变小，曲线右移。Uce 超过约 1 V 后，集电结已能把载流子全部收走，曲线基本重合，所以手册通常只给一条。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 290" role="img" aria-label="NPN 输入特性曲线：Ib 随 Ube 指数上升，Uce 越大曲线越靠右">
+        <rect class="zone-cut" x="56" y="36" width="200" height="210"/>
+        <line class="gl" x1="56" y1="36" x2="456" y2="36"/>
+        <line class="gl" x1="56" y1="141" x2="456" y2="141"/>
+        <line class="gl" x1="256" y1="36" x2="256" y2="246"/>
+        <line class="gl" x1="336" y1="36" x2="336" y2="246"/>
+        <path class="ax" d="M56,36 V246 H456"/>
+        <text x="50" y="40" text-anchor="end" class="v">100</text>
+        <text x="50" y="145" text-anchor="end" class="v">50</text>
+        <text x="50" y="250" text-anchor="end" class="v">0</text>
+        <text x="60" y="26" class="tm">Ib / µA</text>
+        <text x="56" y="264" text-anchor="middle" class="v">0</text>
+        <text x="256" y="264" text-anchor="middle" class="v">0.5</text>
+        <text x="336" y="264" text-anchor="middle" class="v">0.7</text>
+        <text x="456" y="264" text-anchor="end" class="v">1.0</text>
+        <text x="456" y="282" text-anchor="end" class="tm">Ube / V</text>
+        <text x="156" y="120" text-anchor="middle" class="tm">死区，约 0.5 V 以下</text>
+        <polyline id="i1-c0" class="real3" points="56,246 456,246"/>
+        <polyline id="i1-c1" class="real" points="56,246 456,246"/>
+        <polyline id="i1-c2" class="real2" points="56,246 456,246"/>
+        <text x="318" y="56" text-anchor="end" class="v" style="fill:var(--flow)">Uce = 0</text>
+        <text x="366" y="60" class="v" style="fill:var(--copper)">Uce = 1 V</text>
+        <text x="366" y="80" class="v" style="fill:var(--low)">Uce = 10 V</text>
+        <line id="i1-gx" class="ax dash" x1="56" y1="200" x2="336" y2="200"/>
+        <line id="i1-gy" class="ax dash" x1="336" y1="200" x2="336" y2="246"/>
+        <circle id="i1-q" class="dot" cx="336" cy="200" r="6"/>
+      </svg>
+      <figcaption>示意曲线：按 Ib = Is·(e^(Ube/UT) − 1) 画，UT 取 26 mV。三条曲线的平移量为示意，实际 1 V 与 10 V 两条几乎重合。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">集射电压 Uce</span>
+        <div class="seg" id="i1-u"><button id="i1-u-0" data-v="0" aria-pressed="false">0 V</button><button id="i1-u-1" data-v="1" aria-pressed="true">1 V</button><button id="i1-u-10" data-v="2" aria-pressed="false">10 V</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="i1-v">基射电压 Ube</label>
+        <span class="rv" id="i1-vv">0.70 V</span>
+        <input type="range" id="i1-v" min="40" max="80" step="1" value="70"></div>
+      <dl class="read">
+        <dt>基极电流 Ib</dt><dd id="i1-ib">—</dd>
+        <dt>动态电阻 ΔUbe/ΔIb</dt><dd id="i1-r">—</dd>
+        <dt>发射结</dt><dd><span id="i1-st" class="chip on">导通</span></dd>
+      </dl>
+      <p class="note" id="i1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="out">
+  <span class="eyebrow">输出特性 · Ic–Uce</span>
+  <h2>输出特性：一族曲线加一条负载线</h2>
+  <p>每一个 Ib 对应一条 Ic–Uce 曲线。曲线左边陡升的一段是饱和区，Uce 很小，Ic 受 Uce 控制而不受 Ib 控制；右边几乎水平的一段是放大区，Ic ≈ β·Ib，基本不随 Uce 变；Ib = 0 那条曲线以下是截止区。</p>
+  <p>管子接进电路后，集电极回路满足 Uce = Vcc − Ic·Rc，这条直线就是直流负载线。选中的 Ib 曲线与负载线的交点，就是工作点。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 300" role="img" aria-label="NPN 输出特性曲线族，标出饱和区、放大区、截止区，以及直流负载线和工作点">
+        <rect class="zone-sat" x="56" y="36" width="23" height="220"/>
+        <rect class="zone-cut" x="56" y="250" width="400" height="6"/>
+        <line class="gl" x1="56" y1="36" x2="456" y2="36"/>
+        <line class="gl" x1="56" y1="109" x2="456" y2="109"/>
+        <line class="gl" x1="56" y1="183" x2="456" y2="183"/>
+        <line class="gl" x1="189" y1="36" x2="189" y2="256"/>
+        <line class="gl" x1="323" y1="36" x2="323" y2="256"/>
+        <path class="ax" d="M56,36 V256 H456"/>
+        <text x="50" y="40" text-anchor="end" class="v">12</text>
+        <text x="50" y="113" text-anchor="end" class="v">8</text>
+        <text x="50" y="187" text-anchor="end" class="v">4</text>
+        <text x="50" y="260" text-anchor="end" class="v">0</text>
+        <text x="60" y="26" class="tm">Ic / mA</text>
+        <text x="56" y="274" text-anchor="middle" class="v">0</text>
+        <text x="189" y="274" text-anchor="middle" class="v">4</text>
+        <text x="323" y="274" text-anchor="middle" class="v">8</text>
+        <text x="456" y="274" text-anchor="end" class="v">12</text>
+        <text x="456" y="292" text-anchor="end" class="tm">Uce / V</text>
+        <g id="o1-fam"></g>
+        <polyline id="o1-sel" class="real2" points="56,256 456,256"/>
+        <line id="o1-ll" class="real" x1="56" y1="146" x2="456" y2="256"/>
+        <line id="o1-gx" class="ax dash" x1="56" y1="200" x2="200" y2="200"/>
+        <line id="o1-gy" class="ax dash" x1="200" y1="200" x2="200" y2="256"/>
+        <circle id="o1-q" cx="200" cy="200" r="6" style="fill:var(--flow)"/>
+        <text id="o1-qt" x="210" y="192" class="t">Q</text>
+        <text x="84" y="52" class="tm">饱和区</text>
+        <text x="250" y="90" text-anchor="middle" class="tm">放大区</text>
+        <text x="300" y="246" class="tm">截止区（Ib = 0 以下）</text>
+      </svg>
+      <figcaption>示意：β 取 100，Vcc 12 V。灰线是 Ib = 20~100 µA 的曲线族，蓝线是选中的那条，橙线是负载线。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">选中哪条 Ib 曲线</span>
+        <div class="seg" id="o1-ib"><button id="o1-ib-20" data-v="20" aria-pressed="false">20</button><button id="o1-ib-40" data-v="40" aria-pressed="true">40</button><button id="o1-ib-60" data-v="60" aria-pressed="false">60</button><button id="o1-ib-80" data-v="80" aria-pressed="false">80</button><button id="o1-ib-100" data-v="100" aria-pressed="false">100 µA</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="o1-rc">集电极电阻 Rc（改变负载线斜率）</label>
+        <span class="rv" id="o1-rcv">2 kΩ</span>
+        <input type="range" id="o1-rc" min="10" max="60" step="5" value="20"></div>
+      <dl class="read">
+        <dt>负载线两端</dt><dd id="o1-end">(12 V, 0) — (0, 6.0 mA)</dd>
+        <dt>工作点 Ic</dt><dd id="o1-ic">—</dd>
+        <dt>工作点 Uce</dt><dd id="o1-uce">—</dd>
+        <dt>工作区</dt><dd><span id="o1-st" class="chip on">放大</span></dd>
+      </dl>
+      <p class="note" id="o1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="early">
+  <span class="eyebrow">Early 效应 · 输出电阻</span>
+  <h2>放大区的曲线为什么不完全水平</h2>
+  <p>Uce 增大，集电结反偏加深，耗尽层向基区扩展，基区有效宽度变窄。基区越窄，复合越少，同样的 Ib 下 Ic 越大，所以放大区曲线略微上翘。这叫基区宽度调制效应，也叫 Early 效应。</p>
+  <p>把各条曲线的放大区直线往左延长，会近似交于横轴上同一点 Uce = −VA，VA 叫 Early 电压。它决定管子的输出电阻：</p>
+  <p class="eq">Ic ≈ β·Ib·(1 + Uce / VA)　　ro ≈ VA / Ic</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 300" role="img" aria-label="输出特性的放大区直线向左延长，交于横轴负半轴上的 -VA 点">
+        <line class="gl" x1="50" y1="36" x2="460" y2="36"/>
+        <line class="gl" x1="50" y1="91" x2="460" y2="91"/>
+        <line class="gl" x1="50" y1="146" x2="460" y2="146"/>
+        <line class="gl" x1="50" y1="201" x2="460" y2="201"/>
+        <path class="ax" d="M50,256 H460 M397,36 V256"/>
+        <text x="391" y="40" text-anchor="end" class="v">16</text>
+        <text x="391" y="95" text-anchor="end" class="v">12</text>
+        <text x="391" y="150" text-anchor="end" class="v">8</text>
+        <text x="391" y="205" text-anchor="end" class="v">4</text>
+        <text id="e1-lt" x="456" y="150" text-anchor="end" class="v" style="fill:var(--low)">Ib = 40 µA</text>
+        <text x="401" y="30" class="tm">Ic / mA</text>
+        <text x="81" y="274" text-anchor="middle" class="v">−100</text>
+        <text x="239" y="274" text-anchor="middle" class="v">−50</text>
+        <text x="397" y="274" text-anchor="middle" class="v">0</text>
+        <text x="460" y="274" text-anchor="end" class="v">20</text>
+        <text x="460" y="292" text-anchor="end" class="tm">Uce / V</text>
+        <g id="e1-ext"></g>
+        <g id="e1-fam"></g>
+        <circle id="e1-va" cx="239" cy="256" r="5" style="fill:var(--danger)"/>
+        <text id="e1-vat" x="239" y="246" text-anchor="middle" class="v" style="fill:var(--danger)">−VA</text>
+      </svg>
+      <figcaption>示意：β 取 100，Ib = 20~80 µA。实线是真实可到达的区域，虚线是数学延长线。蓝线是选中的 Ib。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">Early 电压 VA</span>
+        <div class="seg" id="e1-a"><button id="e1-a-25" data-v="25" aria-pressed="false">25 V</button><button id="e1-a-50" data-v="50" aria-pressed="true">50 V</button><button id="e1-a-100" data-v="100" aria-pressed="false">100 V</button></div></div>
+      <div class="ctl"><span class="ctl-l">看哪条 Ib</span>
+        <div class="seg" id="e1-ib"><button id="e1-ib-20" data-v="20" aria-pressed="false">20</button><button id="e1-ib-40" data-v="40" aria-pressed="true">40</button><button id="e1-ib-60" data-v="60" aria-pressed="false">60</button><button id="e1-ib-80" data-v="80" aria-pressed="false">80 µA</button></div></div>
+      <dl class="read">
+        <dt>Uce = 2 V 时 Ic</dt><dd id="e1-i2">—</dd>
+        <dt>Uce = 20 V 时 Ic</dt><dd id="e1-i20">—</dd>
+        <dt>Ic 变化</dt><dd id="e1-d">—</dd>
+        <dt>输出电阻 ro</dt><dd id="e1-ro">—</dd>
+      </dl>
+      <p class="note" id="e1-note"></p>
+    </div>
+  </div>
+  <p>ro 并联在集电极上，会限制共射放大器的最大增益，也决定了三极管做电流源时有多"恒流"。小信号管 VA 常见几十到一百多伏（典型值）。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>三极管的输入特性曲线是什么样的？</summary>
+      <div class="ans"><p>就是发射结这个二极管的伏安特性：有约 0.5 V 的死区，导通后 Ube 约 0.6~0.7 V，Ib 随 Ube 指数增长。Uce 增大曲线右移，超过约 1 V 后基本重合。</p></div></details>
+    <details><summary>输出特性曲线上怎么划分三个区？</summary>
+      <div class="ans"><p>左边 Uce 很小、曲线陡升的部分是饱和区；右边近似水平、间距均匀的部分是放大区，Ic ≈ β·Ib；Ib = 0 曲线以下贴着横轴的部分是截止区。再往右 Uce 过高会进入击穿区。</p></div></details>
+    <details><summary>什么是 Early 效应？有什么影响？</summary>
+      <div class="ans"><p>Uce 增大时集电结耗尽层变宽，基区有效宽度变窄，Ic 随 Uce 略增大，放大区曲线上翘。它让管子有有限的输出电阻 ro ≈ VA / Ic，会限制放大器增益，也让电流源不够理想。</p></div></details>
+    <details><summary>负载线和特性曲线是什么关系？</summary>
+      <div class="ans"><p>特性曲线是管子自己的约束，负载线是外电路的约束 Uce = Vcc − Ic·Rc。两者同时成立的点就是工作点。Rc 变大负载线变平，同样的 Ib 更容易进入饱和。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="03-β放大倍数.html"><span>上一页</span>β放大倍数</a><a class="next" href="05-静态工作点Q.html"><span>下一页</span>静态工作点Q</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 输入特性 */
+const iX=scale(0,1,56,456),iY=scale(0,100,246,36),iSh=[-0.04,0,0.012],iUl=['0 V','1 V','10 V'];
+const iI0=40/Math.exp(0.7/0.026);
+const iIb=(v,k)=>iI0*(Math.exp((v-iSh[k])/0.026)-1); /* µA */
+[0,1,2].forEach(k=>$('i1-c'+k).setAttribute('points',plot(v=>{const y=iIb(v,k);return y>100?NaN:y;},0,1,iX,iY,400)));
+const i1={k:1};
+function i1u(){
+  const v=+$('i1-v').value/100,k=i1.k,ib=iIb(v,k),over=ib>100;
+  [0,1,2].forEach(j=>{const c=$('i1-c'+j);c.style.strokeWidth=j===k?'3.5':'1.5';c.style.opacity=j===k?1:.55;});
+  const qx=iX(v),qy=iY(Math.min(ib,100));
+  $('i1-q').setAttribute('cx',qx.toFixed(1));$('i1-q').setAttribute('cy',qy.toFixed(1));
+  $('i1-gx').setAttribute('x2',qx.toFixed(1));$('i1-gx').setAttribute('y1',qy.toFixed(1));$('i1-gx').setAttribute('y2',qy.toFixed(1));
+  $('i1-gy').setAttribute('x1',qx.toFixed(1));$('i1-gy').setAttribute('x2',qx.toFixed(1));$('i1-gy').setAttribute('y1',qy.toFixed(1));
+  $('i1-vv').textContent=fmtV(v);$('i1-v').setAttribute('aria-valuetext',fmtV(v));
+  $('i1-ib').textContent=fmtA(ib*1e-6)+(over?'，超出坐标':'');
+  $('i1-r').textContent=fmtR(0.026/((ib+iI0)*1e-6));
+  let note;
+  if(ib<0.1){chip($('i1-st'),'死区，基本截止','off');note='Ube 还没到约 0.5 V，Ib 只有 '+fmtA(ib*1e-6)+'，可以看成零。这时三极管处于截止区。';}
+  else{chip($('i1-st'),'导通',over?'warn':'on');
+    note='Ube 每增加约 60 mV，Ib 就涨 10 倍，所以导通后 Ube 基本钉在 0.6~0.7 V。动态电阻 ΔUbe/ΔIb ≈ 26 mV / Ib，Ib 越大越小。';}
+  if(k===0)note+=' 当前 Uce = 0，集电结也正偏，同样的 Ube 下 Ib 更大。';
+  else if(k===2)note+=' 当前 Uce = 10 V，和 1 V 那条几乎重合，这就是手册只给一条输入特性的原因。';
+  $('i1-note').textContent=note;
+}
+seg('i1-u',v=>{i1.k=+v;i1u();});
+$('i1-v').addEventListener('input',i1u);
+i1u();
+
+/* 2. 输出特性族 + 负载线 */
+const oX=scale(0,12,56,456),oY=scale(0,12,256,36);
+const oIc=(ib,u)=>100*ib/1000*(1+u/100)*(1-Math.exp(-u/0.2)); /* ib µA → mA */
+[20,40,60,80,100].forEach(ib=>{
+  $('o1-fam').append(svgEl('polyline',{class:'cv',style:'stroke:var(--muted);stroke-width:1.2',points:plot(u=>oIc(ib,u),0,12,oX,oY,120)}),
+    svgEl('text',{x:452,y:(oY(oIc(ib,12))-6).toFixed(1),'text-anchor':'end',class:'tm'},ib+' µA'));
+});
+const o1={ib:40};
+function o1u(){
+  const rc=+$('o1-rc').value/10,ib=o1.ib,top=12/rc;
+  let a=0,b=12;for(let k=0;k<50;k++){const m=(a+b)/2;if(oIc(ib,m)-(12-m)/rc>0)b=m;else a=m;}
+  const u=(a+b)/2,ic=(12-u)/rc,qx=oX(u),qy=oY(ic);
+  $('o1-sel').setAttribute('points',plot(v=>oIc(ib,v),0,12,oX,oY,120));
+  $('o1-ll').setAttribute('y1',oY(top).toFixed(1));
+  $('o1-q').setAttribute('cx',qx.toFixed(1));$('o1-q').setAttribute('cy',qy.toFixed(1));
+  $('o1-qt').setAttribute('x',(qx+10).toFixed(1));$('o1-qt').setAttribute('y',(qy-8).toFixed(1));
+  $('o1-gx').setAttribute('x2',qx.toFixed(1));$('o1-gx').setAttribute('y1',qy.toFixed(1));$('o1-gx').setAttribute('y2',qy.toFixed(1));
+  $('o1-gy').setAttribute('x1',qx.toFixed(1));$('o1-gy').setAttribute('x2',qx.toFixed(1));$('o1-gy').setAttribute('y1',qy.toFixed(1));
+  $('o1-rcv').textContent=fmtR(rc*1e3);$('o1-rc').setAttribute('aria-valuetext',fmtR(rc*1e3));
+  $('o1-end').textContent='(12 V, 0) — (0, '+top.toFixed(1)+' mA)';
+  $('o1-ic').textContent=fmtA(ic/1000)+'，β·Ib = '+fmtA(ib*1e-4);
+  $('o1-uce').textContent=fmtV(u);
+  let note;
+  if(u<0.3){chip($('o1-st'),'饱和','warn');note='负载线太平（Rc 大）或 Ib 太大，交点落在曲线左边陡升段。Ic 被外电路限在约 (Vcc − 0.2) / Rc = '+fmtA((11.8/rc)/1000)+'，比 β·Ib 小。';}
+  else if(u<0.7){chip($('o1-st'),'临界饱和','warn');note='交点刚好落在曲线拐弯处，集电结接近零偏，再大一点就饱和。';}
+  else{chip($('o1-st'),'放大','on');note='交点在曲线水平段，Ic ≈ β·Ib，基本由 Ib 决定。Rc 越大负载线越平，交点越往左，越接近饱和。';}
+  $('o1-note').textContent=note;
+}
+seg('o1-ib',v=>{o1.ib=+v;o1u();});
+$('o1-rc').addEventListener('input',o1u);
+o1u();
+
+/* 3. Early 效应 */
+const eX=scale(-110,20,50,460),eY=scale(0,16,256,36);
+const e1={va:50,ib:40};
+function e1u(){
+  const va=e1.va,sel=e1.ib,ext=$('e1-ext'),fam=$('e1-fam');
+  ext.replaceChildren();fam.replaceChildren();
+  [20,40,60,80].forEach(ib=>{
+    const ic0=ib/10,on=ib===sel,fn=u=>{const y=ic0*(1+u/va)*(1-Math.exp(-u/0.2));return y>16?NaN:y;};
+    ext.append(svgEl('line',{class:'ax dash',x1:eX(-va).toFixed(1),y1:eY(0).toFixed(1),x2:eX(1).toFixed(1),y2:eY(ic0*(1+1/va)).toFixed(1)}));
+    fam.append(svgEl('polyline',{class:on?'real2':'cv',style:on?'':'stroke:var(--muted);stroke-width:1.5',points:plot(fn,0,20,eX,eY,80)}));
+  });
+  const ic0=sel/10,i2=ic0*(1+2/va),i20=ic0*(1+20/va),yEnd=eY(Math.min(i20,16));
+  $('e1-lt').textContent=sel+' µA';$('e1-lt').setAttribute('y',(yEnd-8).toFixed(1));
+  $('e1-va').setAttribute('cx',eX(-va).toFixed(1));
+  $('e1-vat').setAttribute('x',eX(-va).toFixed(1));$('e1-vat').textContent='−VA = −'+va+' V';
+  $('e1-i2').textContent=fmtA(i2/1000);
+  $('e1-i20').textContent=i20>16?fmtA(i20/1000)+'（超出坐标）':fmtA(i20/1000);
+  $('e1-d').textContent='+'+((i20/i2-1)*100).toFixed(0)+'%';
+  $('e1-ro').textContent=fmtR(va/(ic0/1000));
+  $('e1-note').textContent='Uce 从 2 V 升到 20 V，Ic 增加了 '+((i20/i2-1)*100).toFixed(0)+'%。VA 越大，曲线越平，越接近理想电流源；VA = '+va+' V、Ic ≈ '+ic0.toFixed(0)+' mA 时，输出电阻 ro ≈ VA / Ic = '+fmtR(va/(ic0/1000))+'。';
+}
+seg('e1-a',v=>{e1.va=+v;e1u();});
+seg('e1-ib',v=>{e1.ib=+v;e1u();});
+e1u();
+</script>
+</body>
+</html>

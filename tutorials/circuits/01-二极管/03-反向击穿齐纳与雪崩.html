@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>反向击穿齐纳与雪崩</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.pr{fill:var(--shade2);stroke:var(--line)}
+.nr{fill:var(--shade);stroke:var(--line)}
+.dep{fill:var(--panel);stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.hole{fill:var(--panel);stroke:var(--copper);stroke-width:1.5}
+.ele{fill:var(--low)}
+.mk{fill:var(--copper);stroke:var(--panel);stroke-width:2}
+.mk2{fill:var(--low);stroke:var(--panel);stroke-width:2}
+.bok{fill:var(--flow);opacity:.75}.bwarn{fill:var(--warn);opacity:.75}.bbad{fill:var(--danger);opacity:.75}
+.track{fill:var(--chip);stroke:var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#diode">二极管</a><span class="sp"></span><span>03 / 08</span></nav>
+<header>
+  <span class="eyebrow">二极管 · 反向击穿</span>
+  <h1>反向击穿：齐纳与雪崩</h1>
+  <p class="lede">反向电压加到一定值，电流突然增大，这叫击穿。击穿有两种机制：低压的齐纳击穿和高压的雪崩击穿，它们的温度系数正好相反。</p>
+</header>
+
+<section id="mech">
+  <span class="eyebrow">两种机制 · 掺杂决定</span>
+  <h2>齐纳靠隧穿，雪崩靠碰撞</h2>
+  <p>齐纳击穿发生在重掺杂的 PN 结。掺杂越重，耗尽层越薄，几伏电压就能在几十纳米里建立约 10^6 V/cm 的强电场，P 区价带里的电子直接隧穿到 N 区导带。一般在约 5 V 以下。</p>
+  <p>雪崩击穿发生在轻掺杂的 PN 结。耗尽层宽，电场没那么强，但载流子在里面跑的距离长，被加速到足够能量后撞击晶格，撞出新的电子空穴对，新载流子再去撞，像雪崩一样倍增。一般在约 7 V 以上。5~7 V 之间两种机制同时存在。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 200" role="img" aria-label="反偏 PN 结的耗尽层，重掺杂时很薄，电子直接隧穿；轻掺杂时很宽，电子碰撞电离倍增">
+        <rect class="pr" x="20" y="40" width="200" height="100"/>
+        <rect class="nr" x="220" y="40" width="200" height="100"/>
+        <rect id="s1-dep" class="dep" x="200" y="40" width="40" height="100"/>
+        <g id="s1-g"></g>
+        <text id="s1-pl" x="20" y="30" class="t">P⁺ 重掺杂</text>
+        <text id="s1-nl" x="420" y="30" text-anchor="end" class="t">N⁺ 重掺杂</text>
+        <text id="s1-wl" x="220" y="30" text-anchor="middle" class="v">W = 80 nm</text>
+        <path id="s1-e" class="w" d="M250,160 H198"/>
+        <polygon id="s1-eh" class="ah" points="190,160 200,155 200,165"/>
+        <text id="s1-et" x="220" y="186" text-anchor="middle" class="tm">E ≈ 10×10^5 V/cm</text>
+      </svg>
+      <figcaption>虚线框是反偏时的耗尽层，宽度按比例画。蓝色虚线箭头是隧穿的电子，树状线是雪崩倍增：每一次碰撞（空心圆）产生一对新的电子空穴。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">典型器件</span>
+        <div class="seg" id="s1-p"><button id="s1-p-z" data-v="1" aria-pressed="true">齐纳 3.9 V</button><button id="s1-p-m" data-v="4" aria-pressed="false">过渡 5.6 V</button><button id="s1-p-a" data-v="9" aria-pressed="false">雪崩 12 V</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-rng">击穿电压（标准值）</label>
+        <span class="rv" id="s1-vz">3.9 V</span>
+        <input type="range" id="s1-rng" min="0" max="12" step="1" value="1"></div>
+      <dl class="read">
+        <dt>主导机制</dt><dd><span id="s1-state" class="chip warn">齐纳击穿</span></dd>
+        <dt>耗尽层宽度 W</dt><dd id="s1-w">93 nm</dd>
+        <dt>击穿场强</dt><dd id="s1-em">9.0×10^5 V/cm</dd>
+        <dt>等效掺杂浓度</dt><dd id="s1-n">1×10^18 /cm³</dd>
+        <dt>温度系数</dt><dd id="s1-tc">−2.0 mV/°C</dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+      <p class="note">估算：按对称突变结，W = 2·(Vz + 0.7) / Emax，击穿场强随电压在 10^6 ~ 3×10^5 V/cm 之间取值。温度系数是常见小功率稳压管的典型值，示意。</p>
+    </div>
+  </div>
+</section>
+
+<section id="tc">
+  <span class="eyebrow">温度系数 · 正负相反</span>
+  <h2>齐纳负温度系数，雪崩正温度系数</h2>
+  <p>齐纳击穿：温度升高，禁带变窄，电子更容易隧穿，击穿电压下降，温度系数为负。</p>
+  <p>雪崩击穿：温度升高，晶格振动加剧，载流子没跑多远就被散射，攒不够能量，要更高电压才能倍增，温度系数为正。</p>
+  <p>5~6 V 附近两种机制的温度系数正负抵消，接近零，所以这一档稳压管温度稳定性最好。温补基准管也是同样思路：把正温度系数的击穿结和负温度系数的正向结串在一起。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 292" role="img" aria-label="稳压管反向击穿拐点在 25 摄氏度和所选温度下的对比">
+        <g id="s2-ax"></g>
+        <line class="ax dash" x1="50" y1="200" x2="490" y2="200"/>
+        <text x="486" y="194" text-anchor="end" class="tm">测试电流 5 mA</text>
+        <polyline id="s2-c0" class="ideal" points="50,250"/>
+        <polyline id="s2-c1" class="real" points="50,250"/>
+        <circle id="s2-p0" class="mk2" cx="270" cy="200" r="5"/>
+        <circle id="s2-p1" class="mk" cx="270" cy="200" r="5"/>
+        <text id="s2-l0" x="270" y="44" class="tm">25 °C</text>
+        <text id="s2-l1" x="270" y="44" class="t hi">100 °C</text>
+        <text x="56" y="34" class="tm">反向电流 |I| / mA</text>
+        <text x="490" y="286" text-anchor="end" class="tm">反向电压 |V| / V</text>
+      </svg>
+      <figcaption>横轴只截取击穿电压附近 ±2 V。虚线是 25 °C 的击穿特性，橙线是所选温度；两个圆点是 5 mA 时的 Vz。齐纳的拐点比雪崩软。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">稳压管</span>
+        <div class="seg" id="s2-m"><button id="s2-m-39" data-v="3.9" aria-pressed="false">3.9 V</button><button id="s2-m-56" data-v="5.6" aria-pressed="false">5.6 V</button><button id="s2-m-12" data-v="12" aria-pressed="true">12 V</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s2-t">结温 T</label>
+        <span class="rv" id="s2-tv">100 °C</span>
+        <input type="range" id="s2-t" min="-40" max="125" step="5" value="100"></div>
+      <dl class="read">
+        <dt>温度系数</dt><dd id="s2-tc">+8.4 mV/°C</dd>
+        <dt>相对温漂</dt><dd id="s2-tcp">+0.070 %/°C</dd>
+        <dt>Vz（25 °C）</dt><dd id="s2-v0">12.00 V</dd>
+        <dt>Vz（T）</dt><dd id="s2-v1">12.63 V</dd>
+        <dt>结论</dt><dd><span id="s2-state" class="chip warn">正温度系数</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="rev">
+  <span class="eyebrow">可逆与不可逆</span>
+  <h2>击穿不等于损坏</h2>
+  <p>齐纳击穿和雪崩击穿都是电击穿，本身是可逆的：电压降下来，二极管恢复原状，稳压管就是一直工作在击穿区。真正烧坏器件的是热击穿：击穿时两端电压高、电流大，功耗 P = Vz·Iz 让结温上升，漏电再增大，正反馈到结温超过极限，晶格损坏，不可逆。</p>
+  <p class="eq">Tj = Ta + P·RθJA，P = Vz·Iz</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 180" role="img" aria-label="稳压管功耗和结温两根进度条，超过额定功耗和最高结温即热击穿">
+        <text x="20" y="30" class="t">功耗 P</text>
+        <rect class="track" x="20" y="40" width="400" height="22" rx="4"/>
+        <rect id="s3-pb" class="bok" x="20" y="40" width="40" height="22" rx="4"/>
+        <line class="ax dash" x1="220" y1="34" x2="220" y2="68"/>
+        <text x="224" y="30" class="tm">额定 500 mW</text>
+        <text x="20" y="80" class="v">0</text>
+        <text x="420" y="80" text-anchor="end" class="v">1 W</text>
+        <text x="20" y="112" class="t">结温 Tj</text>
+        <rect class="track" x="20" y="122" width="400" height="22" rx="4"/>
+        <rect id="s3-tb" class="bok" x="20" y="122" width="40" height="22" rx="4"/>
+        <line class="ax dash" x1="260" y1="116" x2="260" y2="150"/>
+        <text x="264" y="112" class="tm">Tjmax 150 °C</text>
+        <text x="20" y="162" class="v">0 °C</text>
+        <text x="420" y="162" text-anchor="end" class="v">250 °C</text>
+        <text id="s3-tt" x="60" y="138" class="v">50 °C</text>
+      </svg>
+      <figcaption>示意：5.1 V、500 mW 稳压管，结到环境热阻 RθJA 取 250 °C/W，最高结温 150 °C。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s3-rng">击穿电流 Iz</label>
+        <span class="rv" id="s3-iv">20 mA</span>
+        <input type="range" id="s3-rng" min="1" max="180" step="1" value="20"></div>
+      <div class="ctl"><span class="ctl-l">环境温度 Ta</span>
+        <div class="seg" id="s3-ta"><button id="s3-ta-25" data-v="25" aria-pressed="true">25 °C</button><button id="s3-ta-85" data-v="85" aria-pressed="false">85 °C</button></div></div>
+      <dl class="read">
+        <dt>功耗 P = Vz·Iz</dt><dd id="s3-p">102 mW</dd>
+        <dt>结温 Tj</dt><dd id="s3-tj">50.5 °C</dd>
+        <dt>允许最大 Iz</dt><dd id="s3-im">98 mA</dd>
+        <dt>结果</dt><dd><span id="s3-state" class="chip on">电击穿，可逆</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>齐纳击穿和雪崩击穿有什么区别？</summary>
+      <div class="ans"><p>齐纳击穿发生在重掺杂结，耗尽层薄、电场极强，电子直接隧穿，击穿电压低，约 5 V 以下，负温度系数。雪崩击穿发生在轻掺杂结，耗尽层宽，载流子被加速后碰撞电离、倍增，击穿电压高，约 7 V 以上，正温度系数。5~7 V 两者并存。</p></div></details>
+    <details><summary>为什么两者的温度系数相反？</summary>
+      <div class="ans"><p>齐纳：温度升高禁带变窄，隧穿更容易，击穿电压下降。雪崩：温度升高晶格振动加剧，载流子平均自由程变短，需要更强的电场才能攒够能量碰撞电离，击穿电压上升。</p></div></details>
+    <details><summary>哪种稳压管温度稳定性最好？</summary>
+      <div class="ans"><p>5~6 V 左右的，因为两种机制的温度系数正负抵消，接近零。要求更高时可以用温补基准管，或者直接用 TL431、专用基准芯片。</p></div></details>
+    <details><summary>二极管反向击穿了就坏了吗？</summary>
+      <div class="ans"><p>不一定。齐纳击穿和雪崩击穿都是电击穿，限住电流、功耗不超标就可逆，稳压管和 TVS 就是专门工作在击穿区的。功耗超标导致结温过高的是热击穿，不可逆，器件就坏了。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="02-伏安特性与正向压降.html"><span>上一页</span>伏安特性与正向压降</a><a class="next" href="04-续流二极管.html"><span>下一页</span>续流二极管</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 两种机制 */
+const ZV=[3.3,3.9,4.7,5.1,5.6,6.2,6.8,8.2,10,12,15,18,24];
+const ZTC=[-2.3,-2.0,-1.3,-0.5,0.4,2.0,3.0,4.6,6.4,8.4,11.4,14.4,20.4];
+const mech=v=>v<5?'z':v<=7?'m':'a';
+const fmtE=(x,u)=>{const e=Math.floor(Math.log10(x));return (x/Math.pow(10,e)).toFixed(1)+'×10^'+e+u;};
+const fmtTC=tc=>(tc<0?'−':'+')+Math.abs(tc).toFixed(1)+' mV/°C';
+function tunnel(g,L,R,y){
+  g.append(svgEl('path',{class:'w s-lo dash',d:`M${L},${y} H${R-8}`}));
+  g.append(svgEl('polygon',{class:'lo',points:`${R},${y} ${R-10},${y-5} ${R-10},${y+5}`}));
+  g.append(svgEl('circle',{class:'ele',cx:L,cy:y,r:3.5}));
+}
+function aval(g,L,R,y0,k,sp0){
+  let ps=[y0],sp=sp0;const dx=(R-L)/k;
+  g.append(svgEl('circle',{class:'ele',cx:L,cy:y0,r:3.5}));
+  for(let l=0;l<k;l++){const x=L+l*dx,nx=x+dx,np=[];
+    ps.forEach(y=>{[y-sp,y+sp].forEach(c=>{g.append(svgEl('path',{class:'w s-lo',style:'stroke-width:1.5',d:`M${x.toFixed(1)},${y} L${nx.toFixed(1)},${c}`}));np.push(c);});
+      if(l>0)g.append(svgEl('circle',{class:'hole',cx:x.toFixed(1),cy:y,r:3}));});
+    ps=np;sp/=2;}
+  ps.forEach(y=>g.append(svgEl('circle',{class:'ele',cx:R.toFixed(1),cy:y,r:3})));
+}
+function s1u(){
+  const i=+$('s1-rng').value,Vz=ZV[i],tc=ZTC[i],m=mech(Vz);
+  const Em=1e6*Math.pow(Vz/3.3,-0.607),Wcm=2*(Vz+0.7)/Em,Wum=Wcm*1e4,N=2*1.04e-12*Em/(1.6e-19*Wcm);
+  const h=Wum*130/2,L=220-h,R=220+h;
+  $('s1-dep').setAttribute('x',L.toFixed(1));$('s1-dep').setAttribute('width',(2*h).toFixed(1));
+  $('s1-vz').textContent=Vz+' V';$('s1-rng').setAttribute('aria-valuetext',Vz+' V');
+  $('s1-p').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.v===i?'true':'false'));
+  const heavy=m==='z';
+  $('s1-pl').textContent=heavy?'P⁺ 重掺杂':m==='m'?'P 中等掺杂':'P 轻掺杂';
+  $('s1-nl').textContent=heavy?'N⁺ 重掺杂':m==='m'?'N 中等掺杂':'N 轻掺杂';
+  const ws=Wum<1?(Wum*1000).toFixed(0)+' nm':Wum.toFixed(2)+' µm';
+  $('s1-wl').textContent='W = '+ws;
+  const g=$('s1-g');g.replaceChildren();
+  if(m==='z'){[62,90,118].forEach(y=>tunnel(g,L-20,R+20,y));}
+  else if(m==='m'){tunnel(g,L-20,R+20,58);aval(g,L+3,R-3,108,2,14);}
+  else{aval(g,L+4,R-4,90,Math.min(4,1+Math.floor(2*h/50)),20);}
+  const ea=Math.max(h,24);
+  $('s1-e').setAttribute('d',`M${(220+ea).toFixed(1)},160 H${(220-ea+8).toFixed(1)}`);
+  $('s1-eh').setAttribute('points',`${(220-ea).toFixed(1)},160 ${(220-ea+10).toFixed(1)},155 ${(220-ea+10).toFixed(1)},165`);
+  $('s1-et').textContent='E ≈ '+fmtE(Em,' V/cm')+'，N → P';
+  chip($('s1-state'),m==='z'?'齐纳击穿':m==='m'?'两者并存':'雪崩击穿',m==='m'?'on':'warn');
+  $('s1-w').textContent=ws;$('s1-em').textContent=fmtE(Em,' V/cm');$('s1-n').textContent=fmtE(N,' /cm³');
+  $('s1-tc').textContent=fmtTC(tc)+'，'+(Math.abs(tc)<0.8?'接近零':tc<0?'负':'正');
+  $('s1-note').textContent=m==='z'?'掺杂很重，耗尽层只有几十纳米。电压不高，电场却已经强到让电子直接穿过势垒，不需要加速和碰撞。'
+    :m==='m'?'这一档隧穿和雪崩同时起作用，一个是负温度系数，一个是正温度系数，互相抵消，温漂最小。'
+    :'掺杂轻，耗尽层宽。电子在里面被加速，一路碰撞电离，1 个变 2 个，2 个变 4 个。耗尽层越宽，击穿电压越高。';
+}
+seg('s1-p',v=>{$('s1-rng').value=v;s1u();});
+$('s1-rng').addEventListener('input',s1u);
+s1u();
+
+/* 2. 温度系数 */
+const K2={'3.9':{v:3.9,tc:-2.0,s:0.25,rz:25},'5.6':{v:5.6,tc:0.4,s:0.12,rz:8},'12':{v:12,tc:8.4,s:0.05,rz:12}};
+const s2={k:'12'};
+const Y2=ma=>250-ma*10;
+function kneeV0(p){return p.v-p.s*Math.log(Math.exp(0.005*p.rz/p.s)-1);}
+function kneePts(p,v0,xa,X){const pts=[];
+  for(let k=0;k<=200;k++){const V=xa+4*k/200,I=p.s*Math.log(1+Math.exp((V-v0)/p.s))/p.rz;
+    pts.push(X(V).toFixed(1)+','+Y2(Math.min(I*1e3,20)).toFixed(1));if(I>0.02)break;}
+  return pts.join(' ');}
+function s2axes(xa){
+  const g=$('s2-ax');g.replaceChildren();
+  [50,100,150,200].forEach((y,j)=>{g.append(svgEl('line',{class:'gl',x1:50,y1:y,x2:490,y2:y}));
+    g.append(svgEl('text',{x:44,y:y+4,'text-anchor':'end',class:'v'},String(20-5*j)));});
+  g.append(svgEl('text',{x:44,y:254,'text-anchor':'end',class:'v'},'0'));
+  for(let j=0;j<=4;j++){const x=50+110*j;
+    if(j>0)g.append(svgEl('line',{class:'gl',x1:x,y1:40,x2:x,y2:250}));
+    g.append(svgEl('text',{x:x,y:268,'text-anchor':'middle',class:'v'},(xa+j).toFixed(1)));}
+  g.append(svgEl('path',{class:'ax',d:'M50,40 V250 H490'}));
+}
+function s2u(){
+  const p=K2[s2.k],T=+$('s2-t').value,dT=T-25,dv=p.tc*dT/1000,xa=p.v-2,X=V=>50+(V-xa)*110;
+  const v0=kneeV0(p);
+  s2axes(xa);
+  $('s2-c0').setAttribute('points',kneePts(p,v0,xa,X));
+  $('s2-c1').setAttribute('points',kneePts(p,v0+dv,xa,X));show($('s2-c1'),dT!==0);
+  $('s2-tv').textContent=T+' °C';$('s2-t').setAttribute('aria-valuetext',T+' °C');
+  const x0=X(p.v),x1=X(p.v+dv);
+  $('s2-p0').setAttribute('cx',x0.toFixed(1));$('s2-p1').setAttribute('cx',x1.toFixed(1));show($('s2-p1'),dT!==0);
+  const top0=X(v0+p.s*Math.log(Math.exp(0.02*p.rz/p.s)-1)),top1=top0+(x1-x0);
+  const l0=$('s2-l0'),l1=$('s2-l1');show(l1,dT!==0);l1.textContent=T+' °C';
+  if(top1>=top0){l0.setAttribute('x',(top0-8).toFixed(1));l0.setAttribute('text-anchor','end');l1.setAttribute('x',(top1+8).toFixed(1));l1.setAttribute('text-anchor','start');}
+  else{l0.setAttribute('x',(top0+8).toFixed(1));l0.setAttribute('text-anchor','start');l1.setAttribute('x',(top1-8).toFixed(1));l1.setAttribute('text-anchor','end');}
+  $('s2-tc').textContent=fmtTC(p.tc);
+  $('s2-tcp').textContent=(p.tc<0?'−':'+')+Math.abs(p.tc/p.v/10).toFixed(3)+' %/°C';
+  $('s2-v0').textContent=fmtV(p.v);$('s2-v1').textContent=fmtV(p.v+dv)+'（'+(dv<0?'−':'+')+Math.abs(dv*1e3).toFixed(0)+' mV）';
+  const z=Math.abs(p.tc)<0.8;
+  chip($('s2-state'),z?'温漂最小':p.tc<0?'负温度系数':'正温度系数',z?'on':'warn');
+  $('s2-note').textContent=p.v<5?'3.9 V 以齐纳击穿为主：升温后拐点左移，Vz 下降。注意它的拐点很软，小电流时稳压效果差。'
+    :z?'5.6 V 两种机制并存，温度系数正负抵消，从 −40 °C 到 125 °C 只变几十 mV。做简易基准优先选这一档。'
+    :'12 V 以雪崩击穿为主：升温后拐点右移，Vz 上升。拐点很硬，但温漂按比例约 +0.07 %/°C。';
+}
+seg('s2-m',v=>{s2.k=v;s2u();});
+$('s2-t').addEventListener('input',s2u);
+s2u();
+
+/* 3. 热击穿 */
+const s3={ta:25},VZ3=5.1,RTH=250,TJM=150;
+function s3u(){
+  const iz=+$('s3-rng').value/1000,P=VZ3*iz,Tj=s3.ta+P*RTH,im=(TJM-s3.ta)/(RTH*VZ3);
+  $('s3-iv').textContent=fmtA(iz);$('s3-rng').setAttribute('aria-valuetext',fmtA(iz));
+  const pw=Math.max(4,Math.min(400,P*400)),tw=Math.max(4,Math.min(400,Tj/250*400));
+  const cls=Tj>TJM?'bbad':Tj>125?'bwarn':'bok';
+  $('s3-pb').setAttribute('width',pw.toFixed(1));$('s3-pb').setAttribute('class',P>0.5?'bbad':P>0.4?'bwarn':'bok');
+  $('s3-tb').setAttribute('width',tw.toFixed(1));$('s3-tb').setAttribute('class',cls);
+  const tt=$('s3-tt');tt.textContent=Tj>250?'> 250 °C':Tj.toFixed(0)+' °C';
+  tt.setAttribute('x',tw>80?(20+tw-6).toFixed(1):(20+tw+6).toFixed(1));tt.setAttribute('text-anchor',tw>80?'end':'start');
+  $('s3-p').textContent=fmtP(P);$('s3-tj').textContent=Tj.toFixed(1)+' °C';$('s3-im').textContent=fmtA(im);
+  let note;
+  if(Tj>TJM){chip($('s3-state'),'热击穿，损坏','bad');note='结温超过 150 °C，漏电和功耗互相推高，最后晶格损坏，器件短路或开路，不可逆。这时必须加大限流电阻或换大功率管。';}
+  else if(Tj>125){chip($('s3-state'),'接近极限','warn');note='还没坏，但结温余量很小。工程上一般按 70%~80% 降额使用，环境温度高时允许的电流更小。';}
+  else{chip($('s3-state'),'电击穿，可逆','on');note='管子工作在击穿区，这是稳压管的正常状态。去掉反向电压就恢复，电流只要限在允许值以内就能长期工作。';}
+  $('s3-note').textContent=note;
+}
+seg('s3-ta',v=>{s3.ta=+v;s3u();});
+$('s3-rng').addEventListener('input',s3u);
+s3u();
+</script>
+</body>
+</html>

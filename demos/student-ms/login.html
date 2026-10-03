@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>登录 - 在宿学生信息管理系统</title>
+</head>
+<body>
+    <h1>在宿学生信息管理系统</h1>
+
+    <!-- 登录区域 -->
+    <div id="loginDiv">
+        <h2>登录</h2>
+        用户名: <input type="text" id="username"><br><br>
+        密码: <input type="password" id="password"><br><br>
+        <button onclick="login()">登录</button>
+        <button onclick="showRegister()">注册</button>
+    </div>
+
+    <!-- 注册区域 -->
+    <div id="registerDiv" style="display:none;">
+        <h2>注册</h2>
+        用户名: <input type="text" id="regUsername"><br><br>
+        密码: <input type="password" id="regPassword"><br><br>
+        确认密码: <input type="password" id="regPassword2"><br><br>
+        <button onclick="register()">注册</button>
+        <button onclick="showLogin()">返回登录</button>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+
+        // 显示注册表单
+        function showRegister() {
+            document.getElementById('loginDiv').style.display = 'none';
+            document.getElementById('registerDiv').style.display = 'block';
+        }
+
+        // 显示登录表单
+        function showLogin() {
+            document.getElementById('loginDiv').style.display = 'block';
+            document.getElementById('registerDiv').style.display = 'none';
+        }
+
+        // 注册
+        function register() {
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            const password2 = document.getElementById('regPassword2').value;
+
+            if(!username || !password) {
+                alert('请输入用户名和密码');
+                return;
+            }
+
+            if(password !== password2) {
+                alert('两次密码输入不一致');
+                return;
+            }
+
+            fetch(API_BASE + '/register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if(data.success) {
+                    document.getElementById('regUsername').value = '';
+                    document.getElementById('regPassword').value = '';
+                    document.getElementById('regPassword2').value = '';
+                    showLogin();
+                }
+            })
+            .catch(err => alert('注册错误: ' + err));
+        }
+
+        // 登录
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            fetch(API_BASE + '/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('username', username);
+                    window.location.href = 'main.html';
+                } else {
+                    alert('登录失败: ' + data.message);
+                }
+            })
+            .catch(err => alert('登录错误: ' + err));
+        }
+    </script>
+</body>
+</html>

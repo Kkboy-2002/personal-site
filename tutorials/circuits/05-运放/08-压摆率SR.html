@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>压摆率 SR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#opamp">运放</a><span class="sp"></span><span>08 / 12</span></nav>
+<header>
+  <span class="eyebrow">运放 · 大信号速度</span>
+  <h1>压摆率 SR</h1>
+  <p class="lede">运放输出电压变化的速度有上限，单位是 V/µs。信号又大又快时，输出追不上输入，正弦会被拉成三角波，方波边沿变成斜坡。</p>
+</header>
+
+<section id="step">
+  <span class="eyebrow">阶跃响应 · 小信号与大信号</span>
+  <h2>方波输入：边沿变成直线斜坡</h2>
+  <p>压摆率 SR 是输出电压的最大变化率。输入突然跳变时，运放的输入差分对被推到一边，全部尾电流都去给内部补偿电容充电。充电电流有限，所以输出只能按固定斜率爬升。</p>
+  <p class="eq">SR = (dVo/dt)max ≈ I尾 / Cc</p>
+  <p>跳变很小时，差分对没有被推满，输出按 GBW 决定的指数曲线上升，这时 SR 不起作用。拖动阶跃幅度看两种形状怎么切换。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 270" role="img" aria-label="电压跟随器的阶跃响应，虚线为输入阶跃，实线为输出，横纵轴随幅度自动缩放">
+        <g id="a-ax"></g>
+        <polyline id="a-in" class="ideal" points=""/>
+        <polyline id="a-out" class="real" points=""/>
+        <text id="a-int" x="0" y="0" class="tm">输入</text>
+        <text id="a-outt" x="0" y="0" class="t hi">输出</text>
+        <text id="a-slt" x="0" y="0" class="v hi"></text>
+      </svg>
+      <figcaption>电压跟随器，增益 1。横轴时间和纵轴电压会随幅度自动缩放，只看形状。运放参数为示意值。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">运放</span>
+        <div class="seg" id="a-op"><button id="a-op-0" data-v="0" aria-pressed="true">SR 0.5 V/µs · GBW 1 MHz</button><button id="a-op-1" data-v="1" aria-pressed="false">SR 20 V/µs · GBW 10 MHz</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="a-a">阶跃幅度</label>
+        <span class="rv" id="a-av">5 V</span>
+        <input type="range" id="a-a" min="0" max="9" step="1" value="8"></div>
+      <dl class="read">
+        <dt>小/大信号分界 SR/(2π·GBW)</dt><dd id="a-th">80 mV</dd>
+        <dt>10%~90% 上升时间</dt><dd id="a-tr">8.0 µs</dd>
+        <dt>小信号理论 0.35/GBW</dt><dd id="a-trs">350 ns</dd>
+        <dt>边沿最大斜率</dt><dd id="a-sl">0.50 V/µs</dd>
+        <dt>谁在限制</dt><dd><span id="a-chip" class="chip warn">SR</span></dd>
+      </dl>
+      <p class="note" id="a-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="sine">
+  <span class="eyebrow">正弦输入 · 满功率带宽</span>
+  <h2>正弦输入：追不上就变成三角波</h2>
+  <p>正弦 Vp·sin(2πft) 在过零点斜率最大，等于 2πf·Vp。只要这个值超过 SR，过零附近输出就只能按 SR 直线爬，波形变成三角波，幅度也变小。</p>
+  <p class="eq">不失真条件：2π·f·Vpeak ≤ SR，满功率带宽 fp = SR / (2π·Vpeak)</p>
+  <p>幅度越大，fp 越低。所以同一个运放，小信号能放到 MHz，大信号可能连 20 kHz 都过不去。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 270" role="img" aria-label="正弦输入与受压摆率限制的输出波形，显示两个周期">
+        <g id="b-ax"></g>
+        <polyline id="b-in" class="ideal" points=""/>
+        <polyline id="b-out" class="real" points=""/>
+        <text x="111" y="222" text-anchor="middle" class="tm">虚线：输入</text>
+        <text x="333" y="222" text-anchor="middle" class="t hi">实线：输出</text>
+      </svg>
+      <figcaption>电压跟随器，稳态下的两个周期。纵轴固定 ±12 V。输出同时受 GBW 和 SR 限制，参数为示意值。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">运放</span>
+        <div class="seg" id="b-op"><button id="b-op-0" data-v="0" aria-pressed="true">SR 0.5 V/µs</button><button id="b-op-1" data-v="1" aria-pressed="false">SR 20 V/µs</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="b-f">输入频率</label>
+        <span class="rv" id="b-fv">50 kHz</span>
+        <input type="range" id="b-f" min="0" max="9" step="1" value="5"></div>
+      <div class="ctl"><label class="ctl-l" for="b-a">输入峰值</label>
+        <span class="rv" id="b-av">5 V</span>
+        <input type="range" id="b-a" min="2" max="20" step="1" value="10"></div>
+      <dl class="read">
+        <dt>需要的斜率 2πf·Vp</dt><dd id="b-need">1.57 V/µs</dd>
+        <dt>运放 SR</dt><dd id="b-sr">0.50 V/µs</dd>
+        <dt>该幅度下满功率带宽</dt><dd id="b-fp">15.9 kHz</dd>
+        <dt>输出实际峰值</dt><dd id="b-vo">1.6 V</dd>
+        <dt>波形</dt><dd><span id="b-chip" class="chip bad">三角波</span></dd>
+      </dl>
+      <p class="note" id="b-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="vs">
+  <span class="eyebrow">SR 与 GBW · 两个限制</span>
+  <h2>一个管小信号，一个管大信号</h2>
+  <p>GBW 和 SR 都跟补偿电容 Cc 有关，但限制的是不同的东西。面试时先说清楚：GBW 是线性的，幅度变小但波形还是正弦；SR 是非线性的，波形会变形，而且和幅度有关。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>对比</th><th>增益带宽积 GBW</th><th>压摆率 SR</th></tr></thead>
+    <tbody>
+      <tr><td>限制什么</td><td>小信号的带宽</td><td>输出电压的最大变化速度</td></tr>
+      <tr><td>和幅度的关系</td><td>无关</td><td>幅度越大越容易超限</td></tr>
+      <tr><td>超限时的样子</td><td>幅度衰减、相位滞后，仍是正弦</td><td>正弦变三角波，方波边沿变斜坡</td></tr>
+      <tr><td>关键公式</td><td class="n">fc ≈ GBW / 噪声增益</td><td class="n">fp = SR / (2π·Vpeak)</td></tr>
+      <tr><td>内部来源</td><td class="n">gm / (2π·Cc)</td><td class="n">I尾 / Cc</td></tr>
+      <tr><td>通用运放典型值</td><td>约 0.7~3 MHz</td><td>约 0.3~13 V/µs</td></tr>
+    </tbody>
+  </table></div>
+  <p>例：一颗 SR 约 0.3 V/µs 的通用运放（典型值），输出 5 V 峰值时 fp = 0.3 V/µs ÷ (2π × 5 V) ≈ 9.5 kHz，连完整的音频带宽都放不下。选型时两个条件都要核对，取更严的那个。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>什么是压摆率？</summary>
+      <div class="ans"><p>运放输出电压的最大变化率，单位 V/µs。输入跳变大时，输入差分对被推到一边，全部尾电流给补偿电容充电，充电速度就是 SR，大约是 I尾 / Cc。</p></div></details>
+    <details><summary>输出 10 V 峰值、20 kHz 的正弦，SR 至少要多少？</summary>
+      <div class="ans"><p>最大斜率 2π × 20 kHz × 10 V ≈ 1.26 V/µs，这是下限。实际要留余量，一般选 3 到 5 倍，也就是 5 V/µs 左右的运放。</p></div></details>
+    <details><summary>SR 和 GBW 有什么区别？</summary>
+      <div class="ans"><p>GBW 限制小信号带宽，是线性的，超过了只是幅度衰减，波形还是正弦。SR 限制大信号的变化速度，是非线性的，超过了波形会变形，正弦变三角波，而且幅度越大越严重。</p></div></details>
+    <details><summary>示波器上看到方波输出的边沿是斜线，怎么判断是 SR 还是带宽不够？</summary>
+      <div class="ans"><p>看形状，再改幅度。边沿是直线、斜率固定，幅度越大上升时间越长，就是 SR 限制。边沿是指数曲线，上升时间和幅度无关，约 0.35 / 闭环带宽，就是带宽限制。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="07-增益带宽积GBW.html"><span>上一页</span>增益带宽积 GBW</a><a class="next" href="09-失调电压与偏置电流.html"><span>下一页</span>失调电压与偏置电流</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+function axGrid(gid,o){
+  const g=$(gid);g.textContent='';
+  o.yt.forEach(([py,l])=>g.append(svgEl('line',{class:'gl',x1:o.x0,y1:py,x2:o.x1,y2:py}),svgEl('text',{x:o.x0-6,y:py+4,'text-anchor':'end',class:'v'},l)));
+  o.xt.forEach(([px,l],i)=>g.append(svgEl('line',{class:'gl',x1:px,y1:o.y0,x2:px,y2:o.y1}),svgEl('text',{x:px,y:o.y1+16,'text-anchor':i===o.xt.length-1&&px>=o.x1-2?'end':'middle',class:'v'},l)));
+  g.append(svgEl('path',{class:'ax',d:`M${o.x0},${o.y0} V${o.y1} H${o.x1}`}));
+  if(o.yn)g.append(svgEl('text',{x:o.x0+4,y:o.y0-6,class:'tm'},o.yn));
+  if(o.xn)g.append(svgEl('text',{x:o.x1,y:o.y1+32,'text-anchor':'end',class:'tm'},o.xn));
+}
+const OPS=[{sr:0.5e6,gbw:1e6},{sr:20e6,gbw:10e6}];
+const fmtVs=v=>{const s=v<0?'−':'';v=Math.abs(v);return s+(v<1?+(v*1000).toFixed(0)+' mV':+v.toFixed(2)+' V');};
+const fmtSR=s=>(s/1e6).toFixed(2)+' V/µs';
+const tLab=t=>t===0?'0':fmtT(t);
+/* 跟随器模型：线性区按 GBW 的指数逼近，每步变化量被 SR 限住 */
+function followSim(vin,T,N,op,v0){
+  const tau=1/(2*Math.PI*op.gbw),dt=T/N,k=1-Math.exp(-dt/tau),lim=op.sr*dt;
+  let v=v0;const out=[v];
+  for(let i=1;i<=N;i++){let dv=(vin(i*dt)-v)*k;if(dv>lim)dv=lim;else if(dv<-lim)dv=-lim;v+=dv;out.push(v);}
+  return out;
+}
+const pts=(arr,X,Y,dt)=>arr.map((v,i)=>X(i*dt).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
+
+/* a. 阶跃 */
+const aA=[0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10];
+const a={op:0};
+function aU(){
+  const op=OPS[a.op],A=aA[+$('a-a').value],tau=1/(2*Math.PI*op.gbw),th=op.sr*tau;
+  const T=1.3*(A/op.sr+6*tau),t0=0.1*T,N=600,dt=T/N;
+  const vin=t=>t>=t0?A:0,out=followSim(vin,T,N,op,0);
+  const X=scale(0,T,56,500),Y=scale(-0.15*A,1.2*A,230,30);
+  axGrid('a-ax',{x0:56,x1:500,y0:30,y1:230,
+    xt:[0,.25,.5,.75,1].map(k=>[X(k*T),tLab(k*T)]),
+    yt:[0,.5,1].map(k=>[Y(k*A),k?fmtVs(k*A):'0']),yn:'电压',xn:'时间'});
+  $('a-in').setAttribute('points',plot(vin,0,T,X,Y,N));
+  $('a-out').setAttribute('points',pts(out,X,Y,dt));
+  let t10=null,t90=null,smax=0;
+  for(let i=1;i<=N;i++){const s=(out[i]-out[i-1])/dt;if(s>smax)smax=s;
+    if(t10===null&&out[i]>=0.1*A)t10=i*dt;if(t90===null&&out[i]>=0.9*A)t90=i*dt;}
+  const tr=(t90||T)-(t10||0);
+  $('a-int').setAttribute('x',(X(t0)+6).toFixed(1));$('a-int').setAttribute('y',(Y(A)-8).toFixed(1));
+  const xm=X(t10+(tr/2)),ym=Y(0.5*A);
+  $('a-outt').setAttribute('x',(xm+10).toFixed(1));$('a-outt').setAttribute('y',(ym+18).toFixed(1));
+  $('a-av').textContent=fmtVs(A);$('a-a').setAttribute('aria-valuetext',fmtVs(A));
+  $('a-th').textContent=fmtVs(th);$('a-tr').textContent=fmtT(tr);
+  $('a-trs').textContent=fmtT(0.35/op.gbw);$('a-sl').textContent=fmtSR(smax);
+  const slew=A>th*1.05;
+  $('a-slt').textContent=slew?'斜率 = SR':'指数上升';
+  $('a-slt').setAttribute('x',(xm+10).toFixed(1));$('a-slt').setAttribute('y',(ym+34).toFixed(1));
+  chip($('a-chip'),slew?'SR 限制，大信号':'GBW 限制，小信号',slew?'warn':'on');
+  $('a-note').textContent=slew
+    ?'幅度 '+fmtVs(A)+' 大于分界值 '+fmtVs(th)+'，差分对被推满，输出以 SR 直线爬升。上升时间 ≈ 0.8 × '+fmtVs(A)+' ÷ SR = '+fmtT(0.8*A/op.sr)+'，幅度加倍，时间也加倍。'
+    :'幅度 '+fmtVs(A)+' 小于分界值 '+fmtVs(th)+'，输出按 τ = 1/(2π·GBW) = '+fmtT(tau)+' 指数上升，上升时间约 0.35/GBW，和幅度无关。';
+}
+seg('a-op',v=>{a.op=+v;aU();});
+$('a-a').addEventListener('input',aU);
+aU();
+
+/* b. 正弦 */
+const bF=[1e3,2e3,5e3,1e4,2e4,5e4,1e5,2e5,5e5,1e6];
+const b={op:0};
+const bX=scale(0,2,56,500),bY=scale(-12,12,210,30);
+function bU(){
+  const op=OPS[b.op],f=bF[+$('b-f').value],Vp=+$('b-a').value/2,P=1/f,npp=600;
+  const vin=t=>Vp*Math.sin(2*Math.PI*f*t),out=followSim(vin,5*P,5*npp,op,0).slice(3*npp);
+  axGrid('b-ax',{x0:56,x1:500,y0:30,y1:210,
+    xt:[0,.5,1,1.5,2].map(k=>[bX(k),tLab(k*P)]),
+    yt:[-10,-5,0,5,10].map(v=>[bY(v),String(v).replace('-','−')]),yn:'电压 V',xn:'时间'});
+  $('b-in').setAttribute('points',plot(x=>Vp*Math.sin(2*Math.PI*x),0,2,bX,bY,300));
+  $('b-out').setAttribute('points',out.map((v,i)=>bX(i/npp).toFixed(1)+','+bY(v).toFixed(1)).join(' '));
+  const need=2*Math.PI*f*Vp,fp=op.sr/(2*Math.PI*Vp),vo=Math.max(...out),r=need/op.sr;
+  $('b-fv').textContent=fmtF(f);$('b-f').setAttribute('aria-valuetext',fmtF(f));
+  $('b-av').textContent=Vp+' V';$('b-a').setAttribute('aria-valuetext',Vp+' V');
+  $('b-need').textContent=fmtSR(need);$('b-sr').textContent=fmtSR(op.sr);
+  $('b-fp').textContent=fmtF(fp);$('b-vo').textContent=vo.toFixed(2)+' V';
+  let note;
+  if(r<=1){chip($('b-chip'),'不失真','on');
+    note='需要的斜率只有 SR 的 '+(r*100).toFixed(0)+'%，输出跟得上。'+(f>op.gbw*0.2?'不过频率已接近 GBW，幅度开始因带宽不够而衰减，波形仍是正弦。':'想看失真，提高频率或幅度。');}
+  else if(r<=2){chip($('b-chip'),'开始变形','warn');note='过零点附近需要 '+fmtSR(need)+'，超过了 SR，波形在过零处被拉直，顶部还是圆的，像被捏扁的正弦。';}
+  else{chip($('b-chip'),'三角波','bad');note='需要的斜率是 SR 的 '+r.toFixed(1)+' 倍，输出整段都在按 SR 直线爬升，变成三角波，峰值只剩约 SR/(4f) = '+(op.sr/(4*f)).toFixed(2)+' V。要么降低幅度，要么换 SR 更高的运放。';}
+  $('b-note').textContent=note;
+}
+seg('b-op',v=>{b.op=+v;bU();});
+$('b-f').addEventListener('input',bU);$('b-a').addEventListener('input',bU);
+bU();
+</script>
+</body>
+</html>

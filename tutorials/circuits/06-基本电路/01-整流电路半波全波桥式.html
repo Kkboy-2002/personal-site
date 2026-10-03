@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>整流电路</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#basic">基本电路</a><span class="sp"></span><span>01 / 07</span></nav>
+<header>
+  <span class="eyebrow">基本电路 · 整流</span>
+  <h1>整流电路：半波、全波、桥式</h1>
+  <p class="lede">二极管只让电流单向通过，所以能把交流变成单方向的脉动直流。三种电路的区别在于：负半周有没有被利用，二极管要承受多大的反压。</p>
+</header>
+
+<section id="path">
+  <span class="eyebrow">电流路径 · 正负半周</span>
+  <h2>切换电路和半周，看电流从哪里走</h2>
+  <p>判断方法只有一条：哪个二极管的阳极电位比阴极高，哪个就导通。负载 RL 上的电流方向始终从 + 端流向 − 端，这就是"整流"。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 290" role="img" aria-label="变压器次级接整流二极管和负载电阻，可切换半波、中心抽头全波和桥式三种接法">
+        <path class="w" d="M40,95 V64 M40,215 V246"/>
+        <circle class="r" cx="40" cy="60" r="3.5"/><circle class="r" cx="40" cy="250" r="3.5"/>
+        <text x="40" y="48" text-anchor="middle" class="v">220 V</text>
+        <path class="w" d="M58,90 V220 M62,90 V220"/>
+        <g id="s1-xf"></g>
+        <text x="40" y="274" text-anchor="middle" class="tm">市电</text>
+        <text id="s1-pa" x="92" y="86" class="v hi">+</text>
+        <text id="s1-pb" x="92" y="236" class="v lo">−</text>
+        <g id="s1-g-half"><text x="92" y="160" class="v">V2</text></g>
+        <g id="s1-g-ct"><text x="92" y="130" class="v">V2</text><text x="92" y="190" class="v">V2</text></g>
+        <g id="s1-g-br"><text x="92" y="160" class="v">V2</text></g>
+        <path id="s1-f1" class="flow" d="M80,95 H170 V40 H370 V270 H260 V215 H176 a6,6 0 0 0 -12,0 H80"/>
+        <path id="s1-f2" class="flow" d="M80,215 H164 a6,6 0 0 1 12,0 H260 V40 H370 V270 H170 V95 H80"/>
+      </svg>
+      <figcaption>绿色流动虚线是外电路的电流路径，三角形被填色的二极管正在导通。次级电压有效值记作 V2，交叉处的小弧表示导线跨过、不相连。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">电路</span>
+        <div class="seg" id="s1-m"><button id="s1-m-half" data-v="half" aria-pressed="false">半波</button><button id="s1-m-ct" data-v="ct" aria-pressed="false">中心抽头全波</button><button id="s1-m-br" data-v="br" aria-pressed="true">桥式</button></div></div>
+      <div class="ctl"><span class="ctl-l">次级电压极性</span>
+        <div class="seg" id="s1-h"><button id="s1-h-p" data-v="1" aria-pressed="true">正半周（上 +）</button><button id="s1-h-n" data-v="0" aria-pressed="false">负半周（下 +）</button></div></div>
+      <dl class="read">
+        <dt>导通</dt><dd id="s1-on">D1、D3</dd>
+        <dt>截止</dt><dd id="s1-off">D2、D4</dd>
+        <dt>RL 电流</dt><dd><span id="s1-st" class="chip on">+ → −</span></dd>
+        <dt>输出平均值</dt><dd id="s1-vo">0.9·V2 = 10.8 V</dd>
+        <dt>截止管最大反压</dt><dd id="s1-vr">√2·V2 = 17.0 V</dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+      <p class="note">读数按 V2 = 12 V、二极管理想计算。</p>
+    </div>
+  </div>
+</section>
+
+<section id="wave">
+  <span class="eyebrow">输出波形 · 平均值</span>
+  <h2>输出波形对比：0.45 和 0.9 从哪来</h2>
+  <p>正弦半波在一个周期里的平均值是峰值的 1/π，峰值 Vm = √2·V2，所以半波输出平均值 = √2·V2 / π ≈ 0.45·V2。全波和桥式把负半周也翻上来，面积翻倍，平均值 ≈ 0.9·V2。</p>
+  <p class="eq">半波 Vo ≈ 0.45·V2　　全波 / 桥式 Vo ≈ 0.9·V2</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 250" role="img" aria-label="输入正弦电压和整流后输出波形，以及输出平均值">
+        <line class="gl" x1="50" y1="30" x2="460" y2="30"/><line class="gl" x1="50" y1="75" x2="460" y2="75"/>
+        <line class="gl" x1="50" y1="165" x2="460" y2="165"/><line class="gl" x1="50" y1="210" x2="460" y2="210"/>
+        <path class="ax" d="M50,30 V210 M50,120 H460"/>
+        <text x="44" y="34" text-anchor="end" class="v">40</text><text x="44" y="79" text-anchor="end" class="v">20</text>
+        <text x="44" y="124" text-anchor="end" class="v">0</text><text x="44" y="169" text-anchor="end" class="v">−20</text>
+        <text x="44" y="214" text-anchor="end" class="v">−40</text>
+        <text x="54" y="22" class="tm">电压 / V</text>
+        <text x="152.5" y="228" text-anchor="middle" class="v">10</text><text x="255" y="228" text-anchor="middle" class="v">20</text>
+        <text x="357.5" y="228" text-anchor="middle" class="v">30</text><text x="460" y="228" text-anchor="middle" class="v">40</text>
+        <text x="460" y="245" text-anchor="end" class="tm">时间 ms（50 Hz）</text>
+        <polyline id="s2-in" class="ideal" points=""/>
+        <polyline id="s2-out" class="real" points=""/>
+        <line id="s2-avg" class="real2 dash" x1="50" x2="460" y1="120" y2="120"/>
+        <text id="s2-avgt" x="466" y="124" class="t" style="fill:var(--low)">平均</text>
+        <text id="s2-int" x="203.75" y="200" text-anchor="middle" class="tm">输入 v2</text>
+        <text id="s2-outt" x="306" y="40" text-anchor="middle" class="t" style="fill:var(--copper)">输出 vo</text>
+      </svg>
+      <figcaption>灰色虚线是次级电压 v2，橙线是负载上的输出 vo，蓝色虚线是 vo 的平均值，也就是直流分量。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">电路</span>
+        <div class="seg" id="s2-m"><button id="s2-m-half" data-v="half" aria-pressed="false">半波</button><button id="s2-m-ct" data-v="ct" aria-pressed="false">中心抽头全波</button><button id="s2-m-br" data-v="br" aria-pressed="true">桥式</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s2-v">次级有效值 V2</label>
+        <span class="rv" id="s2-vv">12 V</span>
+        <input type="range" id="s2-v" min="3" max="24" step="1" value="12"></div>
+      <div class="ctl"><span class="ctl-l">二极管</span>
+        <div class="seg" id="s2-d"><button id="s2-d-0" data-v="0" aria-pressed="true">理想</button><button id="s2-d-1" data-v="1" aria-pressed="false">计入 0.7 V 压降</button></div></div>
+      <dl class="read">
+        <dt>峰值 Vm = √2·V2</dt><dd id="s2-vm">16.97 V</dd>
+        <dt>公式平均值</dt><dd id="s2-f">0.9·V2 = 10.80 V</dd>
+        <dt>实际平均值</dt><dd id="s2-a">10.80 V</dd>
+        <dt>纹波频率</dt><dd id="s2-fr">100 Hz</dd>
+        <dt>二极管最大反压</dt><dd id="s2-vr">16.97 V</dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="cmp">
+  <span class="eyebrow">对比 · 选型</span>
+  <h2>三种整流电路对比</h2>
+  <p>桥式最常用：因为变压器不用抽头，每个管子的反压只有 √2·V2。代价是电流每次都要过两个二极管，多一个管压降，低压大电流场合损耗明显。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>项目</th><th>半波</th><th>中心抽头全波</th><th>桥式</th></tr></thead>
+    <tbody>
+      <tr><td>二极管数量</td><td class="n">1</td><td class="n">2</td><td class="n">4</td></tr>
+      <tr><td>输出平均值</td><td class="n">0.45·V2</td><td class="n">0.9·V2</td><td class="n">0.9·V2</td></tr>
+      <tr><td>纹波频率</td><td class="n">50 Hz（= 工频）</td><td class="n">100 Hz</td><td class="n">100 Hz</td></tr>
+      <tr><td>二极管最大反压</td><td class="n">√2·V2</td><td class="n">2√2·V2</td><td class="n">√2·V2</td></tr>
+      <tr><td>每管平均电流</td><td class="n">IL</td><td class="n">IL / 2</td><td class="n">IL / 2</td></tr>
+      <tr><td>通路上的管压降</td><td>1 个</td><td>1 个</td><td>2 个</td></tr>
+      <tr><td>变压器</td><td>利用率低，有直流磁化</td><td>需中心抽头，每半绕组只工作半个周期</td><td>普通绕组，利用率高</td></tr>
+    </tbody>
+  </table></div>
+  <p>中心抽头全波的 V2 指每半个绕组的有效值；IL 是负载平均电流。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>桥式整流正负半周分别是哪两个二极管导通？</summary>
+      <div class="ans"><p>正半周变压器上端为正，电流走 上端 → D1 → RL → D3 → 下端；负半周下端为正，走 下端 → D2 → RL → D4 → 上端。两个半周流过 RL 的方向相同。每次都是对角的两个管导通，另外两个各承受 √2·V2 的反压。</p></div></details>
+    <details><summary>半波和桥式的输出平均值分别是多少？怎么来的？</summary>
+      <div class="ans"><p>半波约 0.45·V2，桥式约 0.9·V2。因为正弦半波在整个周期上的平均值是峰值的 1/π，峰值是 √2·V2，所以半波 = √2/π·V2 ≈ 0.45·V2；全波两个半周都用上，翻倍得 0.9·V2。注意这是不带滤波电容时的值。</p></div></details>
+    <details><summary>中心抽头全波整流的二极管反压为什么是 2√2·V2？</summary>
+      <div class="ans"><p>一个管导通时，输出端被拉到这一半绕组的峰值 +√2·V2；截止管的阳极接在另一半绕组，此时是 −√2·V2。两者相减，截止管承受 2√2·V2。桥式里截止管两端跨的是同一个绕组，只有 √2·V2。</p></div></details>
+    <details><summary>桥式整流有一个二极管开路或接反会怎样？</summary>
+      <div class="ans"><p>开路：有半个周期没有通路，变成半波整流，输出平均值降到约一半，纹波频率变成 50 Hz。接反：某个半周里会有两个管同时正偏，直接把变压器次级短路，烧管子或熔断保险丝。</p></div></details>
+    <details><summary>低压大电流场合，整流为什么常换成肖特基或同步整流？</summary>
+      <div class="ans"><p>因为管压降直接吃掉输出。比如 5 V 输出，桥式两个硅管就要掉约 1.4 V，效率很差。肖特基压降约 0.3~0.5 V（典型值），同步整流用 MOS 管代替二极管，压降只有 I·Rdson，更低。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="next" href="02-电容滤波.html"><span>下一页</span>电容滤波</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 通用画法：二极管（阳极 x1,y1 → 阴极 x2,y2）、线圈 */
+function dio(g,x1,y1,x2,y2,lab){
+  const cx=(x1+x2)/2,cy=(y1+y2)/2,a=Math.atan2(y2-y1,x2-x1)*180/Math.PI;
+  g.append(svgEl('path',{class:'w',d:`M${x1},${y1} L${x2},${y2}`}));
+  const k=svgEl('g',{transform:`translate(${cx},${cy}) rotate(${a})`});
+  const tri=svgEl('polygon',{class:'r',points:'-8,-9 -8,9 8,0'});
+  k.append(tri,svgEl('path',{class:'w',d:'M8,-9 V9'}));g.append(k);
+  const vert=Math.abs(x2-x1)<1;
+  g.append(svgEl('text',vert?{x:cx+13,y:cy+5,class:'t'}:{x:cx,y:cy-14,'text-anchor':'middle',class:'t'},lab));
+  return tri;
+}
+function coil(g,x,y0,n,sw){let d=`M${x},${y0}`;for(let i=0;i<n;i++)d+=` a10,10 0 0 ${sw} 0,20`;g.append(svgEl('path',{class:'w',d}));}
+
+/* 1. 电流路径 */
+const xf=$('s1-xf');coil(xf,40,95,6,1);coil(xf,80,95,6,0);
+const gH=$('s1-g-half'),gC=$('s1-g-ct'),gB=$('s1-g-br'),s1D={};
+gH.append(svgEl('path',{class:'w',d:'M80,95 H150 M210,95 H330 V135 M330,175 V215 H80'}));
+s1D.D=dio(gH,150,95,210,95,'D');
+gH.append(svgEl('rect',{class:'r',x:321,y:135,width:18,height:40,rx:2}),svgEl('text',{x:346,y:160,class:'t'},'RL'),
+  svgEl('text',{x:346,y:112,class:'v hi'},'+'),svgEl('text',{x:346,y:208,class:'v lo'},'−'));
+gC.append(svgEl('path',{class:'w',d:'M80,95 H130 M190,95 H260 V215 H190 M130,215 H80 M80,155 H145 M195,155 H260'}));
+s1D.D1=dio(gC,130,95,190,95,'D1');s1D.D2=dio(gC,130,215,190,215,'D2');
+gC.append(svgEl('rect',{class:'r',x:145,y:147,width:50,height:16,rx:2}),svgEl('text',{x:170,y:141,'text-anchor':'middle',class:'t'},'RL'),
+  svgEl('circle',{class:'dot',cx:260,cy:155,r:3.5}),svgEl('circle',{class:'dot',cx:80,cy:155,r:3.5}),
+  svgEl('text',{x:220,y:178,class:'v hi'},'+'),svgEl('text',{x:114,y:178,class:'v lo'},'−'),svgEl('text',{x:272,y:160,class:'tm'},'输出'));
+gB.append(svgEl('path',{class:'w',d:'M80,95 H170 M80,215 H164 a6,6 0 0 1 12,0 H260 M170,40 H370 V135 M370,175 V270 H170'}));
+s1D.B1=dio(gB,170,95,170,40,'D1');s1D.B4=dio(gB,170,270,170,95,'D4');
+s1D.B2=dio(gB,260,215,260,40,'D2');s1D.B3=dio(gB,260,270,260,215,'D3');
+gB.append(svgEl('rect',{class:'r',x:361,y:135,width:18,height:40,rx:2}),svgEl('text',{x:386,y:160,class:'t'},'RL'),
+  svgEl('text',{x:386,y:60,class:'v hi'},'+'),svgEl('text',{x:386,y:262,class:'v lo'},'−'));
+[[170,95],[260,215],[260,40],[260,270]].forEach(p=>gB.append(svgEl('circle',{class:'dot',cx:p[0],cy:p[1],r:3.5})));
+
+const s1={m:'br',p:true},V2=12,VM=Math.SQRT2*V2;
+const s1P={
+  half:{p:['D','—','M80,95 H330 V215 H80'],n:['—','D','']},
+  ct:{p:['D1','D2','M80,95 H260 V155 H80'],n:['D2','D1','M80,215 H260 V155 H80']},
+  br:{p:['D1、D3','D2、D4',''],n:['D2、D4','D1、D3','']}
+};
+const s1N={
+  halfp:'上端为正，D 的阳极电位高于阴极，D 导通，电流经 RL 从上往下流，输出跟随正半周。',
+  halfn:'下端为正，D 反偏截止，整个回路没有电流，输出为 0。D 两端承受整个次级电压，峰值 √2·V2。负半周的能量被白白扔掉。',
+  ctp:'上半绕组为正，D1 导通，电流经 RL 流回中心抽头。D2 阳极在 −√2·V2，阴极被输出拉到 +√2·V2，所以承受 2√2·V2 反压。',
+  ctn:'下半绕组为正，换 D2 导通，电流仍从 RL 右端流向左端，方向不变。两个半绕组轮流工作，每个只用半个周期。',
+  brp:'上端为正，D1、D3 导通：上端 → D1 → RL → D3 → 下端。D2、D4 反偏，各承受 √2·V2。',
+  brn:'下端为正，D2、D4 导通：下端 → D2 → RL → D4 → 上端。RL 里电流方向和正半周相同，负半周被"翻"了上来。'
+};
+function s1u(){
+  const m=s1.m,p=s1.p,cfg=s1P[m][p?'p':'n'];
+  show(gH,m==='half');show(gC,m==='ct');show(gB,m==='br');
+  Object.values(s1D).forEach(t=>t.classList.remove('lit'));
+  const lit={half:p?['D']:[],ct:p?['D1']:['D2'],br:p?['B1','B3']:['B2','B4']}[m];
+  lit.forEach(k=>s1D[k].classList.add('lit'));
+  const f0=$('s1-f1'),f1=$('s1-f2');
+  if(m==='br'){f0.setAttribute('d','M80,95 H170 V40 H370 V270 H260 V215 H176 a6,6 0 0 0 -12,0 H80');show(f0,p);show(f1,!p);}
+  else{show(f1,false);show(f0,!!cfg[2]);if(cfg[2])f0.setAttribute('d',cfg[2]);}
+  $('s1-pa').textContent=p?'+':'−';$('s1-pb').textContent=p?'−':'+';
+  setLv($('s1-pa'),null,p);setLv($('s1-pb'),null,!p);
+  $('s1-on').textContent=cfg[0];$('s1-off').textContent=cfg[1];
+  const cond=m!=='half'||p;
+  chip($('s1-st'),cond?'+ → −，方向不变':'无电流',cond?'on':'off');
+  const k=m==='half'?0.45:0.9;
+  $('s1-vo').textContent=k+'·V2 = '+fmtV(k*V2,1);
+  $('s1-vr').textContent=m==='ct'?'2√2·V2 = '+fmtV(2*VM,1):'√2·V2 = '+fmtV(VM,1);
+  $('s1-note').textContent=s1N[m+(p?'p':'n')];
+}
+seg('s1-m',v=>{s1.m=v;s1u();});
+seg('s1-h',v=>{s1.p=v==='1';s1u();});
+s1u();
+
+/* 2. 输出波形 */
+const s2X=scale(0,40,50,460),s2Y=scale(0,40,120,30);
+const s2={m:'br',d:false};
+function s2u(){
+  const v2=+$('s2-v').value,vm=Math.SQRT2*v2,m=s2.m,vd=s2.d?(m==='br'?1.4:0.7):0;
+  const w=2*Math.PI*50/1000;
+  const vo=t=>{const s=vm*Math.sin(w*t);return Math.max((m==='half'?s:Math.abs(s))-vd,0);};
+  $('s2-in').setAttribute('points',plot(t=>vm*Math.sin(w*t),0,40,s2X,s2Y,240));
+  $('s2-out').setAttribute('points',plot(vo,0,40,s2X,s2Y,480));
+  let sum=0;const N=4000;for(let i=0;i<N;i++)sum+=vo(i*20/N);const avg=sum/N;
+  const ya=s2Y(avg).toFixed(1);
+  $('s2-avg').setAttribute('y1',ya);$('s2-avg').setAttribute('y2',ya);$('s2-avgt').setAttribute('y',(+ya+4).toFixed(1));
+  $('s2-int').setAttribute('y',Math.min(s2Y(-vm)+16,222).toFixed(1));
+  $('s2-outt').setAttribute('y',Math.max(s2Y(vm-vd)-8,14).toFixed(1));
+  const k=m==='half'?0.45:0.9;
+  $('s2-vv').textContent=v2+' V';$('s2-v').setAttribute('aria-valuetext',v2+' V');
+  $('s2-vm').textContent=fmtV(vm);
+  $('s2-f').textContent=k+'·V2 = '+fmtV(k*v2);
+  $('s2-a').textContent=fmtV(avg)+(vd?'，比公式低 '+fmtV(k*v2-avg):'');
+  $('s2-fr').textContent=m==='half'?'50 Hz，等于工频':'100 Hz，两倍工频';
+  $('s2-vr').textContent=fmtV(m==='ct'?2*vm:vm)+(m==='ct'?'，2√2·V2':'，√2·V2');
+  let note=m==='half'?'负半周输出为 0，一个周期只有一个包，平均值只有峰值的 1/π。':
+    m==='ct'?'两个半绕组轮流导通，每个周期两个包，纹波频率变成 100 Hz，平均值翻倍。':
+    '波形和中心抽头全波一样，但电流每次要过两个二极管。';
+  if(vd)note+=' 计入管压降后，V2 = '+v2+' V 时平均值只剩公式值的 '+Math.round(avg/(k*v2)*100)+'%，电压越低损失比例越大。';
+  $('s2-note').textContent=note;
+}
+seg('s2-m',v=>{s2.m=v;s2u();});
+seg('s2-d',v=>{s2.d=v==='1';s2u();});
+$('s2-v').addEventListener('input',s2u);
+s2u();
+</script>
+</body>
+</html>

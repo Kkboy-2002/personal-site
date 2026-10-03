@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>短路耐受时间</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#igbt">IGBT</a><span class="sp"></span><span>05 / 07</span></nav>
+<header>
+  <span class="eyebrow">IGBT · 短路保护</span>
+  <h1>短路耐受时间 tsc</h1>
+  <p class="lede">IGBT 短路时不会立刻烧，它能扛一小段时间，典型 5~10 µs。保护电路要做的，就是在这段时间内发现短路并把它关掉。</p>
+</header>
+
+<section id="lim">
+  <span class="eyebrow">Vge 限流 · 退饱和</span>
+  <h2>短路电流为什么有上限</h2>
+  <p>短路时负载被旁路，母线电压几乎全加在 IGBT 上。管子被迫离开饱和区，进入放大区（也叫退饱和），这时电流不再由外电路决定，而是由栅极电压决定：Vge 越高，沟道越宽，电流越大。Vge = 15 V 时，短路电流一般被限在额定电流的 4~6 倍。</p>
+  <p>电流有上限，但功率惊人：800 V 乘几百安就是几百 kW，全部变成芯片里的热。能扛多久取决于这份热量，所以短路电流越大，tsc 越短。</p>
+  <p class="eq">P短路 = Vbus · Isc　　短路能量 Esc ≈ Vbus · Isc · t</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="IGBT 输出特性曲线：不同栅压下电流在放大区趋于饱和，短路时工作点在高 Vce 处，电流等于该栅压对应的饱和电流">
+        <g id="l1-ax"></g>
+        <g id="l1-fam"></g>
+        <line class="ax dash" x1="56" y1="0" x2="496" y2="0" id="l1-rt"/>
+        <text id="l1-rtt" x="492" y="0" text-anchor="end" class="tm">额定 50 A</text>
+        <polyline id="l1-c" class="real" points=""/>
+        <text id="l1-ct" x="492" y="0" text-anchor="end" class="t" style="fill:var(--copper)">Vge = 15 V</text>
+        <circle id="l1-pn" class="lo" r="5"/>
+        <text id="l1-pnt" x="0" y="0" class="tm">正常导通点</text>
+        <polygon id="l1-ar" class="hi" points=""/>
+        <text id="l1-art" x="492" y="0" text-anchor="end" class="tm">短路点在 800 V，远在右侧</text>
+      </svg>
+      <figcaption>示意曲线：额定 50 A 的 1200 V IGBT。灰线是其他栅压，橙线是当前栅压；蓝点是 50 A 正常导通时的工作点，右侧箭头指向短路工作点的电流高度。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="l1-vg">栅极电压 Vge</label>
+        <span class="rv" id="l1-vgv">15 V</span>
+        <input type="range" id="l1-vg" min="9" max="20" step="0.5" value="15"></div>
+      <dl class="read">
+        <dt>短路电流 Isc</dt><dd id="l1-isc"></dd>
+        <dt>额定电流倍数</dt><dd id="l1-k"></dd>
+        <dt>短路瞬时功率</dt><dd id="l1-p"></dd>
+        <dt>50 A 时 Vce(sat)</dt><dd id="l1-vs"></dd>
+        <dt>估算 tsc</dt><dd id="l1-tsc"></dd>
+        <dt>评价</dt><dd><span id="l1-chip" class="chip on">合适</span></dd>
+      </dl>
+      <p class="note" id="l1-note"></p>
+      <p class="note">示意：tsc 按"能量相同"粗估，15 V 时取 10 µs。</p>
+    </div>
+  </div>
+</section>
+
+<section id="desat">
+  <span class="eyebrow">DESAT · 检测原理</span>
+  <h2>退饱和检测：盯着 Vce 看</h2>
+  <p>正常导通时 Vce 只有 2 V 左右。一旦短路，管子退出饱和，Vce 猛升到母线电压。所以只要监测导通期间的 Vce，就能判断是否短路，而且不用采样电阻。这就是驱动芯片上的 DESAT 脚。</p>
+  <p>电路很简单：驱动芯片从 DESAT 脚往外送一个恒流，经电阻和高压二极管流进集电极。正常时二极管导通，DESAT 脚电压 ≈ Vce + 二极管压降，远低于 9 V 阈值。短路时 Vce 很高，二极管反偏截止，恒流只能给消隐电容 Cblk 充电，充到阈值就报故障。</p>
+  <p class="eq">消隐时间 tblank = Cblk · Vth / Ichg</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 300" role="img" aria-label="DESAT 检测电路：IGBT 集电极经高压二极管和电阻接驱动芯片 DESAT 脚，DESAT 脚对地接消隐电容，芯片内有恒流源和 9 V 比较器">
+        <text id="s2-bus" x="220" y="18" text-anchor="middle" class="v hi">800 V</text>
+        <path class="w" d="M208,26 H232 M220,26 V40"/>
+        <g id="s2-ld"><rect class="box" x="200" y="40" width="40" height="50" rx="4"/>
+          <text x="220" y="70" text-anchor="middle" class="t">负载</text></g>
+        <g id="s2-sc" hidden><path class="w s-bad" style="stroke-width:3" d="M220,40 V90"/>
+          <text x="232" y="70" class="t" style="fill:var(--danger)">短路</text></g>
+        <path class="w" d="M220,90 V168 L198,182 M198,198 L220,212 V262 M206,262 H234 M211,267 H229 M216,272 H224"/>
+        <line class="bar" x1="198" y1="172" x2="198" y2="208"/>
+        <line class="w" x1="190" y1="176" x2="190" y2="204"/>
+        <polygon class="ah" points="217,210 208,209 212,202"/>
+        <path class="w" d="M140,200 H190"/>
+        <text x="134" y="196" text-anchor="end" class="t">Vge</text>
+        <text x="134" y="212" text-anchor="end" class="v hi">15 V</text>
+        <text x="230" y="196" class="t">IGBT</text>
+        <text id="s2-vcet" x="228" y="150" class="v lo">2 V</text>
+        <circle class="dot" cx="220" cy="130" r="3.5"/>
+        <path class="w" d="M220,130 H250 M264,130 H286 M330,130 H380 M360,130 V186 M346,186 H374 M346,194 H374 M360,194 V262 M346,262 H374 M351,267 H369 M356,272 H364"/>
+        <polygon class="ah" points="250,130 264,122 264,138"/>
+        <line class="w" x1="250" y1="121" x2="250" y2="139"/>
+        <text x="257" y="112" text-anchor="middle" class="tm">Ddesat</text>
+        <rect class="r" x="286" y="122" width="44" height="16" rx="2"/>
+        <text x="308" y="112" text-anchor="middle" class="tm">R 1 kΩ</text>
+        <circle class="dot" cx="360" cy="130" r="3.5"/>
+        <text id="s2-pv" x="354" y="156" text-anchor="end" class="v lo">3.2 V</text>
+        <text x="354" y="172" text-anchor="end" class="tm">DESAT 脚</text>
+        <text x="340" y="194" text-anchor="end" class="t">Cblk</text>
+        <text id="s2-cv" x="340" y="210" text-anchor="end" class="v">220 pF</text>
+        <rect class="box" x="380" y="96" width="70" height="124" rx="4"/>
+        <text x="415" y="116" text-anchor="middle" class="t">驱动芯片</text>
+        <text x="415" y="146" text-anchor="middle" class="v">500 µA</text>
+        <text x="415" y="162" text-anchor="middle" class="tm">恒流源</text>
+        <text x="415" y="188" text-anchor="middle" class="tm">比较器</text>
+        <text x="415" y="204" text-anchor="middle" class="v">9 V</text>
+        <text id="s2-cmp" x="415" y="240" text-anchor="middle" class="t">未触发</text>
+        <path id="s2-fm" class="flow" d="M220,30 V166 L202,178 V200 L220,212 V260"/>
+        <path id="s2-fd" class="flow thin" d="M378,130 H224"/>
+        <path id="s2-fc" class="flow thin" d="M378,130 H360 V184" hidden/>
+      </svg>
+      <figcaption>绿色是正常电流，红色是短路电流。细线是 DESAT 恒流：正常时经二极管流进集电极，短路时被二极管挡住，只能给 Cblk 充电。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">工况</span>
+        <div class="seg" id="s2-m"><button id="s2-m-n" data-v="n" aria-pressed="true">正常导通</button><button id="s2-m-s" data-v="s" aria-pressed="false">负载短路</button></div></div>
+      <div class="ctl"><span class="ctl-l">消隐电容 Cblk</span>
+        <div class="seg" id="s2-c"><button id="s2-c-100" data-v="100" aria-pressed="false">100 pF</button><button id="s2-c-220" data-v="220" aria-pressed="true">220 pF</button><button id="s2-c-470" data-v="470" aria-pressed="false">470 pF</button></div></div>
+      <dl class="read">
+        <dt>Vce</dt><dd id="s2-vce"></dd>
+        <dt>Ddesat</dt><dd id="s2-d"></dd>
+        <dt>DESAT 脚电压</dt><dd id="s2-vp"></dd>
+        <dt>消隐时间 tblank</dt><dd id="s2-tb"></dd>
+        <dt>比较器</dt><dd><span id="s2-chip" class="chip on">未触发</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="race">
+  <span class="eyebrow">时间赛跑 · 软关断</span>
+  <h2>检测 + 关断，必须在 tsc 之内完成</h2>
+  <p>为什么要有消隐时间？因为每次开通瞬间，Vce 还没降下来，DESAT 如果马上比较就会误报。消隐时间要盖过正常开通的 Vce 下降过程，一般 1~3 µs。可它又不能太长：消隐 + 滤波 + 关断，总时间必须小于 tsc。</p>
+  <p>关断方式也很关键。短路电流是额定的好几倍，如果像平常一样快速关断，杂散电感上的 L·di/dt 会叠加在母线上，把 IGBT 击穿。所以检测到短路后要软关断：让栅极缓慢放电，电流慢慢降，把过压压住。</p>
+  <p class="eq">关断过压 ΔV = Ls · di/dt ≈ Ls · Isc / toff</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="短路过程波形：短路后电流升到 Isc，Vce 升到母线电压，DESAT 触发后关断，关断时 Vce 出现过冲，竖线标出 tsc 极限">
+        <rect id="r1-bad" class="zone-sat" x="0" y="46" width="0" height="200" style="fill:var(--danger);fill-opacity:.12"/>
+        <g id="r1-ax"></g>
+        <line id="r1-tsc" class="leak dash" x1="0" y1="46" x2="0" y2="246"/>
+        <text id="r1-tsct" x="0" y="40" text-anchor="middle" class="t" style="fill:var(--danger)">tsc 极限</text>
+        <line id="r1-trip" class="ax dash" x1="0" y1="46" x2="0" y2="246"/>
+        <text id="r1-tript" x="0" y="64" text-anchor="start" class="tm">DESAT 触发</text>
+        <line class="ax dash" x1="56" y1="0" x2="460" y2="0" id="r1-vmax"/>
+        <polyline id="r1-v" class="real" points=""/>
+        <polyline id="r1-i" class="real2" points=""/>
+        <text id="r1-li" x="0" y="0" class="t" style="fill:var(--low)">Ic</text>
+        <text x="66" y="0" id="r1-lv" class="t" style="fill:var(--copper)">Vce</text>
+        <text x="466" y="50" class="v" style="fill:var(--copper)">1500 V</text>
+        <text x="466" y="150" class="v" style="fill:var(--copper)">750 V</text>
+        <text x="466" y="250" class="v" style="fill:var(--copper)">0 V</text>
+        <text id="r1-vmt" x="70" y="0" class="tm">器件耐压 1200 V</text>
+      </svg>
+      <figcaption>示意：800 V 母线，杂散电感 150 nH，1 µs 时发生短路。蓝线 Ic 看左轴，橙线 Vce 看右轴；DESAT 触发后还要约 0.3 µs 滤波和响应才开始关断。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="r1-b">消隐时间 tblank</label>
+        <span class="rv" id="r1-bv">3.0 µs</span>
+        <input type="range" id="r1-b" min="0.5" max="12" step="0.5" value="3"></div>
+      <div class="ctl"><span class="ctl-l">关断方式</span>
+        <div class="seg" id="r1-o"><button id="r1-o-s" data-v="s" aria-pressed="true">软关断 1.5 µs</button><button id="r1-o-h" data-v="h" aria-pressed="false">硬关断 0.12 µs</button></div></div>
+      <div class="ctl"><span class="ctl-l">开通栅压</span>
+        <div class="seg" id="r1-g"><button id="r1-g-15" data-v="15" aria-pressed="true">15 V</button><button id="r1-g-18" data-v="18" aria-pressed="false">18 V</button></div></div>
+      <dl class="read">
+        <dt>短路电流 Isc</dt><dd id="r1-isc"></dd>
+        <dt>该条件下 tsc</dt><dd id="r1-tl"></dd>
+        <dt>短路持续时间</dt><dd id="r1-td"></dd>
+        <dt>关断峰值 Vce</dt><dd id="r1-vp"></dd>
+        <dt>结果</dt><dd><span id="r1-chip" class="chip on">安全关断</span></dd>
+      </dl>
+      <p class="note" id="r1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>什么是 IGBT 的短路耐受时间？一般多长？</summary>
+      <div class="ans"><p>指 IGBT 在规定母线电压、栅压和结温下承受短路而不损坏的最长时间，典型 5~10 µs，数据手册上写作 tsc 或 tpsc。短路时电流被 Vge 限制在额定的 4~6 倍，管子承受母线电压，功耗极大，能量超过芯片热容就会烧毁，所以保护必须在 tsc 内完成关断。</p></div></details>
+    <details><summary>DESAT 退饱和检测的原理是什么？</summary>
+      <div class="ans"><p>正常导通时 IGBT 饱和，Vce 只有 1~3 V；短路时退出饱和，Vce 接近母线电压。驱动芯片通过高压二极管监测导通期间的 Vce：正常时二极管导通，DESAT 脚电压低；短路时二极管反偏，恒流给消隐电容充电到阈值（常见 7~9 V）就判定短路，并关断 IGBT。好处是不需要电流采样，检测点就在管子上。</p></div></details>
+    <details><summary>为什么需要消隐时间？怎么设？</summary>
+      <div class="ans"><p>开通瞬间 Vce 还没降下来，不消隐就会误报。消隐时间 = Cblk·Vth / Ichg，要大于正常开通时 Vce 降到低电平的时间，一般 1~3 µs；同时消隐、滤波和关断的总时间要小于 tsc，并留余量。</p></div></details>
+    <details><summary>短路后为什么要软关断？</summary>
+      <div class="ans"><p>短路电流是额定的数倍，快速关断时 di/dt 很大，杂散电感上的 L·di/dt 叠加在母线电压上，可能超过器件耐压而击穿。软关断用较大的电阻或小电流让栅极慢慢放电，电流缓慢下降，过压就小了。有的驱动还用两级关断，先把 Vge 降到中间值限流，再关断。</p></div></details>
+    <details><summary>栅压为什么不能随便提高到 18 V 或 20 V？</summary>
+      <div class="ans"><p>栅压越高，Vce(sat) 越低，但短路电流也越大，tsc 明显缩短，短路时更难保护。另外 Vge 最大额定一般是 ±20 V，要留余量。所以 IGBT 开通栅压普遍取 +15 V。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="04-拖尾电流.html"><span>上一页</span>拖尾电流</a><a class="next" href="06-驱动要求正负压.html"><span>下一页</span>驱动要求正负压</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+function mkAxes(gid,X,Y,xs,ys,xl,yl){
+  const g=$(gid),x0=X(xs[0]),x1=X(xs[xs.length-1]),y0=Y(ys[0]),y1=Y(ys[ys.length-1]);
+  ys.forEach(v=>g.append(svgEl('line',{class:'gl',x1:x0,x2:x1,y1:Y(v),y2:Y(v)}),svgEl('text',{x:x0-6,y:Y(v)+4,'text-anchor':'end',class:'v'},v)));
+  xs.forEach(v=>g.append(svgEl('text',{x:X(v),y:y0+18,'text-anchor':'middle',class:'v'},v)));
+  g.append(svgEl('path',{class:'ax',d:`M${x0},${y1} V${y0} H${x1}`}),
+    svgEl('text',{x:x1,y:y0+34,'text-anchor':'end',class:'tm'},xl),svgEl('text',{x:x0+4,y:y1-12,class:'tm'},yl));
+}
+const setP=(el,x,y)=>{el.setAttribute('cx',x.toFixed(1));el.setAttribute('cy',y.toFixed(1));};
+const setVL=(el,x)=>{el.setAttribute('x1',x.toFixed(1));el.setAttribute('x2',x.toFixed(1));};
+const setHL=(el,y)=>{el.setAttribute('y1',y.toFixed(1));el.setAttribute('y2',y.toFixed(1));};
+/* 示意模型：饱和电流 Isat = 250·((Vge − 6)/9)^1.5，Vge = 15 V 时为额定 50 A 的 5 倍 */
+const isat=vg=>vg<=6?0:250*Math.pow((vg-6)/9,1.5);
+const tscOf=I=>10*250/I;
+
+/* 1. Vge 限流 */
+const l1X=scale(0,20,56,496),l1Y=scale(0,500,246,36),VK=4.5;
+mkAxes('l1-ax',l1X,l1Y,[0,5,10,15,20],[0,100,200,300,400,500],'Vce / V','Ic / A');
+const icOf=(vce,vg)=>vce<=0.7?0:isat(vg)*(1-Math.exp(-(vce-0.7)/VK));
+[9,12,15,18].forEach(vg=>{$('l1-fam').append(svgEl('polyline',{class:'cv',style:'stroke:var(--muted);stroke-width:1.2',points:plot(v=>icOf(v,vg),0,20,l1X,l1Y,120)}),
+  svgEl('text',{x:62,y:(l1Y(isat(vg)*(1-Math.exp(-(20-0.7)/VK)))-5).toFixed(1),class:'tm'},vg+' V'));});
+setHL($('l1-rt'),l1Y(50));$('l1-rtt').setAttribute('y',(l1Y(50)-6).toFixed(1));
+function l1u(){
+  const vg=+$('l1-vg').value,I=isat(vg),t=tscOf(I);
+  $('l1-c').setAttribute('points',plot(v=>icOf(v,vg),0,20,l1X,l1Y,160));
+  const yEnd=l1Y(icOf(20,vg));$('l1-ct').setAttribute('y',(yEnd-8).toFixed(1));$('l1-ct').textContent='Vge = '+vg+' V';
+  const yI=l1Y(I);$('l1-ar').setAttribute('points',`496,${yI.toFixed(1)} 486,${(yI-6).toFixed(1)} 486,${(yI+6).toFixed(1)}`);
+  $('l1-art').setAttribute('y',(yI+18).toFixed(1));
+  const ok=I>50,vs=ok?0.7-VK*Math.log(1-50/I):null;
+  show($('l1-pn'),ok);show($('l1-pnt'),ok);
+  if(ok){setP($('l1-pn'),l1X(vs),l1Y(50));$('l1-pnt').setAttribute('x',(l1X(vs)+8).toFixed(1));$('l1-pnt').setAttribute('y',(l1Y(50)+18).toFixed(1));}
+  $('l1-vgv').textContent=vg+' V';$('l1-vg').setAttribute('aria-valuetext',vg+' V');
+  $('l1-isc').textContent=fmtA(I);$('l1-k').textContent=(I/50).toFixed(1)+' 倍';
+  $('l1-p').textContent=(800*I/1000).toFixed(0)+' kW';
+  $('l1-vs').textContent=ok?fmtV(vs):'达不到，50 A 时已退饱和';
+  $('l1-tsc').textContent=fmtT(t*1e-6);
+  let n;
+  if(!ok||vs>3.5){chip($('l1-chip'),'栅压不足','bad');n='栅压太低，沟道太窄，额定电流下管子就进入放大区，Vce(sat) 很大，发热严重。IGBT 不能用 5 V、10 V 这种低栅压驱动。';}
+  else if(vg>=17){chip($('l1-chip'),'短路太凶','warn');n='栅压越高，导通压降越低，但短路电流跟着变大，tsc 缩短，保护更难做。而且 Vge 额定一般是 ±20 V，余量也不够了。';}
+  else if(vg<14){chip($('l1-chip'),'压降偏大','warn');n='短路电流小了，tsc 变长，可正常导通的 Vce(sat) 明显升高，导通损耗变大。';}
+  else{chip($('l1-chip'),'合适','on');n='+15 V 左右：导通压降已经足够低，短路电流约为额定的 5 倍，tsc 也有 10 µs 左右，是最常用的开通栅压。';}
+  $('l1-note').textContent=n;
+}
+$('l1-vg').addEventListener('input',l1u);
+l1u();
+
+/* 2. DESAT 电路 */
+const s2={sc:false,C:220};
+function s2u(){
+  const sc=s2.sc,tb=s2.C*1e-12*9/500e-6;
+  show($('s2-ld'),!sc);show($('s2-sc'),sc);
+  $('s2-fm').classList.toggle('bad',sc);show($('s2-fd'),!sc);show($('s2-fc'),sc);
+  $('s2-vcet').textContent=sc?'800 V':'2 V';setLv($('s2-vcet'),null,sc);
+  $('s2-pv').textContent=sc?'→ 9 V':'3.2 V';setLv($('s2-pv'),null,sc);
+  $('s2-cv').textContent=s2.C+' pF';
+  $('s2-vce').textContent=sc?'≈ 800 V，退饱和':'≈ 2 V，饱和';
+  $('s2-d').textContent=sc?'反偏截止，挡住 800 V':'正偏导通';
+  $('s2-vp').textContent=sc?'从 0 充电，'+fmtT(tb)+' 后到 9 V':'≈ 2 + 0.7 + 0.5 = 3.2 V';
+  $('s2-tb').textContent=fmtT(tb)+' = '+s2.C+' pF × 9 V / 500 µA';
+  chip($('s2-chip'),sc?'触发，报故障':'未触发',sc?'bad':'on');
+  $('s2-cmp').textContent=sc?'触发 → 关断':'未触发';$('s2-cmp').style.fill=sc?'var(--danger)':'';
+  $('s2-note').textContent=sc?'负载被短路，母线电压加在 IGBT 上，Vce 冲到 800 V。高压二极管反偏，把驱动芯片和高压隔开；500 µA 恒流给 Cblk 充电，'+fmtT(tb)+' 后达到 9 V，比较器翻转，驱动芯片执行软关断并报故障。'
+    :'IGBT 饱和导通，Vce 只有 2 V 左右。恒流经电阻和二极管流进集电极，DESAT 脚被钳在 3 V 多，远低于 9 V 阈值，比较器不动作。';
+}
+seg('s2-m',v=>{s2.sc=v==='s';s2u();});
+seg('s2-c',v=>{s2.C=+v;s2u();});
+s2u();
+
+/* 3. 时间赛跑 */
+const r1X=scale(0,16,56,460),r1I=scale(0,500,246,46),r1V=scale(0,1500,246,46),r1={soft:true,vg:15},TS=1,LS=150e-9;
+mkAxes('r1-ax',r1X,r1I,[0,2,4,6,8,10,12,14,16],[0,100,200,300,400,500],'时间 / µs','Ic / A');
+setHL($('r1-vmax'),r1V(1200));$('r1-vmt').setAttribute('y',(r1V(1200)-6).toFixed(1));
+function r1u(){
+  const tb=+$('r1-b').value,I=isat(r1.vg),tsc=tscOf(I),toff=r1.soft?1.5:0.12;
+  const tTrip=TS+tb,t1=tTrip+0.3,t2=t1+toff,dur=t2-TS,dv=LS*I/(toff*1e-6),vpk=800+dv;
+  const fail=dur>tsc,brk=vpk>1200;
+  const fi=t=>t<TS?50:t<TS+0.5?50+(I-50)*(t-TS)/0.5:t<t1?I*(1-0.015*(t-TS-0.5)):t<t2?I*(1-0.015*(t1-TS-0.5))*(1-(t-t1)/toff):0;
+  const fv=t=>t<TS?2:t<TS+0.2?2+798*(t-TS)/0.2:t<t1?800:t<t2?800+dv*Math.sin(Math.PI*Math.min(1,(t-t1)/toff)):800;
+  $('r1-i').setAttribute('points',plot(fi,0,16,r1X,r1I,640));
+  $('r1-v').setAttribute('points',plot(fv,0,16,r1X,r1V,640));
+  const xs=r1X(Math.min(16,TS+tsc));setVL($('r1-tsc'),xs);$('r1-tsct').setAttribute('x',xs.toFixed(1));
+  $('r1-bad').setAttribute('x',xs.toFixed(1));$('r1-bad').setAttribute('width',(460-xs).toFixed(1));
+  const xt=r1X(Math.min(16,tTrip));setVL($('r1-trip'),xt);$('r1-tript').setAttribute('x',(xt>380?xt-5:xt+5).toFixed(1));$('r1-tript').setAttribute('text-anchor',xt>380?'end':'start');
+  $('r1-li').setAttribute('x',(r1X(TS+0.5)+4).toFixed(1));$('r1-li').setAttribute('y',(r1I(I)-8).toFixed(1));
+  $('r1-lv').setAttribute('y',(r1V(800)+18).toFixed(1));
+  $('r1-bv').textContent=tb.toFixed(1)+' µs';$('r1-b').setAttribute('aria-valuetext',tb.toFixed(1)+' µs');
+  $('r1-isc').textContent=fmtA(I)+'，'+(I/50).toFixed(1)+' 倍额定';
+  $('r1-tl').textContent=fmtT(tsc*1e-6);
+  $('r1-td').textContent=fmtT(dur*1e-6)+' = 消隐 '+tb.toFixed(1)+' + 响应 0.3 + 关断 '+toff;
+  $('r1-vp').textContent=vpk.toFixed(0)+' V，过冲 '+dv.toFixed(0)+' V';
+  let n;
+  if(fail){chip($('r1-chip'),'热失效','bad');n='短路持续时间超过了 tsc，芯片吸收的能量超过它能承受的极限，结温失控，管子烧毁。要缩短消隐时间，或降低栅压让短路电流小一点。';}
+  else if(brk){chip($('r1-chip'),'过压击穿','bad');n='及时检测到了，但关断太快：'+fmtA(I)+' 在 '+toff+' µs 内降到零，150 nH 杂散电感上产生 '+dv.toFixed(0)+' V 过冲，叠加 800 V 母线超过 1200 V 耐压。这就是必须软关断的原因。';}
+  else if(dur>0.7*tsc||vpk>1100){chip($('r1-chip'),'余量不足','warn');n='这次扛住了，但离极限很近。高温下 tsc 更短、杂散电感更大时就会出事，要给检测时间和过压都留余量。';}
+  else{chip($('r1-chip'),'安全关断','on');n='DESAT 在消隐时间后触发，软关断让电流缓慢下降，过冲很小，总时间也远小于 tsc。试试把消隐时间拉长，或者切到硬关断。';}
+  $('r1-note').textContent=n;
+}
+$('r1-b').addEventListener('input',r1u);
+seg('r1-o',v=>{r1.soft=v==='s';r1u();});
+seg('r1-g',v=>{r1.vg=+v;r1u();});
+r1u();
+</script>
+</body>
+</html>

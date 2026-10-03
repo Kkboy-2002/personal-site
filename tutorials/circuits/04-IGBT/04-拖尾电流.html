@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>拖尾电流</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.n{fill:var(--copper);fill-opacity:.1}.p{fill:var(--low);fill-opacity:.25}
+.metal{fill:var(--muted);fill-opacity:.6}.dep{fill:var(--panel);stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.edge{fill:none;stroke:var(--line);stroke-width:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#igbt">IGBT</a><span class="sp"></span><span>04 / 07</span></nav>
+<header>
+  <span class="eyebrow">IGBT · 关断过程</span>
+  <h1>拖尾电流</h1>
+  <p class="lede">IGBT 关断时，电流不是一下子归零，而是先掉一大截，再拖一条慢慢消失的尾巴。这条尾巴是 IGBT 关断损耗大、频率上不去的主要原因。</p>
+</header>
+
+<section id="src">
+  <span class="eyebrow">漂移区 · 少子</span>
+  <h2>尾巴从哪来：漂移区里的空穴没有出口</h2>
+  <p>导通时，P+ 集电区往 N− 漂移区注入了大量空穴，漂移区被电导调制。栅极一关，MOS 沟道马上消失，电子电流断了，这一段下降很快。</p>
+  <p>可是漂移区里存着的空穴不会跟着消失。靠近上方的一部分被扩展的耗尽区扫走；靠近集电极那一侧的空穴没有电场推它，只能等电子来复合，复合的快慢由少子寿命决定。这段慢慢复合形成的电流就是拖尾电流。拖尾期间 Vce 已经升到母线电压，所以尾巴虽小，损耗不小。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 300" role="img" aria-label="左侧为 IGBT 漂移区示意，关断时耗尽区从上往下扩展，剩余空穴逐渐减少；右侧为 Ic 和 Vce 关断波形与当前时刻">
+        <rect class="metal" x="40" y="30" width="170" height="10"/>
+        <rect class="p" x="40" y="40" width="170" height="20"/>
+        <rect class="n" x="40" y="60" width="170" height="170"/>
+        <rect id="t1-dep" class="dep" x="40" y="60" width="170" height="0"/>
+        <rect class="p" x="40" y="230" width="170" height="22"/>
+        <rect class="metal" x="40" y="252" width="170" height="10"/>
+        <rect class="edge" x="40" y="30" width="170" height="232"/>
+        <g id="t1-holes"></g>
+        <text id="t1-dept" x="125" y="80" text-anchor="middle" class="tm">耗尽区</text>
+        <path class="w" d="M125,30 V20 M125,262 V272"/>
+        <text x="133" y="22" class="t">E</text>
+        <text x="133" y="286" class="t">C</text>
+        <text x="30" y="54" text-anchor="end" class="tm">P</text>
+        <text x="30" y="150" text-anchor="end" class="tm">N−</text>
+        <text x="30" y="246" text-anchor="end" class="tm">P+</text>
+        <g id="t1-ax"></g>
+        <polyline id="t1-v" class="real" points=""/>
+        <polyline id="t1-i" class="real2" points=""/>
+        <text x="256" y="212" class="t" style="fill:var(--copper)">Vce</text>
+        <text x="256" y="54" class="t" style="fill:var(--low)">Ic</text>
+        <line id="t1-cur" class="ax" x1="0" y1="60" x2="0" y2="220" style="stroke:var(--ink)"/>
+      </svg>
+      <figcaption>示意图。蓝点是漂移区里剩下的空穴，虚线框是耗尽区。右侧橙线 Vce（0~600 V），蓝线 Ic（0~20 A），竖线是当前时刻。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="t1-t">时间（0.3 µs 时栅极关断）</label>
+        <span class="rv" id="t1-tv">1.20 µs</span>
+        <input type="range" id="t1-t" min="0" max="60" step="1" value="24"></div>
+      <dl class="read">
+        <dt>阶段</dt><dd><span id="t1-chip" class="chip on">拖尾</span></dd>
+        <dt>Vce</dt><dd id="t1-vce"></dd>
+        <dt>Ic</dt><dd id="t1-ic"></dd>
+        <dt>剩余少子</dt><dd id="t1-q"></dd>
+      </dl>
+      <p class="note" id="t1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="tau">
+  <span class="eyebrow">少子寿命 · 折中</span>
+  <h2>少子寿命：压降和拖尾只能二选一</h2>
+  <p>拖尾电流大致按指数衰减，时间常数就是少子寿命 τ。寿命越短，尾巴越短，Eoff 越小；可寿命短也意味着导通时空穴复合得快，电导调制变弱，Vce(sat) 升高。这就是 IGBT 的 Vce(sat)–Eoff 折中，厂家会把同一个芯片做成"低压降型"和"高速型"两个系列。</p>
+  <p class="eq">I拖尾(t) ≈ I拖尾(0)·e^(−t/τ)　　Eoff = ∫ Vce·Ic dt</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="不同少子寿命下的 IGBT 关断波形，阴影面积为关断损耗">
+        <g id="t2-ax"></g>
+        <polygon id="t2-pt" class="zone-sat" points=""/>
+        <polyline id="t2-v" class="real" points=""/>
+        <polyline id="t2-i" class="real2" points=""/>
+        <text x="466" y="30" text-anchor="end" class="t" style="fill:var(--copper)">Vce</text>
+        <text id="t2-li" x="0" y="0" class="t" style="fill:var(--low)">Ic</text>
+        <text id="t2-lt" x="0" y="0" class="tm">拖尾</text>
+        <text x="476" y="50" class="v" style="fill:var(--low)">20 A</text>
+        <text x="476" y="250" class="v" style="fill:var(--low)">0 A</text>
+      </svg>
+      <figcaption>示意波形：600 V、20 A 感性负载关断。阴影是瞬时功率 Vce·Ic，面积即 Eoff。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="t2-tau">少子寿命 τ</label>
+        <span class="rv" id="t2-tv">0.40 µs</span>
+        <input type="range" id="t2-tau" min="0.1" max="1" step="0.05" value="0.4"></div>
+      <dl class="read">
+        <dt>拖尾到 2% 的时间</dt><dd id="t2-tt"></dd>
+        <dt>Eoff</dt><dd id="t2-e"></dd>
+        <dt>其中拖尾占</dt><dd id="t2-share"></dd>
+        <dt>Vce(sat)（示意）</dt><dd id="t2-vs"></dd>
+        <dt>10 kHz 总损耗</dt><dd id="t2-p"></dd>
+        <dt>定位</dt><dd><span id="t2-chip" class="chip on">均衡</span></dd>
+      </dl>
+      <p class="note" id="t2-note"></p>
+      <p class="note">总损耗按占空比 50%、Eon 取 0.3 mJ 估算，只看趋势。</p>
+    </div>
+  </div>
+</section>
+
+<section id="dead">
+  <span class="eyebrow">桥臂 · 死区时间</span>
+  <h2>拖尾决定了死区要留多长</h2>
+  <p>半桥里上下两管绝不能同时导通。上管收到关断信号后，要经过关断延迟 td(off)、下降时间 tf，再加上一段拖尾才算真正关断。下管如果在这之前就开通，母线会经两只管子直通，出现很大的电流尖峰。所以死区时间必须大于"上管完全关断时间 − 下管开通延迟"，再留余量。IGBT 常用 1~3 µs，MOS 常用几十到几百 ns。</p>
+  <p class="eq">t死区 &gt; td(off)max + tf + 拖尾余量 − td(on)min</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 300" role="img" aria-label="半桥死区时序：上管栅极关断，经过死区后下管栅极开通，下方为上管集电极电流及拖尾，下管开通时上管剩余电流即直通电流">
+        <g id="t3-ax"></g>
+        <text x="50" y="58" text-anchor="end" class="tm">上管 Vge</text>
+        <text x="50" y="108" text-anchor="end" class="tm">下管 Vge</text>
+        <text x="50" y="160" text-anchor="end" class="tm">上管 Ic</text>
+        <polyline id="t3-g1" class="real" points=""/>
+        <polyline id="t3-g2" class="real2" points=""/>
+        <rect id="t3-dz" class="zone-cut" x="0" y="36" width="0" height="220"/>
+        <text id="t3-dzt" x="0" y="34" text-anchor="middle" class="tm">死区</text>
+        <polyline id="t3-i" class="real" points=""/>
+        <polygon id="t3-st" class="zone-sat" points="" style="fill:var(--danger);fill-opacity:.25"/>
+        <line id="t3-on" class="ax dash" x1="0" y1="36" x2="0" y2="256"/>
+        <text id="t3-ont" x="0" y="200" class="tm">下管导通</text>
+      </svg>
+      <figcaption>示意时序：0.5 µs 时上管关断信号，下管开通延迟按 0.15 µs。红色阴影是下管导通时上管还没关干净、从母线直通的那部分电流。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="t3-d">死区时间</label>
+        <span class="rv" id="t3-dv">1.5 µs</span>
+        <input type="range" id="t3-d" min="0.1" max="4" step="0.1" value="1.5"></div>
+      <div class="ctl"><span class="ctl-l">结温</span>
+        <div class="seg" id="t3-t"><button id="t3-t-25" data-v="25" aria-pressed="true">25 °C</button><button id="t3-t-125" data-v="125" aria-pressed="false">125 °C</button></div></div>
+      <dl class="read">
+        <dt>上管 td(off) + tf</dt><dd id="t3-toff"></dd>
+        <dt>拖尾时间常数</dt><dd id="t3-tau"></dd>
+        <dt>下管导通时上管残余电流</dt><dd id="t3-res"></dd>
+        <dt>10 kHz 下死区占周期</dt><dd id="t3-err"></dd>
+        <dt>评价</dt><dd><span id="t3-chip" class="chip on">合适</span></dd>
+      </dl>
+      <p class="note" id="t3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>IGBT 的拖尾电流是怎么产生的？</summary>
+      <div class="ans"><p>导通时 P+ 集电区向 N− 漂移区注入大量空穴。关断时 MOS 沟道先关，电子电流很快消失，但漂移区里存储的空穴没有被抽走的通道，靠近集电极一侧没有电场，只能靠和电子复合慢慢消失，这段电流就是拖尾电流。MOSFET 是多子器件，没有这个问题。</p></div></details>
+    <details><summary>拖尾电流有什么危害？</summary>
+      <div class="ans"><p>拖尾期间 Vce 已经是母线电压，电流虽小，Vce·Ic 的积分并不小，是 Eoff 的主要来源之一，限制了开关频率。另外它让器件真正关断的时间变长，死区时间必须留得更长。</p></div></details>
+    <details><summary>怎样减小拖尾？代价是什么？</summary>
+      <div class="ans"><p>缩短少子寿命（电子辐照、掺重金属），或者用场截止结构、减小背面 P+ 注入效率。代价是导通时电导调制变弱，Vce(sat) 升高。这就是 Vce(sat) 和 Eoff 的折中，低频选低压降型，高频选高速型。</p></div></details>
+    <details><summary>IGBT 的死区时间怎么定？</summary>
+      <div class="ans"><p>看数据手册的 td(off)、tf 和 td(on)，按最坏情况（高温、驱动电阻最大）取：死区 &gt; td(off)max + tf − td(on)min，再加余量，一般 1~3 µs。太短会直通；太长会造成输出电压误差和低速时电机转矩脉动，所以常配合死区补偿。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="03-开关频率对比.html"><span>上一页</span>开关频率对比</a><a class="next" href="05-短路耐受时间.html"><span>下一页</span>短路耐受时间</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+function mkAxes(gid,X,Y,xs,ys,xl,yl,fx){
+  const g=$(gid),x0=X(xs[0]),x1=X(xs[xs.length-1]),y0=Y(ys[0]),y1=Y(ys[ys.length-1]);
+  ys.forEach(v=>g.append(svgEl('line',{class:'gl',x1:x0,x2:x1,y1:Y(v),y2:Y(v)}),svgEl('text',{x:x0-6,y:Y(v)+4,'text-anchor':'end',class:'v'},v)));
+  xs.forEach(v=>g.append(svgEl('text',{x:X(v),y:y0+18,'text-anchor':'middle',class:'v'},fx?fx(v):v)));
+  g.append(svgEl('path',{class:'ax',d:`M${x0},${y1} V${y0} H${x1}`}),
+    svgEl('text',{x:x1,y:y0+34,'text-anchor':'end',class:'tm'},xl));
+  if(yl)g.append(svgEl('text',{x:x0+4,y:y1-12,class:'tm'},yl));
+}
+const setVL=(el,x)=>{el.setAttribute('x1',x.toFixed(1));el.setAttribute('x2',x.toFixed(1));};
+/* 通用关断波形：t 单位 µs；返回 {v,i}，V 600，I 20 */
+function offWave(t,m){
+  const a=m.t0+m.td,b=a+m.tv,c=b+m.tf;
+  const v=t<a?1.7:t<b?1.7+(600-1.7)*(t-a)/m.tv:600;
+  const i=t<b?20:t<c?20-20*(1-m.k)*(t-b)/m.tf:20*m.k*Math.exp(-(t-c)/m.tau);
+  return {v,i};
+}
+
+/* 1. 漂移区少子 */
+const t1M={t0:0.3,td:0.3,tv:0.2,tf:0.1,k:0.25,tau:0.5};
+const t1X=scale(0,3,250,440),t1V=scale(0,600,220,60),t1I=scale(0,20,220,60);
+mkAxes('t1-ax',t1X,t1V,[0,1,2,3],[0,600],'µs','');
+$('t1-v').setAttribute('points',plot(t=>offWave(t,t1M).v,0,3,t1X,t1V,300));
+$('t1-i').setAttribute('points',plot(t=>offWave(t,t1M).i,0,3,t1X,t1I,300));
+const t1H=[];
+for(let r=0;r<10;r++)for(let c=0;c<8;c++){const x=52+c*20+(r%2)*9,y=68+r*16.5;
+  const h=svgEl('circle',{cx:x,cy:y.toFixed(1),r:3,class:'lo'});$('t1-holes').append(h);t1H.push({h,y});}
+function t1u(){
+  const t=+$('t1-t').value*0.05,m=t1M,{v,i}=offWave(t,m);
+  const a=m.t0+m.td,b=a+m.tv,c=b+m.tf;
+  const Q=t<a?100:t<b?100-60*(t-a)/m.tv:t<c?40-8*(t-b)/m.tf:32*Math.exp(-(t-c)/m.tau);
+  const dep=130*Math.sqrt(v/600);
+  $('t1-dep').setAttribute('height',dep.toFixed(1));show($('t1-dept'),dep>26);
+  const yb=60+dep,alive=t1H.filter(o=>o.y>yb+4),nShow=Math.min(alive.length,Math.round(t1H.length*Q/100));
+  t1H.forEach(o=>show(o.h,false));alive.slice(-nShow).forEach(o=>show(o.h,true));
+  setVL($('t1-cur'),t1X(t));
+  $('t1-tv').textContent=t.toFixed(2)+' µs';$('t1-t').setAttribute('aria-valuetext',t.toFixed(2)+' µs');
+  $('t1-vce').textContent=v.toFixed(v<10?1:0)+' V';$('t1-ic').textContent=fmtA(i);$('t1-q').textContent=Q.toFixed(0)+'%';
+  let st,cls,n;
+  if(t<m.t0){st='导通';cls='on';n='栅极为高，漂移区里充满空穴，电导调制让压降只有 1.7 V 左右。';}
+  else if(t<a){st='关断延迟';cls='warn';n='栅极电压正在下降，还没降到米勒平台以下，沟道仍在，电流和电压都还没变。';}
+  else if(t<b){st='电压上升';cls='warn';n='沟道开始关断，耗尽区从 P 体区往下扩展，承受越来越高的电压，扩展过程中把上方的空穴扫出去。这时电流由感性负载维持，仍是 20 A。';}
+  else if(t<c){st='电流快速下降';cls='warn';n='Vce 到达母线电压后，MOS 沟道的电子电流迅速消失，电流很快掉到约 25%。';}
+  else if(i>0.2){st='拖尾';cls='bad';n='耗尽区下方还剩一块空穴，没有电场把它们推走，只能等复合。它们复合时形成的电流就是拖尾，此时电压已是 600 V。';}
+  else{st='关断完成';cls='off';n='空穴基本复合完，电流降到 1% 以下，漂移区大部分被耗尽，承受全部母线电压。';}
+  chip($('t1-chip'),st,cls);$('t1-note').textContent=n;
+}
+$('t1-t').addEventListener('input',t1u);
+t1u();
+
+/* 2. 少子寿命与 Eoff */
+const t2X=scale(0,4,56,470),t2V=scale(0,600,246,46),t2I=scale(0,20,246,46);
+mkAxes('t2-ax',t2X,t2V,[0,1,2,3,4],[0,200,400,600],'时间 / µs','Vce / V');
+function t2u(){
+  const tau=+$('t2-tau').value,m={t0:0.4,td:0.3,tv:0.08,tf:0.08,k:0.25,tau};
+  const c=m.t0+m.td+m.tv+m.tf;let E=0,Et=0;const pp=[];
+  for(let k=0;k<=800;k++){const t=k*0.005,{v,i}=offWave(t,m),p=v*i*0.005e-6;E+=p;if(t>c)Et+=p;
+    pp.push(t2X(t).toFixed(1)+','+(246-v*i/12000*200).toFixed(1));}
+  $('t2-v').setAttribute('points',plot(t=>offWave(t,m).v,0,4,t2X,t2V,400));
+  $('t2-i').setAttribute('points',plot(t=>offWave(t,m).i,0,4,t2X,t2I,400));
+  $('t2-pt').setAttribute('points','56,246 '+pp.join(' ')+' 470,246');
+  $('t2-li').setAttribute('x',(t2X(m.t0+m.td)-24).toFixed(1));$('t2-li').setAttribute('y','64');
+  $('t2-lt').setAttribute('x',(t2X(c)+14).toFixed(1));$('t2-lt').setAttribute('y',(t2I(5)-10).toFixed(1));
+  const tt=tau*Math.log(0.25/0.02),vs=1.4+0.25/Math.sqrt(tau),P=vs*20*0.5+(0.3e-3+E)*10e3;
+  $('t2-tv').textContent=tau.toFixed(2)+' µs';$('t2-tau').setAttribute('aria-valuetext',tau.toFixed(2)+' µs');
+  $('t2-tt').textContent=fmtT(tt*1e-6);$('t2-e').textContent=(E*1e3).toFixed(2)+' mJ';
+  $('t2-share').textContent=(Et/E*100).toFixed(0)+'%';$('t2-vs').textContent=fmtV(vs);$('t2-p').textContent=fmtP(P);
+  if(tau<0.3){chip($('t2-chip'),'高速型','on');$('t2-note').textContent='寿命短，尾巴很快消失，Eoff 小，适合 20 kHz 以上。代价是导通时空穴也复合得快，电导调制变弱，Vce(sat) 明显升高。';}
+  else if(tau>0.65){chip($('t2-chip'),'低压降型','warn');$('t2-note').textContent='寿命长，漂移区空穴多，Vce(sat) 很低，导通损耗小；但尾巴长，Eoff 大，只适合几 kHz 的低频场合。';}
+  else{chip($('t2-chip'),'均衡','on');$('t2-note').textContent='中等寿命，压降和拖尾各让一步。拖尾虽然电流不大，但乘上 600 V 仍占了 Eoff 的相当一部分。';}
+}
+$('t2-tau').addEventListener('input',t2u);
+t2u();
+
+/* 3. 死区时间 */
+const t3X=scale(0,5,56,496),t3={T:25},T3ON=0.15,T3G=0.5;
+mkAxes('t3-ax',t3X,scale(0,1,256,256),[0,1,2,3,4,5],[0],'时间 / µs','');
+const t3IY=scale(0,20,256,146);
+function t3u(){
+  const d=+$('t3-d').value,hot=t3.T>100,m={t0:T3G,td:hot?0.45:0.35,tv:0.08,tf:hot?0.15:0.1,k:0.2,tau:hot?0.5:0.3};
+  const ton=T3G+d+T3ON,xo=t3X(ton);
+  $('t3-g1').setAttribute('points',`56,44 ${t3X(T3G)},44 ${t3X(T3G)},70 496,70`);
+  $('t3-g2').setAttribute('points',`56,120 ${t3X(T3G+d)},120 ${t3X(T3G+d)},94 496,94`);
+  $('t3-dz').setAttribute('x',t3X(T3G).toFixed(1));$('t3-dz').setAttribute('width',(t3X(T3G+d)-t3X(T3G)).toFixed(1));
+  $('t3-dzt').setAttribute('x',((t3X(T3G)+t3X(T3G+d))/2).toFixed(1));
+  const fi=t=>offWave(t,m).i;
+  $('t3-i').setAttribute('points',plot(fi,0,5,t3X,t3IY,500));
+  const res=offWave(ton,m).i,sp=Math.min(20,res*4);
+  const stp=[];for(let k=0;k<=40;k++){const tt=k*0.01,y=sp*Math.exp(-tt/0.08)*(1-Math.exp(-tt/0.01));stp.push(t3X(ton+tt).toFixed(1)+','+t3IY(res+y).toFixed(1));}
+  $('t3-st').setAttribute('points',`${xo.toFixed(1)},256 `+stp.join(' ')+` ${t3X(ton+0.4).toFixed(1)},256`);
+  show($('t3-st'),res>0.2);
+  setVL($('t3-on'),xo);$('t3-ont').setAttribute('x',(xo>420?xo-4:xo+4).toFixed(1));$('t3-ont').setAttribute('text-anchor',xo>420?'end':'start');
+  $('t3-dv').textContent=d.toFixed(1)+' µs';$('t3-d').setAttribute('aria-valuetext',d.toFixed(1)+' µs');
+  $('t3-toff').textContent=fmtT((m.td+m.tv+m.tf)*1e-6);$('t3-tau').textContent=fmtT(m.tau*1e-6);
+  $('t3-res').textContent=fmtA(res)+'，约 '+(res/20*100).toFixed(1)+'%';
+  $('t3-err').textContent=(d*1e-6*10e3*100).toFixed(1)+'%，即 '+(d*1e-6*10e3*600).toFixed(1)+' V 平均电压误差';
+  let n;
+  if(res>2){chip($('t3-chip'),'直通','bad');n='下管开通时上管电流还很大，母线经两只管子直接短路，电流尖峰叠加在负载电流上，轻则发热，重则炸管。';}
+  else if(res>0.4){chip($('t3-chip'),'偏紧','warn');n='下管开通时上管还在拖尾，会出现一小段直通电流，增加损耗和 EMI。高温下拖尾更长，余量更不够。';}
+  else if(d>3){chip($('t3-chip'),'过大','warn');n='不会直通，但死区太长：这段时间输出电压由续流二极管决定，不受控制，造成电压误差和低速转矩脉动。';}
+  else{chip($('t3-chip'),'合适','on');n='上管已经关干净才开下管，没有直通。死区占周期的比例也不大。切到 125 °C 看看，拖尾变长后同样的死区还够不够。';}
+  $('t3-note').textContent=n;
+}
+$('t3-d').addEventListener('input',t3u);
+seg('t3-t',v=>{t3.T=+v;t3u();});
+t3u();
+</script>
+</body>
+</html>

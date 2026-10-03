@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>UART 串口</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.txt{font:500 15px var(--mono);padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);width:11em;max-width:100%}
+.smp{fill:var(--flow)}.smp.warn{fill:var(--warn)}.smp.bad{fill:var(--danger)}
+.mk{stroke:var(--flow);stroke-width:1.2}.mk.warn{stroke:var(--warn)}.mk.bad{stroke:var(--danger)}
+.zone-bad{fill:var(--danger);fill-opacity:.1}
+.tk{stroke:var(--muted);stroke-width:1}
+.ctl .seg button{padding:6px 11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#bus">通信接口</a><span class="sp"></span><span>01 / 05</span></nav>
+<header>
+  <span class="eyebrow">通信接口 · 异步串行</span>
+  <h1>UART 串口</h1>
+  <p class="lede">UART 只有收、发两根信号线，没有时钟线。收发双方事先约好波特率，靠起始位的下降沿对齐，再在每一位的中间采样。下面可以改字节、改波特率、拖误差，看一帧怎么发出去，又是怎么收错的。</p>
+</header>
+
+<section id="wire">
+  <span class="eyebrow">连线 · 交叉与共地</span>
+  <h2>三根线：TX 接 RX，地要连</h2>
+  <p>UART 是点对点、全双工的。A 的 TX 接 B 的 RX，B 的 TX 接 A 的 RX，两条线各管一个方向，可以同时收发。因为没有时钟线，所以叫异步。第三根是地线：电平都是相对地说的，信号电流也要从地线流回发送方。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 226" role="img" aria-label="设备 A 与设备 B 的 UART 连线：TX 交叉接到对方 RX，两边 GND 相连">
+        <rect class="box" x="24" y="36" width="120" height="156" rx="6"/>
+        <text x="70" y="58" text-anchor="middle" class="t">设备 A</text>
+        <text x="136" y="74" text-anchor="end" class="v">TX</text>
+        <text x="136" y="124" text-anchor="end" class="v">RX</text>
+        <text x="136" y="174" text-anchor="end" class="v">GND</text>
+        <rect class="box" x="376" y="36" width="120" height="156" rx="6"/>
+        <text x="450" y="58" text-anchor="middle" class="t">设备 B</text>
+        <text x="384" y="74" class="v">TX</text>
+        <text x="384" y="124" class="v">RX</text>
+        <text x="384" y="174" class="v">GND</text>
+        <g id="s1-g-ok">
+          <path class="w" d="M144,70 H220 L300,120 H376"/>
+          <path class="w" d="M376,70 H300 L220,120 H144"/>
+          <text x="260" y="80" text-anchor="middle" class="tm">交叉</text>
+        </g>
+        <g id="s1-g-tt" hidden>
+          <path class="w s-bad" d="M144,70 H376"/>
+          <path class="w" d="M144,120 H376"/>
+          <text x="260" y="62" text-anchor="middle" class="tm">TX 对 TX</text>
+          <text x="260" y="112" text-anchor="middle" class="tm">RX 对 RX</text>
+        </g>
+        <g id="s1-gnd">
+          <path class="w" d="M144,170 H376 M260,170 V190 M246,190 H274 M251,195 H269 M256,200 H264"/>
+          <circle class="dot" cx="260" cy="170" r="3.5"/>
+        </g>
+        <g id="s1-g-ng" hidden>
+          <path class="w" d="M144,170 H228 M292,170 H376"/>
+          <text x="260" y="174" text-anchor="middle" class="t" style="fill:var(--danger)">没接</text>
+        </g>
+        <path id="s1-fa" class="flow thin" d="M146,70 H220 L300,120 H374"/>
+        <path id="s1-fb" class="flow thin" d="M374,70 H300 L220,120 H146"/>
+        <path id="s1-ra" class="flow thin" d="M374,170 H146"/>
+        <path id="s1-rb" class="flow thin" d="M146,170 H374"/>
+        <path id="s1-fx" class="flow thin bad" d="M146,70 H374" hidden/>
+        <text x="260" y="218" text-anchor="middle" class="tm">公共地</text>
+      </svg>
+      <figcaption>绿色虚线是信号电流：从发送方 TX 出发，进接收方 RX，再经 GND 线回到发送方。红色表示异常电流或没有回路。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">接法</span>
+        <div class="seg" id="s1-w"><button id="s1-w-ok" data-v="ok" aria-pressed="true">交叉连接</button><button id="s1-w-tt" data-v="tt" aria-pressed="false">TX 接 TX</button><button id="s1-w-ng" data-v="ng" aria-pressed="false">不接地</button></div></div>
+      <div class="ctl"><span class="ctl-l">谁在发送</span>
+        <div class="seg" id="s1-d"><button id="s1-d-a" data-v="a" aria-pressed="true">A 发</button><button id="s1-d-b" data-v="b" aria-pressed="false">B 发</button><button id="s1-d-ab" data-v="ab" aria-pressed="false">同时收发</button></div></div>
+      <dl class="read">
+        <dt>B 收 A 的数据</dt><dd id="s1-ab">能收到</dd>
+        <dt>A 收 B 的数据</dt><dd id="s1-ba">这个方向空闲</dd>
+        <dt>信号回流</dt><dd id="s1-ret">经 GND 线回到 A</dd>
+        <dt>状态</dt><dd><span id="s1-st" class="chip on">正常</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="frame">
+  <span class="eyebrow">帧格式 · 起始位到停止位</span>
+  <h2>一帧长什么样</h2>
+  <p>空闲时线路保持高电平。发送方先拉低一位，这是起始位，接收方就靠这个下降沿对齐。接着从最低位 D0 开始逐位发数据，常见 8 位，可设 5~9 位。然后是可选的校验位，最后是高电平的停止位，长 1、1.5 或 2 位，线路回到空闲。常说的 8N1 就是 8 个数据位、无校验、1 个停止位。</p>
+  <p class="eq">位时间 Tbit = 1 / 波特率；115200 波特时 Tbit ≈ 8.68 µs</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 560 236" role="img" aria-label="UART 发送端 TX 波形：空闲高电平，起始位 0，数据位低位先发，可选校验位，停止位 1">
+        <rect id="s2-hl" class="zone-ok" x="70" y="44" width="30" height="140"/>
+        <g id="s2-grid"></g>
+        <line id="s2-zero" class="gl dash" x1="70" y1="115" x2="540" y2="115" hidden/>
+        <text id="s2-zt" x="64" y="119" text-anchor="end" class="v" hidden>0 V</text>
+        <text x="20" y="119" class="t">TX</text>
+        <text id="s2-yh" x="64" y="84" text-anchor="end" class="v">3.3 V</text>
+        <text id="s2-yl" x="64" y="154" text-anchor="end" class="v">0 V</text>
+        <polyline id="s2-wave" class="real" points="70,80 540,80"/>
+        <g id="s2-lab"></g>
+        <path class="ax" d="M70,192 H540"/>
+        <g id="s2-ax"></g>
+        <text x="540" y="230" text-anchor="end" class="tm">时间 µs，从起始位算起</text>
+      </svg>
+      <figcaption>绿色底色是当前位，圆点是接收端在每一位中间的采样点。上排是位名，下排是这一位的逻辑值。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-ch">要发的字节：输入一个字符，或 0x 开头的十六进制</label>
+        <input class="txt" type="text" id="s2-ch" value="A" maxlength="4" autocomplete="off"></div>
+      <div class="ctl"><span class="ctl-l">数据位 · 校验 · 停止位</span>
+        <div class="seg" id="s2-n"><button id="s2-n-7" data-v="7" aria-pressed="false">7 位</button><button id="s2-n-8" data-v="8" aria-pressed="true">8 位</button></div>
+        <div class="seg" id="s2-p"><button id="s2-p-n" data-v="n" aria-pressed="true">无校验</button><button id="s2-p-e" data-v="e" aria-pressed="false">偶校验</button><button id="s2-p-o" data-v="o" aria-pressed="false">奇校验</button></div>
+        <div class="seg" id="s2-s"><button id="s2-s-1" data-v="1" aria-pressed="true">停 1</button><button id="s2-s-15" data-v="1.5" aria-pressed="false">停 1.5</button><button id="s2-s-2" data-v="2" aria-pressed="false">停 2</button></div></div>
+      <div class="ctl"><span class="ctl-l">波特率 · 电平标准</span>
+        <div class="seg" id="s2-b"><button id="s2-b-9600" data-v="9600" aria-pressed="false">9600</button><button id="s2-b-115200" data-v="115200" aria-pressed="true">115200</button><button id="s2-b-921600" data-v="921600" aria-pressed="false">921600</button></div>
+        <div class="seg" id="s2-lv"><button id="s2-lv-ttl" data-v="ttl" aria-pressed="true">TTL 3.3 V</button><button id="s2-lv-rs" data-v="rs" aria-pressed="false">RS-232</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s2-bit">当前位</label>
+        <span class="rv" id="s2-bv">起始位</span>
+        <input type="range" id="s2-bit" min="0" max="9" step="1" value="0">
+        <div class="seg"><button id="s2-play" aria-pressed="false">▶ 逐位播放</button></div></div>
+      <dl class="read">
+        <dt>字节</dt><dd id="s2-hex">0x41</dd>
+        <dt>线上顺序</dt><dd id="s2-ord">—</dd>
+        <dt>校验位</dt><dd id="s2-par">无</dd>
+        <dt>位时间</dt><dd id="s2-tb">8.68 µs</dd>
+        <dt>一帧</dt><dd id="s2-tf">10 位</dd>
+        <dt>有效吞吐</dt><dd id="s2-rate">11520 字节/s</dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="err">
+  <span class="eyebrow">过采样 · 波特率误差</span>
+  <h2>接收端怎么采样，误差多大会收错</h2>
+  <p>接收端用 16 倍波特率的时钟盯着 RX 线。看到下降沿后数 8 个时钟，到了起始位中间再确认一次仍是低电平，排除毛刺。之后每数 16 个时钟采一次，正好落在每一位的中间。不少 UART 还在中间连采三个点投票。</p>
+  <p>因为每帧只在起始位对齐一次，后面全靠自己的时钟计数，所以双方波特率差一点，采样点就一位比一位偏，偏到最后的停止位最严重。</p>
+  <p class="eq">8N1 停止位的采样偏移 ≈ 9.5 × 波特率误差（以位宽计），超过 0.5 位就采到隔壁位</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 560 240" role="img" aria-label="发送端波形与接收端 16 倍采样时钟，接收端波特率偏快或偏慢时采样点逐位偏移">
+        <g id="s3-bad"></g>
+        <g id="s3-grid"></g>
+        <text x="60" y="104" text-anchor="end" class="t">RX</text>
+        <text x="60" y="182" text-anchor="end" class="t">采样</text>
+        <polyline id="s3-wave" class="real" points="70,70 540,70"/>
+        <g id="s3-lab"></g>
+        <g id="s3-tk"></g>
+        <g id="s3-mk"></g>
+        <path class="ax" d="M70,196 H540"/>
+        <g id="s3-ax"></g>
+        <text x="540" y="234" text-anchor="end" class="tm">时间，以发送端位宽计</text>
+      </svg>
+      <figcaption>下排短刻度是接收端的 16 倍时钟，长刻度是接收端认为的位边界。圆点是采样点：绿色安全，黄色贴边，红色采错。示意图，忽略了起始沿检测的 1/16 位误差。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">发送的字节（8N1）</span>
+        <div class="seg" id="s3-v"><button id="s3-v-55" data-v="85" aria-pressed="true">0x55 'U'</button><button id="s3-v-0f" data-v="15" aria-pressed="false">0x0F</button><button id="s3-v-a" data-v="65" aria-pressed="false">0x41 'A'</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s3-e">接收端波特率误差（相对发送端）</label>
+        <span class="rv" id="s3-ev">+1.5%</span>
+        <input type="range" id="s3-e" min="-7" max="7" step="0.5" value="1.5"></div>
+      <dl class="read">
+        <dt>接收端实际波特率</dt><dd id="s3-rb">116928</dd>
+        <dt>停止位采样偏移</dt><dd id="s3-off">—</dd>
+        <dt>收到的字节</dt><dd id="s3-got">0x55</dd>
+        <dt>结论</dt><dd><span id="s3-st" class="chip on">正常</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+      <p class="note">理论极限是停止位偏移不超过半位，约 ±5.3%。扣掉起始沿检测和三点投票各约 1/16 位的不确定度，只剩约 ±3.9%，而且这是收发两边误差加起来的。再给噪声和边沿变形留余量，工程上一般要求收发双方波特率相差小于约 2%~3%。</p>
+    </div>
+  </div>
+</section>
+
+<section id="lvl">
+  <span class="eyebrow">电平标准 · TTL 与 RS-232</span>
+  <h2>同样叫串口，电平可能完全不同</h2>
+  <p>UART 只规定帧格式，不规定电压。MCU 引脚直接出来的是 TTL/CMOS 电平；电脑上老式 DB9 串口是 RS-232 电平。两者逻辑相反、电压相差很大，直接对接轻则乱码，重则烧 IO。上面帧格式图里切到 RS-232，可以看到整条波形上下翻转。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>项目</th><th>TTL / CMOS 串口</th><th>RS-232</th></tr></thead>
+    <tbody>
+      <tr><td>逻辑 1</td><td>高电平，接近 VCC（3.3 V 或 5 V）</td><td class="n">−3 ~ −15 V</td></tr>
+      <tr><td>逻辑 0</td><td>低电平，接近 0 V</td><td class="n">+3 ~ +15 V</td></tr>
+      <tr><td>空闲时</td><td>高电平</td><td>负电压</td></tr>
+      <tr><td>怎么产生</td><td>MCU 引脚直出，USB 转串口模块多数也是这种</td><td>要电平转换芯片，如 MAX232、MAX3232，内部电荷泵产生正负电压</td></tr>
+      <tr><td>距离</td><td>板内或几十厘米</td><td>标准按电缆电容 2500 pF 计，约 15 m（典型值）</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>UART 没有时钟线，收发双方怎么同步？</summary>
+      <div class="ans"><p>靠两点。一是事先约定同样的波特率；二是每帧开头的起始位下降沿，接收端看到它就重新开始计时。接收端用 16 倍波特率的时钟过采样，数到每一位的中间去采。因为每帧都重新对齐，误差不会跨帧累积。</p></div></details>
+    <details><summary>115200 波特率、8N1，一秒能传多少字节？</summary>
+      <div class="ans"><p>一个字节要 1 个起始位 + 8 个数据位 + 1 个停止位 = 10 位。115200 / 10 = 11520 字节每秒，约 11.25 KB/s。UART 一个码元就是一位，所以这里波特率等于比特率。</p></div></details>
+    <details><summary>波特率误差允许多大？</summary>
+      <div class="ans"><p>误差会一位一位累积，8N1 最后的停止位偏得最多，约 9.5 倍的误差。偏移超过半位就采到隔壁位，理论极限约 5%，扣掉采样不确定度约 3.9%。这是双方合计，所以一般要求收发双方波特率相差小于 2%~3%。用内部 RC 振荡器，或者分频除不尽的时候要特别注意。</p></div></details>
+    <details><summary>停止位有什么用？采到 0 会怎样？</summary>
+      <div class="ans"><p>停止位是高电平，保证下一帧的起始位前面一定有一个下降沿可以对齐，也给接收端留出处理时间。接收端在停止位位置采到 0，就报帧错误，常见原因是波特率不一致或线上有干扰。</p></div></details>
+    <details><summary>MCU 的串口能直接接电脑的 RS-232 口吗？</summary>
+      <div class="ans"><p>不能。RS-232 的逻辑 1 是负电压，逻辑 0 是 +3~+15 V，和 TTL 电平逻辑相反、幅度也大得多，直接接可能烧坏 IO。中间要加 MAX3232 这类电平转换芯片，或者用 USB 转 TTL 串口模块。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="next" href="02-SPI.html"><span>下一页</span>SPI</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 公用：按边界数组 xs 画阶梯线，lv[i] 是 xs[i]~xs[i+1] 之间的电平，yOf 把电平换成纵坐标 */
+function stepPts(lv,xs,yOf){
+  const p=[];
+  lv.forEach((b,i)=>{const x=xs[i].toFixed(1);
+    if(i===0)p.push(x+','+yOf(b));
+    else if(b!==lv[i-1])p.push(x+','+yOf(lv[i-1]),x+','+yOf(b));});
+  p.push(xs[lv.length].toFixed(1)+','+yOf(lv[lv.length-1]));
+  return p.join(' ');
+}
+const bin8=(v,n)=>{const s=v.toString(2).padStart(n,'0');return n===8?s.slice(0,4)+' '+s.slice(4):s;};
+
+/* 1. 连线 */
+const s1={w:'ok',d:'a'};
+const s1N={
+  ok:{a:'A 的 TX 驱动线路，B 的 RX 只是个输入，几乎不取电流。电流从 A 出发，经 GND 线回到 A，构成回路。',
+      b:'B 发、A 收，走的是另一根线。两条线互不相干，这就是全双工。',
+      ab:'两个方向各用一根线，可以同时收发，互不干扰。它们共用一根地线作回流。'},
+  tt:'TX 接 TX 时，两个输出端被连在一起。一边输出高、另一边输出低，电流从高的那边灌进低的那边，而且两边都收不到数据。调板子时串口没反应，第一件事就是查 TX、RX 有没有接反。',
+  ng:'两块板子不共地，接收端的 0 V 和发送端的 0 V 不是同一个电位，信号电流也没有回路。结果是时好时坏的乱码，两边地电位差大的时候还可能打坏 IO。'
+};
+function s1u(){
+  const w=s1.w,d=s1.d,a=d!=='b',b=d!=='a',ok=w==='ok',ng=w==='ng';
+  show($('s1-g-ok'),w!=='tt');show($('s1-g-tt'),w==='tt');
+  show($('s1-gnd'),!ng);show($('s1-g-ng'),ng);
+  const off=a&&b?4:0;
+  $('s1-ra').setAttribute('d',`M374,${170-off} H146`);$('s1-rb').setAttribute('d',`M146,${170+off} H374`);
+  show($('s1-fa'),w!=='tt'&&a);show($('s1-fb'),w!=='tt'&&b);
+  $('s1-fa').classList.toggle('bad',ng);$('s1-fb').classList.toggle('bad',ng);
+  show($('s1-ra'),ok&&a);show($('s1-rb'),ok&&b);
+  show($('s1-fx'),w==='tt');
+  $('s1-fx').setAttribute('d',d==='b'?'M374,70 H146':'M146,70 H374');
+  const rx=(on,from)=>ok?(on?'能收到':'这个方向空闲'):w==='tt'?'收不到，'+from+' 的 TX 接到了对方 TX':(on?'乱码，没有公共参考':'—');
+  $('s1-ab').textContent=rx(a,'A');$('s1-ba').textContent=rx(b,'B');
+  $('s1-ret').textContent=ok?(d==='ab'?'两个方向都经 GND 线返回':'经 GND 线回到 '+(a?'A':'B')):w==='tt'?'两个输出直接对顶':'没有回路';
+  if(ok)chip($('s1-st'),'正常','on');else if(w==='tt')chip($('s1-st'),'两个输出打架','bad');else chip($('s1-st'),'乱码，可能损坏','bad');
+  $('s1-note').textContent=ok?s1N.ok[d]:s1N[w];
+}
+seg('s1-w',v=>{s1.w=v;s1u();});
+seg('s1-d',v=>{s1.d=v;s1u();});
+s1u();
+
+/* 2. 帧格式 */
+const s2={v:0x41,n:8,par:'n',stop:1,baud:115200,rs:false,bit:0},s2X0=70,s2X1=540;
+function s2cells(){
+  const n=s2.n,v=s2.v&((1<<n)-1),c=[{l:'闲',v:1,w:1,k:'idle'},{l:'起',v:0,w:1,k:'start'}];let ones=0;
+  for(let i=0;i<n;i++){const b=(v>>i)&1;ones+=b;c.push({l:'D'+i,v:b,w:1,k:'data',i});}
+  if(s2.par!=='n')c.push({l:'P',v:s2.par==='e'?ones%2:1-ones%2,w:1,k:'par'});
+  c.push({l:'停',v:1,w:s2.stop,k:'stop'},{l:'闲',v:1,w:1,k:'idle'});
+  return {c,ones,v};
+}
+function s2u(){
+  const {c,ones,v}=s2cells(),tot=c.reduce((s,x)=>s+x.w,0),dx=(s2X1-s2X0)/tot,xs=[s2X0];
+  c.forEach(x=>xs.push(xs[xs.length-1]+x.w*dx));
+  const yOf=b=>((s2.rs?!b:b)?80:150);
+  $('s2-wave').setAttribute('points',stepPts(c.map(x=>x.v),xs,yOf));
+  const gg=$('s2-grid'),lab=$('s2-lab'),ax=$('s2-ax');gg.textContent='';lab.textContent='';ax.textContent='';
+  c.forEach((x,i)=>{const cx=(xs[i]+xs[i+1])/2;
+    if(i>0)gg.append(svgEl('line',{class:'gl',x1:xs[i].toFixed(1),y1:66,x2:xs[i].toFixed(1),y2:162}));
+    lab.append(svgEl('text',{x:cx.toFixed(1),y:62,'text-anchor':'middle',class:x.k==='idle'?'tm':'t'},x.l));
+    lab.append(svgEl('text',{x:cx.toFixed(1),y:178,'text-anchor':'middle',class:'v'},x.v));
+    if(x.k!=='idle')lab.append(svgEl('circle',{class:'smp',cx:(xs[i]+Math.min(x.w,1)*dx/2).toFixed(1),cy:yOf(x.v),r:3.5}));
+  });
+  const fb=tot-2,tb=1/s2.baud,us=tb*1e6;
+  for(let k=0;k<=Math.floor(fb);k++){const x=(xs[1]+k*dx).toFixed(1);
+    ax.append(svgEl('line',{class:'ax',x1:x,y1:192,x2:x,y2:197}));
+    if(k%2===0){const t=k*us;ax.append(svgEl('text',{x,y:212,'text-anchor':'middle',class:'v'},t<10?+t.toFixed(1):Math.round(t)));}}
+  $('s2-yh').textContent=s2.rs?'+12 V':'3.3 V';$('s2-yl').textContent=s2.rs?'−12 V':'0 V';
+  show($('s2-zero'),s2.rs);show($('s2-zt'),s2.rs);
+  const nb=c.length-2,rg=$('s2-bit');rg.max=nb-1;if(s2.bit>nb-1)s2.bit=nb-1;rg.value=s2.bit;
+  const ci=s2.bit+1,cur=c[ci];
+  $('s2-hl').setAttribute('x',xs[ci].toFixed(1));$('s2-hl').setAttribute('width',(xs[ci+1]-xs[ci]).toFixed(1));
+  const nm=cur.k==='start'?'起始位':cur.k==='stop'?'停止位':cur.k==='par'?'校验位':'D'+cur.i;
+  $('s2-bv').textContent=nm+' = '+cur.v;rg.setAttribute('aria-valuetext',nm);
+  const t0=(xs[ci]-xs[1])/dx*tb,t1=(xs[ci+1]-xs[1])/dx*tb,ft=t=>t===0?'0':fmtT(t);
+  let note;
+  if(cur.k==='start')note='起始位固定为 0。线路从空闲高电平跳到低，接收端看到这个下降沿就开始计时，到这一位中间再确认一次。';
+  else if(cur.k==='data')note='D'+cur.i+' = '+cur.v+'。'+(cur.i===0?'数据从最低位 D0 先发，所以线上的顺序和平时写的二进制是反的。':cur.i===s2.n-1?'最高位最后发。':'第 '+(cur.i+1)+' 个数据位，接收端在位中间采样。');
+  else if(cur.k==='par')note='校验位 = '+cur.v+'。'+(s2.par==='e'?'偶校验：让数据位加校验位里 1 的总数为偶数。':'奇校验：让数据位加校验位里 1 的总数为奇数。')+'它只能发现奇数个位出错。';
+  else note='停止位固定为 1，长 '+s2.stop+' 位。它保证下一帧起始位前一定是高电平，有下降沿可对齐。接收端在这里采到 0 就报帧错误。';
+  if(s2.rs)note+=' RS-232 电平逻辑反相：逻辑 1 在线上是负电压。';
+  $('s2-note').textContent=note+' 时间 '+ft(t0)+' ~ '+ft(t1)+'。';
+  $('s2-hex').textContent='0x'+v.toString(16).toUpperCase().padStart(2,'0')+'，'+bin8(v,s2.n)+(s2.v!==v?'（最高位被丢掉）':'');
+  let ord='';for(let i=0;i<s2.n;i++)ord+=(v>>i)&1;
+  $('s2-ord').textContent='0 | '+ord+(s2.par!=='n'?' | '+c[s2.n+2].v:'')+' | 1';
+  $('s2-par').textContent=s2.par==='n'?'无':(s2.par==='e'?'偶校验':'奇校验')+'：数据里 1 有 '+ones+' 个，校验位 '+c[s2.n+2].v;
+  $('s2-tb').textContent=fmtT(tb);
+  $('s2-tf').textContent=fb+' 位，'+fmtT(fb*tb);
+  $('s2-rate').textContent=Math.round(s2.baud/fb)+' 字节/s';
+}
+$('s2-ch').addEventListener('input',()=>{
+  const s=$('s2-ch').value.trim();let v=null;
+  if(/^0x[0-9a-f]{1,2}$/i.test(s))v=parseInt(s,16);else if(s.length===1&&s.charCodeAt(0)<256)v=s.charCodeAt(0);
+  if(v!==null){s2.v=v;s2u();}
+});
+seg('s2-n',v=>{s2.n=+v;s2u();});
+seg('s2-p',v=>{s2.par=v;s2u();});
+seg('s2-s',v=>{s2.stop=+v;s2u();});
+seg('s2-b',v=>{s2.baud=+v;s2u();});
+seg('s2-lv',v=>{s2.rs=v==='rs';s2u();});
+$('s2-bit').addEventListener('input',()=>{s2.bit=+$('s2-bit').value;s2u();});
+let s2timer=null;
+$('s2-play').addEventListener('click',()=>{
+  const b=$('s2-play');
+  if(s2timer){clearInterval(s2timer);s2timer=null;b.textContent='▶ 逐位播放';b.setAttribute('aria-pressed','false');return;}
+  b.textContent='⏸ 暂停';b.setAttribute('aria-pressed','true');
+  s2timer=setInterval(()=>{s2.bit=(s2.bit+1)%(+$('s2-bit').max+1);s2u();},700);
+});
+s2u();
+
+/* 3. 过采样与误差 */
+const s3={v:0x55,e:1.5},s3dx=470/11.5,s3X=t=>70+(t+1)*s3dx;
+function s3u(){
+  const e=s3.e/100,bits=[0];for(let i=0;i<8;i++)bits.push((s3.v>>i)&1);bits.push(1);
+  const lv=[1].concat(bits,[1]),xs=[-1,0,1,2,3,4,5,6,7,8,9,10,10.5].map(s3X),yOf=b=>b?70:130;
+  $('s3-wave').setAttribute('points',stepPts(lv,xs,yOf));
+  const g=$('s3-grid'),lab=$('s3-lab'),tk=$('s3-tk'),mk=$('s3-mk'),bad=$('s3-bad'),ax=$('s3-ax');
+  [g,lab,tk,mk,bad,ax].forEach(el=>el.textContent='');
+  const names=['起','D0','D1','D2','D3','D4','D5','D6','D7','停'];
+  for(let k=0;k<=10;k++){const x=s3X(k).toFixed(1);
+    g.append(svgEl('line',{class:'gl',x1:x,y1:58,x2:x,y2:142}));
+    ax.append(svgEl('line',{class:'ax',x1:x,y1:196,x2:x,y2:201}));
+    if(k%2===0)ax.append(svgEl('text',{x,y:216,'text-anchor':'middle',class:'v'},k));
+    if(k<10)lab.append(svgEl('text',{x:s3X(k+0.5).toFixed(1),y:52,'text-anchor':'middle',class:'t'},names[k]));}
+  const tr=1/(1+e);
+  for(let j=0;j<=168;j++){const t=j*tr/16;if(t>10.5)break;const x=s3X(t).toFixed(1),big=j%16===0;
+    tk.append(svgEl('line',{class:'tk',x1:x,y1:big?166:174,x2:x,y2:186}));}
+  const txAt=t=>t<0||t>=10?1:bits[Math.floor(t)];
+  let got=0,worst=0,anyBad=false,anyWarn=false,frameErr=false;
+  for(let k=0;k<10;k++){
+    const ts=(k+0.5)*tr,off=ts-(k+0.5),val=txAt(ts),right=val===bits[k],ao=Math.abs(off);
+    const cls=!right?'bad':ao>0.375?'warn':'';
+    if(!right){anyBad=true;bad.append(svgEl('rect',{class:'zone-bad',x:s3X(k).toFixed(1),y:58,width:s3dx.toFixed(1),height:84}));}
+    if(cls==='warn')anyWarn=true;
+    if(k>=1&&k<=8&&val)got|=1<<(k-1);
+    if(k===9){frameErr=val===0;worst=off;}
+    const x=s3X(ts).toFixed(1);
+    mk.append(svgEl('line',{class:'mk '+cls,x1:x,y1:yOf(val),x2:x,y2:186}));
+    mk.append(svgEl('circle',{class:'smp '+cls,cx:x,cy:yOf(val),r:4}));
+  }
+  const sg=s3.e>0?'+':s3.e<0?'−':'±';
+  $('s3-ev').textContent=sg+Math.abs(s3.e)+'%';$('s3-e').setAttribute('aria-valuetext',sg+Math.abs(s3.e)+'%');
+  $('s3-rb').textContent=Math.round(115200*(1+e))+' 波特（发送端 115200）';
+  $('s3-off').textContent=(Math.abs(worst)*100).toFixed(0)+'% 位宽，'+(worst<0?'提前':worst>0?'滞后':'正好在中间');
+  $('s3-got').textContent='0x'+got.toString(16).toUpperCase().padStart(2,'0')+(frameErr?'，停止位采到 0，帧错误':got===s3.v?'，正确':'，数据错');
+  let note;
+  if(anyBad){chip($('s3-st'),'收错','bad');note='接收端'+(e>0?'偏快，采样点一位比一位提前':'偏慢，采样点一位比一位滞后')+'，后面几位已经跑出本位的窗口，采到了隔壁位，红色底色就是采错的位。';}
+  else if(anyWarn){chip($('s3-st'),'临界','warn');note='最后几位的采样点已经贴近位边界，余量不到 1/8 位。再加上边沿抖动或噪声，随时可能出错。有些位侥幸采对，是因为隔壁位恰好同值。';}
+  else{chip($('s3-st'),'正常','on');note='采样点虽然在逐位漂移，但到停止位还在本位中间附近，每一位都采对了。继续拖大误差，看最后几位先出问题。';}
+  $('s3-note').textContent=note;
+}
+seg('s3-v',v=>{s3.v=+v;s3u();});
+$('s3-e').addEventListener('input',()=>{s3.e=+$('s3-e').value;s3u();});
+s3u();
+</script>
+</body>
+</html>

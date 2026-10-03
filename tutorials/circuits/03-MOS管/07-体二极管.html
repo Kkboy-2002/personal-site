@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>体二极管</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.pz{fill:var(--copper);fill-opacity:.18;stroke:var(--line)}
+.nz{fill:var(--low);fill-opacity:.30;stroke:var(--line)}
+.nd{fill:var(--low);fill-opacity:.10;stroke:var(--line)}
+.ox{fill:var(--muted);fill-opacity:.35}
+.chn{fill:var(--low);fill-opacity:.9}
+.plate{stroke:currentColor;stroke-width:3;stroke-linecap:round}
+.hl{color:var(--copper)}
+figure svg+svg{margin-top:10px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#mos">MOS管</a><span class="sp"></span><span>07 / 09</span></nav>
+<header>
+  <span class="eyebrow">MOS管 · 体二极管</span>
+  <h1>体二极管</h1>
+  <p class="lede">每颗分立 MOS 管里都藏着一个二极管，它不是故意加的，是结构带来的。它能帮忙续流，也会带来反向恢复和"关不断"的麻烦。</p>
+</header>
+
+<section id="origin">
+  <span class="eyebrow">来源 · 方向 · 沟道反向导通</span>
+  <h2>源极和体区一短接，二极管就出来了</h2>
+  <p>功率 MOS 管大多是纵向结构：漏极在芯片背面，是 N+ 衬底和 N− 漂移区；正面是 P 体区，里面再做 N+ 源区。为了不让 P 体区悬空、不让寄生 NPN 三极管被触发，源极金属同时压在 N+ 源区和 P 体区上，把两者短接。于是 P 体区到 N− 漂移区这个 PN 结，就变成了一个从 S 指向 D 的二极管。</p>
+  <p>还有一点常被忽略：沟道本身是双向的。栅极开着时，电流既能 D → S，也能 S → D。同步整流正是利用沟道反向导通，把体二极管"短路"掉。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 284" role="img" aria-label="纵向功率 NMOS 剖面：底部漏极 N+ 衬底和 N− 漂移区，上部 P 体区和 N+ 源区，源极金属短接 N+ 源区与 P 体区，P 体区与漂移区之间形成体二极管">
+        <text x="210" y="16" text-anchor="middle" class="v">S 源极</text>
+        <path class="w" d="M86,62 V26 H334 V62"/>
+        <path class="w" d="M210,72 V46"/>
+        <text x="218" y="52" class="t">G</text>
+        <rect class="nd" x="20" y="90" width="380" height="130"/>
+        <rect class="nz" x="20" y="220" width="380" height="30"/>
+        <text x="30" y="240" class="tm">N+ 衬底</text>
+        <text x="210" y="200" text-anchor="middle" class="t">N− 漂移区</text>
+        <path class="pz" d="M20,90 V140 Q20,150 30,150 H160 Q170,150 170,140 V90 Z"/>
+        <path class="pz" d="M250,90 V140 Q250,150 260,150 H390 Q400,150 400,140 V90 Z"/>
+        <text x="50" y="136" class="t">P 体区</text>
+        <text x="300" y="136" class="t">P 体区</text>
+        <rect class="nz" x="110" y="90" width="50" height="20"/>
+        <rect class="nz" x="260" y="90" width="50" height="20"/>
+        <text x="135" y="105" text-anchor="middle" class="tm">N+</text>
+        <text x="285" y="105" text-anchor="middle" class="tm">N+</text>
+        <rect class="box" x="40" y="62" width="92" height="28" rx="2"/>
+        <rect class="box" x="288" y="62" width="92" height="28" rx="2"/>
+        <rect class="ox" x="140" y="84" width="140" height="6"/>
+        <rect class="box" x="140" y="72" width="140" height="12" rx="2"/>
+        <rect id="s1-ch1" class="chn" x="160" y="90" width="10" height="5"/>
+        <rect id="s1-ch2" class="chn" x="250" y="90" width="10" height="5"/>
+        <rect class="box" x="20" y="250" width="380" height="10"/>
+        <text x="210" y="278" text-anchor="middle" class="v">D 漏极，芯片背面</text>
+        <g id="s1-dio">
+          <path class="w" d="M70,150 V160 M70,174 V190"/>
+          <polygon class="ah" points="63,160 77,160 70,173"/>
+          <line class="w" x1="63" y1="174" x2="77" y2="174"/>
+          <text x="84" y="176" class="t">体二极管</text>
+        </g>
+        <path id="s1-fc" class="flow" d="M210,246 V94 H120 V64"/>
+        <path id="s1-fd" class="flow" d="M60,64 V246"/>
+      </svg>
+      <figcaption>源极金属（上方灰框）同时接触 N+ 源区和 P 体区。体二极管在 P 体区和 N− 漂移区的交界处。栅压打开时，蓝色细条是 P 体区表面的反型层沟道。绿色虚线为电流。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">D-S 电压极性</span>
+        <div class="seg" id="s1-v"><button id="s1-v-p" data-v="p" aria-pressed="false">Vds = +24 V</button><button id="s1-v-n" data-v="n" aria-pressed="true">外电路迫使 5 A 从 S 流向 D</button></div></div>
+      <div class="ctl"><span class="ctl-l">栅源电压</span>
+        <div class="seg" id="s1-g"><button id="s1-g-0" data-v="0" aria-pressed="true">Vgs = 0</button><button id="s1-g-1" data-v="1" aria-pressed="false">Vgs = 10 V</button></div></div>
+      <dl class="read">
+        <dt>体二极管</dt><dd><span id="s1-ds" class="chip on">正偏导通</span></dd>
+        <dt>沟道</dt><dd id="s1-cs">关断</dd>
+        <dt>电流方向</dt><dd id="s1-dir">S → D，5 A</dd>
+        <dt>管压降</dt><dd id="s1-vd">Vsd ≈ 0.85 V</dd>
+        <dt>损耗</dt><dd id="s1-p">4.3 W</dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="dead">
+  <span class="eyebrow">死区时间 · 同步整流 · 反向恢复</span>
+  <h2>半桥死区里，电流靠体二极管续流</h2>
+  <p>同步 Buck 的上下两管不能同时导通，否则输入短路，所以切换时要留一段两管都关的死区时间。电感电流不能突变，死区里它只能从地经下管体二极管流向开关节点，开关节点被拉到约 −0.8 V。死区一结束下管开通，电流改走沟道，压降降到几十毫伏，这就是同步整流。</p>
+  <p>体二极管导通时 PN 结里存了少数载流子电荷 Qrr。下一个周期上管开通时，这些电荷要被反向抽走，形成一个反向恢复电流尖峰，叠加在上管电流上，造成额外损耗 ≈ Qrr·Vin·fsw，还会激起振铃和 EMI。MOS 体二极管的恢复特性通常较差，所以死区不能太长，大电流场合还会并联肖特基，或选快恢复体二极管的型号。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 400 276" role="img" aria-label="同步 Buck 半桥：上管、下管、电感和负载，按所选阶段显示电流路径">
+        <text x="150" y="18" text-anchor="middle" class="v">Vin 24 V</text>
+        <path class="w" d="M138,26 H162"/>
+        <path class="w" d="M150,26 V72 H128 M128,108 H150 M128,90 H150 V172 H128 M128,208 H150 M128,190 H150 V250 M136,250 H164 M141,255 H159 M146,260 H154"/>
+        <g id="s2-q1">
+          <line class="bar" x1="116" y1="70" x2="116" y2="110"/>
+          <line class="bar" x1="128" y1="66" x2="128" y2="78"/>
+          <line class="bar" x1="128" y1="84" x2="128" y2="96"/>
+          <line class="bar" x1="128" y1="102" x2="128" y2="114"/>
+          <polygon class="ah" points="131,90 140,85 140,95"/>
+          <path class="w" d="M80,90 H116"/>
+          <text x="74" y="94" text-anchor="end" class="t">上管</text>
+        </g>
+        <circle class="dot" cx="150" cy="108" r="3.5"/>
+        <path class="w" d="M150,50 H174 V84 M174,97 V130 H150 M167,84 H181"/>
+        <polygon class="ah" points="167,97 181,97 174,84"/>
+        <circle class="dot" cx="150" cy="50" r="3.5"/>
+        <circle class="dot" cx="150" cy="130" r="3.5"/>
+        <g id="s2-q2">
+          <line class="bar" x1="116" y1="170" x2="116" y2="210"/>
+          <line class="bar" x1="128" y1="166" x2="128" y2="178"/>
+          <line class="bar" x1="128" y1="184" x2="128" y2="196"/>
+          <line class="bar" x1="128" y1="202" x2="128" y2="214"/>
+          <polygon class="ah" points="131,190 140,185 140,195"/>
+          <path class="w" d="M80,190 H116"/>
+          <text x="74" y="194" text-anchor="end" class="t">下管</text>
+        </g>
+        <circle class="dot" cx="150" cy="208" r="3.5"/>
+        <g id="s2-d2">
+          <path class="w" d="M150,150 H174 V184 M174,197 V230 H150 M167,184 H181"/>
+          <polygon class="ah" points="167,197 181,197 174,184"/>
+          <circle class="dot" cx="150" cy="150" r="3.5"/>
+          <circle class="dot" cx="150" cy="230" r="3.5"/>
+        </g>
+        <path class="w" d="M150,140 H200 M200,140 a8,8 0 0 1 16,0 a8,8 0 0 1 16,0 a8,8 0 0 1 16,0 a8,8 0 0 1 16,0 M264,140 H350 V170 M350,210 V250 M336,250 H364 M341,255 H359 M346,260 H354 M300,140 V180 M300,188 V250 M286,250 H314 M291,255 H309 M296,260 H304"/>
+        <line class="plate" x1="288" y1="180" x2="312" y2="180"/>
+        <line class="plate" x1="288" y1="188" x2="312" y2="188"/>
+        <circle class="dot" cx="150" cy="140" r="3.5"/>
+        <circle class="dot" cx="300" cy="140" r="3.5"/>
+        <rect class="r" x="341" y="170" width="18" height="40" rx="2"/>
+        <text x="232" y="126" text-anchor="middle" class="t">L</text>
+        <text x="366" y="194" class="t">负载</text>
+        <text x="300" y="126" text-anchor="middle" class="v">12 V</text>
+        <text x="186" y="160" class="t">SW</text>
+        <text id="s2-swt" x="186" y="176" class="v">24 V</text>
+        <path id="s2-f" class="flow" d="M150,28 V72 H132 V108 H150 V140 H350 V248"/>
+      </svg>
+      <svg viewBox="0 0 400 150" role="img" aria-label="开关节点电压一个周期的波形，包含上管导通、死区、下管导通、死区四段">
+        <rect id="s2-hl" class="zone-sat" x="0" y="14" width="0" height="104"/>
+        <line class="gl" x1="40" y1="26" x2="390" y2="26"/>
+        <path class="ax" d="M40,14 V118 M40,110 H390"/>
+        <text x="34" y="30" text-anchor="end" class="v">24</text>
+        <text x="34" y="114" text-anchor="end" class="v">0</text>
+        <polyline id="s2-w" class="real" points=""/>
+        <text x="40" y="134" text-anchor="middle" class="v">0</text>
+        <text x="390" y="134" text-anchor="end" class="v">2 µs</text>
+        <text x="215" y="146" text-anchor="middle" class="tm">开关节点电压，一个周期，fsw = 500 kHz</text>
+      </svg>
+      <figcaption>上：同步 Buck 半桥，绿色为电感电流路径。下：开关节点电压，死区按真实比例画出，橙色底是当前所选阶段。示意：负载电流 5 A，体二极管压降 0.8 V，Rds(on) = 10 mΩ，Qrr 取 50 nC。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">阶段</span>
+        <div class="seg" id="s2-ph"><button id="s2-ph-h" data-v="h" aria-pressed="false">上管导通</button><button id="s2-ph-d" data-v="d" aria-pressed="true">死区</button><button id="s2-ph-l" data-v="l" aria-pressed="false">下管导通</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s2-td">死区时间</label>
+        <span class="rv" id="s2-tdv">100 ns</span>
+        <input type="range" id="s2-td" min="20" max="400" step="10" value="100"></div>
+      <dl class="read">
+        <dt>导通器件</dt><dd id="s2-dev">下管体二极管</dd>
+        <dt>开关节点电压</dt><dd id="s2-sw">−0.80 V</dd>
+        <dt>死区导通损耗</dt><dd id="s2-pd">0.40 W</dd>
+        <dt>反向恢复损耗</dt><dd id="s2-prr">0.60 W</dd>
+        <dt>下管沟道导通损耗</dt><dd id="s2-pl">0.11 W</dd>
+        <dt>若全靠二极管续流</dt><dd id="s2-pdi">1.8 W</dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="bidir">
+  <span class="eyebrow">双向阻断 · 背靠背</span>
+  <h2>单个 MOS 管只能单向关断</h2>
+  <p>MOS 管关断时，只能挡住让体二极管反偏的那个方向的电压。反过来，体二极管正偏，电流照样流过，栅极管不着。所以单个 MOS 做不了真正的双向开关。电池保护板、负载开关防倒灌、交流固态继电器都用两颗 MOS 背靠背串联：源极接源极，两个体二极管方向相反，不管哪边电压高，总有一个二极管反偏。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 360 300" role="img" aria-label="A 侧与 B 侧之间串联单个 NMOS 或两个共源背靠背 NMOS，显示关断时体二极管是否导通">
+        <text id="s3-at" x="200" y="18" text-anchor="middle" class="v">A 侧 0 V</text>
+        <text id="s3-bt" x="200" y="292" text-anchor="middle" class="v hi">B 侧 12 V</text>
+        <g id="s3-g1">
+          <path class="w" d="M200,26 V132 H178 M178,168 H200 M178,150 H200 V274 M120,150 H166"/>
+          <line class="bar" x1="166" y1="130" x2="166" y2="170"/>
+          <line class="bar" x1="178" y1="126" x2="178" y2="138"/>
+          <line class="bar" x1="178" y1="144" x2="178" y2="156"/>
+          <line class="bar" x1="178" y1="162" x2="178" y2="174"/>
+          <polygon class="ah" points="181,150 190,145 190,155"/>
+          <circle class="dot" cx="200" cy="168" r="3.5"/>
+          <g id="s3-d1">
+            <path class="w" d="M200,110 H224 V144 M224,157 V190 H200 M217,144 H231"/>
+            <polygon class="ah" points="217,157 231,157 224,144"/>
+            <circle class="dot" cx="200" cy="110" r="3.5"/>
+            <circle class="dot" cx="200" cy="190" r="3.5"/>
+          </g>
+          <text x="114" y="154" text-anchor="end" class="t">G</text>
+          <text x="208" y="100" class="tm">D</text>
+          <text x="208" y="206" class="tm">S</text>
+        </g>
+        <g id="s3-g2" hidden>
+          <path class="w" d="M200,26 V72 H178 M178,108 H200 M178,90 H200 V210 H178 M178,192 H200 M178,228 H200 V274 M120,90 H166 M120,210 H166 M120,90 V210 M80,150 H120"/>
+          <line class="bar" x1="166" y1="70" x2="166" y2="110"/>
+          <line class="bar" x1="178" y1="66" x2="178" y2="78"/>
+          <line class="bar" x1="178" y1="84" x2="178" y2="96"/>
+          <line class="bar" x1="178" y1="102" x2="178" y2="114"/>
+          <polygon class="ah" points="181,90 190,85 190,95"/>
+          <circle class="dot" cx="200" cy="108" r="3.5"/>
+          <line class="bar" x1="166" y1="190" x2="166" y2="230"/>
+          <line class="bar" x1="178" y1="186" x2="178" y2="198"/>
+          <line class="bar" x1="178" y1="204" x2="178" y2="216"/>
+          <line class="bar" x1="178" y1="222" x2="178" y2="234"/>
+          <polygon class="ah" points="181,210 190,205 190,215"/>
+          <circle class="dot" cx="200" cy="192" r="3.5"/>
+          <circle class="dot" cx="120" cy="150" r="3.5"/>
+          <circle class="dot" cx="200" cy="150" r="3.5"/>
+          <g id="s3-da">
+            <path class="w" d="M200,50 H224 V84 M224,97 V130 H200 M217,84 H231"/>
+            <polygon class="ah" points="217,97 231,97 224,84"/>
+            <circle class="dot" cx="200" cy="50" r="3.5"/>
+            <circle class="dot" cx="200" cy="130" r="3.5"/>
+          </g>
+          <g id="s3-db">
+            <path class="w" d="M200,170 H224 V203 M224,216 V250 H200 M217,216 H231"/>
+            <polygon class="ah" points="217,203 231,203 224,216"/>
+            <circle class="dot" cx="200" cy="170" r="3.5"/>
+            <circle class="dot" cx="200" cy="250" r="3.5"/>
+          </g>
+          <text x="74" y="154" text-anchor="end" class="t">G</text>
+          <text x="240" y="154" class="tm">共源极</text>
+          <text x="240" y="94" class="t">Q1</text>
+          <text x="240" y="214" class="t">Q2</text>
+        </g>
+        <path id="s3-f" class="flow" d="M200,272 V190 H224 V110 H200 V28"/>
+      </svg>
+      <figcaption>单管时 D 接 A 侧、S 接 B 侧。背靠背时两管源极相连、栅极相连，由同一个驱动控制。单管关不断时，橙色是正偏导通的体二极管；背靠背关断时，橙色是反偏、承受电压的那个体二极管。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">接法</span>
+        <div class="seg" id="s3-c"><button id="s3-c-1" data-v="1" aria-pressed="true">单管</button><button id="s3-c-2" data-v="2" aria-pressed="false">背靠背</button></div></div>
+      <div class="ctl"><span class="ctl-l">栅极</span>
+        <div class="seg" id="s3-o"><button id="s3-o-0" data-v="0" aria-pressed="true">关断</button><button id="s3-o-1" data-v="1" aria-pressed="false">导通</button></div></div>
+      <div class="ctl"><span class="ctl-l">哪边电压高</span>
+        <div class="seg" id="s3-d"><button id="s3-d-a" data-v="a" aria-pressed="false">A 侧 12 V</button><button id="s3-d-b" data-v="b" aria-pressed="true">B 侧 12 V</button></div></div>
+      <dl class="read">
+        <dt>体二极管</dt><dd id="s3-ds">单管二极管正偏</dd>
+        <dt>A、B 之间</dt><dd><span id="s3-st" class="chip bad">关不断</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>MOS 管的体二极管是怎么来的？方向是什么？</summary>
+      <div class="ans"><p>为了防止寄生三极管导通，源极金属把 N+ 源区和 P 体区短接在一起。P 体区和 N 型漏区之间本来就有一个 PN 结，短接后它就并在了 D、S 之间，成为体二极管。NMOS 的体二极管阳极在 S、阴极在 D，从 S 指向 D；PMOS 反过来。</p></div></details>
+    <details><summary>体二极管在电路里起什么作用？</summary>
+      <div class="ans"><p>主要是续流。H 桥、半桥在死区时间里两管都关，感性负载电流只能走体二极管；同步整流管在开通前也先由体二极管导通。它还能钳住感性关断时的反向电压，起一定保护作用。</p></div></details>
+    <details><summary>同步整流为什么比二极管整流效率高？</summary>
+      <div class="ans"><p>MOS 的沟道可以反向导通。开通后电流走沟道，压降是 I·Rds(on)，几十毫伏；走二极管则是 0.7~1 V 左右的固定压降。低压大电流时损耗能差十倍以上。</p></div></details>
+    <details><summary>单个 MOS 为什么不能双向阻断？怎么解决？</summary>
+      <div class="ans"><p>体二极管只在一个方向反偏。电压反过来时二极管正偏，关断栅极也挡不住电流。解决办法是两颗 MOS 背靠背串联，常见共源接法，两个体二极管方向相反，任何方向都有一个反偏。电池保护板的充放电开关就是这样。</p></div></details>
+    <details><summary>体二极管的反向恢复有什么危害？</summary>
+      <div class="ans"><p>体二极管导通后存有电荷 Qrr，对管开通时要先把它抽走，产生反向恢复电流尖峰，增加对管的开通损耗 ≈ Qrr·Vin·fsw，还引起振铃、EMI 和电压尖峰。对策是缩短死区、并肖特基、选快恢复体二极管的管子，或者换用基本没有 Qrr 的 GaN。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="06-栅极电容与米勒效应.html"><span>上一页</span>栅极电容与米勒效应</a><a class="next" href="08-导通电阻Rdson.html"><span>下一页</span>导通电阻Rdson</a></nav>
+</div>
+
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 体二极管来源 */
+const s1={v:'n',g:'0'},IB=5,RDS=0.01,VF=0.85;
+function s1u(){
+  const neg=s1.v==='n',on=s1.g==='1';
+  show($('s1-ch1'),on);show($('s1-ch2'),on);
+  const dOn=neg&&!on,cOn=on;
+  $('s1-dio').classList.toggle('hl',dOn);
+  show($('s1-fd'),dOn);show($('s1-fc'),cOn);
+  $('s1-fc').setAttribute('d',neg?'M120,64 V94 H210 V246':'M210,246 V94 H120 V64');
+  chip($('s1-ds'),dOn?'正偏导通':neg?'被沟道旁路，不导通':'反偏，承受 24 V',dOn?'on':'off');
+  $('s1-cs').textContent=on?(neg?'导通，反向 S → D':'导通，D → S'):'关断';
+  $('s1-dir').textContent=neg?'S → D，'+IB+' A':on?'D → S，由负载决定':'无，漏电流 µA 级';
+  const vd=dOn?VF:IB*RDS;
+  $('s1-vd').textContent=neg?'Vsd ≈ '+(dOn?fmtV(VF,2):(vd*1e3).toFixed(0)+' mV'):on?'Id·Rds(on)':'24 V 全压在管子上';
+  $('s1-p').textContent=neg?fmtP(IB*vd):'—';
+  $('s1-note').textContent=!neg?(on?'正常导通：栅压在 P 体区表面反型出沟道，电子从 N+ 源区经沟道、漂移区流到漏极，电流 D → S。体二极管此时反偏，不参与。'
+      :'Vds 为正、栅极关断：体二极管反偏，耗尽层在 N− 漂移区里展宽，承受全部 24 V。这就是 MOS 的正向阻断能力，耐压主要由漂移区的厚度和掺杂决定。')
+    :(on?'栅极打开时沟道是双向的，电流从 S 经沟道流到 D，压降只有 '+IB+' A × 10 mΩ = '+(IB*RDS*1e3).toFixed(0)+' mV，远低于二极管的开启电压，体二极管根本来不及导通。这就是同步整流。'
+      :'栅极关断，但外电路（比如电感续流）逼着电流从 S 流向 D。P 体区到 N 漂移区的 PN 结正偏，电流走体二极管，压降约 0.85 V，损耗 '+fmtP(IB*VF)+'，是沟道导通时的 17 倍。');
+}
+seg('s1-v',v=>{s1.v=v;s1u();});
+seg('s1-g',v=>{s1.g=v;s1u();});
+s1u();
+
+/* 2. 死区续流 */
+const s2={ph:'d'},FSW=500e3,VIN=24,IL=5,VFD=0.8,QRR=50e-9,Xs=scale(0,2e-6,40,390),Ys=scale(0,24,110,26);
+const s2F={h:'M150,28 V72 H132 V108 H150 V140 H350 V248',d:'M150,248 V230 H174 V150 H150 V140 H350 V248',l:'M150,248 V208 H132 V172 H150 V140 H350 V248'};
+function s2u(){
+  const td=+$('s2-td').value*1e-9,T=1/FSW,ton=0.5*T,ph=s2.ph;
+  const seg4=[[0,ton,VIN],[ton,ton+td,-VFD],[ton+td,T-td,-IL*RDS],[T-td,T,-VFD]];
+  const pts=[];seg4.forEach(s=>{pts.push(Xs(s[0]).toFixed(1)+','+Ys(s[2]).toFixed(1));pts.push(Xs(s[1]).toFixed(1)+','+Ys(s[2]).toFixed(1));});
+  $('s2-w').setAttribute('points',pts.join(' '));
+  const hs=ph==='h'?seg4[0]:ph==='d'?seg4[1]:seg4[2];
+  $('s2-hl').setAttribute('x',Xs(hs[0]).toFixed(1));$('s2-hl').setAttribute('width',Math.max(2,Xs(hs[1])-Xs(hs[0])).toFixed(1));
+  $('s2-f').setAttribute('d',s2F[ph]);
+  $('s2-q1').classList.toggle('hl',ph==='h');$('s2-q2').classList.toggle('hl',ph==='l');$('s2-d2').classList.toggle('hl',ph==='d');
+  const sw=ph==='h'?VIN:ph==='d'?-VFD:-IL*RDS;
+  $('s2-swt').textContent=fmtV(sw,2);$('s2-sw').textContent=fmtV(sw,2);
+  $('s2-dev').textContent=ph==='h'?'上管沟道':ph==='d'?'下管体二极管':'下管沟道，反向导通';
+  const pd=VFD*IL*2*td*FSW,prr=QRR*VIN*FSW,pl=IL*IL*RDS*(T-ton-2*td)/T,pdi=VFD*IL*(T-ton)/T;
+  $('s2-tdv').textContent=(td*1e9).toFixed(0)+' ns';$('s2-td').setAttribute('aria-valuetext',(td*1e9).toFixed(0)+' ns');
+  $('s2-pd').textContent=fmtP(pd);$('s2-prr').textContent=fmtP(prr);$('s2-pl').textContent=fmtP(pl);$('s2-pdi').textContent=fmtP(pdi);
+  const n={
+    h:'上管导通，开关节点接近 24 V，电流从 Vin 经上管沟道、电感流向负载。下管关断，它的体二极管反偏。上管开通的一瞬间，如果下管体二极管刚在续流，它存的 Qrr 会被反向抽走，形成电流尖峰。',
+    d:'两管都关。电感电流不能断，只能从地经下管体二极管往上流，开关节点被拉到 −0.8 V。每个周期有两段死区，二极管损耗 = Vf·I·2·td·fsw = '+fmtP(pd)+'。死区越长损耗越大，太短又有直通风险。',
+    l:'下管沟道打开，电流从源极流向漏极，这是 MOS 沟道的反向导通。压降只有 I·Rds(on) = '+(IL*RDS*1e3).toFixed(0)+' mV。如果没有下管、只用二极管续流，整个关断期间都要付出 0.8 V 的压降，损耗 '+fmtP(pdi)+'。'
+  };
+  $('s2-note').textContent=n[ph];
+}
+seg('s2-ph',v=>{s2.ph=v;s2u();});
+$('s2-td').addEventListener('input',s2u);
+s2u();
+
+/* 3. 双向阻断 */
+const s3={c:'1',o:'0',d:'b'};
+const s3F={
+  '1':{d_b:'M200,272 V190 H224 V110 H200 V28',ch_a:'M200,28 V132 H182 V168 H200 V272',ch_b:'M200,272 V168 H182 V132 H200 V28'},
+  '2':{ch_a:'M200,28 V72 H182 V108 H200 V192 H182 V228 H200 V272',ch_b:'M200,272 V228 H182 V192 H200 V108 H182 V72 H200 V28'}
+};
+function s3u(){
+  const two=s3.c==='2',on=s3.o==='1',bHi=s3.d==='b';
+  show($('s3-g1'),!two);show($('s3-g2'),two);
+  $('s3-at').textContent='A 侧 '+(bHi?'0 V':'12 V');$('s3-bt').textContent='B 侧 '+(bHi?'12 V':'0 V');
+  setLv($('s3-at'),null,!bHi);setLv($('s3-bt'),null,bHi);
+  $('s3-d1').classList.toggle('hl',!two&&bHi&&!on);
+  $('s3-da').classList.toggle('hl',two&&!bHi&&!on);
+  $('s3-db').classList.toggle('hl',two&&bHi&&!on);
+  let path=null,st,cls,ds,n;
+  if(on){path=s3F[s3.c][bHi?'ch_b':'ch_a'];st='导通';cls='on';ds='被沟道旁路';
+    n=two?'两颗管子的沟道都打开，电流依次流过两个沟道，总电阻是 2·Rds(on)。这是背靠背的代价：同样的导通损耗要用更大的管子。':'沟道是双向导通的，电流方向由外部电压决定。导通时单管没有问题，问题出在关断。';}
+  else if(!two&&bHi){path=s3F['1'].d_b;st='关不断';cls='bad';ds='单管二极管正偏';
+    n='栅极已经关了，但 B 侧电压比 A 侧高，体二极管 S → D 正偏，电流照样从 B 流到 A，只多了约 0.7 V 压降。比如电源开关的输出端接了电池或大电容，就会倒灌回输入。';}
+  else if(!two){st='阻断';cls='off';ds='单管二极管反偏';
+    n='A 侧高，体二极管反偏，MOS 挡住了电压。单管只能挡住这一个方向。';}
+  else{st='阻断';cls='off';ds=bHi?'Q2 二极管反偏，挡住电压':'Q1 二极管反偏，挡住电压';
+    n=bHi?'B 侧高时，Q1 的体二极管方向是顺的，但 Q2 的体二极管方向相反、处于反偏，电流过不去。':'A 侧高时，Q2 的体二极管方向是顺的，但 Q1 的体二极管反偏，电流过不去。两个方向都能挡住，这就是背靠背接法的意义。';}
+  const f=$('s3-f');show(f,!!path);if(path)f.setAttribute('d',path);f.classList.toggle('bad',cls==='bad');
+  $('s3-ds').textContent=ds;chip($('s3-st'),st,cls);$('s3-note').textContent=n;
+}
+seg('s3-c',v=>{s3.c=v;s3u();});
+seg('s3-o',v=>{s3.o=v;s3u();});
+seg('s3-d',v=>{s3.d=v;s3u();});
+s3u();
+</script>
+</body>
+</html>

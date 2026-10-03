@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>反相放大器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#opamp">运放</a><span class="sp"></span><span>02 / 12</span></nav>
+<header>
+  <span class="eyebrow">运放 · 基本放大电路</span>
+  <h1>反相放大器</h1>
+  <p class="lede">面试白板最常考的运放电路。用虚短和虚断四步推出增益，再看输入阻抗为什么只有 Rin、输出为什么会削顶。</p>
+</header>
+
+<section id="derive">
+  <span class="eyebrow">推导 · 四步</span>
+  <h2>用虚短、虚断推出 Vo = −(Rf / Rin)·Vin</h2>
+  <p>先画对电路：信号经 Rin 进反相端，Rf 从输出接回反相端，同相端接地。反馈接在反相端，是负反馈，所以虚短可以用。</p>
+  <ol>
+    <li>同相端接地，V+ = 0。虚短，所以 V− ≈ 0。反相端电位是 0 却没有接地，这叫虚地。</li>
+    <li>Rin 两端电压是 Vin − 0，所以流过 Rin 的电流 I = Vin / Rin。</li>
+    <li>虚断，运放输入端不取电流，所以这个 I 全部流过 Rf。</li>
+    <li>Rf 左端是 0 V，电流从左往右流过 Rf，所以 Vo = 0 − I·Rf = −(Rf / Rin)·Vin。</li>
+  </ol>
+  <p class="eq">Vo = −(Rf / Rin)·Vin　　输入阻抗 = Rin</p>
+  <p>负号表示输出和输入反相，正弦波就是相位差 180°。增益只由两个电阻的比值决定，和运放自身的 A 基本无关，这正是负反馈的好处。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 200" role="img" aria-label="反相放大器：Vin 经 Rin 接反相端，Rf 从输出接回反相端，同相端接地，运放接 ±12 V 电源">
+        <text x="245" y="72" text-anchor="middle" class="v">+12 V</text>
+        <path class="w" d="M245,78 V95"/>
+        <path class="w" d="M245,145 V160"/>
+        <text x="245" y="174" text-anchor="middle" class="v">−12 V</text>
+        <path class="r" d="M200,70 L290,120 L200,170 Z"/>
+        <text x="207" y="100" class="t">−</text>
+        <text x="207" y="150" class="t">+</text>
+        <circle class="r" cx="40" cy="140" r="16"/>
+        <text x="40" y="145" text-anchor="middle" class="t">~</text>
+        <text x="62" y="145" class="t">Vin</text>
+        <path class="w" d="M40,124 V95 H70 M120,95 H200"/>
+        <path class="w" d="M40,156 V160 M26,160 H54"/>
+        <path class="w" d="M31,165 H49 M36,170 H44"/>
+        <rect class="r" x="70" y="87" width="50" height="16" rx="2"/>
+        <text id="c1-rin" x="95" y="80" text-anchor="middle" class="v">Rin 10 kΩ</text>
+        <circle class="dot" cx="150" cy="95" r="3.5"/>
+        <text x="152" y="116" class="tm">虚地 0 V</text>
+        <path class="w" d="M150,95 V35 H215 M265,35 H340 V120"/>
+        <rect class="r" x="215" y="27" width="50" height="16" rx="2"/>
+        <text id="c1-rf" x="240" y="20" text-anchor="middle" class="v">Rf 47 kΩ</text>
+        <circle class="dot" cx="340" cy="120" r="3.5"/>
+        <path class="w" d="M200,145 H170 V175 M156,175 H184 M161,180 H179 M166,185 H174"/>
+        <path id="c1-ow" class="w s-hi" style="stroke-width:3" d="M290,120 H400"/>
+        <text x="400" y="110" text-anchor="end" class="t">Vo</text>
+        <path class="flow thin" d="M40,122 V95 H150 V35 H340 V118"/>
+      </svg>
+      <svg viewBox="0 0 420 210" role="img" aria-label="输入与输出波形，输出反相并按增益放大，超过饱和电压时削顶">
+        <line class="gl" x1="44" y1="100" x2="400" y2="100"/>
+        <line class="gl" x1="222" y1="20" x2="222" y2="180"/>
+        <line class="ax dash" x1="44" y1="44" x2="400" y2="44"/>
+        <line class="ax dash" x1="44" y1="156" x2="400" y2="156"/>
+        <path class="ax" d="M44,20 V180 H400"/>
+        <text x="38" y="24" text-anchor="end" class="v">15</text>
+        <text x="38" y="48" text-anchor="end" class="v">10.5</text>
+        <text x="38" y="104" text-anchor="end" class="v">0</text>
+        <text x="38" y="160" text-anchor="end" class="v">−10.5</text>
+        <text x="38" y="184" text-anchor="end" class="v">−15</text>
+        <text x="50" y="14" class="tm">电压 / V</text>
+        <text x="396" y="40" text-anchor="end" class="tm">+Vsat</text>
+        <text x="44" y="196" text-anchor="middle" class="v">0</text>
+        <text x="222" y="196" text-anchor="middle" class="v">1</text>
+        <text x="400" y="196" text-anchor="end" class="v">2</text>
+        <text x="384" y="196" text-anchor="end" class="tm">时间 ms</text>
+        <polyline id="c1-vin" class="real2" points="44,100 400,100"/>
+        <polyline id="c1-vo" class="real" points="44,100 400,100"/>
+        <text id="c1-lin" x="112" y="90" class="t" style="fill:var(--low)">Vin</text>
+        <text id="c1-lo" x="90" y="130" class="t" style="fill:var(--copper)">Vo</text>
+      </svg>
+      <figcaption>上：±12 V 供电的反相放大器，绿色为正半周电流路径，负半周方向相反。下：1 kHz 正弦输入（蓝）与输出（橙）。饱和电压 ±10.5 V 为示意值。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="c1-r1">输入电阻 Rin</label>
+        <span class="rv" id="c1-r1v">10 kΩ</span>
+        <input type="range" id="c1-r1" min="0" max="6" step="1" value="3"></div>
+      <div class="ctl"><label class="ctl-l" for="c1-r2">反馈电阻 Rf</label>
+        <span class="rv" id="c1-r2v">47 kΩ</span>
+        <input type="range" id="c1-r2" min="0" max="7" step="1" value="5"></div>
+      <div class="ctl"><label class="ctl-l" for="c1-a">输入幅度（峰值）</label>
+        <span class="rv" id="c1-av">1.0 V</span>
+        <input type="range" id="c1-a" min="1" max="50" step="1" value="10"></div>
+      <dl class="read">
+        <dt>增益 −Rf / Rin</dt><dd id="c1-g">−4.70</dd>
+        <dt>理想输出峰值</dt><dd id="c1-vp">4.70 V</dd>
+        <dt>反相端电压</dt><dd id="c1-vm">≈ 0，虚地</dd>
+        <dt>输入阻抗</dt><dd id="c1-zin">10 kΩ</dd>
+        <dt>输出</dt><dd><span id="c1-st" class="chip on">不失真</span></dd>
+      </dl>
+      <p class="note" id="c1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="zin">
+  <span class="eyebrow">输入阻抗 · 缺点</span>
+  <h2>输入阻抗只有 Rin，会被信号源内阻吃掉增益</h2>
+  <p>因为反相端是虚地，从输入端看进去就是 Rin 直接接地，所以输入阻抗 = Rin。信号源都有内阻 Rs，它和 Rin 串联，等于给 Rin 多加了一截。电流变小，增益跟着变小。</p>
+  <p class="eq">实际增益 = −Rf / (Rs + Rin)</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 440 205" role="img" aria-label="带内阻 Rs 的信号源驱动反相放大器，Rs 与 Rin 串联">
+        <rect class="ax dash" x="14" y="58" width="108" height="110" rx="6"/>
+        <text x="90" y="184" text-anchor="middle" class="tm">信号源</text>
+        <circle class="r" cx="40" cy="140" r="16"/>
+        <text x="40" y="145" text-anchor="middle" class="t">Vs</text>
+        <path class="w" d="M40,124 V85 H60 M110,85 H150 M200,85 H260"/>
+        <path class="w" d="M40,156 V186 M26,186 H54 M31,191 H49 M36,196 H44"/>
+        <rect class="r" x="60" y="77" width="50" height="16" rx="2"/>
+        <text id="c2-rst" x="85" y="112" text-anchor="middle" class="v">Rs 1 kΩ</text>
+        <circle class="dot" cx="130" cy="85" r="3.5"/>
+        <text id="c2-vint" x="130" y="72" text-anchor="middle" class="v">0.91 V</text>
+        <rect class="r" x="150" y="77" width="50" height="16" rx="2"/>
+        <text id="c2-rint" x="175" y="112" text-anchor="middle" class="v">Rin 10 kΩ</text>
+        <circle class="dot" cx="230" cy="85" r="3.5"/>
+        <text x="232" y="104" class="tm">虚地</text>
+        <path class="w" d="M230,85 V35 H280 M330,35 H390 V110"/>
+        <rect class="r" x="280" y="27" width="50" height="16" rx="2"/>
+        <text id="c2-rft" x="305" y="20" text-anchor="middle" class="v">Rf 100 kΩ</text>
+        <path class="r" d="M260,60 L350,110 L260,160 Z"/>
+        <text x="267" y="90" class="t">−</text>
+        <text x="267" y="140" class="t">+</text>
+        <path class="w" d="M260,135 H240 V160 M226,160 H254 M231,165 H249 M236,170 H244"/>
+        <circle class="dot" cx="390" cy="110" r="3.5"/>
+        <path id="c2-ow" class="w s-lo" style="stroke-width:3" d="M350,110 H428"/>
+        <text id="c2-vot" x="428" y="100" text-anchor="end" class="v lo">−9.09 V</text>
+        <path class="flow thin" d="M40,122 V85 H228 V35 H390 V108"/>
+      </svg>
+      <figcaption>Vs 取 1 V 直流，设计增益固定为 −10（Rf = 10·Rin）。电流 I = Vs / (Rs + Rin)，全部流过 Rf。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">Rin（Rf 跟着取 10 倍）</span>
+        <div class="seg" id="c2-rin"><button id="c2-rin-1k" data-v="1000" aria-pressed="false">1 kΩ</button><button id="c2-rin-10k" data-v="10000" aria-pressed="true">10 kΩ</button><button id="c2-rin-100k" data-v="100000" aria-pressed="false">100 kΩ</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="c2-rs">信号源内阻 Rs</label>
+        <span class="rv" id="c2-rsv">1 kΩ</span>
+        <input type="range" id="c2-rs" min="0" max="5" step="1" value="3"></div>
+      <dl class="read">
+        <dt>设计增益</dt><dd>−10.0</dd>
+        <dt>实际增益</dt><dd id="c2-g">−9.09</dd>
+        <dt>Rin 上实际得到</dt><dd id="c2-vin">0.91 V</dd>
+        <dt>增益误差</dt><dd id="c2-e">9.1 %</dd>
+        <dt>结论</dt><dd><span id="c2-st" class="chip warn">误差明显</span></dd>
+      </dl>
+      <p class="note" id="c2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="tips">
+  <span class="eyebrow">设计要点</span>
+  <h2>实际电路怎么取值</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>问题</th><th>做法</th><th>原因</th></tr></thead>
+    <tbody>
+      <tr><td>Rin 取多大</td><td>先按信号源内阻定，Rin 至少大于 Rs 的 100 倍</td><td>输入阻抗就是 Rin，太小会拖垮信号源</td></tr>
+      <tr><td>Rf 取多大</td><td>Rf = |增益|·Rin，一般不超过几百 kΩ 到 1 MΩ</td><td>太大时偏置电流误差和热噪声变大</td></tr>
+      <tr><td>同相端接什么</td><td>常接一个 Rp = Rin ∥ Rf 到地</td><td>让两个输入端看出去的电阻相等，偏置电流产生的压降相互抵消</td></tr>
+      <tr><td>输出摆幅</td><td>|Vo| 峰值留在饱和电压以内</td><td>否则削顶，虚短失效，公式不再成立</td></tr>
+      <tr><td>高频稳定性</td><td>Rf 上可并一个小电容</td><td>限制带宽、抵消反相端寄生电容带来的相移</td></tr>
+    </tbody>
+  </table></div>
+  <p>和同相放大器比：反相放大器的两个输入端都在 0 V，没有共模电压，精度好；代价是输入阻抗低、输出反相。要高输入阻抗就用 <a href="03-同相放大器.html">同相放大器</a>。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>画一个反相放大器，推它的增益。</summary>
+      <div class="ans"><p>同相端接地，虚短得 V− = 0；Rin 上电流 Vin / Rin；虚断，这个电流全部流过 Rf；所以 Vo = −(Rf / Rin)·Vin。</p></div></details>
+    <details><summary>反相放大器的输入阻抗是多少？</summary>
+      <div class="ans"><p>等于 Rin。因为反相端是虚地，从输入端看进去就是 Rin 接到地。所以它不适合接内阻大的信号源。</p></div></details>
+    <details><summary>什么是虚地？它能当地用吗？</summary>
+      <div class="ans"><p>虚地是反相端电位近似为 0，但不是真的接地。它靠负反馈维持，不能把别的电流灌进去当地线用。输出饱和后虚地也就不存在了。</p></div></details>
+    <details><summary>同相端为什么要接一个 Rin ∥ Rf 的电阻？</summary>
+      <div class="ans"><p>为了平衡偏置电流。两个输入端的偏置电流差不多，让它们各自看到的直流电阻相等，产生的压降就能抵消，输出只剩失调电流带来的误差。</p></div></details>
+    <details><summary>输出为什么会削顶？</summary>
+      <div class="ans"><p>输出最多只能摆到电源轨附近。理想输出 |Rf / Rin|·Vin 超过这个范围，输出就被卡住，波形顶部被削平。要么降低增益或输入，要么提高供电，或者换轨到轨输出的运放。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="01-虚短与虚断.html"><span>上一页</span>虚短与虚断</a><a class="next" href="03-同相放大器.html"><span>下一页</span>同相放大器</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 反相放大波形 */
+const c1R=[1e3,2.2e3,4.7e3,10e3,22e3,47e3,100e3,220e3],c1S=10.5;
+const c1X=scale(0,2,44,400),c1Y=scale(-15,15,180,20);
+function c1u(){
+  const rin=c1R[+$('c1-r1').value],rf=c1R[+$('c1-r2').value],a=+$('c1-a').value/10,g=rf/rin,vp=g*a,clip=vp>c1S;
+  $('c1-r1v').textContent=fmtR(rin);$('c1-r1').setAttribute('aria-valuetext',fmtR(rin));
+  $('c1-r2v').textContent=fmtR(rf);$('c1-r2').setAttribute('aria-valuetext',fmtR(rf));
+  $('c1-av').textContent=a.toFixed(1)+' V';$('c1-a').setAttribute('aria-valuetext',a.toFixed(1)+' V');
+  $('c1-rin').textContent='Rin '+fmtR(rin);$('c1-rf').textContent='Rf '+fmtR(rf);
+  const vi=t=>a*Math.sin(2*Math.PI*t),vo=t=>Math.max(-c1S,Math.min(c1S,-g*vi(t)));
+  $('c1-vin').setAttribute('points',plot(vi,0,2,c1X,c1Y,240));
+  $('c1-vo').setAttribute('points',plot(vo,0,2,c1X,c1Y,240));
+  $('c1-lin').setAttribute('y',(c1Y(a)-6).toFixed(1));
+  $('c1-lo').setAttribute('y',(c1Y(-Math.min(vp,c1S))+16).toFixed(1));
+  $('c1-g').textContent='−'+g.toFixed(g<10?2:1);
+  $('c1-vp').textContent=fmtV(vp)+(clip?'，超出 ±10.5 V':'');
+  $('c1-vm').textContent='≈ 0，虚地'+(clip?'（削顶期间失效）':'');
+  $('c1-zin').textContent=fmtR(rin);
+  if(clip){chip($('c1-st'),'削顶','bad');
+    $('c1-note').textContent='理想输出峰值 '+fmtV(vp)+' 超过饱和电压，顶部被削平。削顶那段时间输出不能再跟着变，反相端离开 0 V，虚短失效。减小输入幅度或 Rf / Rin 就能恢复。';}
+  else if(g<1){chip($('c1-st'),'衰减','off');
+    $('c1-note').textContent='Rf 小于 Rin，增益绝对值小于 1，反相放大器也可以当反相衰减器用。输入阻抗仍然是 Rin = '+fmtR(rin)+'。';}
+  else{chip($('c1-st'),'不失真','on');
+    $('c1-note').textContent='输出是输入的 '+g.toFixed(2)+' 倍并且反相：Vin 到正峰时 Vo 正好到负峰。增益只看 Rf / Rin，改 Rin 还会同时改变输入阻抗。';}
+}
+['c1-r1','c1-r2','c1-a'].forEach(id=>$(id).addEventListener('input',c1u));
+c1u();
+/* 2. 输入阻抗与源内阻 */
+const c2={rin:1e4},c2Rs=[0,50,600,1e3,1e4,1e5];
+function c2u(){
+  const rs=c2Rs[+$('c2-rs').value],rin=c2.rin,rf=10*rin,g=rf/(rs+rin),vin=rin/(rs+rin),e=rs/(rs+rin)*100;
+  const rsl=rs===0?'0 Ω':fmtR(rs);
+  $('c2-rsv').textContent=rsl;$('c2-rs').setAttribute('aria-valuetext',rsl);
+  $('c2-rst').textContent='Rs '+rsl;$('c2-rint').textContent='Rin '+fmtR(rin);$('c2-rft').textContent='Rf '+fmtR(rf);
+  $('c2-g').textContent='−'+g.toFixed(2);$('c2-vin').textContent=fmtV(vin);$('c2-vint').textContent=fmtV(vin);
+  $('c2-vot').textContent=fmtV(-g);$('c2-e').textContent=e.toFixed(e<1?2:1)+' %';
+  let n;
+  if(e<1){chip($('c2-st'),'可以忽略','on');n='Rin 比 Rs 大得多，Rs 上几乎不分压，实际增益接近 −10。';}
+  else if(e<10){chip($('c2-st'),'误差明显','warn');n='Rs 和 Rin 串联分压，Rin 上只剩 '+fmtV(vin)+'，增益少了 '+e.toFixed(1)+' %。可以把 Rin 加大，或者把 Rs 算进 Rin 里。';}
+  else{chip($('c2-st'),'增益被吃掉','bad');n='Rs 和 Rin 相当甚至更大，大部分信号压在信号源内阻上。这种信号源应该先接一级电压跟随器，或者直接改用同相放大器。';}
+  $('c2-note').textContent=n;
+}
+seg('c2-rin',v=>{c2.rin=+v;c2u();});
+$('c2-rs').addEventListener('input',c2u);
+c2u();
+</script>
+</body>
+</html>

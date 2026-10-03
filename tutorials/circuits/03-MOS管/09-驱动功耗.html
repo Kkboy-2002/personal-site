@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>驱动功耗</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.hl{color:var(--copper)}
+.plate{stroke:currentColor;stroke-width:3;stroke-linecap:round}
+.ls-d{fill:var(--flow)}.ls-s{fill:var(--low)}.ls-c{fill:var(--copper)}.ls-t{fill:var(--muted)}
+figure svg+svg{margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#mos">MOS管</a><span class="sp"></span><span>09 / 09</span></nav>
+<header>
+  <span class="eyebrow">MOS管 · 驱动功耗 · 开关损耗</span>
+  <h1>驱动功耗</h1>
+  <p class="lede">MOS 管的栅极几乎不要直流电流，但每开关一次都要充放一次电。频率一高，驱动损耗和开关损耗就上来了，这也是功率 MOS 离不开图腾柱和驱动芯片的原因。</p>
+</header>
+
+<section id="qg">
+  <span class="eyebrow">驱动损耗 · P = Qg·Vdrv·fsw</span>
+  <h2>每开关一次，都要把栅极充满再放空</h2>
+  <p>MOS 的栅极是一个电容。开通时驱动器把 Qg 的电荷从 Vdrv 送进栅极，关断时再把它放回地。每个周期从驱动电源取走的能量是 Qg·Vdrv，最后全部变成热：开通时大约一半消耗在充电回路的电阻上，另一半先存在栅极电容里，关断时消耗在放电回路上。</p>
+  <p class="eq">P驱动 = Qg·Vdrv·fsw</p>
+  <p>用 Qg 而不用 ½·Ciss·V²，是因为栅极电容随电压变化，还有米勒平台，按电容算会严重低估。手册里的 Qg 就是在指定 Vgs 下把栅极充满需要的总电荷，直接拿来乘。</p>
+  <p>这份热不在 MOS 沟道里，而是落在驱动回路的电阻上：驱动器的输出管、外部栅极电阻 Rg、管子内部的栅电阻 Rg(int)。总量和 Rg 无关，Rg 只决定热量怎么分、开关有多快。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 256" role="img" aria-label="图腾柱驱动经栅极电阻 Rg 给功率 MOS 的栅极充放电：上管 NPN 充电，下管 PNP 放电">
+        <text x="150" y="18" text-anchor="middle" class="v">Vdrv 10 V</text>
+        <path class="w" d="M138,26 H162 M150,26 V52 L128,66 M128,82 L150,96 V164 L128,178 M128,194 L150,208 V236 M136,236 H164 M141,241 H159 M146,246 H154"/>
+        <g id="s1-qh">
+          <line class="bar" x1="128" y1="56" x2="128" y2="92"/>
+          <polygon class="ah" points="147,94 138,93 142,86"/>
+          <text x="92" y="60" text-anchor="end" class="t">NPN</text>
+        </g>
+        <g id="s1-ql">
+          <line class="bar" x1="128" y1="168" x2="128" y2="204"/>
+          <polygon class="ah" points="133,175 142,174 138,167"/>
+          <text x="92" y="212" text-anchor="end" class="t">PNP</text>
+        </g>
+        <path class="w" d="M128,74 H110 V186 H128 M62,130 H110 M150,130 H190 M240,130 H300"/>
+        <circle class="dot" cx="110" cy="130" r="3.5"/>
+        <circle class="dot" cx="150" cy="130" r="3.5"/>
+        <rect class="box" x="10" y="112" width="52" height="36" rx="4"/>
+        <text x="36" y="135" text-anchor="middle" class="t">PWM</text>
+        <text id="s1-in" x="36" y="166" text-anchor="middle" class="v hi">高</text>
+        <rect class="r" x="190" y="122" width="50" height="16" rx="2"/>
+        <text id="s1-rgt" x="215" y="114" text-anchor="middle" class="v">Rg 5 Ω</text>
+        <line class="bar" x1="300" y1="110" x2="300" y2="150"/>
+        <line class="bar" x1="312" y1="106" x2="312" y2="118"/>
+        <line class="bar" x1="312" y1="124" x2="312" y2="136"/>
+        <line class="bar" x1="312" y1="142" x2="312" y2="154"/>
+        <polygon class="ah" points="315,130 324,125 324,135"/>
+        <path class="w" d="M334,60 V112 H312 M312,148 H334 M312,130 H334 V236 M320,236 H348 M325,241 H343 M330,246 H338"/>
+        <circle class="dot" cx="334" cy="148" r="3.5"/>
+        <text x="342" y="64" class="tm">D 接负载</text>
+        <text x="342" y="112" class="t">功率 MOS</text>
+        <path class="w dash" d="M270,130 V180 M270,188 V222 H334"/>
+        <line class="plate" x1="258" y1="180" x2="282" y2="180"/>
+        <line class="plate" x1="258" y1="188" x2="282" y2="188"/>
+        <circle class="dot" cx="270" cy="130" r="3.5"/>
+        <circle class="dot" cx="334" cy="222" r="3.5"/>
+        <text x="252" y="206" text-anchor="end" class="tm">Ciss 等效</text>
+        <text id="s1-vgt" x="270" y="104" text-anchor="middle" class="v hi">Vgs → 10 V</text>
+        <path id="s1-fon" class="flow" d="M150,30 V52 L132,64 V84 L150,96 V130 H270 V178 M270,190 V222 H334 V234"/>
+        <path id="s1-foff" class="flow" d="M270,178 V130 H152 V164 L132,176 V196 L150,208 V234" hidden/>
+      </svg>
+      <figcaption>绿色虚线是栅极电流。上管 NPN 导通时从 Vdrv 给栅极充电，下管 PNP 导通时把栅极电荷放到地。虚线电容表示栅极的等效输入电容。示意：Qg = 50 nC，Vdrv = 10 V，fsw = 100 kHz，驱动器输出电阻 2 Ω，管内栅电阻 1 Ω。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">阶段</span>
+        <div class="seg" id="s1-ph"><button id="s1-ph-on" data-v="on" aria-pressed="true">开通：充电</button><button id="s1-ph-off" data-v="off" aria-pressed="false">关断：放电</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-rg">外部栅极电阻 Rg</label>
+        <span class="rv" id="s1-rgv">5 Ω</span>
+        <input type="range" id="s1-rg" min="0" max="20" step="1" value="5"></div>
+      <dl class="read">
+        <dt>每周期能量 Qg·Vdrv</dt><dd id="s1-e">0.50 µJ</dd>
+        <dt>驱动损耗 Qg·Vdrv·fsw</dt><dd id="s1-p">50 mW</dd>
+        <dt>其中耗在外部 Rg</dt><dd id="s1-pr">31 mW</dd>
+        <dt>耗在驱动器内部</dt><dd id="s1-pd">12.5 mW</dd>
+        <dt>耗在管内 Rg(int)</dt><dd id="s1-pi">6.3 mW</dd>
+        <dt>峰值栅极电流</dt><dd id="s1-ip">1.25 A</dd>
+        <dt>当前</dt><dd><span id="s1-st" class="chip on">充电</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="drv">
+  <span class="eyebrow">驱动电流 · 图腾柱 · 驱动芯片</span>
+  <h2>为什么不能拿单片机引脚直接驱动</h2>
+  <p>栅极要充进 Qg 的电荷，驱动电流越大，开关越快：</p>
+  <p class="eq">t ≈ Qg / Ig　　Ig ≈ (Vdrv − Vgs) / (Rdrv + Rg + Rg(int))</p>
+  <p>50 nC 的管子想在 50 ns 内开通，就要约 1 A。单片机引脚一般只能给几 mA 到二十几 mA，电压也只有 3.3 V，接近甚至低于标准管的阈值。开关期间管子长时间停在线性区，Vds 和 Id 同时很大，开关损耗惊人，稍不注意就烧管。</p>
+  <p>图腾柱是 NPN、PNP 两个射极跟随器上下串联：NPN 拉高给栅极充电，PNP 拉低放电，能放大出几百 mA 到 1 A 以上的电流，输出比电源低一个 VBE。两管基极接在一起，同一时刻只可能有一个发射结正偏，不会直通。驱动芯片在此基础上还提供几 A 的峰值电流、欠压锁定、高边自举和死区控制。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 280" role="img" aria-label="三种驱动方式下 MOS 开通时的栅源电压和漏源电压波形对比">
+        <rect id="s2-pz" class="zone-sat" x="0" y="26" width="0" height="216"/>
+        <line class="gl" x1="56" y1="30" x2="500" y2="30"/>
+        <line class="gl" x1="56" y1="75" x2="500" y2="75"/>
+        <path class="ax" d="M56,26 V120 H500 M56,146 V240 H500"/>
+        <line class="leak dash" x1="56" y1="97.5" x2="500" y2="97.5" style="stroke-width:1.2"/>
+        <text x="496" y="92" text-anchor="end" class="tm" style="fill:var(--danger)">Vth 3 V</text>
+        <text x="50" y="34" text-anchor="end" class="v">12</text>
+        <text x="50" y="79" text-anchor="end" class="v">6</text>
+        <text x="50" y="124" text-anchor="end" class="v">0</text>
+        <text x="62" y="20" class="tm">Vgs / V</text>
+        <line class="gl" x1="56" y1="150" x2="500" y2="150"/>
+        <line class="gl" x1="56" y1="195" x2="500" y2="195"/>
+        <text x="50" y="154" text-anchor="end" class="v">50</text>
+        <text x="50" y="199" text-anchor="end" class="v">25</text>
+        <text x="50" y="244" text-anchor="end" class="v">0</text>
+        <text x="62" y="142" class="tm">Vds / V</text>
+        <text x="56" y="256" text-anchor="middle" class="v">0</text>
+        <text x="144.8" y="256" text-anchor="middle" class="v">100</text>
+        <text x="233.6" y="256" text-anchor="middle" class="v">200</text>
+        <text x="322.4" y="256" text-anchor="middle" class="v">300</text>
+        <text x="411.2" y="256" text-anchor="middle" class="v">400</text>
+        <text x="500" y="256" text-anchor="end" class="v">500</text>
+        <text x="500" y="272" text-anchor="end" class="tm">时间 / ns</text>
+        <polyline id="s2-g0" class="ideal" points="56,120"/>
+        <polyline id="s2-g1" class="ideal" points="56,120"/>
+        <polyline id="s2-g2" class="ideal" points="56,120"/>
+        <polyline id="s2-d0" class="ideal" points="56,154"/>
+        <polyline id="s2-d1" class="ideal" points="56,154"/>
+        <polyline id="s2-d2" class="ideal" points="56,154"/>
+        <text id="s2-pzt" x="0" y="140" text-anchor="middle" class="tm">米勒平台</text>
+      </svg>
+      <figcaption>上：栅源电压；下：漏源电压。所选驱动画实线，另外两种画虚线。橙色底是所选驱动的米勒平台，Vds 就在这段时间里从 48 V 降下来。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">驱动方式</span>
+        <div class="seg" id="s2-dv"><button id="s2-dv-m" data-v="0" aria-pressed="false">MCU 引脚</button><button id="s2-dv-t" data-v="1" aria-pressed="true">图腾柱</button><button id="s2-dv-c" data-v="2" aria-pressed="false">驱动芯片</button></div></div>
+      <dl class="read">
+        <dt>驱动电压 / 峰值电流</dt><dd id="s2-ip">10 V / 0.91 A</dd>
+        <dt>Vgs 最终值</dt><dd id="s2-vf">10 V</dd>
+        <dt>电流上升 + 米勒平台</dt><dd id="s2-tsw">53 ns</dd>
+        <dt>开通 + 关断一次的损耗</dt><dd id="s2-e">25 µJ</dd>
+        <dt>100 kHz 下开关损耗</dt><dd id="s2-p">2.5 W</dd>
+        <dt>结论</dt><dd><span id="s2-st" class="chip on">可以</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+      <p class="note">示意：Qg = 50 nC（Qgs 15 nC、Qgd 20 nC，平台 4.5 V，Vth 3 V），母线 48 V、感性负载电流 10 A。驱动等效为电压源加输出电阻：MCU 3.3 V / 150 Ω，图腾柱 10 V / 10 Ω，驱动芯片 10 V / 2.5 Ω，另加管内栅电阻 1 Ω。关断按和开通同样的速度估算。</p>
+    </div>
+  </div>
+</section>
+<section id="cmp">
+  <span class="eyebrow">三种损耗 · 频率与管子大小</span>
+  <h2>驱动、开关、导通，哪个说了算</h2>
+  <ul>
+    <li><b>驱动损耗</b> = Qg·Vdrv·fsw。和负载电流无关，通常最小，但它决定了开关有多快。</li>
+    <li><b>开关损耗</b> ≈ ½·V·I·(tr + tf)·fsw，tr、tf ≈ Qsw / Ig。Qsw 是电流上升和米勒平台两段的电荷，约 Qgs2 + Qgd。</li>
+    <li><b>导通损耗</b> = I²·Rds(on)·D。和频率无关。</li>
+  </ul>
+  <p>同一代工艺，Rds(on)·Qg 大致是个常数，叫品质因数 FOM。管子做大，Rds(on) 小了，Qg 却大了。低频时导通损耗为主，该选大管子；高频时开关、驱动损耗为主，该选小管子，驱动电流也要跟上。中间存在一个总损耗最小的管子大小。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 250" role="img" aria-label="驱动损耗、开关损耗、导通损耗和合计四根柱子的对比">
+        <line class="gl" x1="56" y1="30" x2="500" y2="30"/>
+        <line class="gl" x1="56" y1="125" x2="500" y2="125"/>
+        <path class="ax" d="M56,26 V220 H500"/>
+        <text id="s3-yt" x="50" y="34" text-anchor="end" class="v">2</text>
+        <text id="s3-ym" x="50" y="129" text-anchor="end" class="v">1</text>
+        <text x="50" y="224" text-anchor="end" class="v">0</text>
+        <text x="62" y="20" class="tm">损耗 / W</text>
+        <g id="s3-bars"></g>
+        <text x="111.5" y="238" text-anchor="middle" class="t">驱动</text>
+        <text x="222.5" y="238" text-anchor="middle" class="t">开关</text>
+        <text x="333.5" y="238" text-anchor="middle" class="t">导通</text>
+        <text x="444.5" y="238" text-anchor="middle" class="t">合计</text>
+      </svg>
+      <figcaption>绿色是驱动损耗，蓝色是开关损耗，橙色是导通损耗，灰色是三者之和。纵轴随数值自动缩放，看刻度。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s3-f">开关频率 fsw</label>
+        <span class="rv" id="s3-fv">100 kHz</span>
+        <input type="range" id="s3-f" min="0" max="6" step="1" value="2"></div>
+      <div class="ctl"><label class="ctl-l" for="s3-q">栅极电荷 Qg（代表管子大小）</label>
+        <span class="rv" id="s3-qv">50 nC</span>
+        <input type="range" id="s3-q" min="10" max="200" step="10" value="50"></div>
+      <div class="ctl"><label class="ctl-l" for="s3-ig">驱动电流 Ig</label>
+        <span class="rv" id="s3-igv">1 A</span>
+        <input type="range" id="s3-ig" min="0" max="4" step="1" value="2"></div>
+      <dl class="read">
+        <dt>Rds(on) = FOM / Qg</dt><dd id="s3-r">10 mΩ</dd>
+        <dt>tr = tf ≈ Qsw / Ig</dt><dd id="s3-t">25 ns</dd>
+        <dt>驱动损耗</dt><dd id="s3-pd">50 mW</dd>
+        <dt>开关损耗</dt><dd id="s3-ps">1.20 W</dd>
+        <dt>导通损耗</dt><dd id="s3-pc">0.50 W</dd>
+        <dt>合计</dt><dd id="s3-pt">1.75 W</dd>
+        <dt>此条件下最优 Qg</dt><dd id="s3-qo">≈ 29 nC</dd>
+        <dt>主要矛盾</dt><dd><span id="s3-st" class="chip warn">开关损耗</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+      <p class="note">示意：48 V、10 A、占空比 0.5 的硬开关，Vdrv = 10 V；FOM = Rds(on)·Qg 取 500 mΩ·nC（Qg = 50 nC 时 10 mΩ）；Qsw 取 0.5·Qg，Ig 指平台期的平均驱动电流；不计 Coss、反向恢复和温升。</p>
+    </div>
+  </div>
+</section>
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>MOS 的驱动损耗怎么算？和栅极电阻有关吗？</summary>
+      <div class="ans"><p>P = Qg·Vdrv·fsw。每个周期驱动电源要把 Qg 的电荷送进栅极再放掉，能量 Qg·Vdrv 全部变成热。总量和 Rg 无关，Rg 只决定这份热在驱动器、外部 Rg、管内栅电阻之间怎么分，以及开关快慢。这份损耗不在 MOS 沟道里，由驱动器和栅极电阻承担。</p></div></details>
+    <details><summary>为什么用 Qg 算，而不用 ½·C·V²？</summary>
+      <div class="ans"><p>栅极电容随电压非线性变化，开通途中还有米勒平台，这段时间驱动在给 Cgd 充电，电压却不涨。用 Ciss 按 ½·C·V² 算会严重低估。手册给的 Qg 是在指定 Vgs 下把栅极充满的总电荷，直接乘 Vdrv 和 fsw 就是驱动损耗。</p></div></details>
+    <details><summary>为什么单片机 IO 不能直接驱动功率 MOS？</summary>
+      <div class="ans"><p>一是电压不够：3.3 V 接近甚至低于标准管的阈值，开不透，Rds(on) 很大。二是电流不够：IO 只有几到几十 mA，几十 nC 的 Qg 要 µs 级才能充满，米勒平台期间管子停在线性区，开关损耗巨大。三是高边管需要浮地驱动。所以要加图腾柱或驱动芯片。</p></div></details>
+    <details><summary>图腾柱驱动是什么？为什么用 NPN 加 PNP？</summary>
+      <div class="ans"><p>两个射极跟随器上下串联，基极接在一起。输入高时上面的 NPN 导通，从电源给栅极充电；输入低时下面的 PNP 导通，把栅极电荷放到地。射随器输入电流小、输出电流大，拉高拉低都是主动的，所以开得快关得也快。两管基极同电位，同一时刻只可能有一个发射结正偏，不会上下直通。缺点是输出比电源低一个 VBE。</p></div></details>
+    <details><summary>开关频率升高，损耗怎么变？怎么选管子？</summary>
+      <div class="ans"><p>驱动损耗和开关损耗都和 fsw 成正比，导通损耗和频率无关。低频时导通损耗为主，选 Rds(on) 小的；高频时开关、驱动损耗为主，选 Qg、Qgd 小的，驱动电流也要够大。同一工艺 Rds(on)·Qg 大致固定，所以有一个总损耗最小的管子大小，频率越高，最优的管子越小。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="08-导通电阻Rdson.html"><span>上一页</span>导通电阻 Rds(on)</a><a class="next" href="../index.html#mos"><span>下一页</span>返回目录</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 驱动损耗落在哪里 */
+const QG=50e-9,VDR=10,FSW=100e3,RDRV=2,RGI=1;
+const s1={ph:'on'};
+function s1u(){
+  const rg=+$('s1-rg').value,on=s1.ph==='on',rt=RDRV+rg+RGI,p=QG*VDR*FSW,pc=x=>fmtP(p*x/rt)+'，'+(x/rt*100).toFixed(0)+'%';
+  $('s1-rgv').textContent=rg+' Ω';$('s1-rg').setAttribute('aria-valuetext',rg+' Ω');$('s1-rgt').textContent='Rg '+rg+' Ω';
+  show($('s1-fon'),on);show($('s1-foff'),!on);
+  $('s1-qh').classList.toggle('hl',on);$('s1-ql').classList.toggle('hl',!on);
+  $('s1-in').textContent=on?'高':'低';setLv($('s1-in'),null,on);
+  $('s1-vgt').textContent=on?'Vgs → 10 V':'Vgs → 0 V';setLv($('s1-vgt'),null,on);
+  $('s1-e').textContent=(QG*VDR*1e6).toFixed(2)+' µJ';$('s1-p').textContent=fmtP(p);
+  $('s1-pr').textContent=pc(rg);$('s1-pd').textContent=pc(RDRV);$('s1-pi').textContent=pc(RGI);
+  $('s1-ip').textContent=fmtA(VDR/rt);
+  chip($('s1-st'),on?'充电':'放电','on');
+  $('s1-note').textContent=(on?'输入为高，NPN 导通，电流从 Vdrv 经 Rg 流进栅极，把栅极充到 10 V。充电回路的电阻上消耗约一半的 Qg·Vdrv，另一半暂存在栅极电容里。'
+      :'输入为低，PNP 导通，栅极电荷经 Rg 流到地，暂存在栅极里的那一半能量在放电回路的电阻上烧掉。')
+    +'拖动 Rg：总损耗始终是 '+fmtP(p)+'，变的只是各部分的比例和峰值电流。Rg 越大，驱动器越凉快，但开关越慢。'
+    +(rg===0?'Rg = 0 时热量都落在驱动器和管内栅电阻上，峰值电流也最大，驱动器要扛得住。':'');
+}
+seg('s1-ph',v=>{s1.ph=v;s1u();});
+$('s1-rg').addEventListener('input',s1u);
+s1u();
+
+/* 2. 三种驱动方式 */
+const DRV=[{v:3.3,r:150},{v:10,r:10},{v:10,r:2.5}],QGS=15e-9,QGD=20e-9,VPL=4.5,VTHD=3,VB=48,IL=10,T0D=20e-9;
+const vgQ=q=>q<QGS?VPL*q/QGS:q<QGS+QGD?VPL:VPL+(q-QGS-QGD)*5.5/15e-9;
+const XD=scale(0,500e-9,56,500),YG=scale(0,12,120,30),YD=scale(0,50,240,150);
+function simDrv(d){
+  const rt=d.r+RGI,dt=0.5e-9,g=[],v=[];let q=0,tA=null,tB=null,tC=null;
+  for(let k=0;k<=1000;k++){const t=k*dt;
+    if(t>=T0D)q+=Math.max(0,(d.v-vgQ(q))/rt)*dt;
+    const vg=vgQ(q),vds=q<QGS?VB:q<QGS+QGD?VB-(VB-IL*0.01)*(q-QGS)/QGD:IL*0.01;
+    if(tA===null&&vg>=VTHD)tA=t;if(tB===null&&q>=QGS)tB=t;if(tC===null&&q>=QGS+QGD)tC=t;
+    g.push(XD(t).toFixed(1)+','+YG(vg).toFixed(1));v.push(XD(t).toFixed(1)+','+YD(vds).toFixed(1));}
+  return {g:g.join(' '),v:v.join(' '),tA,tB,tC};
+}
+const SIM=DRV.map(simDrv);
+SIM.forEach((s,k)=>{$('s2-g'+k).setAttribute('points',s.g);$('s2-d'+k).setAttribute('points',s.v);});
+const s2={k:1};
+function s2u(){
+  const k=s2.k,d=DRV[k],s=SIM[k],pk=d.v/(d.r+RGI),ok=s.tC!==null;
+  [0,1,2].forEach(j=>{$('s2-g'+j).setAttribute('class',j===k?'real':'ideal');$('s2-d'+j).setAttribute('class',j===k?'real2':'ideal');});
+  const pz=$('s2-pz'),pt=$('s2-pzt');show(pz,ok);show(pt,ok);
+  if(ok){const a=XD(s.tB),b=XD(s.tC);pz.setAttribute('x',a.toFixed(1));pz.setAttribute('width',Math.max(2,b-a).toFixed(1));pt.setAttribute('x',Math.min(470,Math.max(90,(a+b)/2)).toFixed(1));}
+  $('s2-ip').textContent=d.v+' V / '+fmtA(pk);
+  $('s2-vf').textContent=fmtV(d.v,1)+(d.v<VPL?'，低于平台 4.5 V':'');
+  let n;
+  if(!ok){$('s2-tsw').textContent='到不了米勒平台';$('s2-e').textContent='—';$('s2-p').textContent='管子开不透';
+    chip($('s2-st'),'开不了','bad');
+    n='MCU 引脚只有 3.3 V，输出电阻按 150 Ω 算，峰值电流约 '+fmtA(pk)+'。栅压爬得慢，最高也只有 3.3 V，连米勒平台 4.5 V 都到不了，Vds 根本降不下来，管子开不透，只能在线性区里发烫。';}
+  else{const tsw=s.tC-s.tA,E=VB*IL*tsw,P=E*FSW,ipl=(d.v-VPL)/(d.r+RGI);
+    $('s2-tsw').textContent=fmtT(tsw);$('s2-e').textContent=(E*1e6).toFixed(1)+' µJ';$('s2-p').textContent=fmtP(P);
+    chip($('s2-st'),k===2?'最快':'可以','on');
+    n=(k===1?'图腾柱把电流放大到峰值约 ':'驱动芯片峰值电流约 ')+fmtA(pk)+'，米勒平台期间约 '+fmtA(ipl)+'，Vds 在 '+fmtT(s.tC-s.tB)+' 内降下来。开通加关断一次的交叠损耗约 '+(E*1e6).toFixed(1)+' µJ，100 kHz 下 '+fmtP(P)+'。'
+      +(k===2?'代价是 di/dt、dv/dt 更大，要注意振铃和 EMI，必要时适当加大 Rg。':'换成驱动芯片试试，平台还能再短。');}
+  $('s2-note').textContent=n;
+}
+seg('s2-dv',v=>{s2.k=+v;s2u();});
+s2u();
+/* 3. 驱动、开关、导通损耗对比 */
+const FL=[20e3,50e3,100e3,200e3,300e3,500e3,1e6],IGL=[0.25,0.5,1,2,4],V3=48,I3=10,D3=0.5,FOM=5e-10;
+const CX=[111.5,222.5,333.5,444.5],CLS=['ls-d','ls-s','ls-c','ls-t'];
+function loss3(f,qg,ig){const r=FOM/qg,t=0.5*qg/ig,pd=qg*VDR*f,ps=V3*I3*t*f,pc=I3*I3*r*D3;return {r,t,pd,ps,pc,pt:pd+ps+pc};}
+function s3u(){
+  const f=FL[+$('s3-f').value],qg=+$('s3-q').value*1e-9,ig=IGL[+$('s3-ig').value],L=loss3(f,qg,ig);
+  $('s3-fv').textContent=fmtF(f);$('s3-f').setAttribute('aria-valuetext',fmtF(f));
+  $('s3-qv').textContent=(qg*1e9).toFixed(0)+' nC';$('s3-q').setAttribute('aria-valuetext',(qg*1e9).toFixed(0)+' nC');
+  $('s3-igv').textContent=ig+' A';$('s3-ig').setAttribute('aria-valuetext',ig+' A');
+  const vals=[L.pd,L.ps,L.pc,L.pt],steps=[0.5,1,2,5,10,20,50,100],top=steps.find(s=>s>=L.pt*1.15)||100,Yb=scale(0,top,220,30);
+  $('s3-yt').textContent=top;$('s3-ym').textContent=+(top/2).toFixed(2);
+  const g=$('s3-bars');g.replaceChildren();
+  vals.forEach((v,i)=>{const y=Yb(Math.min(v,top));
+    g.append(svgEl('rect',{x:CX[i]-28,y:y.toFixed(1),width:56,height:Math.max(1,220-y).toFixed(1),class:CLS[i]}));
+    g.append(svgEl('text',{x:CX[i],y:(y-6).toFixed(1),'text-anchor':'middle',class:'v'},fmtP(v)));});
+  $('s3-r').textContent=fmtR(L.r);$('s3-t').textContent=fmtT(L.t);
+  $('s3-pd').textContent=fmtP(L.pd);$('s3-ps').textContent=fmtP(L.ps);$('s3-pc').textContent=fmtP(L.pc);$('s3-pt').textContent=fmtP(L.pt);
+  const qo=Math.sqrt(I3*I3*D3*FOM/(f*(VDR+0.5*V3*I3/ig)));
+  $('s3-qo').textContent='≈ '+(qo*1e9).toFixed(0)+' nC';
+  const mx=Math.max(L.pd,L.ps,L.pc),pct=x=>(x/L.pt*100).toFixed(0)+'%';
+  chip($('s3-st'),mx===L.pc?'导通损耗':mx===L.ps?'开关损耗':'驱动损耗',mx===L.pc?'on':'warn');
+  let n;
+  if(mx===L.pc)n='导通损耗占 '+pct(L.pc)+'。频率低，开关和驱动损耗都小，该选 Rds(on) 更小、Qg 更大的管子。';
+  else if(mx===L.ps)n='开关损耗占 '+pct(L.ps)+'，每个开关沿约 '+fmtT(L.t)+'。'+(ig<4?'加大驱动电流能直接缩短开关沿。':'驱动电流已经很大，再降只能换 Qg 更小的管子或降低频率。');
+  else n='驱动损耗成了最大的一块，说明频率很高、管子偏大，驱动器自己也会发热。';
+  if(mx!==L.pd)n+='驱动损耗本身只有 '+fmtP(L.pd)+'，但同一个 Qg 决定了开关沿有多慢。';
+  n+=qg>qo*1.4?'当前 Qg 比最优值大，管子选大了。':qg<qo/1.4?'当前 Qg 比最优值小，导通损耗吃亏。':'当前 Qg 接近这个条件下的最优值。';
+  $('s3-note').textContent=n;
+}
+['s3-f','s3-q','s3-ig'].forEach(id=>$(id).addEventListener('input',s3u));
+s3u();
+</script>
+</body>
+</html>

@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PMOS防反接</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.hl{color:var(--copper)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#protect">保护电路</a><span class="sp"></span><span>06 / 08</span></nav>
+<header>
+  <span class="eyebrow">保护电路 · 防反接</span>
+  <h1>PMOS 防反接</h1>
+  <p class="lede">二极管防反接简单，但要白白吃掉 0.3~1 V 的压降。把二极管换成一颗 PMOS，压降只剩 I·Rds(on)，几十毫伏。关键在于 PMOS 要"反着接"，下面切换正接和反接，看每个节点的电压和电流走哪条路。</p>
+</header>
+
+<section id="pmos">
+  <span class="eyebrow">正极线 · PMOS 反着接</span>
+  <h2>D 接输入，S 接负载：先走体二极管，再走沟道</h2>
+  <p>PMOS 串在电源正极线上，漏极 D 接输入，源极 S 接负载，栅极经电阻 Rg 接地。体二极管方向是 D → S，也就是从输入指向负载。这和普通 PMOS 高边开关的接法正好相反，面试最爱考这一点。</p>
+  <p>正接上电分两步。第一步沟道还没开，电流先从体二极管过去，源极被抬到 Vin − 0.8 V 左右。第二步，栅极在 0 V，源极在高电位，Vgs 为负且远超阈值，沟道打开，把体二极管短路。反接时输入是负电压，体二极管反偏；源极经负载接地、栅极经 Rg 接地，都是 0 V，Vgs = 0，沟道打不开。</p>
+  <p class="eq">正接：Vgs ≈ −Vin，压降 = I·Rds(on)，损耗 = I²·Rds(on)　　反接：Vgs = 0，体二极管反偏，截止</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 290" role="img" aria-label="电源正极经 PMOS 接负载：漏极 D 接输入，源极 S 接负载，体二极管从 D 指向 S；栅极经 Rg 接地，稳压管 Dz 并在栅源之间">
+        <text id="s1-vin" x="62" y="62" class="v hi">IN+ 12 V</text>
+        <path id="s1-wd" class="w s-hi" d="M50,70 H160"/>
+        <path class="w" d="M50,70 V150 M50,160 V250 H400 M160,70 H182 V92"/>
+        <g id="s1-bn">
+          <path class="w" d="M36,150 H64"/>
+          <path class="w" style="stroke-width:4" d="M43,160 H57"/>
+          <text x="26" y="154" text-anchor="middle" class="t">+</text>
+          <text x="26" y="172" text-anchor="middle" class="t">−</text>
+        </g>
+        <g id="s1-br" hidden>
+          <path class="w" style="stroke-width:4" d="M43,150 H57"/>
+          <path class="w" d="M36,160 H64"/>
+          <text x="26" y="154" text-anchor="middle" class="t">−</text>
+          <text x="26" y="172" text-anchor="middle" class="t">+</text>
+        </g>
+        <text x="72" y="160" class="tm">电源 12 V</text>
+        <text x="62" y="242" class="v">IN− 0 V</text>
+        <line class="bar" x1="176" y1="92" x2="188" y2="92"/>
+        <line class="bar" x1="194" y1="92" x2="206" y2="92"/>
+        <line class="bar" x1="212" y1="92" x2="224" y2="92"/>
+        <line class="bar" x1="180" y1="104" x2="220" y2="104"/>
+        <path class="w" d="M200,92 V70 H240 M218,92 V70 M200,104 V160"/>
+        <polygon class="ah" points="200,73 195,82 205,82"/>
+        <circle class="dot" cx="218" cy="70" r="3.5"/>
+        <text x="174" y="86" text-anchor="end" class="t">D</text>
+        <text x="228" y="86" class="t">S</text>
+        <text x="192" y="136" text-anchor="end" class="t">G</text>
+        <text x="232" y="122" class="t">Q1</text>
+        <text x="232" y="138" class="tm">PMOS</text>
+        <g id="s1-dio">
+          <path class="w" d="M160,70 V46 H193 M206,46 H240 V70 M206,39 V53"/>
+          <polygon class="ah" points="193,39 193,53 206,46"/>
+          <circle class="dot" cx="160" cy="70" r="3.5"/>
+          <circle class="dot" cx="240" cy="70" r="3.5"/>
+          <text x="200" y="30" text-anchor="middle" class="tm">体二极管 D → S</text>
+        </g>
+        <circle class="dot" cx="290" cy="70" r="3.5"/>
+        <path class="w" d="M290,70 V104 M290,117 V160 H200"/>
+        <path class="w" d="M280,100 L283,104 H297 L300,108"/>
+        <polygon class="ah" points="283,117 297,117 290,104"/>
+        <text x="306" y="110" class="t">Dz</text>
+        <text x="306" y="126" class="v">15 V</text>
+        <circle class="dot" cx="200" cy="160" r="3.5"/>
+        <text id="s1-vg" x="214" y="178" class="v lo">G 0 V</text>
+        <path class="w" d="M200,160 V180 M200,220 V250"/>
+        <rect class="r" x="191" y="180" width="18" height="40" rx="2"/>
+        <text x="184" y="198" text-anchor="end" class="t">Rg</text>
+        <text x="184" y="214" text-anchor="end" class="v">10 kΩ</text>
+        <circle class="dot" cx="200" cy="250" r="3.5"/>
+        <circle class="dot" cx="300" cy="250" r="3.5"/>
+        <path class="w" d="M300,250 V262 M288,262 H312 M293,267 H307 M298,272 H302"/>
+        <path id="s1-ws" class="w s-hi" d="M240,70 H400 V118"/>
+        <text id="s1-vs" x="340" y="62" text-anchor="middle" class="v hi">S 11.94 V</text>
+        <rect id="s1-load" class="box lit" x="376" y="118" width="48" height="52" rx="4"/>
+        <text x="400" y="149" text-anchor="middle" class="t">负载</text>
+        <text id="s1-il" x="432" y="200" class="v">3 A</text>
+        <path class="w" d="M400,170 V250"/>
+        <path id="s1-f" class="flow" d="M50,146 V70 H182 V88 H218 V70 H400 V116 M400,172 V250 H50 V164"/>
+      </svg>
+      <figcaption>绿色虚线是电流路径，橙色元件是正在导通的体二极管。所有电压都以输入负极 IN− 为 0 V。示意参数：负载电流 3 A，体二极管压降 0.8 V，Vgs = −12 V 时 Rds(on) ≈ 20 mΩ。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">电源极性</span>
+        <div class="seg" id="s1-p"><button id="s1-p-n" data-v="n" aria-pressed="true">正接</button><button id="s1-p-r" data-v="r" aria-pressed="false">反接</button></div></div>
+      <div class="ctl"><span class="ctl-l">上电阶段</span>
+        <div class="seg" id="s1-ph"><button id="s1-ph-pu" data-v="pu" aria-pressed="false">上电瞬间</button><button id="s1-ph-ss" data-v="ss" aria-pressed="true">稳态</button></div></div>
+      <dl class="read">
+        <dt>输入 IN+ / 漏极 D</dt><dd id="s1-rin">12.00 V</dd>
+        <dt>源极 S（负载端）</dt><dd id="s1-rs">11.94 V</dd>
+        <dt>栅极 G</dt><dd id="s1-rg">0 V</dd>
+        <dt>Vgs = VG − VS</dt><dd id="s1-rgs">−11.94 V</dd>
+        <dt>体二极管</dt><dd id="s1-rd">被沟道短路</dd>
+        <dt>沟道</dt><dd><span id="s1-st" class="chip on">导通</span></dd>
+        <dt>MOS 压降 / 损耗</dt><dd id="s1-rp">60 mV / 0.18 W</dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="gate">
+  <span class="eyebrow">栅极 · 稳压管和电阻</span>
+  <h2>Vgs 跟着输入走：太低开不透，太高击穿栅氧</h2>
+  <p>PMOS 导通后栅极在 0 V，源极约等于输入，所以 |Vgs| ≈ Vin。输入低时 |Vgs| 不够，Rds(on) 迅速变大；输入高时 |Vgs| 会超过栅源耐压，常见值是 ±20 V，超过就击穿栅氧。</p>
+  <p>高压这一头的办法：在栅源之间并一个稳压管，阴极接 S，阳极接 G，把 Vsg 钳在 Vz。栅极对地的 Rg 给稳压管限流。Vz 一般取 10~15 V，既能让管子充分导通，又低于耐压。低压这一头只能靠选型，选规格书标了低 Vgs 下 Rds(on) 的逻辑电平 PMOS。</p>
+  <p class="eq">有稳压管：|Vgs| = min(Vin, Vz)　　Iz = (Vin − Vz) / Rg　　Rg 功耗 = (Vin − Vz)² / Rg</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 270" role="img" aria-label="左边是栅极网络：源极经稳压管接栅极，栅极经 Rg 接地；右边是栅源电压绝对值随输入电压变化的曲线，有无稳压管两条线">
+        <text id="s2-vs" x="70" y="18" text-anchor="middle" class="v hi">S 24 V</text>
+        <g id="s2-z">
+          <path class="w" d="M70,26 V56 M70,69 V112"/>
+          <path class="w" d="M60,52 L63,56 H77 L80,60"/>
+          <polygon class="ah" points="63,69 77,69 70,56"/>
+          <text x="86" y="60" class="t">Dz</text>
+          <text x="86" y="76" class="v">15 V</text>
+        </g>
+        <g id="s2-nz" hidden>
+          <path class="w" d="M70,26 V36"/>
+          <text x="70" y="68" text-anchor="middle" class="tm">未接稳压管</text>
+        </g>
+        <circle class="dot" cx="70" cy="112" r="3.5"/>
+        <path class="w" d="M70,112 H120 M70,112 V132 M70,172 V196 M58,196 H82 M63,201 H77 M68,206 H72"/>
+        <text x="124" y="116" class="tm">至栅极</text>
+        <text id="s2-vg" x="78" y="104" class="v">G 9 V</text>
+        <rect class="r" x="61" y="132" width="18" height="40" rx="2"/>
+        <text x="86" y="150" class="t">Rg</text>
+        <text x="86" y="166" class="v">10 kΩ</text>
+        <text id="s2-izt" x="86" y="190" class="v">Iz 0.9 mA</text>
+        <path id="s2-f" class="flow thin" d="M70,28 V194"/>
+        <rect class="zone-sat" x="210" y="30" width="290" height="87.1"/>
+        <rect class="zone-cut" x="210" y="201.5" width="290" height="24.5"/>
+        <line class="gl" x1="210" y1="171.6" x2="500" y2="171.6"/>
+        <line class="gl" x1="210" y1="62.7" x2="500" y2="62.7"/>
+        <line class="ax" x1="210" y1="117.1" x2="500" y2="117.1" style="stroke:var(--danger);stroke-dasharray:5 4"/>
+        <path class="ax" d="M210,30 V226 H500"/>
+        <text x="216" y="46" class="tm">超过 ±20 V 耐压，栅氧击穿</text>
+        <text x="496" y="219" text-anchor="end" class="tm">Vgs 不足，Rds(on) 变大</text>
+        <text x="204" y="230" text-anchor="end" class="v">0</text>
+        <text x="204" y="175.6" text-anchor="end" class="v">10</text>
+        <text x="204" y="121.1" text-anchor="end" class="v">20</text>
+        <text x="204" y="66.7" text-anchor="end" class="v">30</text>
+        <text x="214" y="24" class="tm">|Vgs| / V</text>
+        <text x="210" y="242" text-anchor="middle" class="v">0</text>
+        <text x="306.7" y="242" text-anchor="middle" class="v">12</text>
+        <text x="403.3" y="242" text-anchor="middle" class="v">24</text>
+        <text x="500" y="242" text-anchor="end" class="v">36</text>
+        <text x="500" y="260" text-anchor="end" class="tm">输入电压 Vin / V</text>
+        <polyline id="s2-c0" class="ideal" points="210,226 500,30"/>
+        <polyline id="s2-c1" class="real" points="210,226 330.8,144.3 500,144.3"/>
+        <text x="400" y="88" text-anchor="end" class="tm">无稳压管：|Vgs| = Vin</text>
+        <text id="s2-l1" x="496" y="138" text-anchor="end" class="t" style="fill:var(--copper)">Vz 钳位 15 V</text>
+        <line id="s2-cur" class="ax" x1="0" y1="30" x2="0" y2="226" style="stroke:var(--danger);stroke-dasharray:4 3"/>
+        <circle id="s2-pt" class="dot" cx="0" cy="0" r="5" style="fill:var(--danger)"/>
+      </svg>
+      <figcaption>左：栅极网络，绿色虚线是稳压管电流。右：|Vgs| 随输入电压的变化，红点是当前工作点。上方色带超过 ±20 V 耐压，下方色带 Vgs 不足。Rds(on) 按示意模型计算，阈值约 1.8 V。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-rng">输入电压 Vin</label>
+        <span class="rv" id="s2-rv">24 V</span>
+        <input type="range" id="s2-rng" min="3" max="36" step="1" value="24"></div>
+      <div class="ctl"><span class="ctl-l">栅源稳压管</span>
+        <div class="seg" id="s2-z-m"><button id="s2-z-1" data-v="1" aria-pressed="true">有，Vz = 15 V</button><button id="s2-z-0" data-v="0" aria-pressed="false">没有</button></div></div>
+      <dl class="read">
+        <dt>|Vgs|</dt><dd id="s2-gs">15 V</dd>
+        <dt>Rds(on)，示意</dt><dd id="s2-r">17.7 mΩ</dd>
+        <dt>3 A 时 MOS 损耗</dt><dd id="s2-p">0.16 W</dd>
+        <dt>稳压管电流 Iz</dt><dd id="s2-iz">0.9 mA</dd>
+        <dt>Rg 功耗</dt><dd id="s2-pr">8.1 mW</dd>
+        <dt>栅极</dt><dd><span id="s2-st" class="chip on">安全，充分导通</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="loss">
+  <span class="eyebrow">损耗 · 对比二极管方案</span>
+  <h2>二极管损耗 Vf·I，MOS 损耗 I²·Rds(on)</h2>
+  <p>二极管的正向压降基本固定，普通硅二极管 0.7~1 V，肖特基 0.3~0.5 V，损耗约 Vf·I，随电流线性增长。PMOS 导通后就是一个电阻，损耗 I²·Rds(on)，虽然随电流平方增长，但 Rds(on) 只有几十 mΩ，常用电流范围里小得多。</p>
+  <p>压降还直接吃掉负载电压。5 V、3.3 V 系统里，0.4 V 的肖特基压降就占了一成左右，负载可能因此欠压。输入越低、电流越大，PMOS 越值得用。</p>
+  <p class="eq">二极管：P = Vf·I　　PMOS：P = I²·Rds(on)　　例：3 A 时肖特基约 1.2 W，20 mΩ 的 PMOS 约 0.18 W</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 280" role="img" aria-label="防反接器件损耗随负载电流变化：普通二极管、肖特基二极管、PMOS 三条曲线，竖线为当前电流">
+        <line class="gl" x1="60" y1="194.8" x2="430" y2="194.8"/>
+        <line class="gl" x1="60" y1="153.6" x2="430" y2="153.6"/>
+        <line class="gl" x1="60" y1="112.4" x2="430" y2="112.4"/>
+        <line class="gl" x1="60" y1="71.2" x2="430" y2="71.2"/>
+        <line class="gl" x1="60" y1="30" x2="430" y2="30"/>
+        <path class="ax" d="M60,30 V236 H430"/>
+        <text x="54" y="240" text-anchor="end" class="v">0</text>
+        <text x="54" y="198.8" text-anchor="end" class="v">2</text>
+        <text x="54" y="157.6" text-anchor="end" class="v">4</text>
+        <text x="54" y="116.4" text-anchor="end" class="v">6</text>
+        <text x="54" y="75.2" text-anchor="end" class="v">8</text>
+        <text x="54" y="34" text-anchor="end" class="v">10</text>
+        <text x="64" y="22" class="tm">器件损耗 / W</text>
+        <text x="60" y="252" text-anchor="middle" class="v">0</text>
+        <text x="134" y="252" text-anchor="middle" class="v">2</text>
+        <text x="208" y="252" text-anchor="middle" class="v">4</text>
+        <text x="282" y="252" text-anchor="middle" class="v">6</text>
+        <text x="356" y="252" text-anchor="middle" class="v">8</text>
+        <text x="430" y="252" text-anchor="middle" class="v">10</text>
+        <text x="430" y="270" text-anchor="end" class="tm">负载电流 / A</text>
+        <polyline id="s3-c1" class="real" points=""/>
+        <polyline id="s3-c2" class="real2" points=""/>
+        <polyline id="s3-c3" class="real3" points=""/>
+        <text id="s3-l1" x="436" y="34" class="t" style="fill:var(--copper)">普通二极管</text>
+        <text id="s3-l2" x="436" y="127" class="t" style="fill:var(--low)">肖特基</text>
+        <text id="s3-l3" x="436" y="199" class="t" style="fill:var(--flow)">PMOS</text>
+        <line id="s3-cur" class="ax" x1="0" y1="30" x2="0" y2="236" style="stroke:var(--danger);stroke-dasharray:4 3"/>
+        <circle id="s3-d1" class="dot" cx="0" cy="0" r="5" style="fill:var(--copper)"/>
+        <circle id="s3-d2" class="dot" cx="0" cy="0" r="5" style="fill:var(--low)"/>
+        <circle id="s3-d3" class="dot" cx="0" cy="0" r="5" style="fill:var(--flow)"/>
+      </svg>
+      <figcaption>示意模型：普通二极管 Vf = 0.75 V + 25 mΩ·I，肖特基 Vf = 0.35 V + 20 mΩ·I；PMOS 的 Rds(on) 随 |Vgs| 变，|Vgs| 由输入电压决定（15 V 稳压管钳位）。竖虚线是当前电流。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s3-rng">负载电流</label>
+        <span class="rv" id="s3-rv">3 A</span>
+        <input type="range" id="s3-rng" min="0.5" max="10" step="0.5" value="3"></div>
+      <div class="ctl"><span class="ctl-l">输入电压</span>
+        <div class="seg" id="s3-v"><button id="s3-v-5" data-v="5" aria-pressed="false">5 V</button><button id="s3-v-12" data-v="12" aria-pressed="true">12 V</button><button id="s3-v-24" data-v="24" aria-pressed="false">24 V</button></div></div>
+      <dl class="read">
+        <dt>普通二极管 压降 / 损耗</dt><dd id="s3-r1">0.83 V / 2.48 W</dd>
+        <dt>肖特基 压降 / 损耗</dt><dd id="s3-r2">0.41 V / 1.23 W</dd>
+        <dt>PMOS 压降 / 损耗</dt><dd id="s3-r3">60 mV / 0.18 W</dd>
+        <dt>负载电压 肖特基 / PMOS</dt><dd id="s3-rl">11.59 V / 11.94 V</dd>
+        <dt>PMOS 比肖特基少烧</dt><dd><span id="s3-st" class="chip on">1.05 W</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="nmos">
+  <span class="eyebrow">负极线 · NMOS 方案</span>
+  <h2>NMOS 放在地线上：更便宜，但地被分开了</h2>
+  <p>把 NMOS 串在电源负极线上，道理完全一样：漏极 D 接输入负极，源极 S 接系统地，栅极经 Rg 接输入正极，稳压管并在 G、S 之间。体二极管从 S 指向 D，同样顺着正常电流的方向。正接时 Vgs ≈ +Vin，沟道导通；反接时 Vgs = 0，截止。</p>
+  <p>NMOS 靠电子导电，电子迁移率约是空穴的 2~3 倍，同样尺寸和价格下 Rds(on) 更小，大电流时更划算。代价是系统地和电源负极之间隔了一个 MOS：正接时差 I·Rds(on)，反接时差 12 V。只要系统还有别的线把地连到外部，保护就会被绕过去。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 320" role="img" aria-label="电源负极经 NMOS 接系统地：漏极 D 接输入负极，源极 S 接系统地，体二极管从 S 指向 D；栅极经 Rg 接输入正极，稳压管并在栅源之间；可选一条绕过 NMOS 的外部地线">
+        <text id="s4-vin" x="62" y="52" class="v hi">IN+ 12 V</text>
+        <path id="s4-wt" class="w s-hi" d="M50,60 H380 V100"/>
+        <path class="w" d="M50,60 V145 M50,155 V240 M170,240 H192 V218"/>
+        <path id="s4-wb" class="w" d="M50,240 H170"/>
+        <g id="s4-bn">
+          <path class="w" d="M36,145 H64"/>
+          <path class="w" style="stroke-width:4" d="M43,155 H57"/>
+          <text x="26" y="149" text-anchor="middle" class="t">+</text>
+          <text x="26" y="167" text-anchor="middle" class="t">−</text>
+        </g>
+        <g id="s4-br" hidden>
+          <path class="w" style="stroke-width:4" d="M43,145 H57"/>
+          <path class="w" d="M36,155 H64"/>
+          <text x="26" y="149" text-anchor="middle" class="t">−</text>
+          <text x="26" y="167" text-anchor="middle" class="t">+</text>
+        </g>
+        <text x="72" y="155" class="tm">电源 12 V</text>
+        <text x="62" y="232" class="v">IN− 0 V</text>
+        <circle class="dot" cx="210" cy="60" r="3.5"/>
+        <path class="w" d="M210,60 V84 M210,124 V206 M210,150 H300 V186 M300,199 V240"/>
+        <rect class="r" x="201" y="84" width="18" height="40" rx="2"/>
+        <text x="194" y="102" text-anchor="end" class="t">Rg</text>
+        <text x="194" y="118" text-anchor="end" class="v">10 kΩ</text>
+        <circle class="dot" cx="210" cy="150" r="3.5"/>
+        <text id="s4-vg" x="222" y="142" class="v hi">G 12 V</text>
+        <text x="202" y="184" text-anchor="end" class="t">G</text>
+        <line class="bar" x1="190" y1="206" x2="230" y2="206"/>
+        <line class="bar" x1="186" y1="218" x2="198" y2="218"/>
+        <line class="bar" x1="204" y1="218" x2="216" y2="218"/>
+        <line class="bar" x1="222" y1="218" x2="234" y2="218"/>
+        <path class="w" d="M210,218 V240 M228,218 V240"/>
+        <polygon class="ah" points="210,221 205,230 215,230"/>
+        <circle class="dot" cx="228" cy="240" r="3.5"/>
+        <text x="182" y="234" text-anchor="end" class="t">D</text>
+        <text x="236" y="234" class="t">S</text>
+        <text x="240" y="186" class="t">Q1</text>
+        <text x="240" y="202" class="tm">NMOS</text>
+        <path class="w" d="M290,182 L293,186 H307 L310,190"/>
+        <polygon class="ah" points="293,199 307,199 300,186"/>
+        <circle class="dot" cx="300" cy="240" r="3.5"/>
+        <text x="314" y="190" class="t">Dz</text>
+        <text x="314" y="206" class="v">15 V</text>
+        <g id="s4-dio">
+          <path class="w" d="M170,240 V264 H204 M217,264 H250 V240 M204,257 V271"/>
+          <polygon class="ah" points="217,257 217,271 204,264"/>
+          <circle class="dot" cx="170" cy="240" r="3.5"/>
+          <circle class="dot" cx="250" cy="240" r="3.5"/>
+          <text x="210" y="288" text-anchor="middle" class="tm">体二极管 S → D</text>
+        </g>
+        <path id="s4-ws" class="w" d="M210,240 H380 V152"/>
+        <rect id="s4-load" class="box lit" x="356" y="100" width="48" height="52" rx="4"/>
+        <text x="380" y="131" text-anchor="middle" class="t">负载</text>
+        <text x="388" y="216" class="tm">系统地</text>
+        <text id="s4-vs" x="388" y="232" class="v">0.03 V</text>
+        <g id="s4-alt" hidden>
+          <path class="w dash" d="M110,240 V296 H330 V240"/>
+          <circle class="dot" cx="110" cy="240" r="3.5"/>
+          <circle class="dot" cx="330" cy="240" r="3.5"/>
+          <text x="220" y="314" text-anchor="middle" class="tm">另一条地线：通信口地线或金属外壳</text>
+        </g>
+        <path id="s4-f" class="flow" d="M50,143 V60 H380 V98 M380,154 V240 H228 V222 H192 V240 H50 V157"/>
+        <path id="s4-f2" class="flow thin" d="M330,240 V296 H110 V240" hidden/>
+      </svg>
+      <figcaption>电压以输入负极 IN− 为 0 V。绿色虚线是正常电流，红色是反接时绕过 MOS 的电流。示意参数：负载电流 3 A，NMOS 的 Rds(on) 取 10 mΩ。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">电源极性</span>
+        <div class="seg" id="s4-p"><button id="s4-p-n" data-v="n" aria-pressed="true">正接</button><button id="s4-p-r" data-v="r" aria-pressed="false">反接</button></div></div>
+      <div class="ctl"><span class="ctl-l">系统地另外接到电源负极</span>
+        <div class="seg" id="s4-a"><button id="s4-a-0" data-v="0" aria-pressed="true">没有</button><button id="s4-a-1" data-v="1" aria-pressed="false">有，如通信口地线</button></div></div>
+      <dl class="read">
+        <dt>输入 IN+</dt><dd id="s4-rin">12.00 V</dd>
+        <dt>系统地 S</dt><dd id="s4-rs">0.03 V</dd>
+        <dt>栅极 G</dt><dd id="s4-rg">12.00 V</dd>
+        <dt>Vgs = VG − VS</dt><dd id="s4-rgs">11.97 V</dd>
+        <dt>体二极管</dt><dd id="s4-rd">被沟道短路</dd>
+        <dt>负载两端</dt><dd id="s4-rl">11.97 V</dd>
+        <dt>结果</dt><dd><span id="s4-st" class="chip on">导通</span></dd>
+      </dl>
+      <p class="note" id="s4-note"></p>
+    </div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>对比项</th><th>PMOS 放正极线</th><th>NMOS 放负极线</th></tr></thead>
+    <tbody>
+      <tr><td>接法</td><td>D 接输入正极，S 接负载</td><td>D 接输入负极，S 接系统地</td></tr>
+      <tr><td>栅极</td><td>经 Rg 接地，Vgs ≈ −Vin</td><td>经 Rg 接输入正极，Vgs ≈ +Vin</td></tr>
+      <tr><td>同尺寸 Rds(on)</td><td>较大，价格较高</td><td>较小，便宜，大电流更划算</td></tr>
+      <tr><td>系统地</td><td>完整，和电源负极直接相连</td><td>被 MOS 隔开，多了 I·Rds(on) 的地偏移</td></tr>
+      <tr><td>适用</td><td>最常用，系统有对外接地的接口也没问题</td><td>系统地不和外部其他地相连的场合，如独立的电池供电设备</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>PMOS 防反接的原理是什么？</summary>
+      <div class="ans"><p>PMOS 串在正极线上，漏极接输入，源极接负载，栅极经电阻接地。正接上电时体二极管先导通，把源极抬到接近 Vin，这时 Vgs ≈ −Vin，沟道导通，把体二极管短路，压降只有 I·Rds(on)。反接时体二极管反偏，源极和栅极都在 0 V，Vgs = 0，沟道不导通，负载上没有电压。</p></div></details>
+    <details><summary>PMOS 的 D 和 S 接反了会怎样？</summary>
+      <div class="ans"><p>如果按普通高边开关那样把 S 接输入、D 接负载，正接时照样导通，测试时看不出问题。但体二极管变成了从负载指向输入，一旦电源反接，它正偏导通，负载被反向供电，保护完全失效。判断方法：体二极管必须顺着正常电流方向，从输入指向负载。</p></div></details>
+    <details><summary>栅极为什么要加稳压管和电阻？</summary>
+      <div class="ans"><p>正接时 Vgs ≈ −Vin。输入超过 20 V 左右，或者有浪涌尖峰，Vgs 就会超过栅源耐压（常见 ±20 V），击穿栅氧。所以在栅源之间并一个 10~15 V 的稳压管钳位，栅极对地的电阻 Rg 给稳压管限流，电流约 (Vin − Vz) / Rg。</p></div></details>
+    <details><summary>PMOS 方案比二极管方案好在哪？有什么缺点？</summary>
+      <div class="ans"><p>好在压降和损耗小：3 A 时肖特基约 0.4 V、1.2 W，20 mΩ 的 PMOS 只有 60 mV、0.18 W。缺点是元件多、成本高；输入电压很低时 Vgs 不够，Rds(on) 变大；而且它不防倒灌，输入掉电时 PMOS 仍然导通，输出电容会经沟道反向放电。要防倒灌就用理想二极管控制器，检测到反向电流就关断 MOS。</p></div></details>
+    <details><summary>NMOS 放在地线上防反接有什么问题？</summary>
+      <div class="ans"><p>原理一样：漏极接输入负极，源极接系统地，栅极经电阻接输入正极。NMOS 同样尺寸下 Rds(on) 更小、更便宜。问题是系统地和电源负极之间隔了一个 MOS，地被分割。如果系统还有别的线把地接到外部（通信口地线、金属外壳），反接时电流会绕过 MOS 从那条地线流走，保护失效。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="05-二极管防反接.html"><span>上一页</span>二极管防反接</a><a class="next" href="07-ESD防护.html"><span>下一页</span>ESD防护</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 共用：PMOS 导通电阻随 |Vgs| 变化的示意模型，|Vgs| = 12 V 时约 20 mΩ，|Vgs| 低于 2.3 V 视为没打开 */
+const rdsP=v=>v<=2.3?Infinity:0.010+0.102/(v-1.8);
+const mV=v=>Math.abs(v)<1?(v*1e3).toFixed(0)+' mV':fmtV(v,2);
+
+/* 1. 正接与反接 */
+const s1={p:'n',ph:'ss'},V1=12,I1=3,VF1=0.8;
+const s1F={pu:'M50,146 V70 H160 V46 H240 V70 H400 V116 M400,172 V250 H50 V164',ss:'M50,146 V70 H182 V88 H218 V70 H400 V116 M400,172 V250 H50 V164'};
+function s1u(){
+  const rev=s1.p==='r',pu=!rev&&s1.ph==='pu';
+  const vin=rev?-V1:V1,drop=rev?0:pu?VF1:I1*rdsP(V1),vs=rev?0:V1-drop,vgs=-vs;
+  show($('s1-bn'),!rev);show($('s1-br'),rev);
+  $('s1-vin').textContent='IN+ '+fmtV(vin,0);
+  $('s1-vin').classList.toggle('hi',!rev);$('s1-vin').style.fill=rev?'var(--danger)':'';
+  $('s1-wd').classList.toggle('s-hi',!rev);$('s1-wd').classList.toggle('s-bad',rev);
+  $('s1-vs').textContent='S '+fmtV(vs,2);setLv($('s1-vs'),$('s1-ws'),!rev);
+  $('s1-dio').classList.toggle('hl',pu);$('s1-load').classList.toggle('lit',!rev);
+  $('s1-il').textContent=rev?'0 A':I1+' A';
+  const f=$('s1-f');show(f,!rev);if(!rev)f.setAttribute('d',s1F[s1.ph]);
+  $('s1-rin').textContent=fmtV(vin,2);$('s1-rs').textContent=fmtV(vs,2);$('s1-rg').textContent='0 V';
+  $('s1-rgs').textContent=fmtV(vgs,2)+(rev?'，达不到阈值':'，远超阈值');
+  $('s1-rd').textContent=rev?'反偏，承受 12 V':pu?'正偏导通，压降 0.8 V':'被沟道短路，只剩 '+mV(drop);
+  if(rev)chip($('s1-st'),'截止，负载无电','off');
+  else if(pu)chip($('s1-st'),'正在打开','warn');
+  else chip($('s1-st'),'导通，D → S','on');
+  $('s1-rp').textContent=rev?'Vds = −12 V / 0 W':mV(drop)+' / '+fmtP(I1*drop);
+  $('s1-note').textContent=rev
+    ?'电源接反，IN+ 变成 −12 V。体二极管阳极在 D（−12 V），阴极在 S，反偏截止。源极经负载接地、栅极经 Rg 接地，都是 0 V，Vgs = 0，沟道打不开。12 V 反压全落在 MOS 上，负载安然无恙。反接时不分阶段，始终截止。'
+    :pu?'刚上电，沟道还没打开，电流先走体二极管：输入 → 体二极管 → 负载。源极被抬到 12 − 0.8 = 11.2 V，栅极经 Rg 接地是 0 V，Vgs = −11.2 V，远超阈值，PMOS 随即导通。这一步只持续微秒级，此刻损耗是 0.8 V × 3 A = 2.4 W。'
+    :'沟道导通后，D、S 之间只剩 I·Rds(on) = 3 A × '+(rdsP(V1)*1e3).toFixed(0)+' mΩ = '+mV(drop)+'，远低于体二极管的开启电压，体二极管被短路。电流从 D 流向 S，是沟道的反向导通，PMOS 沟道是双向的，照样能走。';
+}
+seg('s1-p',v=>{s1.p=v;s1u();});
+seg('s1-ph',v=>{s1.ph=v;s1u();});
+s1u();
+
+/* 2. 栅极稳压管 */
+const s2={z:true},s2X=scale(0,36,210,500),s2Y=scale(0,36,226,30);
+function s2u(){
+  const vin=+$('s2-rng').value,z=s2.z,vsg=z?Math.min(vin,15):vin,vg=vin-vsg;
+  const iz=z&&vin>15?(vin-15)/10e3:0,r=rdsP(vsg);
+  show($('s2-z'),z);show($('s2-nz'),!z);show($('s2-c1'),z);show($('s2-l1'),z);
+  $('s2-c0').setAttribute('class',z?'ideal':'real');
+  const x=s2X(vin).toFixed(1);
+  $('s2-cur').setAttribute('x1',x);$('s2-cur').setAttribute('x2',x);
+  $('s2-pt').setAttribute('cx',x);$('s2-pt').setAttribute('cy',s2Y(vsg).toFixed(1));
+  $('s2-rv').textContent=vin+' V';$('s2-rng').setAttribute('aria-valuetext',vin+' V');
+  $('s2-vs').textContent='S '+vin+' V';$('s2-vg').textContent='G '+vg+' V';
+  $('s2-izt').textContent='Iz '+(iz?fmtA(iz):'0');show($('s2-f'),iz>0);
+  $('s2-gs').textContent=vsg+' V';$('s2-r').textContent=fmtR(r);$('s2-p').textContent=fmtP(9*r);
+  $('s2-iz').textContent=iz?fmtA(iz):'0，稳压管没击穿';$('s2-pr').textContent=iz?fmtP(iz*iz*10e3):'0';
+  if(vsg>20)chip($('s2-st'),'超过 ±20 V，栅氧击穿','bad');
+  else if(vsg<4.5)chip($('s2-st'),'Vgs 偏低，开不透','warn');
+  else chip($('s2-st'),'安全，充分导通','on');
+  $('s2-note').textContent=vsg>20
+    ?'没有稳压管，Vgs 跟着输入走到 −'+vin+' V，超过常见的 ±20 V 栅源耐压，栅氧会被击穿，管子直接损坏。输入可能有浪涌的场合（比如车载电源的抛负载）更要钳位。'
+    :z&&vin>15?'稳压管击穿，把 Vsg 钳在 15 V，栅极被抬到 '+vg+' V。多出来的 '+(vin-15)+' V 落在 Rg 上，Iz = (Vin − Vz) / Rg = '+fmtA(iz)+'。Rg 取几 kΩ 到几十 kΩ：太小白白耗电，太大则栅极电容充放电慢，MOS 开关变慢。'
+    :vsg<4.5?'输入只有 '+vin+' V，Vgs 也只有 −'+vin+' V，Rds(on) 升到 '+fmtR(r)+'，是 12 V 时的好几倍。低压输入要选逻辑电平 PMOS，看规格书里 Vgs = −2.5 V 或 −4.5 V 条件下的 Rds(on)。'
+    :'Vgs ≈ −Vin，在 ±20 V 以内，管子充分导通。'+(z?'稳压管还没到 15 V，不导通。':'')+'栅极不取直流电流，Rg 上没有压降，栅极就是 0 V。'+(!z&&vin>15?'输入再高几伏就超耐压了，没有余量。':'');
+}
+seg('s2-z-m',v=>{s2.z=v==='1';s2u();});
+$('s2-rng').addEventListener('input',s2u);
+s2u();
+
+/* 3. 损耗对比，二极管 Vf 用线性近似 */
+const s3={v:12},s3X=scale(0,10,60,430),s3Y=scale(0,10,236,30);
+const pSi=i=>i*(0.75+0.025*i),pSch=i=>i*(0.35+0.02*i);
+$('s3-c1').setAttribute('points',plot(pSi,0,10,s3X,s3Y,80));
+$('s3-c2').setAttribute('points',plot(pSch,0,10,s3X,s3Y,80));
+$('s3-l1').setAttribute('y',(s3Y(pSi(10))+4).toFixed(1));
+$('s3-l2').setAttribute('y',(s3Y(pSch(10))+4).toFixed(1));
+function s3u(){
+  const I=+$('s3-rng').value,V=s3.v,R=rdsP(Math.min(V,15)),pM=i=>i*i*R;
+  $('s3-c3').setAttribute('points',plot(pM,0,10,s3X,s3Y,80));
+  $('s3-l3').setAttribute('y',(s3Y(pM(10))+4).toFixed(1));$('s3-l3').textContent='PMOS '+(R*1e3).toFixed(0)+' mΩ';
+  const x=s3X(I).toFixed(1);$('s3-cur').setAttribute('x1',x);$('s3-cur').setAttribute('x2',x);
+  [[pSi,'s3-d1'],[pSch,'s3-d2'],[pM,'s3-d3']].forEach(([f,id])=>{$(id).setAttribute('cx',x);$(id).setAttribute('cy',s3Y(f(I)).toFixed(1));});
+  const v1=pSi(I)/I,v2=pSch(I)/I,v3=I*R;
+  $('s3-rv').textContent=I+' A';$('s3-rng').setAttribute('aria-valuetext',I+' A');
+  $('s3-r1').textContent=fmtV(v1,2)+' / '+fmtP(pSi(I));
+  $('s3-r2').textContent=fmtV(v2,2)+' / '+fmtP(pSch(I));
+  $('s3-r3').textContent=mV(v3)+' / '+fmtP(pM(I));
+  $('s3-rl').textContent=fmtV(V-v2,2)+' / '+fmtV(V-v3,2);
+  chip($('s3-st'),fmtP(pSch(I)-pM(I)),'on');
+  $('s3-note').textContent=I<=1
+    ?'电流只有 '+I+' A，肖特基损耗 '+fmtP(pSch(I))+'，一只贴片二极管就扛得住。小电流场合直接用肖特基更省事、更便宜，PMOS 的优势不明显。'
+    :'I = '+I+' A 时，普通二极管烧掉 '+fmtP(pSi(I))+'，肖特基 '+fmtP(pSch(I))+'，PMOS 只有 '+fmtP(pM(I))+'。'
+      +(V===5?'5 V 输入时 |Vgs| 只有 5 V，Rds(on) 升到约 '+(R*1e3).toFixed(0)+' mΩ，但仍远小于二极管；肖特基的压降则要吃掉 '+(v2/V*100).toFixed(1)+'% 的电压。'
+      :'二极管损耗随电流线性增长，MOS 按平方增长，但 Rds(on) 很小，十几安以内 MOS 都占优。');
+}
+seg('s3-v',v=>{s3.v=+v;s3u();});
+$('s3-rng').addEventListener('input',s3u);
+s3u();
+
+/* 4. NMOS 放地线 */
+const s4={p:'n',a:false},RN=0.01;
+const s4F={n:'M50,143 V60 H380 V98 M380,154 V240 H228 V222 H192 V240 H50 V157',bad:'M50,157 V240 H110 V296 H330 V240 H380 V154 M380,98 V60 H50 V143'};
+function s4u(){
+  const rev=s4.p==='r',alt=s4.a,vin=rev?-12:12;
+  let vs,vg,dio,st,cls,note,fl=null;
+  if(!rev){vs=alt?0:3*RN;vg=12;dio='被沟道短路';st=alt?'导通，地线分走部分电流':'导通';cls='on';fl=s4F.n;
+    note=alt?'正接时这条外部地线和 NMOS 并联，分走一部分回流电流，没有坏处，系统照常工作。问题出在反接，切过去看看。'
+      :'正接上电时体二极管先导通，系统地被抬到约 0.8 V，Vgs ≈ 11 V，沟道随即打开。稳态压降 I·Rds(on) = 3 A × 10 mΩ = 30 mV，也就是系统地比电源负极高 30 mV。';}
+  else if(!alt){vs=-12;vg=-12;dio='反偏，承受 12 V';st='截止，负载无电';cls='off';
+    note='电源接反，IN+ 变成 −12 V。系统地经负载被拉到 −12 V，栅极经 Rg 也在 −12 V，Vgs = 0，沟道关断。体二极管阳极 −12 V、阴极 0 V，反偏，负载两端没有电压。';}
+  else{vs=0;vg=-0.7;dio='两端都是 0 V，被旁路';st='保护被旁路';cls='bad';fl=s4F.bad;
+    note='反接时，外部地线把系统地直接接到了电源正端（现在的 IN−）。电流不经过 NMOS，从这条地线绕进负载，负载被反向加上 12 V。稳压管此时正偏，把 Vgs 限在 −0.7 V，NMOS 关着也没用。这是低边防反接最大的隐患。';}
+  const vl=vin-vs;
+  show($('s4-bn'),!rev);show($('s4-br'),rev);show($('s4-alt'),alt);
+  $('s4-vin').textContent='IN+ '+fmtV(vin,0);$('s4-vin').classList.toggle('hi',!rev);$('s4-vin').style.fill=rev?'var(--danger)':'';
+  $('s4-wt').classList.toggle('s-hi',!rev);$('s4-wt').classList.toggle('s-bad',rev);
+  $('s4-vg').textContent='G '+fmtV(vg,Math.abs(vg)<1?1:0);$('s4-vg').classList.toggle('hi',vg>0);$('s4-vg').style.fill=vg<0?'var(--danger)':'';
+  $('s4-vs').textContent=fmtV(vs,2);$('s4-vs').style.fill=vs<0?'var(--danger)':'';
+  $('s4-load').classList.toggle('lit',!rev);$('s4-load').classList.toggle('s-bad',cls==='bad');
+  const f=$('s4-f');show(f,!!fl);if(fl)f.setAttribute('d',fl);f.classList.toggle('bad',cls==='bad');
+  show($('s4-f2'),!rev&&alt);
+  $('s4-rin').textContent=fmtV(vin,2);$('s4-rs').textContent=fmtV(vs,2);$('s4-rg').textContent=fmtV(vg,2);
+  $('s4-rgs').textContent=fmtV(vg-vs,2)+(vg-vs>2?'，导通':'，关断');
+  $('s4-rd').textContent=dio;
+  $('s4-rl').textContent=fmtV(vl,2)+(vl<-1?'，反向！':'');
+  chip($('s4-st'),st,cls);$('s4-note').textContent=note;
+}
+seg('s4-p',v=>{s4.p=v;s4u();});
+seg('s4-a',v=>{s4.a=v==='1';s4u();});
+s4u();
+</script>
+</body>
+</html>

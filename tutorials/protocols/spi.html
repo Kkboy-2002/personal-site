@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPI 工作流程 · 动态图解</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>SPI <span>同步串行</span>工作流程</h1>
+  <p>Serial Peripheral Interface —— 高速芯片间通信:时钟同步 + 移位寄存器交换</p>
+</header>
+
+<nav>
+  <a href="index.html" class="home">🏠 协议总览</a>
+  <a href="#s1">① 四线拓扑</a>
+  <a href="#s2">② 移位交换</a>
+  <a href="#s3">③ 时钟模式</a>
+  <a href="#s4">④ 完整流程</a>
+  <a href="#s5">⑤ 特点速查</a>
+</nav>
+
+<main>
+
+<!-- ① 拓扑 -->
+<section id="s1">
+  <h2><span class="num">1</span>四线拓扑:主机提供时钟,片选决定和谁说话</h2>
+  <p class="desc">
+    SPI 是<b>同步、全双工、一主多从</b>总线,四根线:
+    <code>SCLK</code> 时钟(主机发)、<code>MOSI</code> 主出从入、<code>MISO</code> 主入从出、
+    <code>CS̅</code> 片选(每个从机一根,低有效)。想跟谁通信,就把谁的 CS̅ 拉低。点击切换片选看效果。
+  </p>
+  <div class="stage">
+    <svg id="svgTopo" viewBox="0 0 900 330" width="900" height="330">
+      <rect x="50" y="70" width="200" height="200" rx="14" fill="#1b2440" stroke="#2a3654" stroke-width="2"/>
+      <text x="150" y="102" fill="#e8edf7" font-size="17" text-anchor="middle" font-weight="bold">主机 MCU</text>
+      <text x="238" y="140" fill="#fbbf24" font-size="12" text-anchor="end">SCLK</text>
+      <text x="238" y="175" fill="#4cc9f0" font-size="12" text-anchor="end">MOSI</text>
+      <text x="238" y="210" fill="#4ade80" font-size="12" text-anchor="end">MISO</text>
+      <text x="238" y="245" fill="#a78bfa" font-size="12" text-anchor="end">CS̅1/CS̅2</text>
+      <!-- 共享三线 -->
+      <line x1="250" y1="135" x2="840" y2="135" stroke="#fbbf24" stroke-width="3"/>
+      <line x1="250" y1="170" x2="840" y2="170" stroke="#4cc9f0" stroke-width="3"/>
+      <line x1="250" y1="205" x2="840" y2="205" stroke="#4ade80" stroke-width="3"/>
+      <!-- 从机1 -->
+      <g>
+        <line x1="530" y1="135" x2="530" y2="60" stroke="#3a4460" stroke-width="2"/>
+        <rect id="sl1" x="440" y="20" width="180" height="42" rx="9" fill="#1b2440" stroke="#2a3654" stroke-width="2"/>
+        <text x="530" y="47" fill="#e8edf7" font-size="14" text-anchor="middle" font-weight="bold">从机 1:Flash 存储器</text>
+        <line id="cs1" x1="250" y1="240" x2="400" y2="240" stroke="#a78bfa" stroke-width="3"/>
+        <line id="cs1b" x1="400" y1="240" x2="440" y2="52" stroke="#a78bfa" stroke-width="3"/>
+        <text id="cs1t" x="330" y="258" fill="#a78bfa" font-size="12">CS̅1 = 1(未选中)</text>
+      </g>
+      <!-- 从机2 -->
+      <g>
+        <line x1="750" y1="205" x2="750" y2="290" stroke="#3a4460" stroke-width="2"/>
+        <rect id="sl2" x="660" y="288" width="180" height="42" rx="9" fill="#1b2440" stroke="#2a3654" stroke-width="2"/>
+        <text x="750" y="315" fill="#e8edf7" font-size="14" text-anchor="middle" font-weight="bold">从机 2:LCD 屏幕</text>
+        <line id="cs2" x1="250" y1="262" x2="620" y2="262" stroke="#a78bfa" stroke-width="3"/>
+        <line id="cs2b" x1="620" y1="262" x2="660" y2="305" stroke="#a78bfa" stroke-width="3"/>
+        <text id="cs2t" x="430" y="282" fill="#a78bfa" font-size="12">CS̅2 = 1(未选中)</text>
+      </g>
+    </svg>
+  </div>
+  <div class="controls">
+    <button id="btnSel1">选中从机 1(Flash)</button>
+    <button id="btnSel2">选中从机 2(屏幕)</button>
+    <button id="btnSel0" class="ghost">全部释放</button>
+  </div>
+  <div class="status" id="stTopo">SCLK/MOSI/MISO 三线共享;CS̅ 一从一根。未被选中的从机把 MISO 置为高阻,完全「隐身」。</div>
+</section>
+
+<!-- ② 移位交换 -->
+<section id="s2">
+  <h2><span class="num">2</span>核心机制:两个移位寄存器围成一个环</h2>
+  <p class="desc">
+    SPI 的本质是:主、从各有一个 8 位移位寄存器,MOSI、MISO 把它们<b>首尾相连成环</b>。
+    每来一个时钟,环整体转动一格——主机移出 1 位的同时必然移入 1 位。
+    所以 SPI <b>发送和接收永远同时发生</b>:想只读?也得发 8 个哑元位来「摇时钟」。
+    点「下一拍」看两个字节如何在 8 个时钟内完成交换。
+  </p>
+  <div class="stage">
+    <svg id="svgShift" viewBox="0 0 940 300" width="940" height="300">
+      <text x="130" y="60" fill="#e8edf7" font-size="15" font-weight="bold">主机寄存器(发 0xB2)</text>
+      <text x="620" y="60" fill="#e8edf7" font-size="15" font-weight="bold">从机寄存器(发 0x4D)</text>
+      <g id="mReg"></g><g id="sReg"></g>
+      <path d="M 400 105 L 530 105" stroke="#4cc9f0" stroke-width="3" fill="none"/>
+      <path d="M 524 100 l 8 5 l -8 5" stroke="#4cc9f0" stroke-width="3" fill="none"/>
+      <text x="465" y="95" fill="#4cc9f0" font-size="13" text-anchor="middle">MOSI(主→从)</text>
+      <path d="M 530 200 L 400 200" stroke="#4ade80" stroke-width="3" fill="none"/>
+      <path d="M 406 195 l -8 5 l 8 5" stroke="#4ade80" stroke-width="3" fill="none"/>
+      <text x="465" y="225" fill="#4ade80" font-size="13" text-anchor="middle">MISO(从→主)</text>
+      <text id="shClk" x="465" y="160" fill="#fbbf24" font-size="16" text-anchor="middle" font-weight="bold">时钟拍:0 / 8</text>
+      <g id="shBits"></g>
+    </svg>
+  </div>
+  <div class="controls">
+    <button id="btnShStep">▶ 下一拍(SCLK 跳一次)</button>
+    <button id="btnShAuto" class="ghost">⏩ 自动播放</button>
+    <button id="btnShReset" class="ghost">↺ 重置</button>
+  </div>
+  <div class="status" id="stSh">初始:主机装入 0xB2=10110010,从机装入 0x4D=01001101。MSB(最高位)先行。</div>
+</section>
+
+<!-- ③ 时钟模式 -->
+<section id="s3">
+  <h2><span class="num">3</span>时钟模式:CPOL 与 CPHA 的四种组合</h2>
+  <p class="desc">
+    <b>CPOL</b>(极性):空闲时 SCLK 是低(0)还是高(1)。<b>CPHA</b>(相位):在时钟的第 1 个还是第 2 个跳变沿<b>采样</b>。
+    两两组合成模式 0~3,主从双方必须配置一致——模式不对是 SPI 调不通的头号原因。点按钮切换观察。
+  </p>
+  <div class="stage">
+    <svg id="svgMode" viewBox="0 0 940 300" width="940" height="300">
+      <text x="30" y="80" fill="#fbbf24" font-size="13">SCLK</text>
+      <path id="mdClk" fill="none" stroke="#fbbf24" stroke-width="3"/>
+      <text x="30" y="190" fill="#4cc9f0" font-size="13">MOSI</text>
+      <g id="mdData"></g>
+      <g id="mdDots"></g>
+      <text id="mdInfo" x="470" y="285" fill="#8fa0c0" font-size="14" text-anchor="middle"></text>
+    </svg>
+  </div>
+  <div class="controls">
+    <button id="md0">模式 0</button>
+    <button id="md1" class="ghost">模式 1</button>
+    <button id="md2" class="ghost">模式 2</button>
+    <button id="md3" class="ghost">模式 3</button>
+  </div>
+  <div class="status" id="stMd">模式 0(CPOL=0, CPHA=0)最常用:空闲低电平,上升沿采样。红点 = 采样时刻。</div>
+</section>
+
+<!-- ④ 流程 -->
+<section id="s4">
+  <h2><span class="num">4</span>一次完整读写的流程串讲(以读 Flash 为例)</h2>
+  <div class="stage">
+    <svg id="svgFlow" viewBox="0 0 940 430" width="940" height="430"><g id="flowSteps"></g></svg>
+  </div>
+  <div class="controls"><button id="btnFlow">▶ 播放完整流程</button></div>
+  <div class="status" id="stFlow">点击播放,高亮框会依次走完 6 个步骤。</div>
+</section>
+
+<!-- ⑤ 特点 -->
+<section id="s5">
+  <h2><span class="num">5</span>特点速查</h2>
+  <div class="cards">
+    <div class="card"><b>优点:快</b><br>有时钟线,不靠约定波特率;几十 MHz 很常见,QSPI 4 线并发更快。</div>
+    <div class="card"><b>优点:简单灵活</b><br>硬件就是移位寄存器,帧长、内容完全由器件手册定义,自由度大。</div>
+    <div class="card"><b>缺点:费引脚</b><br>每加一个从机多一根 CS̅;远不如 I²C 两根线走天下。</div>
+    <div class="card"><b>缺点:无协议保障</b><br>没有应答、没有校验、没有仲裁;从机死活主机无从知晓,靠上层自己约定。</div>
+    <div class="card"><b>典型应用</b><br>SPI Flash、TF 卡、LCD/OLED 屏、高速 ADC/DAC、无线模块(nRF24、W5500)。</div>
+    <div class="card"><b>距离</b><br>板级通信(厘米级);要出板走线需谨慎,长距离请换 485/CAN。</div>
+  </div>
+  <div class="status" style="margin-top:16px">
+    一句话总结:SPI = 主机摇时钟 + 片选点名 + 移位寄存器环形交换;全双工、极快,但只适合板上短距离。
+  </div>
+</section>
+
+</main>
+<footer>SPI 工作流程动态图解 · <a href="index.html" style="color:var(--accent)">返回协议总览</a></footer>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const SVGNS="http://www.w3.org/2000/svg";
+function el(t,a,p){const e=document.createElementNS(SVGNS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ① 片选 */
+function sel(n){
+  const c1=n===1,c2=n===2;
+  $("cs1").setAttribute("stroke",c1?"#fbbf24":"#a78bfa");
+  $("cs1b").setAttribute("stroke",c1?"#fbbf24":"#a78bfa");
+  $("cs2").setAttribute("stroke",c2?"#fbbf24":"#a78bfa");
+  $("cs2b").setAttribute("stroke",c2?"#fbbf24":"#a78bfa");
+  $("sl1").setAttribute("stroke",c1?"#4ade80":"#2a3654");
+  $("sl2").setAttribute("stroke",c2?"#4ade80":"#2a3654");
+  $("cs1t").textContent=c1?"CS̅1 = 0(选中!)":"CS̅1 = 1(未选中)";
+  $("cs2t").textContent=c2?"CS̅2 = 0(选中!)":"CS̅2 = 1(未选中)";
+  $("cs1t").setAttribute("fill",c1?"#4ade80":"#a78bfa");
+  $("cs2t").setAttribute("fill",c2?"#4ade80":"#a78bfa");
+  $("stTopo").textContent=
+    n===0?"全部 CS̅ 拉高,总线空闲;从机 MISO 均为高阻。"
+    :n===1?"CS̅1 拉低:Flash 被唤醒,独占 MOSI/MISO;屏幕的 MISO 保持高阻不干扰。"
+    :"CS̅2 拉低:屏幕被唤醒;Flash 完全忽略总线上的时钟和数据。";
+}
+$("btnSel1").onclick=()=>sel(1);
+$("btnSel2").onclick=()=>sel(2);
+$("btnSel0").onclick=()=>sel(0);
+
+/* ② 移位交换 */
+const M0="10110010", S0="01001101";
+let mBits,sBits,clk,shAuto=null;
+function drawRegs(){
+  const gm=$("mReg"),gs=$("sReg");gm.innerHTML="";gs.innerHTML="";
+  const cell=(g,x0,bits,hue)=>{
+    bits.forEach((b,i)=>{
+      el("rect",{x:x0+i*40,y:80,width:36,height:40,rx:6,
+        fill:b==="1"?"#26436b":"#1b2440",stroke:hue,"stroke-width":1.5},g);
+      const t=el("text",{x:x0+i*40+18,y:107,"font-size":16,"text-anchor":"middle",
+        fill:b==="1"?"#4cc9f0":"#5b6b8c","font-weight":"bold"},g);
+      t.textContent=b;
+    });
+    const hex=parseInt(bits.join(""),2).toString(16).toUpperCase().padStart(2,"0");
+    const ht=el("text",{x:x0+160,y:150,"font-size":13,"text-anchor":"middle",fill:"#8fa0c0"},g);
+    ht.textContent="当前值:0x"+hex;
+  };
+  cell(gm,75,mBits,"#4cc9f0");
+  cell(gs,565,sBits,"#4ade80");
+  $("shClk").textContent=`时钟拍:${clk} / 8`;
+}
+function shReset(){
+  clearInterval(shAuto);shAuto=null;$("btnShAuto").textContent="⏩ 自动播放";
+  mBits=M0.split("");sBits=S0.split("");clk=0;
+  $("btnShStep").disabled=false;
+  drawRegs();
+  $("stSh").textContent="初始:主机装入 0xB2=10110010,从机装入 0x4D=01001101。MSB(最高位)先行。";
+}
+function shStep(){
+  if(clk>=8)return;
+  const mOut=mBits.shift(), sOut=sBits.shift();
+  mBits.push(sOut); sBits.push(mOut);
+  clk++;
+  drawRegs();
+  $("stSh").textContent=`第 ${clk} 拍:主机移出 ${mOut} 走 MOSI 进从机尾部;同时从机移出 ${sOut} 走 MISO 进主机尾部。`;
+  if(clk>=8){
+    $("stSh").textContent="8 拍结束:主机寄存器变成 0x4D,从机变成 0xB2 —— 两个字节完成了「原地交换」!这就是 SPI 全双工的本质。";
+    $("btnShStep").disabled=true;
+    clearInterval(shAuto);shAuto=null;$("btnShAuto").textContent="⏩ 自动播放";
+  }
+}
+$("btnShStep").onclick=shStep;
+$("btnShAuto").onclick=()=>{
+  if(shAuto){clearInterval(shAuto);shAuto=null;$("btnShAuto").textContent="⏩ 自动播放";return;}
+  if(clk>=8)shReset();
+  $("btnShAuto").textContent="⏸ 暂停";
+  shAuto=setInterval(shStep,1000);
+};
+$("btnShReset").onclick=shReset;
+shReset();
+
+/* ③ 时钟模式 */
+const mdBits=[1,0,1,1];
+function drawMode(cpol,cpha){
+  const clkP=$("mdClk"),gD=$("mdData"),gDot=$("mdDots"),info=$("mdInfo");
+  gD.innerHTML="";gDot.innerHTML="";
+  const x0=90,per=190,hi=55,lo=105;      // SCLK y
+  const idle=cpol? hi:lo, act=cpol? lo:hi;
+  let d=`M ${x0-40} ${idle}`;
+  // 4 个时钟周期:前半 act? 取决于表示。周期 i: 边沿1 at x0+i*per, 边沿2 at x0+i*per+per/2
+  for(let i=0;i<4;i++){
+    const xa=x0+i*per, xb=xa+per/2, xc=xa+per;
+    d+=` L ${xa} ${idle} L ${xa} ${act} L ${xb} ${act} L ${xb} ${idle} L ${xc} ${idle}`;
+  }
+  clkP.setAttribute("d",d);
+  // 数据线:CPHA=0 数据在边沿1之前就稳定(从 CS 拉低即输出),采样在边沿1;CPHA=1 数据在边沿1输出,采样在边沿2
+  const dHi=165,dLo=215;
+  const yD=b=>b?dHi:dLo;
+  let dd="",prev=null;
+  for(let i=0;i<4;i++){
+    const b=mdBits[i];
+    const xs=cpha? x0+i*per : x0+i*per-per/2+per*0.06;   // 数据变化时刻
+    const xe=cpha? x0+i*per+per : x0+i*per+per/2+per*0.06;
+    if(prev===null)dd+=`M ${Math.max(xs,30)} ${yD(b)}`;
+    else dd+=` L ${xs} ${yD(prev)} L ${xs} ${yD(b)}`;
+    dd+=` L ${xe} ${yD(b)}`;
+    prev=b;
+    const t=el("text",{x:(cpha?x0+i*per+per/2:x0+i*per),y:245,"font-size":14,"text-anchor":"middle",fill:"#4cc9f0","font-weight":"bold"},gD);
+    t.textContent=b;
+  }
+  el("path",{d:dd,fill:"none",stroke:"#4cc9f0","stroke-width":3},gD);
+  // 采样点:CPHA=0 → 每周期第1沿(xa);CPHA=1 → 第2沿(xb)
+  for(let i=0;i<4;i++){
+    const x=cpha? x0+i*per+per/2 : x0+i*per;
+    el("circle",{cx:x,cy:(hi+lo)/2,r:6,fill:"#ff6b6b"},gDot);
+    el("line",{x1:x,y1:(hi+lo)/2,x2:x,y2:yD(mdBits[i]),stroke:"#ff6b6b","stroke-width":1.5,"stroke-dasharray":"3 3"},gDot);
+  }
+  const edge1=cpol?"下降":"上升", edge2=cpol?"上升":"下降";
+  info.textContent=`CPOL=${cpol}(空闲${cpol?"高":"低"}) CPHA=${cpha}(第${cpha?2:1}个沿采样)→ 在${cpha?edge2:edge1}沿采样`;
+}
+const mdBtns=["md0","md1","md2","md3"];
+const mdDesc=[
+  "模式 0(CPOL=0, CPHA=0):空闲低,上升沿采样 —— 最常用,绝大多数 Flash/传感器默认。",
+  "模式 1(CPOL=0, CPHA=1):空闲低,下降沿采样。",
+  "模式 2(CPOL=1, CPHA=0):空闲高,下降沿采样。",
+  "模式 3(CPOL=1, CPHA=1):空闲高,上升沿采样 —— 部分 ADC/SD 卡使用。",
+];
+mdBtns.forEach((id,i)=>{
+  $(id).onclick=()=>{
+    mdBtns.forEach((o,j)=>$(o).className=j===i?"":"ghost");
+    drawMode(i>>1,i&1);
+    $("stMd").textContent=mdDesc[i]+" 红点 = 采样时刻。";
+  };
+});
+drawMode(0,0);
+
+/* ④ 流程 */
+const flowSteps=[
+  {t:"① 配置外设",d:"主机设好时钟频率、模式(CPOL/CPHA)、位序 MSB;与器件手册一致。"},
+  {t:"② 拉低片选",d:"把目标从机的 CS̅ 拉低,从机被唤醒,开始监听时钟。"},
+  {t:"③ 发命令+地址",d:"主机摇时钟,经 MOSI 移出读命令(如 0x03)和 3 字节地址。"},
+  {t:"④ 摇哑元读数据",d:"主机继续发哑元字节 0xFF 提供时钟,从机把数据经 MISO 移回。"},
+  {t:"⑤ 拉高片选",d:"传输结束,CS̅ 回高;从机 MISO 回到高阻,释放总线。"},
+  {t:"⑥ 处理数据",d:"主机从接收寄存器/DMA 缓冲取走数据;正确性由上层协议自行校验。"},
+];
+(function buildFlow(){
+  const g=$("flowSteps");
+  const cols=3,cw=290,ch=150,gapx=18,gapy=44,x0=30,y0=30;
+  flowSteps.forEach((s,i)=>{
+    const r=Math.floor(i/cols),c=i%cols;
+    const x=x0+c*(cw+gapx),y=y0+r*(ch+gapy);
+    s.box=el("rect",{x,y,width:cw,height:ch,rx:12,fill:"#1b2440",stroke:"#2a3654","stroke-width":2},g);
+    const t1=el("text",{x:x+16,y:y+34,"font-size":17,fill:"#4cc9f0","font-weight":"bold"},g);
+    t1.textContent=s.t;
+    const L=17;
+    for(let l=0;l*L<s.d.length&&l<5;l++){
+      const t2=el("text",{x:x+16,y:y+62+l*22,"font-size":13,fill:"#8fa0c0"},g);
+      t2.textContent=s.d.slice(l*L,(l+1)*L);
+    }
+    if(i<flowSteps.length-1){
+      if(c<cols-1)
+        el("path",{d:`M ${x+cw+2} ${y+ch/2} l 12 0 m 0 0 l -6 -5 m 6 5 l -6 5`,stroke:"#5b6b8c","stroke-width":2,fill:"none"},g);
+      else
+        el("path",{d:`M ${x+cw/2} ${y+ch+4} l 0 34 L ${x0+cw/2} ${y+ch+38} l 0 -34 m 0 34 l -5 -8 m 5 8 l 5 -8`,stroke:"#5b6b8c","stroke-width":2,fill:"none"},g);
+    }
+  });
+})();
+let fB=false;
+$("btnFlow").onclick=async()=>{
+  if(fB)return;fB=true;
+  const st=$("stFlow");
+  flowSteps.forEach(s=>{s.box.setAttribute("stroke","#2a3654");s.box.setAttribute("fill","#1b2440");});
+  for(const s of flowSteps){
+    s.box.setAttribute("stroke","#fbbf24");s.box.setAttribute("fill","#26304f");
+    st.textContent=s.t+" —— "+s.d;
+    await sleep(2400);
+    s.box.setAttribute("stroke","#4ade80");
+  }
+  st.textContent="流程走完!记住:SPI 里主机是唯一的节拍器,从机永远被动跟随时钟。";
+  fB=false;
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>积分电路</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#opamp">运放</a><span class="sp"></span><span>05 / 12</span></nav>
+<header>
+  <span class="eyebrow">运放 · 波形运算</span>
+  <h1>积分电路</h1>
+  <p class="lede">把反相放大器的反馈电阻换成电容，输出就变成输入对时间的积分：方波进去，三角波出来。可它对直流误差也照样积分，所以实际电路总要在电容旁边并一个大电阻。</p>
+</header>
+
+<section id="ideal">
+  <span class="eyebrow">推导 · 电容代替 Rf</span>
+  <h2>Vo = −(1 / (R·C))·∫Vin dt</h2>
+  <p>电路和反相放大器一样：信号经 R 进反相端，同相端接地，只是反馈元件从电阻换成了电容 C。</p>
+  <ol>
+    <li>同相端接地，虚短得 V− ≈ 0，反相端是虚地。</li>
+    <li>R 上的电流 I = Vin / R，只由 Vin 决定。</li>
+    <li>虚断，这个电流全部流进电容。电容电压 = 电荷 / C，而电荷就是电流对时间的累加。</li>
+    <li>电容左端是 0 V，所以 Vo = −(1/C)·∫I dt = −(1/(R·C))·∫Vin dt。</li>
+  </ol>
+  <p class="eq">Vo = −(1 / (R·C))·∫Vin dt　　输出斜率 dVo/dt = −Vin / (R·C)</p>
+  <p>方波在 +A 和 −A 之间跳。每半个周期里 Vin 不变，电容被恒流充电，输出按固定斜率 A / (R·C) 直线下降或上升，拼起来就是三角波。每半个周期输出变化 A·(T/2) / (R·C)，这就是三角波的峰峰值：</p>
+  <p class="eq">三角波峰峰值 = A / (2·f·R·C)</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 200" role="img" aria-label="积分电路：方波 Vin 经电阻 R 接反相端，电容 C 从输出接回反相端，同相端接地，运放接正负 12 V 电源">
+        <text x="245" y="72" text-anchor="middle" class="v">+12 V</text>
+        <path class="w" d="M245,78 V95 M245,145 V160"/>
+        <text x="245" y="174" text-anchor="middle" class="v">−12 V</text>
+        <path class="r" d="M200,70 L290,120 L200,170 Z"/>
+        <text x="207" y="100" class="t">−</text>
+        <text x="207" y="150" class="t">+</text>
+        <circle class="r" cx="40" cy="140" r="16"/>
+        <path class="w" style="stroke-width:1.5" d="M31,146 H36 V134 H44 V146 H49"/>
+        <text x="62" y="145" class="t">Vin</text>
+        <path class="w" d="M40,124 V95 H70 M120,95 H200 M40,156 V160 M26,160 H54 M31,165 H49 M36,170 H44"/>
+        <rect class="r" x="70" y="87" width="50" height="16" rx="2"/>
+        <text id="g1-rt" x="95" y="80" text-anchor="middle" class="v">R 10 kΩ</text>
+        <circle class="dot" cx="150" cy="95" r="3.5"/>
+        <text x="146" y="118" text-anchor="end" class="tm">虚地 0 V</text>
+        <path class="w" d="M150,95 V35 H235 M245,35 H340 V120"/>
+        <path class="w" style="stroke-width:2.5" d="M235,23 V47 M245,23 V47"/>
+        <text id="g1-ct" x="240" y="15" text-anchor="middle" class="v">C 10 nF</text>
+        <circle class="dot" cx="340" cy="120" r="3.5"/>
+        <path class="w" d="M200,145 H170 V175 M156,175 H184 M161,180 H179 M166,185 H174"/>
+        <path id="g1-ow" class="w s-hi" style="stroke-width:3" d="M290,120 H400"/>
+        <text x="400" y="110" text-anchor="end" class="t">Vo</text>
+        <path class="flow thin" d="M40,122 V95 H150 V35 H233 M247,35 H340 V118"/>
+      </svg>
+      <svg viewBox="0 0 420 268" role="img" aria-label="上：方波输入 Vin；下：积分器输出，方波变成三角波，幅度过大时被电源轨削平">
+        <g id="g1-axi"></g>
+        <g id="g1-axo"></g>
+        <g id="g1-rails"><line id="g1-r1" class="ax dash" x1="44" x2="400" y1="0" y2="0"/><line id="g1-r2" class="ax dash" x1="44" x2="400" y1="0" y2="0"/>
+          <text x="398" y="100" text-anchor="end" class="tm">虚线：±10.5 V 饱和</text></g>
+        <polyline id="g1-vin" class="real2" points=""/>
+        <polyline id="g1-vo" class="real" points=""/>
+        <text x="398" y="18" text-anchor="end" class="tm">方波 ±1 V</text>
+      </svg>
+      <figcaption>上：±12 V 供电的积分器。绿色是 Vin 为正时的电流路径：电流经 R 流进电容，再从运放输出端流走；Vin 为负时方向相反。下：幅度 1 V 的方波输入（蓝）和输出（橙），画两个周期，输出纵轴随幅度自动缩放。饱和电压 ±10.5 V 为示意值。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="g1-r">电阻 R</label>
+        <span class="rv" id="g1-rv">10 kΩ</span>
+        <input type="range" id="g1-r" min="0" max="6" step="1" value="3"></div>
+      <div class="ctl"><label class="ctl-l" for="g1-c">电容 C</label>
+        <span class="rv" id="g1-cv">10 nF</span>
+        <input type="range" id="g1-c" min="0" max="6" step="1" value="3"></div>
+      <div class="ctl"><label class="ctl-l" for="g1-f">方波频率 f</label>
+        <span class="rv" id="g1-fv">1 kHz</span>
+        <input type="range" id="g1-f" min="0" max="6" step="1" value="3"></div>
+      <dl class="read">
+        <dt>时间常数 R·C</dt><dd id="g1-tau">100 µs</dd>
+        <dt>斜率 A / (R·C)</dt><dd id="g1-sl">10 V/ms</dd>
+        <dt>三角波峰峰值</dt><dd id="g1-pp">5.00 V</dd>
+        <dt>单位增益频率 1/(2π·R·C)</dt><dd id="g1-f0">1.59 kHz</dd>
+        <dt>输出</dt><dd><span id="g1-st" class="chip on">三角波</span></dd>
+      </dl>
+      <p class="note" id="g1-note"></p>
+    </div>
+  </div>
+</section>
+<section id="drift">
+  <span class="eyebrow">实际电路 · 并联 Rf</span>
+  <h2>直流误差也被积分，输出一路漂到电源轨</h2>
+  <p>电容对直流相当于开路。理想积分器对直流没有负反馈，直流增益就是运放的开环增益，十万倍以上。</p>
+  <p>运放总有失调电压 Vos 和偏置电流 Ib，它们相当于一个很小的直流输入。积分器把它一直累加，输出单向爬升，迟早撞到电源轨。撞上以后三角波有一边被削掉，电路就不能用了。</p>
+  <p class="eq">漂移速率 = Vos / (R·C) + Ib / C</p>
+  <p>解决办法是在电容两端并一个大电阻 Rf。直流下电容开路，只剩 Rf，电路退化成增益 −Rf / R 的反相放大器，输出偏移被限制住。代价是低频不再积分，只有频率远高于 fL 的信号才被正常积分。</p>
+  <p class="eq">输出直流偏移 = Vos·(1 + Rf / R)　　fL = 1 / (2π·Rf·C)</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 215" role="img" aria-label="积分器，电容 C 两端可并联电阻 Rf，同相端串一个表示失调电压的电压源 Vos">
+        <path class="r" d="M200,90 L290,140 L200,190 Z"/>
+        <text x="207" y="120" class="t">−</text>
+        <text x="207" y="170" class="t">+</text>
+        <circle class="r" cx="40" cy="160" r="16"/>
+        <path class="w" style="stroke-width:1.5" d="M31,166 H36 V154 H44 V166 H49"/>
+        <text x="62" y="165" class="t">Vin</text>
+        <path class="w" d="M40,144 V115 H70 M120,115 H200 M40,176 V182 M26,182 H54 M31,187 H49 M36,192 H44"/>
+        <rect class="r" x="70" y="107" width="50" height="16" rx="2"/>
+        <text x="95" y="100" text-anchor="middle" class="v">R 10 kΩ</text>
+        <circle class="dot" cx="150" cy="115" r="3.5"/>
+        <path class="w" d="M150,115 V62 H235 M245,62 H340 V140"/>
+        <path class="w" style="stroke-width:2.5" d="M235,50 V74 M245,50 V74"/>
+        <text x="240" y="90" text-anchor="middle" class="v">C 10 nF</text>
+        <g id="g2-g-rf" hidden>
+          <path class="w" d="M150,62 V22 H215 M265,22 H340 V62"/>
+          <rect class="r" x="215" y="14" width="50" height="16" rx="2"/>
+          <text id="g2-rft" x="240" y="44" text-anchor="middle" class="v">Rf 1 MΩ</text>
+          <circle class="dot" cx="150" cy="62" r="3.5"/>
+          <circle class="dot" cx="340" cy="62" r="3.5"/>
+        </g>
+        <circle class="dot" cx="340" cy="140" r="3.5"/>
+        <path class="w" d="M200,170 H184 M156,170 H140 V184 M126,184 H154 M131,189 H149 M136,194 H144"/>
+        <circle class="r" cx="170" cy="170" r="14" style="stroke:var(--danger)"/>
+        <text x="160" y="174" class="tm">−</text>
+        <text x="173" y="175" class="tm">+</text>
+        <text id="g2-vost" x="170" y="150" text-anchor="middle" class="t" style="fill:var(--danger)">Vos 2 mV</text>
+        <path id="g2-ow" class="w s-bad" style="stroke-width:3" d="M290,140 H400"/>
+        <text x="400" y="130" text-anchor="end" class="t">Vo</text>
+        <text id="g2-vot" x="400" y="162" text-anchor="end" class="v"></text>
+      </svg>
+      <svg viewBox="0 0 420 340" role="img" aria-label="上：两个周期内的输出波形形状与理想三角波对比；下：一秒内输出的直流中心和三角波摆动范围，没有 Rf 时一路漂到饱和">
+        <g id="g2-axa"></g>
+        <polyline id="g2-id" class="ideal" points=""/>
+        <polyline id="g2-sh" class="real" points=""/>
+        <text x="398" y="20" text-anchor="end" class="tm">虚线：理想三角波</text>
+        <g id="g2-axb"></g>
+        <line class="ax dash" x1="44" x2="400" y1="178.1" y2="178.1"/>
+        <text x="50" y="192" class="tm">+Vsat 10.5 V</text>
+        <polygon id="g2-band" class="zone-sat" points=""/>
+        <polyline id="g2-mid" class="real" points=""/>
+        <text id="g2-midt" x="396" y="0" text-anchor="end" class="t hi">直流中心</text>
+        <line id="g2-cl" class="ax dash" x1="0" x2="0" y1="170" y2="300"/>
+        <text id="g2-clt" x="0" y="294" class="tm">三角波顶到电源轨</text>
+      </svg>
+      <figcaption>R = 10 kΩ、C = 10 nF，输入仍是 1 kHz、±1 V 方波，设 t = 0 时三角波以 0 V 为中心。上图只看两个周期的形状。下图时间拉长到 1 s，1 kHz 的三角波太密，画成色带，橙线是它的直流中心。只算了 Vos；偏置电流 Ib 作用相同，漂移速率 Ib / C。饱和 ±10.5 V 为示意值。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">电容两端</span>
+        <div class="seg" id="g2-rf"><button id="g2-rf-0" data-v="0" aria-pressed="true">不并 Rf</button><button id="g2-rf-1m" data-v="1e6" aria-pressed="false">并 1 MΩ</button><button id="g2-rf-100k" data-v="1e5" aria-pressed="false">并 100 kΩ</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="g2-v">失调电压 Vos</label>
+        <span class="rv" id="g2-vv">2 mV</span>
+        <input type="range" id="g2-v" min="0" max="5" step="1" value="4"></div>
+      <dl class="read">
+        <dt>直流增益</dt><dd id="g2-dc">开环增益，10⁵ 以上</dd>
+        <dt>输出直流</dt><dd id="g2-dr">每秒涨 20 V</dd>
+        <dt>三角波顶到电源轨</dt><dd id="g2-tc">0.40 s</dd>
+        <dt>低频转折 fL</dt><dd id="g2-fl">0，全频段积分</dd>
+        <dt>半周期内斜率下降</dt><dd id="g2-lin">0 %</dd>
+        <dt>状态</dt><dd><span id="g2-st" class="chip bad">漂到饱和</span></dd>
+      </dl>
+      <p class="note" id="g2-note"></p>
+    </div>
+  </div>
+</section>
+<section id="freq">
+  <span class="eyebrow">频率特性 · 用途</span>
+  <h2>换个角度看：积分器是一个低通</h2>
+  <p>对正弦信号，电容的阻抗是 1 / (2π·f·C)。把它当成反相放大器里的 Rf，增益就是 1 / (2π·f·R·C)。频率每升高十倍，增益降到十分之一，也就是 −20 dB/十倍频。增益等于 1 的频率叫单位增益频率 f0 = 1 / (2π·R·C)。</p>
+  <p>并了 Rf 以后，低于 fL 的频率增益被限制在 Rf / R，整个电路就是一阶有源低通滤波器。只有在 fL 以上，它才表现为积分。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>输入</th><th>输出</th><th>原因</th></tr></thead>
+    <tbody>
+      <tr><td>方波</td><td>三角波</td><td>每半个周期恒流充电，斜率 A / (R·C) 不变</td></tr>
+      <tr><td>正弦</td><td>余弦，超前输入 90°</td><td>积分带来 −90°，反相再加 180°；幅度 A / (2π·f·R·C)</td></tr>
+      <tr><td>直流或阶跃</td><td>斜坡，直到饱和</td><td>恒定输入就是恒流充电，Vos 漂移就是这个过程</td></tr>
+      <tr><td>三角波</td><td>由抛物线段拼成，接近正弦</td><td>斜坡积分后变成二次曲线</td></tr>
+    </tbody>
+  </table></div>
+  <p>常见用途：PI 调节器和开关电源误差放大器的补偿网络，靠积分项消除稳态误差；积分器加比较器组成三角波、锯齿波发生器；双积分型 ADC。需要每次从零开始积分的场合，会在电容两端并一个模拟开关，积分前先把电容放电复位。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>画一个积分电路，推它的输出。</summary>
+      <div class="ans"><p>反相放大器把 Rf 换成电容。同相端接地，虚短得反相端是虚地，R 上电流 Vin / R；虚断，这个电流全部给电容充电；电容左端 0 V，所以 Vo = −(1/C)·∫(Vin / R) dt = −(1/(R·C))·∫Vin dt。</p></div></details>
+    <details><summary>输入方波，输出是什么？幅度怎么算？</summary>
+      <div class="ans"><p>三角波。半个周期里 Vin = ±A 不变，电容恒流充电，输出斜率 A / (R·C) 不变。半个周期 T/2 内输出变化 A·T / (2·R·C)，这就是峰峰值，写成频率是 A / (2·f·R·C)。频率越高，三角波越小。</p></div></details>
+    <details><summary>为什么实际积分电路要在电容上并一个电阻？</summary>
+      <div class="ans"><p>电容隔直，理想积分器对直流没有反馈，直流增益就是开环增益。失调电压和偏置电流被不停累加，输出以 Vos / (R·C) + Ib / C 的速度漂移，最后饱和。并上 Rf，直流增益被限制在 Rf / R，输出偏移只剩 Vos·(1 + Rf / R) 这个量级。</p></div></details>
+    <details><summary>并联的 Rf 取多大？</summary>
+      <div class="ans"><p>两头都有约束。Rf 太大，直流增益高，偏移大；Rf 太小，fL = 1 / (2π·Rf·C) 升高，信号频率附近就不像积分了，三角波变圆。先让信号最低频率比 fL 高 10 倍以上，再核对 Vos·(1 + Rf / R) 能不能接受。</p></div></details>
+    <details><summary>积分器的频率特性是什么样的？</summary>
+      <div class="ans"><p>增益 1 / (2π·f·R·C)，每十倍频下降 20 dB，输出超前输入 90°（含反相的 180°）。单位增益频率 f0 = 1 / (2π·R·C)。并 Rf 后是一阶低通，直流增益 Rf / R，转折频率 fL = 1 / (2π·Rf·C)。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="04-差分放大器.html"><span>上一页</span>差分放大器</a><a class="next" href="06-微分电路.html"><span>下一页</span>微分电路</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+function axGrid(gid,o){
+  const g=$(gid);g.textContent='';
+  o.yt.forEach(([py,l])=>g.append(svgEl('line',{class:'gl',x1:o.x0,y1:py,x2:o.x1,y2:py}),svgEl('text',{x:o.x0-6,y:py+4,'text-anchor':'end',class:'v'},l)));
+  o.xt.forEach(([px,l],i)=>g.append(svgEl('line',{class:'gl',x1:px,y1:o.y0,x2:px,y2:o.y1}),svgEl('text',{x:px,y:o.y1+16,'text-anchor':i===o.xt.length-1&&px>=o.x1-2?'end':'middle',class:'v'},l)));
+  g.append(svgEl('path',{class:'ax',d:`M${o.x0},${o.y0} V${o.y1} H${o.x1}`}));
+  if(o.yn)g.append(svgEl('text',{x:o.x0+4,y:o.y0-6,class:'tm'},o.yn));
+  if(o.xn)g.append(svgEl('text',{x:o.x1,y:o.y1+32,'text-anchor':'end',class:'tm'},o.xn));
+}
+const SAT=10.5;
+const fmtCap=c=>c>=1e-6?+(c*1e6).toFixed(2)+' µF':+(c*1e9).toFixed(1)+' nF';
+const fmtVx=v=>{const s=v<0?'−':'';v=Math.abs(v);return v>=100?s+v.toFixed(0)+' V':v>=1?s+v.toFixed(2)+' V':s+(v*1e3).toFixed(v>=0.01?0:1)+' mV';};
+const fmtRate=s=>s>=1e6?+(s/1e6).toFixed(2)+' V/µs':s>=1e3?+(s/1e3).toFixed(2)+' V/ms':+s.toFixed(1)+' V/s';
+const tLab=s=>s>=1?+s.toFixed(2)+' s':s>=1e-3?+(s*1e3).toFixed(2)+' ms':+(s*1e6).toFixed(1)+' µs';
+
+/* 1. 理想积分器：方波进三角波出 */
+const g1R=[1e3,2.2e3,4.7e3,10e3,22e3,47e3,100e3],g1C=[1e-9,2.2e-9,4.7e-9,10e-9,22e-9,47e-9,100e-9],g1F=[100,200,500,1e3,2e3,5e3,1e4];
+const g1X=scale(0,2,44,400),g1Yi=scale(-1.5,1.5,78,28),g1Q=[0,.5,1,1.5,2],g1FS=[0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,3,5,12];
+axGrid('g1-axi',{x0:44,x1:400,y0:28,y1:78,xt:g1Q.map(q=>[g1X(q),'']),yt:[[g1Yi(1),'1'],[g1Yi(0),'0'],[g1Yi(-1),'−1']],yn:'Vin / V'});
+$('g1-vin').setAttribute('points',plot(x=>(x%1)<0.5?1:-1,0,2,g1X,g1Yi,400));
+function g1u(){
+  const R=g1R[+$('g1-r').value],C=g1C[+$('g1-c').value],f=g1F[+$('g1-f').value],T=1/f,rc=R*C,A=1;
+  const pp=A*T/(2*rc),pk=pp/2,clip=pk>SAT;
+  const FS=g1FS.find(x=>x>=1.15*Math.min(pk,SAT))||12,mv=FS<1,k=mv?1e3:1,Y=scale(-FS,FS,232,110);
+  const tl=v=>v===0?'0':(v<0?'−':'')+(+(Math.abs(v)*k).toFixed(2));
+  axGrid('g1-axo',{x0:44,x1:400,y0:110,y1:232,xt:g1Q.map(q=>[g1X(q),q?tLab(q*T):'0']),yt:[-1,-.5,0,.5,1].map(q=>[Y(q*FS),tl(q*FS)]),yn:'Vo / '+(mv?'mV':'V'),xn:'时间'});
+  const N=400,dt=2*T/N;let v=Math.min(pk,SAT);const pts=[g1X(0).toFixed(1)+','+Y(v).toFixed(1)];
+  for(let i=1;i<=N;i++){const t=(i-0.5)*dt,vin=(t%T)<T/2?A:-A;v=Math.max(-SAT,Math.min(SAT,v-vin*dt/rc));pts.push(g1X(i*dt/T).toFixed(1)+','+Y(v).toFixed(1));}
+  $('g1-vo').setAttribute('points',pts.join(' '));
+  const rails=FS>=SAT;show($('g1-rails'),rails);
+  if(rails)[['g1-r1',SAT],['g1-r2',-SAT]].forEach(([id,val])=>{$(id).setAttribute('y1',Y(val).toFixed(1));$(id).setAttribute('y2',Y(val).toFixed(1));});
+  $('g1-rv').textContent=fmtR(R);$('g1-r').setAttribute('aria-valuetext',fmtR(R));
+  $('g1-cv').textContent=fmtCap(C);$('g1-c').setAttribute('aria-valuetext',fmtCap(C));
+  $('g1-fv').textContent=fmtF(f);$('g1-f').setAttribute('aria-valuetext',fmtF(f));
+  $('g1-rt').textContent='R '+fmtR(R);$('g1-ct').textContent='C '+fmtCap(C);
+  $('g1-tau').textContent=tLab(rc);$('g1-sl').textContent=fmtRate(A/rc);
+  $('g1-pp').textContent=fmtVx(pp)+(clip?'（理想值），超出 ±10.5 V':'');
+  $('g1-f0').textContent=fmtF(1/(2*Math.PI*rc));
+  const ow=$('g1-ow');ow.classList.toggle('s-bad',clip);ow.classList.toggle('s-hi',!clip);
+  let n;
+  if(clip){chip($('g1-st'),'削顶','bad');n='理想三角波峰峰值 '+fmtVx(pp)+'，超过了 ±10.5 V 的摆幅。输出斜坡撞到电源轨后被卡住，波形变成梯形。加大 R·C 或提高频率，三角波就会变小。';}
+  else if(pp<0.05){chip($('g1-st'),'幅度很小','warn');n='R·C = '+tLab(rc)+'，比半个周期 '+tLab(T/2)+' 长得多，电容半个周期只充了一点点，三角波只有 '+fmtVx(pp)+'。频率越高于单位增益频率，输出越小。';}
+  else{chip($('g1-st'),'三角波','on');n='半个周期 '+tLab(T/2)+' 里输出以 '+fmtRate(A/rc)+' 的斜率直线变化，峰峰值 = 1 V × '+tLab(T/2)+' ÷ '+tLab(rc)+' = '+fmtVx(pp)+'。Vin 为正时输出往下走，这就是公式里的负号。频率加倍，三角波减半。';}
+  $('g1-note').textContent=n;
+}
+['g1-r','g1-c','g1-f'].forEach(id=>$(id).addEventListener('input',g1u));
+g1u();
+/* 2. 失调漂移与并联 Rf */
+const g2V=[0.1,0.2,0.5,1,2,5],g2={rf:0},R2=10e3,C2=10e-9,A2=1,T2=1e-3;
+const g2Xa=scale(0,2,44,400),g2Ya=scale(-3,3,110,30),g2Xb=scale(0,1,44,400),g2Yb=scale(-12,12,300,170);
+const sLab=s=>s>=0.1?+s.toFixed(2)+' s':tLab(s);
+axGrid('g2-axa',{x0:44,x1:400,y0:30,y1:110,xt:[0,.5,1,1.5,2].map(q=>[g2Xa(q),q?q+(q===2?' ms':''):'0']),
+  yt:[-3,-1.5,0,1.5,3].map(v=>[g2Ya(v),v?String(v).replace('-','−'):'0']),yn:'两个周期的形状 Vo / V'});
+axGrid('g2-axb',{x0:44,x1:400,y0:170,y1:300,xt:[0,.25,.5,.75,1].map(q=>[g2Xb(q),q?String(q):'0']),
+  yt:[-10,-5,0,5,10].map(v=>[g2Yb(v),v?String(v).replace('-','−'):'0']),yn:'拉长到 1 s：Vo / V',xn:'时间 s'});
+$('g2-id').setAttribute('points',plot(x=>{const p=x%1;return p<0.5?2.5-10*p:-2.5+10*(p-0.5);},0,2,g2Xa,g2Ya,8));
+function g2u(){
+  const vos=g2V[+$('g2-v').value]*1e-3,rf=g2.rf,rc=R2*C2,h=T2/2,K=rf/R2,tf=rf*C2;
+  const hh=rf?K*A2*Math.tanh(h/(2*tf)):A2*h/(2*rc);
+  const N=400,dt=2*T2/N,ex=rf?Math.exp(-dt/tf):1;let v=hh;const sp=[g2Xa(0).toFixed(1)+','+g2Ya(v).toFixed(1)];
+  for(let i=1;i<=N;i++){const t=(i-0.5)*dt,vin=(t%T2)<h?A2:-A2;
+    v=rf?-K*vin+(v+K*vin)*ex:v-vin*dt/rc;sp.push(g2Xa(i*dt*1e3).toFixed(1)+','+g2Ya(v).toFixed(1));}
+  $('g2-sh').setAttribute('points',sp.join(' '));
+  const M=200,bt=[],bb=[],mid=[];let mEnd=0;
+  for(let i=0;i<=M;i++){const t=i/M,c=rf?vos*(1+K)-vos*K*Math.exp(-t/tf):vos+vos*t/rc;
+    let top=c+hh,bot=c-hh;if(top>SAT){top=SAT;bot=SAT-2*hh;}
+    const px=g2Xb(t).toFixed(1);bt.push(px+','+g2Yb(top).toFixed(1));bb.unshift(px+','+g2Yb(bot).toFixed(1));
+    mEnd=(top+bot)/2;mid.push(px+','+g2Yb(mEnd).toFixed(1));}
+  $('g2-band').setAttribute('points',bt.concat(bb).join(' '));
+  $('g2-mid').setAttribute('points',mid.join(' '));
+  $('g2-midt').setAttribute('y',(g2Yb(mEnd)-8).toFixed(1));
+  const rate=vos/rc,dcf=vos*(1+K),tcA=rf?Infinity:(SAT-hh-vos)/rate,vis=tcA<=1;
+  show($('g2-cl'),vis);show($('g2-clt'),vis);
+  if(vis){const x=g2Xb(tcA),r=x>300;$('g2-cl').setAttribute('x1',x.toFixed(1));$('g2-cl').setAttribute('x2',x.toFixed(1));
+    $('g2-clt').setAttribute('x',(x+(r?-4:4)).toFixed(1));$('g2-clt').setAttribute('text-anchor',r?'end':'start');}
+  show($('g2-g-rf'),!!rf);if(rf)$('g2-rft').textContent='Rf '+fmtR(rf);
+  const vl=+(vos*1e3).toFixed(1)+' mV';
+  $('g2-vv').textContent=vl;$('g2-v').setAttribute('aria-valuetext',vl);$('g2-vost').textContent='Vos '+vl;
+  $('g2-dc').textContent=rf?'−Rf / R = −'+K:'开环增益，10⁵ 以上（典型值）';
+  $('g2-dr').textContent=rf?'稳定在 '+fmtVx(dcf)+'，不再漂':'每秒涨 '+(+rate.toFixed(1))+' V，不会停';
+  $('g2-tc').textContent=rf?'不会':sLab(tcA)+' 后';
+  $('g2-fl').textContent=rf?fmtF(1/(2*Math.PI*tf)):'0，全频段积分';
+  const drop=rf?(1-(K*A2-hh)/(K*A2+hh))*100:0;
+  $('g2-lin').textContent=drop.toFixed(drop<10?1:0)+' %';
+  const ow=$('g2-ow'),vot=$('g2-vot');
+  ow.classList.toggle('s-bad',!rf);ow.classList.toggle('s-hi',!!rf);
+  vot.textContent=rf?'直流 +'+fmtVx(dcf):(vis?'顶到 +10.5 V':'一直往上漂');
+  vot.style.fill=rf?'var(--copper)':'var(--danger)';
+  let n;
+  if(!rf){chip($('g2-st'),vis?'漂到饱和':'正在漂移','bad');
+    n='电容隔直，Vos 没有反馈拉回来，被当成输入一直积分，漂移速率 = Vos / (R·C) = '+vl+' ÷ '+tLab(rc)+' = '+(+rate.toFixed(1))+' V/s。约 '+sLab(tcA)+' 后三角波的顶碰到电源轨，被削平压扁。Vos 再小也只是晚一点，迟早饱和。';}
+  else if(drop>20){chip($('g2-st'),'不漂，但三角波变圆','warn');
+    n='Rf 只有 R 的 '+K+' 倍，fL = '+fmtF(1/(2*Math.PI*tf))+'，离 1 kHz 太近。电容充电的同时 Rf 在放电，半个周期里斜率掉了 '+drop.toFixed(0)+' %，已经不像积分了。直流偏移倒是很小，只有 '+fmtVx(dcf)+'。';}
+  else{chip($('g2-st'),'稳定','on');
+    n='直流下电容开路，电路变成增益 −'+K+' 的反相放大器，输出只偏 Vos·(1 + Rf/R) = '+fmtVx(dcf)+'，经过几个 Rf·C = '+tLab(tf)+' 就稳定。fL = '+fmtF(1/(2*Math.PI*tf))+'，比 1 kHz 低得多，三角波几乎不受影响。';}
+  $('g2-note').textContent=n;
+}
+seg('g2-rf',v=>{g2.rf=+v;g2u();});
+$('g2-v').addEventListener('input',g2u);
+g2u();
+</script>
+</body>
+</html>

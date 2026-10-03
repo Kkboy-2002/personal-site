@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>差分放大器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#opamp">运放</a><span class="sp"></span><span>04 / 12</span></nav>
+<header>
+  <span class="eyebrow">运放 · 基本放大电路</span>
+  <h1>差分放大器</h1>
+  <p class="lede">只放大两个输入的差，把两边共有的干扰扔掉。四个电阻就能搭，但电阻一失配，共模干扰就漏到输出；仪表放大器是为了解决这个问题。</p>
+</header>
+
+<section id="diff">
+  <span class="eyebrow">四电阻差分 · 电阻匹配</span>
+  <h2>Vo = (R2 / R1)·(V2 − V1)</h2>
+  <p>它是反相放大器和同相放大器的叠加。V1 经 R1 进反相端，V2 经 R3、R4 分压后进同相端，R2 是反馈电阻。用叠加定理分别算：</p>
+  <ol>
+    <li>只看 V1（V2 接地）：反相放大，贡献 −(R2 / R1)·V1。</li>
+    <li>只看 V2（V1 接地）：先被 R3、R4 分压成 V2·R4 / (R3 + R4)，再同相放大 (1 + R2 / R1) 倍。</li>
+    <li>当 R1 = R3、R2 = R4 时，第 2 项正好变成 (R2 / R1)·V2，两项合起来就是 (R2 / R1)·(V2 − V1)。</li>
+  </ol>
+  <p class="eq">Vo = V2·R4 / (R3 + R4)·(1 + R2 / R1) − V1·R2 / R1</p>
+  <p>把输入拆成差模 Vd = V2 − V1 和共模 Vcm = (V1 + V2) / 2。电阻完全匹配时共模增益为 0；只要比值差一点点，共模就会按 Acm 漏到输出。共模抑制比 CMRR = 20·lg|Ad / Acm|，单位 dB。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 250" role="img" aria-label="四电阻差分放大器：V1 经 R1 到反相端，R2 为反馈；V2 经 R3 到同相端，R4 接地">
+        <text x="265" y="92" text-anchor="middle" class="v">+15 V</text>
+        <path class="w" d="M265,98 V115 M265,165 V182"/>
+        <text x="265" y="196" text-anchor="middle" class="v">−15 V</text>
+        <path class="r" d="M220,90 L310,140 L220,190 Z"/>
+        <text x="227" y="120" class="t">−</text>
+        <text x="227" y="170" class="t">+</text>
+        <circle class="r" cx="40" cy="115" r="4"/>
+        <circle class="r" cx="40" cy="165" r="4"/>
+        <text x="30" y="119" text-anchor="end" class="t">V1</text>
+        <text x="30" y="169" text-anchor="end" class="t">V2</text>
+        <path class="w" d="M44,115 H80 M130,115 H220 M44,165 H80 M130,165 H220"/>
+        <rect class="r" x="80" y="107" width="50" height="16" rx="2"/>
+        <rect class="r" x="80" y="157" width="50" height="16" rx="2"/>
+        <text x="105" y="100" text-anchor="middle" class="v">R1 10 kΩ</text>
+        <text x="105" y="150" text-anchor="middle" class="v">R3 10 kΩ</text>
+        <circle class="dot" cx="170" cy="115" r="3.5"/>
+        <path class="w" d="M170,115 V50 H240 M290,50 H350 V140"/>
+        <rect class="r" x="240" y="42" width="50" height="16" rx="2"/>
+        <text x="265" y="35" text-anchor="middle" class="v">R2 100 kΩ</text>
+        <circle class="dot" cx="350" cy="140" r="3.5"/>
+        <circle class="dot" cx="170" cy="165" r="3.5"/>
+        <path class="w" d="M170,165 V180 M170,220 V232 M156,232 H184 M161,237 H179 M166,242 H174"/>
+        <rect class="r" x="161" y="180" width="18" height="40" rx="2"/>
+        <text x="152" y="198" text-anchor="end" class="t">R4</text>
+        <text id="d1-r4" x="152" y="214" text-anchor="end" class="v">100 kΩ</text>
+        <path class="w s-hi" style="stroke-width:3" d="M310,140 H400"/>
+        <text id="d1-vot" x="400" y="130" text-anchor="end" class="v hi">Vo 2.00 V</text>
+      </svg>
+      <svg viewBox="0 0 420 250" role="img" aria-label="上：两个输入端的电压，叠加了相同的 50 Hz 共模干扰；下：输出中的共模误差">
+        <line class="gl" x1="50" y1="65" x2="400" y2="65"/>
+        <path class="ax" d="M50,20 V110 H400"/>
+        <text x="44" y="24" text-anchor="end" class="v">6</text>
+        <text x="44" y="69" text-anchor="end" class="v">0</text>
+        <text x="44" y="114" text-anchor="end" class="v">−6</text>
+        <text x="56" y="14" class="tm">输入电压 / V</text>
+        <polyline id="d1-v1" class="real2" points="50,65 400,65"/>
+        <polyline id="d1-v2" class="real3" points="50,65 400,65"/>
+        <text id="d1-l1" x="404" y="70" class="t" style="fill:var(--low)">V1</text>
+        <text id="d1-l2" x="404" y="60" class="t" style="fill:var(--flow)">V2</text>
+        <line class="ideal" x1="50" y1="185" x2="400" y2="185"/>
+        <path class="ax" d="M50,140 V230 H400"/>
+        <text x="44" y="144" text-anchor="end" class="v">250</text>
+        <text x="44" y="189" text-anchor="end" class="v">0</text>
+        <text x="44" y="234" text-anchor="end" class="v">−250</text>
+        <text x="56" y="134" class="tm">输出误差 Vo − 10·Vd / mV</text>
+        <polyline id="d1-err" class="real" points="50,185 400,185"/>
+        <text x="50" y="246" text-anchor="middle" class="v">0</text>
+        <text x="225" y="246" text-anchor="middle" class="v">20</text>
+        <text x="400" y="246" text-anchor="end" class="v">40 ms</text>
+      </svg>
+      <figcaption>示意：两根输入线上叠加了同样的 50 Hz 工频干扰（共模），真正的信号是两者之差 Vd（差模，直流）。理想输出是一条直线 10·Vd，下图画的是偏离这条直线的部分。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="d1-cm">共模干扰幅度 Vcm</label>
+        <span class="rv" id="d1-cmv">3.0 V</span>
+        <input type="range" id="d1-cm" min="0" max="50" step="1" value="30"></div>
+      <div class="ctl"><label class="ctl-l" for="d1-d">差模电压 Vd = V2 − V1</label>
+        <span class="rv" id="d1-dv">0.20 V</span>
+        <input type="range" id="d1-d" min="-50" max="50" step="1" value="20"></div>
+      <div class="ctl"><label class="ctl-l" for="d1-e">R4 失配</label>
+        <span class="rv" id="d1-ev">1.0 %</span>
+        <input type="range" id="d1-e" min="0" max="50" step="1" value="10"></div>
+      <dl class="read">
+        <dt>差模增益 Ad</dt><dd id="d1-ad">10.00</dd>
+        <dt>共模增益 Acm</dt><dd id="d1-acm">0.0090</dd>
+        <dt>CMRR</dt><dd id="d1-cmrr">61 dB</dd>
+        <dt>理想输出 10·Vd</dt><dd id="d1-vo">2.00 V</dd>
+        <dt>共模误差峰值</dt><dd id="d1-ep">27 mV</dd>
+        <dt>结论</dt><dd><span id="d1-st" class="chip warn">共模漏出</span></dd>
+      </dl>
+      <p class="note" id="d1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="ina">
+  <span class="eyebrow">仪表放大器 · 三运放结构</span>
+  <h2>仪表放大器：前面加两个同相放大器</h2>
+  <p>四电阻差分有两个硬伤。一是输入阻抗低且两边不相等：V1 端看进去是 R1，V2 端是 R3 + R4；信号源内阻会直接加到 R1 或 R3 上，破坏匹配。二是 CMRR 全靠电阻匹配，1% 的电阻只能做到 40 到 60 dB 量级。</p>
+  <p>仪表放大器在前面加两个同相放大器 A1、A2，信号从同相端进，输入阻抗极高。两级之间只有一个 Rg，差模电压全部加在 Rg 上并被放大 1 + 2R / Rg 倍；共模电压两边一样，Rg 上没有电流，前级只让它以增益 1 通过。后级 A3 是单位增益差分放大器，把共模减掉。</p>
+  <p class="eq">G = (1 + 2R / Rg)·(R2 / R1)　通常 R2 = R1，只用一个 Rg 设增益</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 280" role="img" aria-label="三运放仪表放大器：A1、A2 为同相输入的前级，之间接增益电阻 Rg；A3 为单位增益差分放大器">
+        <path class="r" d="M100,30 L170,65 L100,100 Z"/>
+        <text x="106" y="53" class="t">−</text>
+        <text x="106" y="87" class="t">+</text>
+        <text x="118" y="70" class="tm">A1</text>
+        <path class="r" d="M100,180 L170,215 L100,250 Z"/>
+        <text x="106" y="203" class="t">−</text>
+        <text x="106" y="237" class="t">+</text>
+        <text x="118" y="220" class="tm">A2</text>
+        <circle class="r" cx="40" cy="82" r="4"/>
+        <circle class="r" cx="40" cy="232" r="4"/>
+        <text x="48" y="76" class="t">V1</text>
+        <text x="48" y="226" class="t">V2</text>
+        <path class="w" d="M44,82 H100 M44,232 H100"/>
+        <path class="w" d="M100,48 H20 V103 M20,143 V198 H100"/>
+        <rect class="r" x="11" y="103" width="18" height="40" rx="2"/>
+        <text x="34" y="120" class="t">Rg</text>
+        <text id="i-rgt" x="34" y="136" class="v">5.56 kΩ</text>
+        <circle class="dot" cx="60" cy="48" r="3.5"/>
+        <circle class="dot" cx="60" cy="198" r="3.5"/>
+        <path class="w" d="M60,48 V14 H100 M150,14 H185 V65 M60,198 V160 H100 M150,160 H185 V215"/>
+        <rect class="r" x="100" y="6" width="50" height="16" rx="2"/>
+        <rect class="r" x="100" y="152" width="50" height="16" rx="2"/>
+        <text x="125" y="36" text-anchor="middle" class="tm">R 25 kΩ</text>
+        <text x="125" y="182" text-anchor="middle" class="tm">R 25 kΩ</text>
+        <circle class="dot" cx="185" cy="65" r="3.5"/>
+        <circle class="dot" cx="185" cy="215" r="3.5"/>
+        <path class="w" d="M170,65 H210 M260,65 H300 V115 H320 M170,215 H210 M260,215 H300 V155 H320"/>
+        <rect class="r" x="210" y="57" width="50" height="16" rx="2"/>
+        <rect class="r" x="210" y="207" width="50" height="16" rx="2"/>
+        <text x="235" y="50" text-anchor="middle" class="tm">R1</text>
+        <text x="235" y="240" text-anchor="middle" class="tm">R3</text>
+        <circle class="dot" cx="300" cy="65" r="3.5"/>
+        <circle class="dot" cx="300" cy="215" r="3.5"/>
+        <path class="w" d="M300,65 V30 H340 M390,30 H420 V135"/>
+        <rect class="r" x="340" y="22" width="50" height="16" rx="2"/>
+        <text x="365" y="15" text-anchor="middle" class="tm">R2</text>
+        <path class="w" d="M300,215 V225 M300,255 V262 M286,262 H314 M291,267 H309 M296,272 H304"/>
+        <rect class="r" x="291" y="225" width="18" height="30" rx="2"/>
+        <text x="316" y="244" class="tm">R4</text>
+        <path class="r" d="M320,95 L400,135 L320,175 Z"/>
+        <text x="326" y="120" class="t">−</text>
+        <text x="326" y="160" class="t">+</text>
+        <text x="338" y="140" class="tm">A3</text>
+        <circle class="dot" cx="420" cy="135" r="3.5"/>
+        <path class="w s-hi" style="stroke-width:3" d="M400,135 H452"/>
+        <text x="452" y="125" text-anchor="end" class="t">Vo</text>
+        <path id="i-flow" class="flow thin" d="M185,213 V160 H60 V198 H20 V48 H60 V14 H185 V63"/>
+      </svg>
+      <figcaption>绿色是差模电流 Vd / Rg：它从 A2 输出经 R、Rg、R 流到 A1 输出（V2 > V1 时）。共模电压两边相同，Rg 上没有电流。R 取 25 kΩ 与常见集成仪放一致，示意。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="i-g">增益电阻 Rg</label>
+        <span class="rv" id="i-gv">5.56 kΩ</span>
+        <input type="range" id="i-g" min="0" max="4" step="1" value="2"></div>
+      <div class="ctl"><label class="ctl-l" for="i-rs">V1 一侧信号源内阻（两侧不平衡）</label>
+        <span class="rv" id="i-rsv">100 Ω</span>
+        <input type="range" id="i-rs" min="0" max="4" step="1" value="2"></div>
+      <dl class="read">
+        <dt>仪放增益 G</dt><dd id="i-gg">10.0</dd>
+        <dt>仪放 CMRR</dt><dd id="i-c1">86 dB</dd>
+        <dt>仪放输入阻抗</dt><dd>&gt; 1 GΩ，典型值</dd>
+        <dt>四电阻差分 CMRR</dt><dd id="i-c2">60 dB</dd>
+        <dt>四电阻输入阻抗</dt><dd>V1：10 kΩ，V2：110 kΩ</dd>
+        <dt>对比</dt><dd><span id="i-st" class="chip on">仪放胜出</span></dd>
+      </dl>
+      <p class="note" id="i-note"></p>
+      <p class="note">示意条件：后级与四电阻差分的电阻都按 0.1% 匹配；四电阻差分增益固定为 10。</p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>四电阻差分放大器的输出公式是什么，有什么前提？</summary>
+      <div class="ans"><p>Vo = (R2 / R1)·(V2 − V1)，前提是 R1 = R3、R2 = R4，严格说是 R2 / R1 = R4 / R3。比值不等时共模电压会漏到输出。</p></div></details>
+    <details><summary>什么是 CMRR？电阻失配怎么影响它？</summary>
+      <div class="ans"><p>CMRR 是差模增益和共模增益之比，常用 dB 表示。四电阻差分的共模增益来自电阻比值失配，失配越大 Acm 越大，CMRR 越低。增益 10、电阻失配 1% 时只有 60 dB 左右。</p></div></details>
+    <details><summary>仪表放大器为什么要三个运放？</summary>
+      <div class="ans"><p>前两个是同相放大器，提供极高且对称的输入阻抗，并且只放大差模、共模以增益 1 通过；第三个是差分放大器，把共模减掉。前级先把差模放大 G1 倍，所以整体 CMRR 在后级基础上再提高约 20·lg(G1) dB。</p></div></details>
+    <details><summary>仪表放大器的增益为什么只用一个电阻设？</summary>
+      <div class="ans"><p>G = 1 + 2R / Rg，只改 Rg 就改了增益，而共模在 Rg 上不产生电流，所以改增益不会破坏共模抑制。如果改后级四个电阻，就得同时保证它们的匹配。</p></div></details>
+    <details><summary>仪表放大器用在哪？</summary>
+      <div class="ans"><p>桥式传感器、热电偶、心电等小信号测量。这些信号差模只有 mV 级，而共模有几伏或者叠着工频干扰，源内阻还不对称。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="03-同相放大器.html"><span>上一页</span>同相放大器</a><a class="next" href="05-积分电路.html"><span>下一页</span>积分电路</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 通用：四电阻差分的差模、共模增益 */
+function dGain(r1,r2,r3,r4){const k=r4/(r3+r4),g=r2/r1;return{ad:(k*(1+g)+g)/2,acm:k*(1+g)-g};}
+const dB=x=>20*Math.log10(x);
+/* 1. 四电阻差分 */
+const d1X=scale(0,40,50,400),d1Y=scale(-6,6,110,20),d1E=scale(-250,250,230,140);
+function d1u(){
+  const cm=+$('d1-cm').value/10,vd=+$('d1-d').value/100,ep=+$('d1-e').value/10;
+  const r4=100e3*(1+ep/100),g=dGain(10e3,100e3,10e3,r4),w=2*Math.PI*0.05;
+  $('d1-cmv').textContent=cm.toFixed(1)+' V';$('d1-cm').setAttribute('aria-valuetext',cm.toFixed(1)+' V');
+  $('d1-dv').textContent=fmtV(vd);$('d1-d').setAttribute('aria-valuetext',fmtV(vd));
+  $('d1-ev').textContent=ep.toFixed(1)+' %';$('d1-e').setAttribute('aria-valuetext',ep.toFixed(1)+' %');
+  $('d1-r4').textContent=fmtR(r4);
+  const v1=t=>cm*Math.sin(w*t)-vd/2,v2=t=>cm*Math.sin(w*t)+vd/2;
+  const err=t=>{const x1=v1(t),x2=v2(t),vo=x2*(r4/(10e3+r4))*11-x1*10;return (vo-10*vd)*1e3;};
+  $('d1-v1').setAttribute('points',plot(v1,0,40,d1X,d1Y,200));
+  $('d1-v2').setAttribute('points',plot(v2,0,40,d1X,d1Y,200));
+  $('d1-err').setAttribute('points',plot(t=>Math.max(-250,Math.min(250,err(t))),0,40,d1X,d1E,200));
+  $('d1-l1').setAttribute('y',(d1Y(v1(40))+(vd>=0?12:-4)).toFixed(1));
+  $('d1-l2').setAttribute('y',(d1Y(v2(40))+(vd>=0?-4:12)).toFixed(1));
+  const vo=10*vd+g.acm*0,epk=Math.abs(g.acm)*cm*1e3;
+  $('d1-ad').textContent=g.ad.toFixed(2);$('d1-acm').textContent=g.acm.toFixed(4);
+  const inf=Math.abs(g.acm)<1e-9,cmrr=inf?Infinity:dB(Math.abs(g.ad/g.acm));
+  $('d1-cmrr').textContent=inf?'∞，理想匹配':cmrr.toFixed(0)+' dB';
+  $('d1-vo').textContent=fmtV(vo);$('d1-vot').textContent='Vo ≈ '+fmtV(vo);setLv($('d1-vot'),null,vo>=0);
+  $('d1-ep').textContent=epk<1?epk.toFixed(2)+' mV':epk.toFixed(0)+' mV';
+  let n;
+  if(inf||epk<1){chip($('d1-st'),'共模被抑制','on');
+    n=inf?'R2 / R1 = R4 / R3，同相端分压后的共模和反相端算出来的共模正好抵消，输出只剩 10·Vd，干扰再大也看不见。':'共模误差不到 1 mV，可以忽略。';}
+  else if(epk<30){chip($('d1-st'),'共模漏出','warn');
+    n='R4 偏大 '+ep.toFixed(1)+' %，同相端分到的共模比反相端多一点，差出来的部分被放大后出现在输出上：误差峰值 = |Acm|·Vcm = '+epk.toFixed(0)+' mV。它跟着 50 Hz 干扰一起起伏。';}
+  else{chip($('d1-st'),'干扰明显','bad');
+    n='失配 '+ep.toFixed(1)+' %、共模 '+cm.toFixed(1)+' V，输出误差达 '+epk.toFixed(0)+' mV，已经和信号可比。四电阻差分的 CMRR 完全由电阻匹配决定，要么换 0.1% 甚至集成匹配电阻，要么用仪表放大器。';}
+  $('d1-note').textContent=n;
+}
+['d1-cm','d1-d','d1-e'].forEach(id=>$(id).addEventListener('input',d1u));
+d1u();
+/* 2. 仪表放大器对比 */
+const iRg=[Infinity,50e3,5.556e3,505,50.03],iRs=[0,10,100,1e3,10e3];
+function iu(){
+  const rg=iRg[+$('i-g').value],rs=iRs[+$('i-rs').value],G=1+50e3/rg;
+  const rgl=isFinite(rg)?fmtR(rg):'开路';
+  $('i-gv').textContent=rgl;$('i-g').setAttribute('aria-valuetext',rgl);$('i-rgt').textContent=rgl;
+  const rsl=rs===0?'0 Ω':fmtR(rs);$('i-rsv').textContent=rsl;$('i-rs').setAttribute('aria-valuetext',rsl);
+  const st2=dGain(1e4,1e4,1e4,1e4*1.001),c2nd=dB(Math.abs(st2.ad/st2.acm)),cIna=c2nd+dB(G);
+  const f=dGain(1e4+rs,1e5,1e4,1e5*1.001),cDiff=dB(Math.abs(f.ad/f.acm));
+  $('i-gg').textContent=G.toFixed(G<10?2:1);
+  $('i-c1').textContent=cIna.toFixed(0)+' dB';$('i-c2').textContent=cDiff.toFixed(0)+' dB';
+  show($('i-flow'),isFinite(rg));
+  const gap=cIna-cDiff;
+  if(gap>3)chip($('i-st'),'仪放高 '+gap.toFixed(0)+' dB','on');
+  else if(gap>-3)chip($('i-st'),'差不多','off');
+  else chip($('i-st'),'四电阻略好','warn');
+  let n='仪放前级增益 '+G.toFixed(1)+' 倍，差模先被放大、共模仍是 1 倍，所以后级 '+c2nd.toFixed(0)+' dB 的基础上再加 20·lg(G) = '+dB(G).toFixed(0)+' dB。';
+  n+=rs>0?'四电阻差分这边，'+rsl+' 的源内阻串进 R1，R2/R1 不再等于 R4/R3，CMRR 降到 '+cDiff.toFixed(0)+' dB；仪放输入阻抗极高，源内阻几乎没影响。':'源内阻为 0 时四电阻差分只受 0.1% 电阻匹配限制。';
+  if(!isFinite(rg))n='Rg 开路时前级就是两个跟随器，G = 1，仪放 CMRR 只剩后级的 '+c2nd.toFixed(0)+' dB。仪放在高增益下 CMRR 才特别高，这也是它常用在小信号放大的原因。';
+  $('i-note').textContent=n;
+}
+['i-g','i-rs'].forEach(id=>$(id).addEventListener('input',iu));
+iu();
+</script>
+</body>
+</html>

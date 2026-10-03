@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>反射与阻抗匹配</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.trk{fill:none;stroke:var(--copper);stroke-width:6;stroke-linecap:round}
+.mk{stroke:var(--danger);stroke-width:1.2;stroke-dasharray:3 3}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#pcb">PCB与调试</a><span class="sp"></span><span>04 / 08</span></nav>
+<header>
+  <span class="eyebrow">PCB与调试 · 信号完整性</span>
+  <h1>反射与阻抗匹配</h1>
+  <p class="lede">信号沿走线传播时，每遇到一处阻抗变化就有一部分被弹回来。弹回来的波和原信号叠加，就是过冲和振铃。匹配电阻的作用是让这部分反射消失。</p>
+</header>
+
+<section id="when">
+  <span class="eyebrow">传输线判据</span>
+  <h2>什么时候要把走线当传输线</h2>
+  <p>看的不是时钟频率，而是上升沿。信号在 FR4 微带线上约 6 ps/mm（典型值），一个上升沿在走线上"铺开"的长度是 ℓ = tr / tpd。走线比这段长度短很多时，整条线上电压几乎同时变化，可以当普通导线；走线长到边沿的约 1/6 以上，线上不同位置的电压就不一样了，反射开始明显，要按传输线处理。</p>
+  <p class="eq">临界长度 ≈ (tr / tpd) / 6；1 ns 上升沿约 28 mm</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 206" role="img" aria-label="边沿刚到达走线末端时，沿走线各点的电压分布，与上升沿空间长度的六分之一对比">
+        <line class="gl" x1="50" y1="30" x2="430" y2="30"/>
+        <line class="gl" x1="50" y1="90" x2="430" y2="90"/>
+        <path class="ax" d="M50,24 V150 H430"/>
+        <text x="44" y="34" text-anchor="end" class="v">1</text>
+        <text x="44" y="94" text-anchor="end" class="v">0.5</text>
+        <text x="44" y="154" text-anchor="end" class="v">0</text>
+        <text x="54" y="18" class="tm">线上电压（归一化）</text>
+        <text x="50" y="166" text-anchor="middle" class="v">0</text>
+        <text x="177" y="166" text-anchor="middle" class="v">100</text>
+        <text x="303" y="166" text-anchor="middle" class="v">200</text>
+        <text x="430" y="166" text-anchor="end" class="v">300</text>
+        <text x="430" y="200" text-anchor="end" class="tm">沿走线位置 / mm</text>
+        <line id="s1-cr" class="mk" x1="85" y1="24" x2="85" y2="150"/>
+        <text id="s1-crt" x="89" y="44" class="tm">临界 ℓ/6</text>
+        <path id="s1-tr" class="trk" d="M50,182 H177"/>
+        <text id="s1-trt" x="54" y="200" class="tm">走线</text>
+        <polyline id="s1-v" class="real" points="50,150 430,150"/>
+      </svg>
+      <figcaption>画的是驱动端开始翻转、边沿前沿刚好到达走线末端那一刻。曲线越倾斜，说明线两端电压差越大，越要当传输线看。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s1-t">上升时间 tr</label>
+        <span class="rv" id="s1-tv">1 ns</span>
+        <input type="range" id="s1-t" min="0" max="6" step="1" value="3"></div>
+      <div class="ctl"><label class="ctl-l" for="s1-l">走线长度</label>
+        <span class="rv" id="s1-lv">100 mm</span>
+        <input type="range" id="s1-l" min="10" max="300" step="10" value="100"></div>
+      <dl class="read">
+        <dt>边沿空间长度 tr/tpd</dt><dd id="s1-e">—</dd>
+        <dt>临界长度 ≈ 1/6</dt><dd id="s1-c">—</dd>
+        <dt>走线单程延时 Td</dt><dd id="s1-d">—</dd>
+        <dt>结论</dt><dd><span id="s1-st" class="chip on">集总</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="bounce">
+  <span class="eyebrow">反射系数 · 反弹图</span>
+  <h2>反射怎么算：Γ 和来回弹</h2>
+  <p>走线有特征阻抗 Z0，它是线上电压波和电流波之比，由线宽、介质厚度和介电常数决定，常用 50 Ω。波走到末端遇到负载 ZL，反射回来的比例是反射系数：</p>
+  <p class="eq">Γ = (ZL − Z0) / (ZL + Z0)</p>
+  <p>ZL = Z0 时 Γ = 0，没有反射；开路 Γ = +1，全反射同相叠加，电压翻倍；短路 Γ = −1。反射波回到源端，又按源端的 Γs 再反射一次，如此来回，每次到达接收端就叠加一个台阶，这就是反弹图算法。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 136" role="img" aria-label="驱动器经内阻和源端串联电阻 Rs 接到 50 欧传输线，末端接负载 ZL 到地">
+        <path class="w" d="M30,40 V80 L64,60 Z"/>
+        <text x="20" y="108" class="tm">驱动 3.3 V，内阻 Ro 10 Ω</text>
+        <path class="w" d="M64,60 H84 M134,60 H160 M360,60 H400 V70 M400,110 V118 M388,118 H412 M393,123 H407 M398,128 H402"/>
+        <rect class="r" x="84" y="52" width="50" height="16" rx="2"/>
+        <text id="s2-rst" x="109" y="44" text-anchor="middle" class="v">Rs 0 Ω</text>
+        <rect class="box" x="160" y="48" width="200" height="24" rx="12"/>
+        <text x="260" y="64" text-anchor="middle" class="tm">Z0 = 50 Ω，Td = 1 ns</text>
+        <rect class="r" x="391" y="70" width="18" height="40" rx="2"/>
+        <text x="416" y="86" class="t">ZL</text>
+        <text id="s2-zlt" x="416" y="102" class="v">开路</text>
+        <circle class="dot" cx="147" cy="60" r="3.5"/>
+        <circle class="dot" cx="380" cy="60" r="3.5"/>
+        <text x="147" y="90" text-anchor="middle" class="tm">源端</text>
+        <text x="380" y="44" text-anchor="middle" class="tm">接收端</text>
+      </svg>
+      <svg viewBox="0 0 460 226" role="img" aria-label="接收端与源端电压随时间变化的波形，按反弹图叠加多次反射计算">
+        <line class="gl" x1="50" y1="46.2" x2="440" y2="46.2"/>
+        <line class="gl" x1="50" y1="89.8" x2="440" y2="89.8"/>
+        <line class="gl" x1="50" y1="133.4" x2="440" y2="133.4"/>
+        <line id="s2-fin" class="ax dash" x1="50" y1="100" x2="440" y2="100"/>
+        <path class="ax" d="M50,20 V190 H440"/>
+        <text x="44" y="50" text-anchor="end" class="v">6</text>
+        <text x="44" y="94" text-anchor="end" class="v">4</text>
+        <text x="44" y="137" text-anchor="end" class="v">2</text>
+        <text x="44" y="181" text-anchor="end" class="v">0</text>
+        <line class="gl" x1="50" y1="177" x2="440" y2="177"/>
+        <text x="54" y="14" class="tm">电压 / V</text>
+        <text x="50" y="206" text-anchor="middle" class="v">0</text>
+        <text x="115" y="206" text-anchor="middle" class="v">2</text>
+        <text x="180" y="206" text-anchor="middle" class="v">4</text>
+        <text x="245" y="206" text-anchor="middle" class="v">6</text>
+        <text x="310" y="206" text-anchor="middle" class="v">8</text>
+        <text x="375" y="206" text-anchor="middle" class="v">10</text>
+        <text x="440" y="206" text-anchor="end" class="v">12</text>
+        <text x="440" y="222" text-anchor="end" class="tm">时间 ns</text>
+        <polyline id="s2-vs" class="real2" points="50,177 440,177"/>
+        <polyline id="s2-vl" class="real" points="50,177 440,177"/>
+        <text id="s2-vst" x="54" y="100" class="t" style="fill:var(--low)">源端</text>
+        <text id="s2-vlt" x="100" y="60" class="t" style="fill:var(--copper)">接收端</text>
+      </svg>
+      <figcaption>橙线是接收端电压，蓝线是源端（Rs 之后、走线入口）电压，灰虚线是稳态值。驱动上升时间取 0.25 ns，走线单程延时 1 ns（约 17 cm，示意）。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-zl">负载阻抗 ZL</label>
+        <span class="rv" id="s2-zlv">开路</span>
+        <input type="range" id="s2-zl" min="0" max="7" step="1" value="7"></div>
+      <div class="ctl"><label class="ctl-l" for="s2-rs">源端串联电阻 Rs</label>
+        <span class="rv" id="s2-rsv">0 Ω</span>
+        <input type="range" id="s2-rs" min="0" max="60" step="5" value="0"></div>
+      <dl class="read">
+        <dt>源端 Γs = (Ro+Rs−Z0)/(Ro+Rs+Z0)</dt><dd id="s2-gs">—</dd>
+        <dt>负载 ΓL</dt><dd id="s2-gl">—</dd>
+        <dt>发出的第一个波 V0</dt><dd id="s2-v0">—</dd>
+        <dt>接收端第一次到达</dt><dd id="s2-v1">—</dd>
+        <dt>接收端最高</dt><dd id="s2-vm">—</dd>
+        <dt>稳态</dt><dd id="s2-vf">—</dd>
+        <dt>波形</dt><dd><span id="s2-st" class="chip bad">过冲振铃</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="term">
+  <span class="eyebrow">两种匹配</span>
+  <h2>源端串联匹配和末端并联匹配</h2>
+  <p>源端串联匹配是让源端不再反射：Ro + Rs = Z0。线上先走一个半幅的波，到开路的接收端全反射，叠成全幅；反射波回到源端被吸收，一次就结束。末端并联匹配是让负载不反射：ZL = Z0，波到了就被吸收。</p>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>源端串联匹配</th><th>末端并联匹配</th></tr></thead>
+    <tbody>
+      <tr><td>接法</td><td>驱动端串一个电阻，Rs = Z0 − Ro，常见 22~33 Ω</td><td>接收端对地（或对 VTT）并一个 Z0 的电阻；也有戴维南和 RC 交流匹配</td></tr>
+      <tr><td>功耗</td><td>几乎没有静态功耗</td><td>接地并联时高电平持续耗电，3.3 V / 50 Ω ≈ 66 mA</td></tr>
+      <tr><td>幅度</td><td>接收端全幅</td><td>和驱动内阻分压，幅度略降</td></tr>
+      <tr><td>适用</td><td>点对点，接收端在线的末端</td><td>多负载总线、高速接口；DDR 等常用在末端或片内</td></tr>
+      <tr><td>限制</td><td>线中间挂的负载会看到半幅台阶，不能用在中途有负载的拓扑</td><td>需要驱动能力足够</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>信号为什么会反射？怎么算？</summary>
+      <div class="ans"><p>传输线上电压波和电流波的比值固定为特征阻抗 Z0。到了负载处，负载要求的电压电流比是 ZL，两者不一致，多出来或不够的部分只能以反射波的形式回去。反射系数 Γ = (ZL − Z0)/(ZL + Z0)，开路 +1，短路 −1，匹配时为 0。</p></div></details>
+    <details><summary>什么情况下需要考虑阻抗匹配？</summary>
+      <div class="ans"><p>看上升时间和走线长度，不看时钟频率。走线长度超过上升沿空间长度的约 1/6，也就是单程延时超过 tr/6 左右，就要按传输线处理。FR4 上 1 ns 的上升沿，临界长度大约 3 cm。</p></div></details>
+    <details><summary>源端串联电阻怎么取值？</summary>
+      <div class="ans"><p>Rs = Z0 − Ro，Ro 是驱动器输出阻抗。50 Ω 线、驱动内阻十几到二十几欧时，Rs 常取 22~33 Ω。电阻要尽量靠近驱动器放。</p></div></details>
+    <details><summary>源端匹配和末端匹配各适合什么场合？</summary>
+      <div class="ans"><p>源端匹配几乎不耗电，适合点对点、接收端在末端的连接，比如 SPI 时钟、单个存储器的地址线。末端匹配能在任意位置吸收反射，适合多负载总线或很高速的接口，代价是静态功耗和幅度下降。</p></div></details>
+    <details><summary>示波器上看到时钟有过冲振铃，怎么判断是不是反射？</summary>
+      <div class="ans"><p>看振铃周期是否约等于走线往返延时的整数倍关系，比如开路负载时周期约 4·Td。在源端串一个 22~33 Ω 电阻，过冲明显变小就说明是反射。同时要排除探头接地线过长引起的假振铃。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="03-模拟地与数字地.html"><span>上一页</span>模拟地与数字地</a><a class="next" href="05-串扰.html"><span>下一页</span>串扰</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 传输线判据 */
+const s1T=[0.1,0.2,0.5,1,2,5,10],s1Tp=6e-3;/* ns/mm */
+const s1X=scale(0,300,50,430),s1Y=scale(0,1,150,30);
+function s1u(){
+  const tr=s1T[+$('s1-t').value],len=+$('s1-l').value,le=tr/s1Tp,cr=le/6,td=len*s1Tp;
+  $('s1-tv').textContent=tr+' ns';$('s1-t').setAttribute('aria-valuetext',tr+' ns');
+  $('s1-lv').textContent=len+' mm';$('s1-l').setAttribute('aria-valuetext',len+' mm');
+  $('s1-v').setAttribute('points',plot(x=>s1Y(Math.min(1,(len-x)/le)),0,len,s1X,y=>y,120));
+  $('s1-tr').setAttribute('d','M50,182 H'+s1X(len).toFixed(1));
+  $('s1-trt').textContent='走线 '+len+' mm';
+  const xc=s1X(Math.min(cr,300));
+  $('s1-cr').setAttribute('x1',xc.toFixed(1));$('s1-cr').setAttribute('x2',xc.toFixed(1));
+  show($('s1-cr'),cr<=300);show($('s1-crt'),cr<=300);
+  $('s1-crt').setAttribute('x',(xc>330?xc-4:xc+4).toFixed(1));$('s1-crt').setAttribute('text-anchor',xc>330?'end':'start');
+  $('s1-e').textContent=le>=1000?(le/1000).toFixed(2)+' m':le.toFixed(0)+' mm';
+  $('s1-c').textContent=cr.toFixed(cr<10?1:0)+' mm';
+  $('s1-d').textContent=(td*1000).toFixed(0)+' ps，= '+(td/tr).toFixed(2)+' tr';
+  const tl=len>cr;
+  if(tl&&len>2*cr)chip($('s1-st'),'必须按传输线','bad');else if(tl)chip($('s1-st'),'按传输线处理','warn');else chip($('s1-st'),'集总，可忽略','on');
+  $('s1-note').textContent=tl?'边沿前沿到达末端时，驱动端早已升高了一大截，线两端电压明显不同。反射会在接收端叠出过冲和振铃，需要控阻抗并考虑匹配。'
+    :'边沿比走线长得多，前沿到达末端时整条线上电压几乎一样，反射在上升沿还没结束时就叠加完了，看不出来，可以当普通导线。';
+}
+$('s1-t').addEventListener('input',s1u);
+$('s1-l').addEventListener('input',s1u);
+s1u();
+
+/* 2. 反弹图 */
+const s2Z=[10,25,33,50,75,100,200,Infinity],s2Ro=10,s2Z0=50,s2Vs=3.3,s2Tr=0.25;
+const s2X=scale(0,12,50,440),s2Y=scale(0,6,177,46.2);
+const s2Rp=x=>Math.max(0,Math.min(1,x/s2Tr));
+function s2u(){
+  const ZL=s2Z[+$('s2-zl').value],Rs=+$('s2-rs').value,Rt=s2Ro+Rs;
+  const gs=(Rt-s2Z0)/(Rt+s2Z0),gl=ZL===Infinity?1:(ZL-s2Z0)/(ZL+s2Z0),v0=s2Vs*s2Z0/(Rt+s2Z0);
+  const fin=ZL===Infinity?s2Vs:s2Vs*ZL/(ZL+Rt);
+  const a=[];let ak=v0;for(let k=0;k<12;k++){a.push(ak);ak*=gl*gs;}
+  const vl=t=>a.reduce((s,x,k)=>s+x*(1+gl)*s2Rp(t-(2*k+1)),0);
+  const vs=t=>v0*s2Rp(t)+a.reduce((s,x,k)=>s+x*gl*(1+gs)*s2Rp(t-(2*k+2)),0);
+  const cl=v=>Math.max(-0.4,Math.min(6.4,v));
+  $('s2-vl').setAttribute('points',plot(t=>s2Y(cl(vl(t))),0,12,s2X,y=>y,480));
+  $('s2-vs').setAttribute('points',plot(t=>s2Y(cl(vs(t))),0,12,s2X,y=>y,480));
+  const yf=s2Y(fin).toFixed(1);$('s2-fin').setAttribute('y1',yf);$('s2-fin').setAttribute('y2',yf);
+  let vm=0;for(let k=0;k<=600;k++)vm=Math.max(vm,vl(k*0.02));
+  const v1=v0*(1+gl);
+  $('s2-vst').setAttribute('y',(s2Y(cl(v0))-6).toFixed(1));
+  $('s2-vlt').setAttribute('x',(s2X(1.25)+4).toFixed(1));$('s2-vlt').setAttribute('y',(s2Y(cl(v1))-6).toFixed(1));
+  const zl=ZL===Infinity?'开路':ZL+' Ω';
+  $('s2-zlv').textContent=zl;$('s2-zl').setAttribute('aria-valuetext',zl);$('s2-zlt').textContent=zl;
+  $('s2-rsv').textContent=Rs+' Ω';$('s2-rs').setAttribute('aria-valuetext',Rs+' Ω');$('s2-rst').textContent='Rs '+Rs+' Ω';
+  const s2G=g=>Math.abs(g)<0.005?'0':(g>0?'+':'−')+Math.abs(g).toFixed(2);
+  $('s2-gs').textContent=s2G(gs);
+  $('s2-gl').textContent=s2G(gl);
+  $('s2-v0').textContent=fmtV(v0);
+  $('s2-v1').textContent=fmtV(v1);
+  const over=(vm-fin)/fin;
+  $('s2-vm').textContent=fmtV(vm)+(over>0.01?'，过冲 '+(over*100).toFixed(0)+'%':'');
+  $('s2-vf').textContent=fmtV(fin);
+  if(over>0.1)chip($('s2-st'),'过冲振铃','bad');
+  else if(fin<0.8*s2Vs)chip($('s2-st'),'幅度不足','warn');
+  else if(v1<0.9*fin)chip($('s2-st'),'台阶上升','warn');
+  else chip($('s2-st'),'干净','on');
+  let n;
+  if(Math.abs(gs)<0.05&&gl>0.95)n='源端串联匹配：Ro + Rs = Z0。源端先发出半幅的波，到开路的接收端全反射叠成全幅；反射波回到源端正好被吸收，一个来回就结束。注意源端电压在 2Td 之前停在半幅。';
+  else if(Math.abs(gl)<0.05)n='末端并联匹配：负载等于 Z0，第一次到达就被完全吸收，没有反射。代价是负载持续耗电，而且和驱动内阻、串联电阻分压，幅度下降。';
+  else if(Math.abs(gs)<0.05)n='源端匹配了，负载的反射回到源端就被吸收，最多只有一次反射。';
+  else if(gl>0&&gs<0)n='负载比 Z0 大，反射为正，接收端第一次到达就冲过终值；反射回源端时 Γs 为负，符号翻转后再送过来，于是正负交替来回振铃，周期约 4·Td。';
+  else if(gl<0)n='负载比 Z0 小，反射为负，接收端第一次到达时够不到终值，要经过几次往返才慢慢爬上去，呈台阶状。';
+  else n='源端和负载都偏高，反射同号叠加，接收端呈台阶状缓慢逼近终值。';
+  $('s2-note').textContent=n;
+}
+$('s2-zl').addEventListener('input',s2u);
+$('s2-rs').addEventListener('input',s2u);
+s2u();
+</script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>电容滤波</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#basic">基本电路</a><span class="sp"></span><span>02 / 07</span></nav>
+<header>
+  <span class="eyebrow">基本电路 · 电容滤波</span>
+  <h1>电容滤波</h1>
+  <p class="lede">整流后的脉动直流并一个大电容，输出就变成带锯齿纹波的直流。本页回答：纹波有多大、输出电压是多少、为什么二极管电流是一个个尖脉冲。</p>
+</header>
+
+<section id="cd">
+  <span class="eyebrow">机制 · 充电快放电慢</span>
+  <h2>一个周期里，二极管只导通一小段</h2>
+  <p>整流电压高于电容电压时，二极管导通，电源同时给电容充电和给负载供电。因为充电回路只有绕组和二极管的小电阻，所以充得很快。整流电压一掉下去，电容电压反而更高，二极管反偏截止，负载只能靠电容放电供电。因为负载电流有限，所以放电慢。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 400" role="img" aria-label="整流桥经二极管给滤波电容充电，电容并联负载电阻；下方是输出电压波形和当前时刻标记">
+        <rect class="box" x="16" y="70" width="84" height="160" rx="6"/>
+        <text x="58" y="140" text-anchor="middle" class="t">变压器</text>
+        <text x="58" y="160" text-anchor="middle" class="t">+ 整流桥</text>
+        <text x="58" y="182" text-anchor="middle" class="tm">输出 |v|</text>
+        <path class="w" d="M100,90 H140 M180,90 H330 V130 M330,170 V210 H100 M230,90 V144 M230,156 V210"/>
+        <g id="s1-d"></g>
+        <line class="bar" x1="216" y1="144" x2="244" y2="144"/><line class="bar" x1="216" y1="156" x2="244" y2="156"/>
+        <text x="252" y="142" class="t">C</text><text x="252" y="160" class="v">2200 µF</text>
+        <text x="218" y="136" class="v hi">+</text>
+        <circle class="dot" cx="230" cy="90" r="3.5"/><circle class="dot" cx="230" cy="210" r="3.5"/>
+        <rect class="r" x="321" y="130" width="18" height="40" rx="2"/>
+        <text x="346" y="146" class="t">RL</text><text x="346" y="163" class="v">0.5 A</text>
+        <text id="s1-vo" x="340" y="80" class="v hi">15.0 V</text>
+        <path id="s1-fc" class="flow" d="M104,90 H330 V210 H104"/>
+        <path id="s1-fcc" class="flow thin" d="M230,94 V142 M230,158 V206"/>
+        <path id="s1-fd" class="flow" d="M230,142 V90 H330 V210 H230 V158"/>
+        <line class="gl" x1="50" y1="262" x2="400" y2="262"/><line class="gl" x1="50" y1="316" x2="400" y2="316"/>
+        <path class="ax" d="M50,258 V370 H400"/>
+        <text x="44" y="266" text-anchor="end" class="v">16</text><text x="44" y="320" text-anchor="end" class="v">8</text><text x="44" y="374" text-anchor="end" class="v">0</text>
+        <text x="54" y="252" class="tm">电压 / V</text>
+        <text x="225" y="388" text-anchor="middle" class="v">10</text><text x="400" y="388" text-anchor="end" class="v">20 ms</text>
+        <polyline id="s1-rec" class="ideal" points=""/>
+        <polyline id="s1-w" class="real" points=""/>
+        <line id="s1-mk" class="ax dash" x1="100" x2="100" y1="258" y2="370"/>
+        <circle id="s1-pt" class="dot" cx="100" cy="300" r="5" style="fill:var(--flow)"/>
+      </svg>
+      <figcaption>上：简化电路，二极管 D 代表桥里此刻导通的那一对。下：虚线是不加电容时的整流波形，橙线是加电容后的输出。示意条件：V2 = 12 V，桥式，C = 2200 µF，负载 0.5 A。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s1-t">时刻</label>
+        <span class="rv" id="s1-tv">4.5 ms</span>
+        <input type="range" id="s1-t" min="0" max="20" step="0.25" value="4.5"></div>
+      <dl class="read">
+        <dt>状态</dt><dd><span id="s1-st" class="chip on">充电</span></dd>
+        <dt>整流电压</dt><dd id="s1-vs">14.1 V</dd>
+        <dt>电容电压</dt><dd id="s1-vc">14.0 V</dd>
+        <dt>二极管电流</dt><dd id="s1-id">3.2 A</dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="rp">
+  <span class="eyebrow">纹波 · 导通角 · 浪涌</span>
+  <h2>拖电容和负载电流，看纹波和二极管电流脉冲</h2>
+  <p>放电阶段电容独自给负载供电，电压按 ΔV = I·Δt / C 下降。放电时间近似等于一个纹波周期 1/f，于是：</p>
+  <p class="eq">ΔV ≈ I / (f·C)　　桥式 f = 2 × 50 Hz = 100 Hz</p>
+  <p>电容越大，纹波越小，但二极管导通的时间越短。因为一个周期里要补回的电荷 Q = I·T 不变，导通时间短了，电流峰值就高，这就是导通角变小、电流冲击变大。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 340" role="img" aria-label="上图为电容滤波后的输出电压纹波，下图为二极管电流脉冲">
+        <line class="gl" x1="50" y1="24" x2="490" y2="24"/><line class="gl" x1="50" y1="82" x2="490" y2="82"/>
+        <path class="ax" d="M50,20 V140 H490"/>
+        <text x="44" y="28" text-anchor="end" class="v">20</text><text x="44" y="86" text-anchor="end" class="v">10</text><text x="44" y="144" text-anchor="end" class="v">0</text>
+        <text x="56" y="14" class="tm">输出电压 / V</text>
+        <polyline id="s2-rec" class="ideal" points=""/>
+        <polyline id="s2-w" class="real" points=""/>
+        <text id="s2-wl" x="486" y="40" text-anchor="end" class="t" style="fill:var(--copper)">vo</text>
+        <line class="gl" x1="50" y1="190" x2="490" y2="190"/><line class="gl" x1="50" y1="240" x2="490" y2="240"/>
+        <path class="ax" d="M50,186 V290 H490"/>
+        <text id="s2-i1" x="44" y="194" text-anchor="end" class="v">10</text><text id="s2-i2" x="44" y="244" text-anchor="end" class="v">5</text>
+        <text x="44" y="294" text-anchor="end" class="v">0</text>
+        <text x="56" y="180" class="tm">二极管电流 / A</text>
+        <polyline id="s2-id" class="real2" points=""/>
+        <line id="s2-il" class="real3 dash" x1="50" x2="490" y1="290" y2="290"/>
+        <text id="s2-ilt" x="486" y="284" text-anchor="end" class="t" style="fill:var(--flow)">负载电流</text>
+        <text x="50" y="308" text-anchor="middle" class="v">0</text><text x="160" y="308" text-anchor="middle" class="v">10</text>
+        <text x="270" y="308" text-anchor="middle" class="v">20</text><text x="380" y="308" text-anchor="middle" class="v">30</text>
+        <text x="490" y="308" text-anchor="end" class="v">40</text>
+        <text x="490" y="326" text-anchor="end" class="tm">时间 ms</text>
+      </svg>
+      <figcaption>示意仿真：V2 = 12 V，50 Hz 桥式整流，两管压降共 1.4 V，绕组加二极管等效内阻 0.5 Ω，负载按恒流处理。蓝线是流过导通二极管的电流，绿色虚线是负载电流。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-c">滤波电容 C</label>
+        <span class="rv" id="s2-cv">2200 µF</span>
+        <input type="range" id="s2-c" min="0" max="6" step="1" value="3"></div>
+      <div class="ctl"><label class="ctl-l" for="s2-i">负载电流 I</label>
+        <span class="rv" id="s2-iv">0.5 A</span>
+        <input type="range" id="s2-i" min="0" max="15" step="1" value="5"></div>
+      <dl class="read">
+        <dt>纹波峰峰值（仿真）</dt><dd id="s2-dv">—</dd>
+        <dt>估算 I / (f·C)</dt><dd id="s2-df">—</dd>
+        <dt>输出平均值</dt><dd id="s2-av">—</dd>
+        <dt>每半周导通角</dt><dd id="s2-ang">—</dd>
+        <dt>二极管峰值电流</dt><dd id="s2-ip">—</dd>
+        <dt>结论</dt><dd><span id="s2-st" class="chip on">—</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="vo">
+  <span class="eyebrow">输出电压 · 选型</span>
+  <h2>加电容后输出是多少，电容怎么选</h2>
+  <p>空载时电容没有放电通路，一直停在峰值，输出 ≈ √2·V2 ≈ 1.414·V2。带载后电容边放电边被补，平均值落在峰值下方。工程上让放电时间常数 RL·C ≥ (3~5)·T/2（T 为工频周期），此时输出按 ≈ 1.2·V2 估算。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>条件（桥式）</th><th>输出平均值</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>不加电容</td><td class="n">0.9·V2</td><td>纯脉动直流</td></tr>
+      <tr><td>加电容，正常负载</td><td class="n">≈ 1.2·V2</td><td>RL·C ≥ (3~5)·T/2 时的经验值</td></tr>
+      <tr><td>加电容，空载</td><td class="n">≈ 1.414·V2</td><td>电容充到峰值后不再放电</td></tr>
+      <tr><td>半波加电容，正常负载</td><td class="n">≈ 1.0·V2</td><td>放电时间长一倍，纹波更大（经验值）</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><b>容量</b>：先定允许纹波 ΔV，再按 C ≥ I / (f·ΔV) 算。例如 1 A、纹波 1 V、桥式：C ≥ 1 / (100 × 1) = 10000 µF。</li>
+    <li><b>耐压</b>：按空载峰值 √2·V2 再考虑电网 +10% 波动，留足余量。</li>
+    <li><b>纹波电流</b>：电解电容要承受尖脉冲充电电流，发热由纹波电流有效值决定，要查规格书的纹波电流额定值。</li>
+    <li><b>开机浪涌</b>：上电瞬间电容电压为 0，相当于短路，冲击电流只受绕组和二极管内阻限制。二极管选型要看浪涌电流 IFSM，大容量时串 NTC 热敏电阻或做缓启动。</li>
+  </ul>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>电容滤波后纹波怎么估算？</summary>
+      <div class="ans"><p>ΔV ≈ I / (f·C)。因为放电阶段电容独自供电，ΔV = I·Δt / C，放电时间近似一个纹波周期。f 是纹波频率，桥式和全波是 100 Hz，半波是 50 Hz。所以同样的电容，半波纹波约是桥式的两倍。</p></div></details>
+    <details><summary>桥式整流加电容滤波，输出电压是多少？</summary>
+      <div class="ans"><p>空载约 1.414·V2，也就是峰值；正常带载按 1.2·V2 估算；不加电容是 0.9·V2。负载越重，电容放电越多，输出越往下掉。</p></div></details>
+    <details><summary>为什么加了滤波电容后二极管电流是尖脉冲？</summary>
+      <div class="ans"><p>因为只有整流电压高于电容电压的一小段时间里二极管才导通，导通角很小。一个周期里要补回的电荷等于负载在整个周期消耗的电荷，时间短，电流峰值就要高，常常是负载电流的几倍到十几倍。电容越大，导通角越小，脉冲越尖。</p></div></details>
+    <details><summary>滤波电容是不是越大越好？</summary>
+      <div class="ans"><p>不是。电容越大纹波越小，但开机浪涌越大，二极管电流脉冲越尖，电网侧功率因数和谐波也更差，体积成本也上去了。按纹波要求算出来留一点余量即可，大容量时配 NTC 或缓启动。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="01-整流电路半波全波桥式.html"><span>上一页</span>整流电路半波全波桥式</a><a class="next" href="03-LC滤波.html"><span>下一页</span>LC滤波</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+function dio(g,x1,y1,x2,y2,lab){
+  const cx=(x1+x2)/2,cy=(y1+y2)/2,a=Math.atan2(y2-y1,x2-x1)*180/Math.PI;
+  g.append(svgEl('path',{class:'w',d:`M${x1},${y1} L${x2},${y2}`}));
+  const k=svgEl('g',{transform:`translate(${cx},${cy}) rotate(${a})`});
+  const tri=svgEl('polygon',{class:'r',points:'-8,-9 -8,9 8,0'});
+  k.append(tri,svgEl('path',{class:'w',d:'M8,-9 V9'}));g.append(k);
+  g.append(svgEl('text',{x:cx,y:cy-14,'text-anchor':'middle',class:'t'},lab));
+  return tri;
+}
+/* 仿真：桥式整流 + 电容 + 恒流负载，返回最后 40 ms 的采样 */
+const VPK=Math.SQRT2*12-1.4,RS=0.5,W=2*Math.PI*50;
+function simC(C,I){
+  const dt=5e-6,n=Math.round(0.08/dt),out=[];let vc=VPK;
+  for(let k=0;k<=n;k++){const t=k*dt,vs=Math.max(Math.abs(Math.SQRT2*12*Math.sin(W*t))-1.4,0);
+    const id=Math.max(vs-vc,0)/RS;
+    if(t>=0.04&&k%10===0)out.push({t:(t-0.04)*1e3,vs,vc,id});
+    vc+=(id-(vc>0?I:0))/C*dt;if(vc<0)vc=0;}
+  return out;
+}
+const pl=(arr,key,X,Y)=>arr.map(p=>X(p.t).toFixed(1)+','+Y(p[key]).toFixed(1)).join(' ');
+
+/* 1. 充放电 */
+const s1D=dio($('s1-d'),140,90,180,90,'D');
+const s1S=simC(2200e-6,0.5).filter(p=>p.t<=20.001),s1X=scale(0,20,50,400),s1Y=scale(0,16,370,262);
+$('s1-rec').setAttribute('points',pl(s1S,'vs',s1X,s1Y));
+$('s1-w').setAttribute('points',pl(s1S,'vc',s1X,s1Y));
+function s1u(){
+  const t=+$('s1-t').value,p=s1S.reduce((a,b)=>Math.abs(b.t-t)<Math.abs(a.t-t)?b:a),ch=p.id>0.01;
+  $('s1-tv').textContent=t+' ms';$('s1-t').setAttribute('aria-valuetext',t+' ms');
+  const x=s1X(p.t).toFixed(1);
+  ['x1','x2'].forEach(a=>$('s1-mk').setAttribute(a,x));$('s1-pt').setAttribute('cx',x);$('s1-pt').setAttribute('cy',s1Y(p.vc).toFixed(1));
+  chip($('s1-st'),ch?'充电，D 导通':'放电，D 截止',ch?'on':'off');
+  s1D.classList.toggle('lit',ch);
+  show($('s1-fc'),ch);show($('s1-fcc'),ch);show($('s1-fd'),!ch);
+  $('s1-vs').textContent=fmtV(p.vs,1);$('s1-vc').textContent=fmtV(p.vc,2);$('s1-vo').textContent=fmtV(p.vc,1);
+  $('s1-id').textContent=ch?fmtA(p.id):'0';
+  $('s1-note').textContent=ch?'整流电压比电容电压高，D 导通。电源一边给 RL 供电，一边把电容快速充回峰值附近，这一小段时间里二极管电流很大。'
+    :'整流电压已低于电容电压，D 反偏截止，电源和负载断开。负载电流全靠电容放电提供，电压按 I / C 的斜率缓慢下降，形成锯齿的斜边。';
+}
+$('s1-t').addEventListener('input',s1u);
+s1u();
+
+/* 2. 纹波与电流脉冲 */
+const s2C=[470,1000,1500,2200,3300,4700,10000],s2X=scale(0,40,50,490),s2Y=scale(0,20,140,24);
+function s2u(){
+  const C=s2C[+$('s2-c').value]*1e-6,I=(+$('s2-i').value+1)*0.1,S=simC(C,I);
+  $('s2-cv').textContent=s2C[+$('s2-c').value]+' µF';$('s2-c').setAttribute('aria-valuetext',$('s2-cv').textContent);
+  $('s2-iv').textContent=I.toFixed(1)+' A';$('s2-i').setAttribute('aria-valuetext',I.toFixed(1)+' A');
+  $('s2-rec').setAttribute('points',pl(S,'vs',s2X,s2Y));
+  $('s2-w').setAttribute('points',pl(S,'vc',s2X,s2Y));
+  const ipk=Math.max(...S.map(p=>p.id)),top=[2,5,10,20,40,80].find(v=>v>=ipk*1.05)||80,s2I=scale(0,top,290,190);
+  $('s2-i1').textContent=top;$('s2-i2').textContent=top/2;
+  $('s2-id').setAttribute('points',pl(S,'id',s2X,s2I));
+  const yl=s2I(I).toFixed(1);$('s2-il').setAttribute('y1',yl);$('s2-il').setAttribute('y2',yl);$('s2-ilt').setAttribute('y',(+yl-6).toFixed(1));
+  const vmax=Math.max(...S.map(p=>p.vc)),vmin=Math.min(...S.map(p=>p.vc)),dv=vmax-vmin;
+  const avg=S.reduce((a,p)=>a+p.vc,0)/S.length,on=S.filter(p=>p.id>0.01).length/S.length,df=I/(100*C);
+  $('s2-wl').setAttribute('y',Math.max(s2Y(vmax)-8,34).toFixed(1));
+  $('s2-dv').textContent=fmtV(dv);
+  $('s2-df').textContent=fmtV(df)+(df>VPK?'，已失效':'');
+  $('s2-av').textContent=fmtV(avg)+'，约 '+(avg/12).toFixed(2)+'·V2';
+  $('s2-ang').textContent=Math.round(on*180)+'°（共 180°）';
+  $('s2-ip').textContent=fmtA(ipk)+'，负载电流的 '+(ipk/I).toFixed(1)+' 倍';
+  let st,cls,note;
+  if(vmin<0.5){st='纹波过大';cls='bad';note='电容太小或负载太重，放电阶段电压一路掉到底，输出已接近没有滤波的脉动直流。I / (f·C) 这个估算只在纹波远小于输出时才成立。';}
+  else if(dv>0.15*avg){st='纹波偏大';cls='warn';note='纹波超过平均值的 15%，后级稳压器很可能掉出调整范围。加大电容或减小负载电流，纹波按 I / (f·C) 同比例下降。';}
+  else{st='纹波可接受';cls='on';note='纹波小、输出接近峰值。注意下图：导通角只有 '+Math.round(on*180)+'°，二极管在很短时间里把整个周期的电荷补回去，峰值电流是负载电流的 '+(ipk/I).toFixed(1)+' 倍。电容越大，这个脉冲越尖。';}
+  chip($('s2-st'),st,cls);$('s2-note').textContent=note;
+}
+$('s2-c').addEventListener('input',s2u);$('s2-i').addEventListener('input',s2u);
+s2u();
+</script>
+</body>
+</html>

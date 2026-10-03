@@ -1,0 +1,557 @@
+<title>电源硬件面试手册</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#eef1f2;
+  --surface:#ffffff;
+  --surface-2:#f7f9f9;
+  --ink:#182530;
+  --muted:#5a6b76;
+  --line:#d5dde0;
+  --accent:#a3541a;        /* 铜 / copper */
+  --accent-soft:#f4e4d6;
+  --steel:#2c5d78;         /* 钢蓝 */
+  --steel-soft:#e2edf2;
+  --good:#2e7d4f;
+  --warn:#b07a12;
+  --crit:#b23a3a;
+  --crit-soft:#f6e3e3;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#141b21;
+  --surface:#1c262e;
+  --surface-2:#222f38;
+  --ink:#e8eef1;
+  --muted:#93a5b0;
+  --line:#31414c;
+  --accent:#d98e4a;
+  --accent-soft:#3a2c1f;
+  --steel:#7db3cf;
+  --steel-soft:#1f333f;
+  --good:#6fbf8f;
+  --warn:#d4a94a;
+  --crit:#e08a8a;
+  --crit-soft:#3c2424;
+  color-scheme: dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#141b21; --surface:#1c262e; --surface-2:#222f38; --ink:#e8eef1;
+  --muted:#93a5b0; --line:#31414c; --accent:#d98e4a; --accent-soft:#3a2c1f;
+  --steel:#7db3cf; --steel-soft:#1f333f; --good:#6fbf8f; --warn:#d4a94a;
+  --crit:#e08a8a; --crit-soft:#3c2424; color-scheme: dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Noto Sans SC",-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.7;
+  padding-block:0 64px;
+  padding-inline:20px;
+}
+.wrap{max-width:1000px; margin:0 auto}
+h1,h2,h3{font-family:"Noto Serif SC",serif; text-wrap:balance; line-height:1.35}
+h2{font-size:1.5rem; font-weight:900; margin:0 0 6px}
+h3{font-size:1.08rem; font-weight:600; margin:0}
+p{margin:.4em 0}
+.mono{font-family:"JetBrains Mono",monospace; font-size:.86em}
+.muted{color:var(--muted)}
+a{color:var(--steel)}
+/* ---- top bar ---- */
+header.top{
+  position:sticky; top:0; z-index:10;
+  top:env(safe-area-inset-top,0px);
+  background:color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+  margin-inline:-20px; padding-inline:20px;
+}
+header.top nav{
+  max-width:1000px; margin:0 auto;
+  display:flex; gap:4px; overflow-x:auto; padding-block:8px;
+}
+header.top a{
+  white-space:nowrap; text-decoration:none; color:var(--muted);
+  font-size:.85rem; padding:4px 10px; border-radius:99px;
+}
+header.top a:hover{color:var(--ink); background:var(--surface-2)}
+/* ---- hero ---- */
+.hero{padding-block:44px 28px; border-bottom:1px solid var(--line)}
+.kicker{
+  font-size:.78rem; letter-spacing:.18em; color:var(--accent);
+  text-transform:uppercase; font-weight:500; margin:0 0 10px;
+}
+.hero h1{font-size:2rem; font-weight:900; margin:0 0 10px}
+.hero .lead{max-width:60ch; color:var(--muted)}
+.boards{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:24px}
+@media (max-width:640px){.boards{grid-template-columns:1fr}}
+.board-card{
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:10px; padding:16px 18px;
+  border-top:3px solid var(--steel);
+}
+.board-card.b2{border-top-color:var(--accent)}
+.board-card .tag{
+  display:inline-block; font-size:.72rem; letter-spacing:.08em;
+  color:var(--steel); background:var(--steel-soft);
+  padding:2px 9px; border-radius:99px; margin-bottom:8px;
+}
+.board-card.b2 .tag{color:var(--accent); background:var(--accent-soft)}
+.board-card h3{margin-bottom:6px}
+.board-card p{font-size:.9rem; color:var(--muted); margin:0}
+/* ---- sections ---- */
+section{padding-block:40px 8px}
+section > .sec-head{margin-bottom:18px}
+.sec-head .eyebrow{
+  font-size:.75rem; letter-spacing:.16em; color:var(--steel);
+  text-transform:uppercase; margin:0 0 4px;
+}
+.sec-head p{color:var(--muted); max-width:70ch; margin:4px 0 0}
+/* ---- flow chain ---- */
+.chain{
+  display:flex; flex-wrap:wrap; align-items:stretch; gap:8px;
+  margin:14px 0 6px;
+}
+.chain .node{
+  background:var(--surface); border:1px solid var(--line); border-radius:8px;
+  padding:8px 12px; font-size:.84rem; text-align:center;
+  display:flex; flex-direction:column; justify-content:center; min-width:0;
+}
+.chain .node b{font-size:.86rem}
+.chain .node span{font-size:.74rem; color:var(--muted)}
+.chain .arrow{align-self:center; color:var(--accent); font-weight:700}
+/* ---- tables ---- */
+.tblwrap{overflow-x:auto; margin:14px 0; border:1px solid var(--line); border-radius:10px}
+table{border-collapse:collapse; width:100%; min-width:640px; font-size:.87rem}
+th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top}
+th{
+  background:var(--surface-2); font-size:.76rem; letter-spacing:.06em;
+  color:var(--muted); text-transform:uppercase; white-space:nowrap;
+}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:nth-child(even){background:var(--surface-2)}
+td b.part{color:var(--accent)}
+/* ---- ripple layers ---- */
+.layers{display:grid; gap:12px; grid-template-columns:repeat(2,1fr); margin-top:14px}
+@media (max-width:720px){.layers{grid-template-columns:1fr}}
+.layer{
+  background:var(--surface); border:1px solid var(--line); border-radius:10px;
+  padding:14px 16px; font-size:.9rem;
+}
+.layer h3 b{color:var(--accent)}
+.layer ul{margin:8px 0 0; padding-left:1.2em}
+.layer li{margin-block:4px}
+/* ---- details / faq ---- */
+details{
+  background:var(--surface); border:1px solid var(--line); border-radius:10px;
+  padding:0; margin-bottom:10px; overflow:hidden;
+}
+summary{
+  cursor:pointer; padding:12px 16px; font-weight:500; font-size:.95rem;
+  list-style:none; display:flex; gap:10px; align-items:baseline;
+}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+"; color:var(--accent); font-weight:700; font-family:"JetBrains Mono",monospace}
+details[open] summary::before{content:"−"}
+details[open] summary{border-bottom:1px dashed var(--line)}
+details .body{padding:12px 16px 14px; font-size:.9rem}
+details .body p:first-child{margin-top:0}
+details .body p:last-child{margin-bottom:0}
+/* ---- severity chips ---- */
+.chip{
+  display:inline-block; font-size:.72rem; padding:1px 8px; border-radius:99px;
+  font-weight:500; white-space:nowrap;
+}
+.chip.crit{color:var(--crit); background:var(--crit-soft)}
+.chip.warn{color:var(--warn); background:color-mix(in srgb, var(--warn) 14%, transparent)}
+.chip.good{color:var(--good); background:color-mix(in srgb, var(--good) 14%, transparent)}
+/* ---- interview ---- */
+.qa{border-left:3px solid var(--steel); padding-left:16px; margin-bottom:22px}
+.qa.b2{border-left-color:var(--accent)}
+.qa .q{font-weight:700; margin-bottom:4px}
+.qa .q .no{font-family:"JetBrains Mono",monospace; color:var(--steel); margin-right:8px; font-size:.85rem}
+.qa.b2 .q .no{color:var(--accent)}
+.qa ul{margin:4px 0 0; padding-left:1.2em; color:var(--muted); font-size:.92rem}
+.qa ul b{color:var(--ink)}
+.qa .script{
+  margin-top:8px; background:var(--surface-2); border-radius:8px;
+  padding:10px 12px; font-size:.88rem; color:var(--ink);
+  border:1px dashed var(--line);
+}
+.qa .script::before{
+  content:"话术"; font-size:.68rem; letter-spacing:.1em; color:var(--accent);
+  display:block; margin-bottom:2px;
+}
+/* ---- metric tiles ---- */
+.metrics{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px}
+@media (max-width:640px){.metrics{grid-template-columns:1fr}}
+.metric{
+  background:var(--surface); border:1px solid var(--line); border-radius:10px;
+  padding:12px 14px;
+}
+.metric .v{font-family:"JetBrains Mono",monospace; font-size:1.15rem; font-weight:600; color:var(--steel)}
+.metric .l{font-size:.78rem; color:var(--muted)}
+footer{margin-top:48px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted); font-size:.82rem}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+</style>
+
+<header class="top">
+  <nav>
+    <a href="#overview">总结</a>
+    <a href="#arch">架构链路</a>
+    <a href="#bom">元器件选型</a>
+    <a href="#ripple">纹波处理</a>
+    <a href="#test">测试问题</a>
+    <a href="#qa">面试问答</a>
+    <a href="#tech">技术追问</a>
+  </nav>
+</header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="kicker">Hardware Interview Prep · 汇川电源硬件方向</p>
+  <h1>两块 PCB 的完整复盘</h1>
+  <p class="lead">以 <b>PCB1 电机控制通信板</b> 与 <b>PCB2 USB-PD 恒压恒流可调电源</b> 为素材，覆盖项目总结、选型逻辑、纹波处理、调试问题与面试答题要点。所有器件型号、参数均取自两块板的实际 BOM。</p>
+  <div class="boards">
+    <div class="board-card">
+      <span class="tag">PCB1</span>
+      <h3>12V 电机控制 + RS485 通信板</h3>
+      <p>DC005 12V 输入 → Buck(12V→5V) → LDO(5V→3.3V) → STM32F103；外挂有刷电机驱动 1.8A、MAX3485 隔离防护总线、OLED、四按键、SWD。</p>
+    </div>
+    <div class="board-card b2">
+      <span class="tag">PCB2</span>
+      <h3>USB-PD 快充恒压恒流电源</h3>
+      <p>Type-C → CH224Q 取电(最高 28V) → P-MOS 防反 → TPS5430 Buck(3A) → 20mΩ 采样 + 运放构成 CV/CC 双环竞争控制，输出电压、限流点均由电位器可调。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 总结 ================= -->
+<section id="overview">
+  <div class="sec-head">
+    <p class="eyebrow">Summary</p>
+    <h2>一页总结</h2>
+    <p>两块板正好覆盖电源硬件岗位最看重的两条线：一是<b>数字系统供电架构</b>（多级降压、模拟数字隔离、保护链），二是<b>功率变换与闭环控制</b>（拓扑选择、环路补偿、恒流恒压切换）。面试时用 PCB2 讲深度、用 PCB1 讲广度。</p>
+  </div>
+  <div class="metrics">
+    <div class="metric"><div class="v">12V→5V→3.3V</div><div class="l">PCB1 三级供电：Buck 粗调 + LDO 精滤，模拟电源走磁珠独立隔离</div></div>
+    <div class="metric"><div class="v">5~28V / 3A</div><div class="l">PCB2 输入范围：CH224Q 协议取电，TPS5430 拓扑留 36V 耐压裕量</div></div>
+    <div class="metric"><div class="v">CV / CC 双环</div><div class="l">PCB2 核心：电压环接 VSENSE，电流环经二极管 OR 注入反馈节点竞争控制</div></div>
+  </div>
+</section>
+
+<!-- ================= 架构 ================= -->
+<section id="arch">
+  <div class="sec-head">
+    <p class="eyebrow">Architecture</p>
+    <h2>架构与信号链</h2>
+  </div>
+
+  <h3 style="margin-bottom:2px">PCB1 · 供电与功能链</h3>
+  <div class="chain">
+    <div class="node"><b>DC005 插座</b><span>24V / 5A</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>船型开关</b><span>KCD1-101</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>SMAJ18A TVS</b><span>浪涌防护</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>2×100µF+100nF</b><span>储能滤波</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>U1 Buck 3A</b><span>12V→5V</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>U3 LDO 1A</b><span>5V→3.3V · PSRR 70dB</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>STM32F103</b><span>Cortex-M3 72MHz</span></div>
+  </div>
+  <p class="muted" style="font-size:.88rem">外设支路：电机驱动 U2(1.8A，4 路 PWM 各串 100Ω) · MAX3485 → 共模滤波器 L3 → SMAJ6.5CA×2 + SMAJ12CA + 120Ω 终端 · VDDA 经 600Ω 磁珠 + 1µF/100nF · 8MHz 晶振(内置 33pF) · OLED(I2C) · SWD 5P 调试口。</p>
+
+  <h3 style="margin:22px 0 2px">PCB2 · 功率与环路链</h3>
+  <div class="chain">
+    <div class="node"><b>Type-C 16P</b><span>VBUS / CC1·CC2</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>CH224Q</b><span>PD3.2 受电 · 5~28V</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>Q1 P-MOS</b><span>HP806P550S 60V/8A 防反</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>U5 TPS5430</b><span>500kHz Buck · D6 续流</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>470µF+22µF</b><span>输出滤波</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>R5 20mΩ</b><span>电流采样 2W/1%</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>J2 端子</b><span>VO_EXT 输出</span></div>
+  </div>
+  <p class="muted" style="font-size:.88rem">环路：<b>CV 环</b> — R13/R16 分压反馈至 VSENSE；<b>CC 环</b> — 电流检测放大器(U3)检测 20mΩ 压降，与 TL431 类基准(U2, VREF25≈2.5V)比较，经 TLV333(U4) 误差放大、1N4148+1kΩ 注入反馈节点。两环竞争：轻载 CV 主导，到达限流点 CC 环拉低反馈进入恒流。LED+MMBT3904 做状态指示。</p>
+</section>
+
+<!-- ================= 选型 ================= -->
+<section id="bom">
+  <div class="sec-head">
+    <p class="eyebrow">Component Selection</p>
+    <h2>元器件选型逻辑</h2>
+    <p>面试讲选型要答出三层：<b>约束是什么</b>（电压/电流/温度裕量）、<b>为什么是它</b>（与其他方案对比）、<b>代价是什么</b>（成本/体积/效率的取舍）。</p>
+  </div>
+
+  <h3 style="margin-bottom:2px">PCB1 · 电源与保护</h3>
+  <div class="tblwrap"><table>
+    <thead><tr><th>位置</th><th>器件</th><th>选型理由（面试答法）</th></tr></thead>
+    <tbody>
+      <tr><td>输入 TVS</td><td><b class="part mono">SMAJ18A</b></td><td>12V 输入，反向截止电压 18V 留 50% 裕量防误动作；400W 峰值功率吸收插拔浪涌；SMA 封装走线短、寄生小</td></tr>
+      <tr><td>输入储能</td><td><b class="part mono">100µF×2 电解 + 100nF</b></td><td>电解管低频储能（120Hz 纹波、线缆电感），100nF 就近吸收开关高频；双 100µF 分担纹波电流降低单颗温升</td></tr>
+      <tr><td>主降压 U1</td><td><b class="part mono">Buck 4.5~28V / 3A</b></td><td>输入耐压 28V：即使误插 24V 适配器也不损坏；输出 5V 给后级 LDO，降压比约 2.4，占空比与效率均衡；3A 覆盖电机驱动峰值</td></tr>
+      <tr><td>二级稳压 U3</td><td><b class="part mono">LDO 1A · 70dB@1kHz</b></td><td>Buck 纹波在数百 kHz，LDO 高频 PSRR 虽衰减但 70dB 已足够；3.3V 挂着 MCU/RS485/OLED，数字地弹不能进模拟域；压差 1.7V 的损耗（如 200mA×1.7V≈0.34W）可接受</td></tr>
+      <tr><td>模拟隔离</td><td><b class="part mono">磁珠 600Ω@100MHz</b></td><td>VDDA 独立供电：磁珠在高频呈阻性，消耗噪声能量而不产生谐振；配合 1µF+100nF 构成低通，保证 ADC 采样精度</td></tr>
+      <tr><td>RS485 防护</td><td><b class="part mono">MAX3485 + 共模扼流圈 + SMAJ6.5CA×2 + 120Ω</b></td><td>工业总线三件套：TVS 防线缆耦合浪涌（IEC61000-4-2），共模滤波器抑制共模干扰，120Ω 终端电阻匹配双绞线特征阻抗防反射；SMAJ12CA 跨接 A-B 防差模过压</td></tr>
+      <tr><td>PWM 串阻</td><td><b class="part mono">100Ω ×4</b></td><td>与驱动级输入电容构成 RC，抑制振铃、限制 di/dt，降低 EMI；阻值过大则边沿变缓、开关损耗上升，100Ω 是折中</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 style="margin:22px 0 2px">PCB2 · 功率与环路</h3>
+  <div class="tblwrap"><table>
+    <thead><tr><th>位置</th><th>器件</th><th>选型理由（面试答法）</th></tr></thead>
+    <tbody>
+      <tr><td>PD 取电</td><td><b class="part mono">CH224Q (DFN-10)</b></td><td>一颗芯片完成 PD3.2/PPS/AVS 协议，把普通快充头变成最高 28V 供电（EPR 140W），比专用高压适配器成本低、普及度高；4~30V 供电范围覆盖 VBUS 全档位；DFN 底部散热焊盘必须良好接地</td></tr>
+      <tr><td>防反接</td><td><b class="part mono">HP806P550S P-MOS</b></td><td>高边防反：S 极接输入、D 极接负载，上电瞬间体二极管先导通建立电压，沟道随后打开，导通压降仅 27mΩ×3A≈80mV，远优于二极管方案；60V/8A 裕量大；栅极接 10V 齐纳(D2)钳位防 VGS 过压击穿</td></tr>
+      <tr><td>主拓扑</td><td><b class="part mono">TPS5430 500kHz</b></td><td>500kHz 是纹波、体积、效率的折中点：频率低则电感大纹波大，太高则开关损耗占比上升；内置功率管简化设计；逐波限流+过流打嗝保护天然适配恒流源场景；ESOP-8 底部 EP 铺铜散热</td></tr>
+      <tr><td>续流管</td><td><b class="part mono">ST36B 肖特基 60V/3A</b></td><td>非同步 Buck 必备；肖特基低 Vf(0.5V@3A) 降低续流损耗；60V 耐压覆盖 SW 节点关断尖峰（Vin + 振铃裕量）</td></tr>
+      <tr><td>输出滤波</td><td><b class="part mono">470µF 电解(ESR 80mΩ) + 22µF 陶瓷</b></td><td>电解管低频段并吸收负载阶跃，850mA@100kHz 纹波电流额定值留裕量；陶瓷补中高频；注意电解 ESR 零点参与环路补偿，不能盲目堆低 ESR</td></tr>
+      <tr><td>采样电阻</td><td><b class="part mono">20mΩ / 2W / ±1% / 50ppm</b></td><td>恒流精度由它决定：3A×20mΩ=60mV 压降、0.18W 损耗，2W 封装温升低；50ppm/℃ 温漂保证满载发热时精度不漂移；20mΩ 阻值压降低、损耗小，但要求放大器失调电压足够小——所以配了专用电流检测放大器</td></tr>
+      <tr><td>基准</td><td><b class="part mono">TL431 类 2.5V · 50ppm/℃</b></td><td>环路精度的最终上限由基准决定，远优于从分压直接取 VCC；并联结构简单可靠</td></tr>
+      <tr><td>设定电位器</td><td><b class="part mono">3296W 10kΩ 多圈×2</b></td><td>分别设定输出电压与限流点；28 圈微调精度高，适合需要整定的模拟调节回路</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ================= 纹波 ================= -->
+<section id="ripple">
+  <div class="sec-head">
+    <p class="eyebrow">Ripple &amp; Noise</p>
+    <h2>电源纹波处理</h2>
+    <p>标准答法按「源 — 路 — 端」三层展开，再落到自己板子上的具体做法，最后用测量方法收尾。</p>
+  </div>
+  <div class="layers">
+    <div class="layer">
+      <h3><b>① 源</b> · 输入侧抑制</h3>
+      <ul>
+        <li>电解 + 陶瓷并联：电解管 120Hz~几十 kHz 低频与储能，陶瓷管数百 kHz 以上开关纹波</li>
+        <li>陶瓷电容<b>紧贴 Buck VIN 引脚</b>，走线短而宽——输入回路是 Buck 最大的 di/dt 环路</li>
+        <li>PCB2 前级 10µF/1210 X7R + SMAJ24A，PCB1 前级 100µF×2 + 100nF + SMAJ18A</li>
+      </ul>
+    </div>
+    <div class="layer">
+      <h3><b>② 路</b> · 功率回路布局</h3>
+      <ul>
+        <li>SW 节点环路（输入电容→开关管→SW→续流管）面积最小化，器件紧凑摆放</li>
+        <li>电感选型：ΔI = Vout×(1−D)/(L×fsw)，控制在额定的 20~40%；一体成型电感屏蔽好、抗饱和</li>
+        <li>电感 Isat &gt; 峰值电流，DCR 低降损耗；SW 节点铺铜面积适度——够散热即可，过大变成发射天线</li>
+      </ul>
+    </div>
+    <div class="layer">
+      <h3><b>③ 端</b> · 输出滤波与二次隔离</h3>
+      <ul>
+        <li>电解(低 ESR) + 陶瓷组合覆盖全频段；电解 ESR 零点参与环路补偿，需与补偿网络联调</li>
+        <li>敏感电路用 LDO 二次滤波（PSRR 70dB）+ 磁珠隔离模拟电源（VDDA 支路）</li>
+        <li>输出长线到端子时防电缆与陶瓷电容谐振：可加小串联电阻或磁珠阻尼</li>
+      </ul>
+    </div>
+    <div class="layer">
+      <h3><b>④ 测</b> · 测量方法（说出来很加分）</h3>
+      <ul>
+        <li>示波器探头<b>弹簧地</b>（去掉长鳄鱼夹地线），直接点在电容焊盘上，否则测的是天线不是纹波</li>
+        <li>20MHz 带宽限制下看纹波，全带宽看尖峰：纹波靠滤波解决，尖峰靠布局（环路面积）解决</li>
+        <li>区分纹波（开关频率及谐波）与噪声（振铃、耦合）：对症下药，不要盲目堆电容</li>
+        <li>两块板都预留了测试点（PCB2 的 TP1/TP7/TP8），专门测 VBUS、输出和反馈节点</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 测试 ================= -->
+<section id="test">
+  <div class="sec-head">
+    <p class="eyebrow">Debug &amp; Bring-up</p>
+    <h2>测试中可能遇到的问题</h2>
+    <p>调试经验是面试区分度最高的部分。每一条都按「现象 → 根因 → 解决」准备，能对上号最好，对不上也能展示排查思路。</p>
+  </div>
+
+  <h3 style="margin-bottom:2px">PCB1 · 控制板常见问题</h3>
+  <div class="tblwrap"><table>
+    <thead><tr><th>现象</th><th>等级</th><th>可能原因</th><th>排查 / 解决</th></tr></thead>
+    <tbody>
+      <tr><td>Buck 无输出或输出偏低</td><td><span class="chip crit">阻断</span></td><td>使能脚悬空被拉低；反馈分压电阻错焊；电感虚焊或换成了普通磁珠</td><td>先测 EN 脚电压与基准 0.596V 反馈点，再量 SW 节点有无方波——SW 有波形说明芯片工作，问题在输出级；SW 无波形查 VIN 与 EN</td></tr>
+      <tr><td>LDO 发烫 / 3.3V 跌落</td><td><span class="chip warn">热</span></td><td>压差×电流损耗过大（200mA→0.34W，SOT-23 封装扛不住）；后级短路</td><td>算热阻：θJA×P 是否超结温；断开后级分路排查短路；必要时换大封装 LDO 或提高前级效率</td></tr>
+      <tr><td>RS485 通信不通 / 丢包</td><td><span class="chip crit">功能</span></td><td>A/B 接反（最常见）；终端电阻缺失或重复匹配；共模电压超范围；波特率下走线过长</td><td>示波器看 A-B 差分波形是否正常翻转；确认总线只有两端各一个 120Ω；万用表测 A/B 对地共模电压；交换 A/B 验证</td></tr>
+      <tr><td>ADC 采样值跳动</td><td><span class="chip warn">精度</span></td><td>数字噪声耦合进 VDDA；参考电压不稳；采样时刻与 PWM 开关同步</td><td>检查磁珠+电容网络是否按图纸焊接；软件上让 ADC 采样避开电机开关时刻或做均值滤波；示波器挂 VDDA 看纹波</td></tr>
+      <tr><td>晶振不起振 / 时钟不稳</td><td><span class="chip crit">阻断</span></td><td>负载电容不匹配；焊接虚焊；用了有源/无源混淆</td><td>本设计选内置 33pF 负载电容的晶振规避此项；用示波器探头(高阻)探 OSC 引脚，注意探头电容会扰动起振</td></tr>
+      <tr><td>电机驱动级 PWM 振铃 / EMI 超标</td><td><span class="chip warn">EMC</span></td><td>100Ω 串阻缺失；走线过长形成天线；回路面积大</td><td>确认 R_PWM1~4 全部贴装；缩短驱动走线；必要时加大串阻或加 RC snubber</td></tr>
+      <tr><td>上电复位异常 / 掉电重启</td><td><span class="chip warn">时序</span></td><td>12V 适配器插拔浪涌使 TVS 动作拉低总线；NRST 电容容值不合适； Buck 软启动期间电流受限</td><td>示波器抓上电瞬间的 3.3V 与 NRST 波形；检查 C21(100nF on NRST) 与复位阈值；确认输入电容储能足够</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 style="margin:22px 0 2px">PCB2 · 电源板常见问题</h3>
+  <div class="tblwrap"><table>
+    <thead><tr><th>现象</th><th>等级</th><th>可能原因</th><th>排查 / 解决</th></tr></thead>
+    <tbody>
+      <tr><td>PD 不握手，VBUS 只有 5V</td><td><span class="chip crit">阻断</span></td><td>CC1/CC2 未正确接入 CH224Q；快充头不支持所需档位；协议芯片供电异常</td><td>确认 CC 走线与 SRC/Rp 协商；用支持 PD 的充电头+万用表逐档验证；测 CH224Q VDD；量 DP/DM 是否按 PPS 需要连接</td></tr>
+      <tr><td>防反 MOS 不导通 / 反接仍导通</td><td><span class="chip crit">阻断</span></td><td>S/D 接反（高边 P-MOS 必须体二极管指向负载）；栅极下拉电阻缺失导致关不住；齐纳钳位缺失使 VGS 超限</td><td>核对 S→VIN、D→VBUS 后级；上电时体二极管先建立电压，测压降应从 ~0.7V 降到 mV 级；确认 D2(10V 齐纳) 焊接</td></tr>
+      <tr><td>输出纹波超标</td><td><span class="chip warn">纹波</span></td><td>输出电容容量/ESR 不匹配；SW 环路大引入耦合；探头地线过长（假象）</td><td>先用弹簧地复核测量；示波器看纹波频率是否等于 500kHz 开关频率（是→正常滤波问题，否→寄生振荡）；加大输出电容或调整补偿</td></tr>
+      <tr><td>SW 节点尖峰振铃严重</td><td><span class="chip warn">振铃</span></td><td>续流二极管反向恢复 + 回路电感 LC 谐振；布线环路面积大</td><td>缩小功率环路布局；加 RC snubber（先估算振铃频率 f=1/2π√LC）；确认 ST36B 靠近 SW 与 GND</td></tr>
+      <tr><td>CV↔CC 切换点振荡</td><td><span class="chip crit">环路</span></td><td>两环经二极管竞争，切入瞬间增益特性突变；补偿零极点与输出电容极点冲突</td><td>调误差放大器补偿网络（积分电容 Cf）；检查电解 ESR 是否参与补偿；负载电子仪做阶跃测试观察恢复时间与过冲；确认 1N4148 注入支路 R11 阻值</td></tr>
+      <tr><td>恒流精度漂移</td><td><span class="chip warn">精度</span></td><td>20mΩ shunt 温漂与自热；电流放大器失调；基准 TL431 温漂</td><td>满载半小时后复测（自热平衡）；核算 shunt 功耗 0.18W vs 2W 额定；必要时换更低温漂采样电阻；用四位半表对比放大器输出</td></tr>
+      <tr><td>空载电压偏高或失控</td><td><span class="chip warn">空载</span></td><td>非同步 Buck 空载进入断续模式(DCM)，反馈点取压变化；无最小负载</td><td>加假负载电阻（毫安级）；确认反馈分压在 DCM 下的传递函数变化；示波器观察空载 SW 波形确认 DCM</td></tr>
+      <tr><td>效率偏低 / 板子发烫</td><td><span class="chip warn">热</span></td><td>电感 DCR 与 shunt 损耗叠加；非同步整流二极管损耗；TPS5430 EP 未充分接地</td><td>分段测损耗：电感温升、二极管压降×电流、shunt 0.18W；确认 EP 焊盘过孔阵列到地平面；必要时换同步拓扑</td></tr>
+      <tr><td>输出端子带载压降大</td><td><span class="chip warn">布局</span></td><td>输出到端子走线细；shunt 在反馈环路之外导致线损未补偿</td><td>加粗输出铺铜；反馈取样点尽量靠近端子（远端反馈），把线损纳入环路</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ================= 面试问答 ================= -->
+<section id="qa">
+  <div class="sec-head">
+    <p class="eyebrow">HR Round · 12 Questions</p>
+    <h2>二面问答要点</h2>
+    <p>按面经的 12 题逐条准备。第 2 题是唯一的技术深挖入口，用 PCB2 作主项目、PCB1 作补充，准备 3 分钟版本。</p>
+  </div>
+
+  <div class="qa">
+    <p class="q"><span class="no">01</span>自我介绍</p>
+    <ul>
+      <li>结构：学校专业 → 主攻方向 → 一句话带过两个项目 → 为什么投电源硬件</li>
+      <li>项目一句话：「做过一块 PD 快充取电的恒压恒流可调电源，和一块 12V 电机控制通信板，从选型、原理图、PCB 到调试闭环全流程。」</li>
+    </ul>
+  </div>
+
+  <div class="qa b2">
+    <p class="q"><span class="no">02</span>介绍一个项目，最大的挑战是什么 ⭐</p>
+    <ul>
+      <li><b>背景</b>：利用普及的 PD 快充头取电，做一个恒压/恒流可调的通用供电模块</li>
+      <li><b>方案</b>：CH224Q 协议取电 → P-MOS 防反 → TPS5430 Buck → 20mΩ 采样 + 运放构成 CV/CC 双环竞争控制</li>
+      <li><b>最大挑战（讲环路）</b>：恒压环与恒流环同时作用于同一反馈节点，切换点附近振荡；通过调整误差放大器补偿、确认电解 ESR 参与的环路特性、优化输出电容，实现负载阶跃下平滑切换</li>
+      <li><b>第二个挑战</b>：非同步 Buck 的 SW 振铃导致尖峰超标——缩短功率环路布局 + RC snubber 解决</li>
+    </ul>
+    <div class="script">这个项目最难的部分是两个控制环的耦合。恒压环直接接在芯片的反馈脚上，恒流环要经二极管把误差信号注入同一个节点，切换瞬间环路增益特性突变，输出在限流点附近会振荡。我从补偿网络入手，调整了误差放大器的零极点位置，同时确认了输出电容的 ESR 在补偿中的作用，最终在负载阶跃测试里实现了平滑的 CV 到 CC 切换。这件事让我真正理解了「电源不只是把电压变出来，环路才是它的灵魂」。</div>
+  </div>
+
+  <div class="qa">
+    <p class="q"><span class="no">03</span>对工作氛围的考虑</p>
+    <ul><li>结果导向 + 坦诚协作：硬件靠评审迭代，喜欢敢互相挑错的团队；可顺势反问团队评审机制</li></ul>
+  </div>
+
+  <div class="qa">
+    <p class="q"><span class="no">03b</span>自身不足</p>
+    <ul><li>选与岗位核心不冲突、有改进动作的：大功率电力电子（IGBT/SiC 驱动、三相逆变）还停留在仿真层面，项目以板级 DC-DC 为主，正在系统补齐</li></ul>
+  </div>
+
+  <div class="qa">
+    <p class="q"><span class="no">04</span>自身优势</p>
+    <ul>
+      <li>端到端能力：选型 → 原理图 → PCB 布局 → 焊接调试 → 环路整定</li>
+      <li>对电源细节有手感：纹波测量、环路补偿、热设计、保护链（TVS / 防反 / OCP）</li>
+      <li>能从失效倒推设计：板上每颗 TVS、齐纳、串阻都说得出防的是什么</li>
+    </ul>
+  </div>
+
+  <div class="qa">
+    <p class="q"><span class="no">05</span>与企业合作和在学校做项目的差异</p>
+    <ul><li>学校：能工作就行、单人闭环、成本与一致性约束弱；企业：BOM 成本、DFM、EMC 认证、量产一致性、跨部门协作</li><li>收尾：「所以我特别在意规范和评审流程，希望提前适应企业节奏」</li></ul>
+  </div>
+
+  <div class="qa">
+    <p class="q"><span class="no">06</span>对未来工作的规划</p>
+    <ul><li>1~2 年：吃透公司平台（规范、器件库、历史原理图），独立负责一块电源板</li><li>3~5 年：独立完成整机电源架构（拓扑选择、环路、热、EMC），向系统工程师发展</li></ul>
+  </div>
+
+  <div class="qa">
+    <p class="q"><span class="no">07</span>对汇川的看法</p>
+    <ul><li>工控国产替代头部（变频器/伺服份额领先）；业务延伸至新能源电驱、光伏储能；研发驱动</li><li>落到个人：「汇川驱动器的核心是电力电子+控制，我希望把环路设计能力从板级 DC-DC 提升到功率变换级别」</li></ul>
+  </div>
+
+  <div class="qa">
+    <p class="q"><span class="no">08</span>工作岗位的选择</p>
+    <ul><li>明确表态第一志愿电源硬件开发：已有 DC-DC 闭环项目积累，愿意从板级电源做起逐步接触功率变换</li></ul>
+  </div>
+
+  <div class="qa">
+    <p class="q"><span class="no">09</span>新入职怎么更快学新东西、融入环境</p>
+    <ul><li>学：先啃设计规范与历史原理图（最快的载体），问题记清单集中请教带教，自己搭板/仿真验证</li><li>融入：主动接小活、评审多提问、跟测试与生产同事学习，每个 bug 写复盘</li></ul>
+  </div>
+
+  <div class="qa">
+    <p class="q"><span class="no">10</span>设想未来工作会遇到哪些有挑战的事、怎么解决</p>
+    <ul>
+      <li><b>EMC 认证不过</b>：预设计预留滤波器与 snubber 位置，提前摸底测试，按频段定位差模/共模再对症下药</li>
+      <li><b>量产批次环路漂移振荡</b>：设计留裕量（相位裕量≥45°）、关键器件选低温漂、做极限批量验证</li>
+      <li><b>降成本与可靠性冲突</b>：用数据说话——降额分析证明哪些器件可降规格、哪些保护电路不能省</li>
+    </ul>
+  </div>
+
+  <div class="qa">
+    <p class="q"><span class="no">11</span>薪资</p>
+    <ul><li>不先报死数字：「更看重平台与成长，希望参考行业同岗位水平」；被追问时给出查过的区间并可谈</li></ul>
+  </div>
+
+  <div class="qa">
+    <p class="q"><span class="no">12</span>反问</p>
+    <ul>
+      <li>「入职第一年通常参与什么类型的项目？带教机制是怎样的？」</li>
+      <li>「团队硬件评审流程大概怎样？新人会参与到哪一步？」</li>
+      <li>「电源组目前主要做哪类拓扑？AC-DC 还是 DC-DC 模块为主？」</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= 技术追问 ================= -->
+<section id="tech">
+  <div class="sec-head">
+    <p class="eyebrow">Technical Follow-ups</p>
+    <h2>高频技术追问</h2>
+    <p>技术面大概率从你的项目细节往下钻，这些问题按「30 秒结论 + 展开逻辑」准备。</p>
+  </div>
+
+  <details>
+    <summary>Buck 的纹波电流怎么算？电感为什么选 10µH / 22µH？</summary>
+    <div class="body"><p>纹波电流 ΔI = Vout×(1−D)/(L×fsw)。以 PCB2 为例：28V 输入、5V 输出时 D≈0.18，fsw=500kHz，22µH 下 ΔI≈0.4A，约为满载 3A 的 13%，处于连续模式深区、磁芯损耗与铜损均衡的区间。电感过小则纹波大、轻载易进 DCM；过大则 DCR 损耗和体积上升、动态响应变慢。还要核对 Isat（5.5A）大于峰值电流 3A+ΔI/2，留足饱和裕量。</p></div>
+  </details>
+
+  <details>
+    <summary>恒压环和恒流环是怎么"竞争"的？二极管 OR 的原理？</summary>
+    <div class="body"><p>两个误差放大器的输出分别代表「电压偏差」和「电流偏差」，经二极管 OR 后只有偏差更大的那个环起作用（输出更低的拉低反馈节点）。轻载时电压环主导，输出恒压；负载加重到限流点，电流环误差变大、把反馈拉低，Buck 自动降低占空比进入恒流。二极管保证两环解耦，但切换点附近两环都在起作用的过渡区，就是振荡最容易出现的地方——补偿要保证过渡区仍有足够相位裕量。</p></div>
+  </details>
+
+  <details>
+    <summary>P-MOS 防反接为什么 S 极接输入？和理想二极管方案比呢？</summary>
+    <div class="body"><p>高边 P-MOS 防反的关键是体二极管方向：S 接输入、D 接负载，正接时体二极管先正向导通建立负载侧电压，VGS 随之拉开、沟道导通把体二极管旁路掉，压降从 0.7V 降到 I×RDS(on)（3A×27mΩ≈80mV）。反接时体二极管反向截止、VGS&gt;0 沟道关断，实现防反。相比专用理想二极管控制器，P-MOS 方案成本更低、更简单，代价是需要处理栅极驱动与 VGS 钳位（板上的 10V 齐纳）。</p></div>
+  </details>
+
+  <details>
+    <summary>TVS 怎么选？SMAJ18A 和 SMAJ24A 的区别体现了什么原则？</summary>
+    <div class="body"><p>TVS 三步选型：① 反向截止电压 Vrwm ≥ 工作电压（留 10~50% 裕量防误动作——12V 系统选 18V、PD 20V 档选 24V 就是这个原则）；② 钳位电压 VC ≤ 后级可承受的最大电压；③ 峰值脉冲功率按浪涌等级核算（400W@10/1000µs 覆盖 IEC61000-4-2 大部分场景）。两块板选不同型号正说明选型是跟着输入范围走的，不是抄一个型号到处用。</p></div>
+  </details>
+
+  <details>
+    <summary>为什么用 LDO 而不是两级 Buck？效率不是更低吗？</summary>
+    <div class="body"><p>单看效率 LDO 确实低（压差 1.7V），但两级 Buck 会引入两套开关噪声源，且第二级 Buck 在低压差下占空比极小、纹波抑制反而变差。LDO 的价值是 PSRR：把前级 Buck 的开关纹波压下去 70dB（1kHz 处），为 MCU/ADC/RS485 提供干净电源。这是「效率让位于噪声性能」的典型取舍，模拟供电普遍这么设计。</p></div>
+  </details>
+
+  <details>
+    <summary>电解电容的 ESR 对环路有什么影响？</summary>
+    <div class="body"><p>输出电容的 ESR 在环路传递函数里引入一个零点 f=1/(2π·ESR·C)。这个零点可以用来提升相位裕量（补偿补偿网络的极点），但如果换成超低 ESR 的陶瓷/固态电容，零点被推到高频、失去补偿作用，环路可能欠阻尼甚至振荡。所以换输出电容类型后必须重测环路（增益相位曲线或负载阶跃响应），不能只看纹波指标。</p></div>
+  </details>
+
+  <details>
+    <summary>RS485 为什么要 120Ω 终端电阻？加在哪、加几个？</summary>
+    <div class="body"><p>双绞线特征阻抗约 120Ω，终端不匹配时信号反射造成波形畸变、误码。终端电阻只加在总线拓扑的两端（各一个），星形/分支拓扑不适合加；多个终端电阻会并联拉低差分幅度、加重收发器负载。配合共模扼流圈和 TVS，构成工业总线的完整防护链。</p></div>
+  </details>
+
+  <details>
+    <summary>怎么实测一个电源的环路（波特图）？没有网络分析仪怎么办？</summary>
+    <div class="body"><p>标准做法是在反馈节点注入小信号（串联电阻 + 隔离变压器注入），扫频测回路增益与相位，读穿越频率和相位裕量。没有仪器时的替代：① 负载阶跃法——电子负载做 0.1→满载跳变，看过冲幅度与恢复时间反推阻尼；② 步进负载+示波器观察振铃频率估算穿越频率。面试说得出这两种替代方法，说明真的调过环路。</p></div>
+  </details>
+</section>
+
+<footer>
+  器件信息取自 PCB1 / PCB2 的网表（嘉立创 EDA 导出，2026-09-28）。实测数字（纹波、效率、调整率）请在面试前补齐——「实测输出纹波 30mVpp」比任何形容词都有说服力。
+</footer>
+
+</div>

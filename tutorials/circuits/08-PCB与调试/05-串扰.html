@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>串扰</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.trk{fill:none;stroke:var(--copper);stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.die{fill:var(--grid);stroke:var(--line);stroke-width:1}
+.cu{fill:var(--copper)}
+.cup{fill:var(--low);fill-opacity:.55}
+.dim{stroke:var(--muted);stroke-width:1;fill:none}
+.fx{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:4 3}
+.mk{stroke:var(--danger);stroke-width:1.2;stroke-dasharray:3 3}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#pcb">PCB与调试</a><span class="sp"></span><span>05 / 08</span></nav>
+<header>
+  <span class="eyebrow">PCB与调试 · 信号完整性</span>
+  <h1>串扰</h1>
+  <p class="lede">两根线靠得近，一根线上的边沿会通过电场和磁场，在另一根线上感应出噪声。弄清楚噪声从哪来、出现在哪一头，才知道拉开间距、缩短平行段、靠近地平面分别管什么用。</p>
+</header>
+
+<section id="mech">
+  <span class="eyebrow">容性耦合 · 感性耦合</span>
+  <h2>噪声从哪来：互容和互感</h2>
+  <p>发出信号的线叫攻击线，被干扰的线叫受害线。两线之间有互容 Cm 和互感 Lm。攻击线电压跳变，经 Cm 往受害线注入电流 i = Cm·dV/dt；攻击线电流跳变，经 Lm 在受害线上感应电压 v = Lm·dI/dt。两者都只在边沿出现，所以串扰看的是上升时间，不是时钟频率。</p>
+  <p>受害线靠近驱动端的一头叫近端，另一头叫远端。两种耦合在近端同号相加，在远端互相抵消：</p>
+  <p class="eq">NEXT = Kb·Va，Kb = (Cm/C + Lm/L) / 4</p>
+  <p class="eq">FEXT = −(Lm/L − Cm/C) / 2 · (Td / tr) · Va</p>
+  <p>Cm/C、Lm/L 是互容、互感占单线电容、电感的比例，Td 是耦合段的单程延时，tr 是攻击线上升时间，Va 是攻击线摆幅。Kb 是 2·Td ≥ tr 时的饱和值。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 266" role="img" aria-label="攻击线和受害线平行，中间有互容 Cm 和互感 Lm。受害线两端端接 50 欧，绿色虚线是受害线上的感应电流，下方是近端和远端的噪声波形">
+        <text x="230" y="22" text-anchor="middle" class="tm">攻击线：电压上升沿，电流向右</text>
+        <rect class="box" x="14" y="44" width="44" height="32" rx="4"/>
+        <text x="36" y="65" text-anchor="middle" class="t">驱动</text>
+        <rect class="box" x="402" y="44" width="44" height="32" rx="4"/>
+        <text x="424" y="65" text-anchor="middle" class="t">接收</text>
+        <path class="trk" d="M58,60 H402"/>
+        <path class="flow thin" d="M62,48 H398"/>
+        <path class="trk" d="M70,120 H390"/>
+        <path class="w" d="M70,120 H40 V132 M40,168 V180 M30,180 H50 M34,185 H46 M38,190 H42"/>
+        <path class="w" d="M390,120 H420 V132 M420,168 V180 M410,180 H430 M414,185 H426 M418,190 H422"/>
+        <rect class="r" x="31" y="132" width="18" height="36" rx="2"/>
+        <rect class="r" x="411" y="132" width="18" height="36" rx="2"/>
+        <text x="54" y="156" class="v">50 Ω</text>
+        <text x="406" y="156" text-anchor="end" class="v">50 Ω</text>
+        <circle class="dot" cx="70" cy="120" r="3.5"/>
+        <circle class="dot" cx="390" cy="120" r="3.5"/>
+        <text x="14" y="112" class="t">近端</text>
+        <text x="446" y="112" text-anchor="end" class="t">远端</text>
+        <text x="230" y="150" text-anchor="middle" class="tm">受害线</text>
+        <g id="s1-gc">
+          <path class="w" d="M170,64 V84 M162,84 H178 M162,92 H178 M170,92 V116 M290,64 V84 M282,84 H298 M282,92 H298 M290,92 V116"/>
+          <text x="182" y="93" class="v">Cm</text>
+          <text x="302" y="93" class="v">Cm</text>
+        </g>
+        <g id="s1-gl">
+          <ellipse class="fx" cx="230" cy="90" rx="30" ry="14"/>
+          <text x="230" y="95" text-anchor="middle" class="v">Lm</text>
+        </g>
+        <path id="s1-fc1" class="flow thin" d="M170,96 V110 H80"/>
+        <path id="s1-fc2" class="flow thin" d="M290,96 V110 H380"/>
+        <path id="s1-fl" class="flow thin" d="M380,131 H80"/>
+        <text x="20" y="198" class="t">近端 NEXT</text>
+        <text id="s1-vn" x="200" y="198" text-anchor="end" class="v">—</text>
+        <path class="ax" d="M20,202 V262 M20,232 H200"/>
+        <text x="200" y="246" text-anchor="end" class="tm">4 ns</text>
+        <polyline id="s1-wn" class="real" points="20,232 200,232"/>
+        <text x="260" y="198" class="t">远端 FEXT</text>
+        <text id="s1-vf" x="440" y="198" text-anchor="end" class="v">—</text>
+        <path class="ax" d="M260,202 V262 M260,232 H440"/>
+        <text x="440" y="246" text-anchor="end" class="tm">4 ns</text>
+        <polyline id="s1-wf" class="real2" points="260,232 440,232"/>
+      </svg>
+      <figcaption>绿色虚线流动的方向就是电流方向：最上面是攻击线电流；受害线上方是经 Cm 注入、向两头分流的容性耦合电流；受害线下方是互感感应出的电流，和攻击线电流反向。小波形横轴 0~4 ns，取 Td = tr = 1 ns、Va = 3.3 V，耦合比例为示意值。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">看哪种耦合</span>
+        <div class="seg" id="s1-m"><button id="s1-m-c" data-v="c" aria-pressed="false">只看容性</button><button id="s1-m-l" data-v="l" aria-pressed="false">只看感性</button><button id="s1-m-b" data-v="b" aria-pressed="true">两者叠加</button></div></div>
+      <div class="ctl"><span class="ctl-l">走线结构</span>
+        <div class="seg" id="s1-k"><button id="s1-k-ms" data-v="ms" aria-pressed="true">微带线 表层</button><button id="s1-k-sl" data-v="sl" aria-pressed="false">带状线 内层</button></div></div>
+      <dl class="read">
+        <dt>Cm / C</dt><dd id="s1-rc">—</dd>
+        <dt>Lm / L</dt><dd id="s1-rl">—</dd>
+        <dt>近端 NEXT</dt><dd id="s1-rn">—</dd>
+        <dt>远端 FEXT</dt><dd id="s1-rf">—</dd>
+        <dt>远端</dt><dd><span id="s1-st" class="chip warn">为负</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="geo">
+  <span class="eyebrow">间距 · 平行长度 · 参考平面高度</span>
+  <h2>3W 规则和另外两个旋钮</h2>
+  <p>耦合的强弱主要看两线的中心距 D 和它们到参考平面的高度 h。平面把大部分电场和磁场"吸"到自己身上，h 越小，漏到邻线的场越少。一个常用的经验估算：</p>
+  <p class="eq">Kb ≈ 1 / (1 + (D/h)²)（经验估算，只看趋势）</p>
+  <p>3W 规则说的是线中心距 D ≥ 3 倍线宽 W，也就是边缘间距至少 2W。50 Ω 表层线的线宽大约是 h 的 2 倍，按上式 3W 对应 Kb 约 3%。平行长度的影响分两头：NEXT 在耦合段往返延时 2·Td 超过 tr 后就饱和，再加长只是变宽；FEXT 则一直随长度线性增长。</p>
+  <p class="eq">饱和长度 Lsat = tr / (2·tpd)，tpd ≈ 6 ps/mm；tr = 0.5 ns 时约 42 mm</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 256" role="img" aria-label="PCB 俯视图：攻击线和受害线有一段平行，下方是剖面图，标出线中心距 D 和到地平面高度 h">
+        <text x="14" y="20" class="tm">俯视（横向缩小画，纵向按剖面比例的 1/4）</text>
+        <rect class="box" x="14" y="34" width="40" height="32" rx="4"/>
+        <text x="34" y="55" text-anchor="middle" class="t">驱动</text>
+        <rect class="box" x="406" y="34" width="40" height="32" rx="4"/>
+        <text x="426" y="55" text-anchor="middle" class="t">接收</text>
+        <path class="trk" style="stroke-width:8" d="M54,50 H406"/>
+        <path id="s2-vic" class="trk" style="stroke-width:8" d="M60,124 H400"/>
+        <circle class="dot" cx="60" cy="124" r="3.5"/>
+        <circle class="dot" cx="400" cy="124" r="3.5"/>
+        <text x="56" y="152" class="tm">近端</text>
+        <text x="404" y="152" text-anchor="end" class="tm">远端</text>
+        <path id="s2-dl" class="dim" d="M107,142 V134 M107,138 H347 M347,142 V134"/>
+        <text id="s2-dlt" x="227" y="154" text-anchor="middle" class="tm">平行 100 mm</text>
+        <text x="14" y="176" class="tm">剖面（放大）</text>
+        <path id="s2-dd" class="dim" d="M200,180 V186 M200,183 H260 M260,180 V186"/>
+        <text id="s2-ddt" x="230" y="176" text-anchor="middle" class="v">D</text>
+        <rect id="s2-die" class="die" x="110" y="196" width="240" height="15"/>
+        <rect id="s2-pl" class="cup" x="110" y="211" width="240" height="6"/>
+        <rect id="s2-ca" class="cu" x="185" y="190" width="30" height="6"/>
+        <rect id="s2-cv" class="cu" x="245" y="190" width="30" height="6"/>
+        <text id="s2-cat" x="200" y="233" text-anchor="middle" class="tm">攻击线</text>
+        <text id="s2-cvt" x="260" y="233" text-anchor="middle" class="tm">受害线</text>
+        <text id="s2-plt" x="104" y="217" text-anchor="end" class="tm">地平面</text>
+        <path id="s2-dh" class="dim" d="M362,196 V211 M356,196 H368 M356,211 H368"/>
+        <text id="s2-dht" x="372" y="208" class="v">h</text>
+      </svg>
+      <svg viewBox="0 0 460 222" role="img" aria-label="受害线近端和远端的串扰电压波形，红色虚线是正负 5% 的噪声预算">
+        <line class="gl" x1="56" y1="20" x2="440" y2="20"/>
+        <line class="gl" x1="56" y1="60" x2="440" y2="60"/>
+        <line class="gl" x1="56" y1="140" x2="440" y2="140"/>
+        <line class="gl" x1="56" y1="180" x2="440" y2="180"/>
+        <line class="ax" x1="56" y1="100" x2="440" y2="100"/>
+        <line class="mk" x1="56" y1="67" x2="440" y2="67"/>
+        <line class="mk" x1="56" y1="133" x2="440" y2="133"/>
+        <text x="436" y="62" text-anchor="end" class="tm">预算 +5%</text>
+        <path class="ax" d="M56,20 V180"/>
+        <text x="50" y="24" text-anchor="end" class="v">400</text>
+        <text x="50" y="64" text-anchor="end" class="v">200</text>
+        <text x="50" y="104" text-anchor="end" class="v">0</text>
+        <text x="50" y="144" text-anchor="end" class="v">−200</text>
+        <text x="50" y="184" text-anchor="end" class="v">−400</text>
+        <text x="60" y="14" class="tm">受害线电压 / mV</text>
+        <text x="56" y="198" text-anchor="middle" class="v">0</text>
+        <text x="152" y="198" text-anchor="middle" class="v">1</text>
+        <text x="248" y="198" text-anchor="middle" class="v">2</text>
+        <text x="344" y="198" text-anchor="middle" class="v">3</text>
+        <text x="440" y="198" text-anchor="end" class="v">4</text>
+        <text x="440" y="216" text-anchor="end" class="tm">时间 ns</text>
+        <polyline id="s2-nx" class="real" points="56,100 440,100"/>
+        <polyline id="s2-fx" class="real2" points="56,100 440,100"/>
+        <text id="s2-nxt" x="60" y="60" class="t" style="fill:var(--copper)">近端 NEXT</text>
+        <text id="s2-fxt" x="60" y="150" class="t" style="fill:var(--low)">远端 FEXT</text>
+      </svg>
+      <figcaption>示意模型：线宽 W = 0.2 mm，攻击线 3.3 V、上升时间 0.5 ns，受害线两端端接。FEXT 按表层微带线、Lm/L − Cm/C 取与 Kb 相同估算（和上一张图的比例一致）。超出 ±400 mV 的部分被截平。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-d">线中心距 D</label>
+        <span class="rv" id="s2-dv">0.40 mm</span>
+        <input type="range" id="s2-d" min="40" max="120" step="5" value="40"></div>
+      <div class="ctl"><label class="ctl-l" for="s2-l">平行长度</label>
+        <span class="rv" id="s2-lv">100 mm</span>
+        <input type="range" id="s2-l" min="5" max="200" step="5" value="100"></div>
+      <div class="ctl"><label class="ctl-l" for="s2-h">到参考平面高度 h</label>
+        <span class="rv" id="s2-hv">0.10 mm</span>
+        <input type="range" id="s2-h" min="5" max="15" step="1" value="10"></div>
+      <dl class="read">
+        <dt>D / W</dt><dd id="s2-rd">—</dd>
+        <dt>3W 规则</dt><dd id="s2-r3">—</dd>
+        <dt>Kb ≈ 1/(1+(D/h)²)</dt><dd id="s2-kb">—</dd>
+        <dt>耦合段延时 Td</dt><dd id="s2-td">—</dd>
+        <dt>近端 NEXT</dt><dd id="s2-rn">—</dd>
+        <dt>远端 FEXT</dt><dd id="s2-rf">—</dd>
+        <dt>串扰</dt><dd><span id="s2-st" class="chip bad">超预算</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="fix">
+  <span class="eyebrow">布线措施</span>
+  <h2>减小串扰的几种办法</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>措施</th><th>为什么有效</th><th>注意</th></tr></thead>
+    <tbody>
+      <tr><td>拉开间距，守 3W 规则</td><td>耦合随 (D/h)² 快速下降，间距翻倍，串扰约降到 1/4</td><td>3W 指中心距；时钟、复位等敏感线可以放宽到 5W 甚至更多</td></tr>
+      <tr><td>缩短平行长度</td><td>FEXT 正比于平行长度；NEXT 在饱和长度以内也正比于长度</td><td>平行段超过饱和长度后，NEXT 幅度不再下降，只能靠间距和 h</td></tr>
+      <tr><td>靠近参考平面</td><td>h 越小，场越集中在线和平面之间，漏到邻线的越少</td><td>在叠层阶段就决定了，见<a href="02-地平面与电源平面.html">地平面与电源平面</a>；参考平面不能被割断</td></tr>
+      <tr><td>中间加地保护线</td><td>挡住一部分电场，给耦合电流一条就近回地的路</td><td>保护线沿线要打一串地过孔（间距常取最高频率波长的 1/20 以内，典型值），悬空或只一端接地的保护线可能更糟</td></tr>
+      <tr><td>高速线走内层带状线</td><td>介质均匀时 Cm/C = Lm/L，FEXT 抵消</td><td>NEXT 仍然存在，间距规则照样要守</td></tr>
+      <tr><td>相邻信号层正交走线</td><td>上下层平行走线是宽边耦合，比同层耦合更强</td><td>两层信号中间最好隔一层地</td></tr>
+      <tr><td>放慢边沿</td><td>耦合电流 Cm·dV/dt、感应电压 Lm·dI/dt 都正比于变化率</td><td>在时序允许的范围内选慢一点的驱动，或加源端串联电阻</td></tr>
+    </tbody>
+  </table></div>
+  <p>差分线对外部串扰有天然的抗力：两根线上感应到的噪声近似相等，接收端相减后大部分抵消。但差分对之间、差分对和单端线之间，同样要守间距规则。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>什么是串扰？是怎么产生的？</summary>
+      <div class="ans"><p>一根线上的信号通过线间的互容和互感，在相邻线上感应出噪声。互容产生容性耦合电流 Cm·dV/dt，互感产生感性耦合电压 Lm·dI/dt。两者都只在边沿变化时出现，所以串扰的大小取决于上升时间，而不是信号频率。</p></div></details>
+    <details><summary>近端串扰和远端串扰有什么区别？</summary>
+      <div class="ans"><p>近端串扰 NEXT 出现在受害线靠近驱动端的一头，容性和感性两部分同号相加，幅度在耦合长度超过饱和长度后就不再增加，持续时间是耦合段往返延时 2·Td。远端串扰 FEXT 出现在另一头，两部分相减，是一个宽约 tr 的窄脉冲，幅度正比于耦合长度、反比于上升时间。表层微带线的 FEXT 为负，内层带状线的 FEXT 基本抵消。</p></div></details>
+    <details><summary>3W 规则是什么？为什么是 3W？</summary>
+      <div class="ans"><p>相邻走线的中心距不小于 3 倍线宽，也就是边缘间距至少 2W。耦合随距离平方快速衰减，对常见的 50 Ω 表层线，3W 时近端串扰约在 3% 以内，是面积和噪声之间比较划算的点。关键信号可以加严到 5W 或更多。</p></div></details>
+    <details><summary>布线时怎么减小串扰？</summary>
+      <div class="ans"><p>按效果排：拉开间距；让信号层紧贴完整参考平面，减小 h；缩短平行走线长度；敏感线走内层带状线；相邻信号层正交走线；必要时在两线之间加地保护线并沿线打地过孔；在时序允许时放慢边沿。</p></div></details>
+    <details><summary>地保护线一定有用吗？</summary>
+      <div class="ans"><p>不一定。保护线必须沿线多点打孔接地，否则它自己会被耦合上噪声，还可能谐振，把噪声再传给受害线。而且保护线要占空间，很多时候把原来的两根线直接拉开到同样距离，效果差不多。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="04-反射与阻抗匹配.html"><span>上一页</span>反射与阻抗匹配</a><a class="next" href="06-热设计.html"><span>下一页</span>热设计</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 容性与感性耦合 */
+const s1={m:'b',k:'ms'},s1K={ms:{c:.06,l:.10},sl:{c:.08,l:.08}},s1Va=3300;
+const s1Xn=scale(0,4,20,200),s1Xf=scale(0,4,260,440),s1Yv=v=>232-v/180*30;
+const s1Mv=v=>Math.abs(v)<1?'≈ 0':(v<0?'−':'+')+Math.abs(v).toFixed(0)+' mV';
+const s1N={
+  c:'攻击线电压上升，经互容 Cm 往受害线注入电流 i = Cm·dV/dt。电流进了受害线向两头分流，所以近端、远端都是正的。往近端走的那一半沿途陆续到达，铺成一段宽 2·Td 的平台；往远端走的那一半和攻击线的边沿同步前进，一路叠加，到远端变成一个窄而高的尖峰。',
+  l:'攻击线电流变化，它的磁场穿过受害线和地构成的回路，按楞次定律在受害线上感应出和攻击电流方向相反的电流，从远端流向近端。所以近端为正，远端为负。远端的负脉冲同样随边沿一路叠加。',
+  bms:'两种耦合同时存在。近端两者同号相加，NEXT 总是正的；远端一正一负互相抵消。表层微带线有一部分电场在空气里，容性耦合偏弱，感性占上风，所以 FEXT 为负。',
+  bsl:'带状线被均匀介质包住，Cm/C 正好等于 Lm/L，远端的两部分完全抵消，FEXT ≈ 0，只剩 NEXT。这是高速线常走内层的原因之一。'
+};
+function s1u(){
+  const k=s1K[s1.k],c=s1.m==='l'?0:k.c,l=s1.m==='c'?0:k.l;
+  const nx=(c+l)/4*s1Va,fx=-(l-c)/2*s1Va;/* 取 Td/tr = 1 */
+  const rp=t=>Math.max(0,Math.min(1,t));
+  $('s1-wn').setAttribute('points',plot(t=>s1Yv(nx*(rp(t)-rp(t-2))),0,4,s1Xn,y=>y,200));
+  $('s1-wf').setAttribute('points',plot(t=>s1Yv(t>=1&&t<=2?fx:0),0,4,s1Xf,y=>y,200));
+  show($('s1-gc'),s1.m!=='l');show($('s1-gl'),s1.m!=='c');
+  show($('s1-fc1'),s1.m!=='l');show($('s1-fc2'),s1.m!=='l');show($('s1-fl'),s1.m!=='c');
+  $('s1-rc').textContent=s1.m==='l'?'不计':k.c.toFixed(2);
+  $('s1-rl').textContent=s1.m==='c'?'不计':k.l.toFixed(2);
+  $('s1-rn').textContent=s1Mv(nx)+'，'+(nx/s1Va*100).toFixed(1)+'%';
+  $('s1-rf').textContent=s1Mv(fx)+(Math.abs(fx)<1?'':'，'+(Math.abs(fx)/s1Va*100).toFixed(1)+'%');
+  $('s1-vn').textContent=s1Mv(nx);$('s1-vf').textContent=s1Mv(fx);
+  if(Math.abs(fx)<1)chip($('s1-st'),'正负抵消','on');else chip($('s1-st'),fx<0?'为负':'为正','warn');
+  $('s1-note').textContent=s1.m==='b'?s1N['b'+s1.k]:s1N[s1.m];
+}
+seg('s1-m',v=>{s1.m=v;s1u();});
+seg('s1-k',v=>{s1.k=v;s1u();});
+s1u();
+
+/* 2. 间距、平行长度、参考平面高度 */
+const s2W=0.2,s2Va=3300,s2Tr=0.5,s2Tp=0.006,s2Sc=160;
+const s2X=scale(0,4,56,440),s2Y=v=>100-Math.max(-400,Math.min(400,v))*0.2;
+function s2u(){
+  const Dv=+$('s2-d').value,D=Dv/100,Lp=+$('s2-l').value,h=+$('s2-h').value/100;
+  const kb=1/(1+(D/h)*(D/h)),td=Lp*s2Tp,lsat=s2Tr/(2*s2Tp);
+  const nx=kb*s2Va*Math.min(1,2*td/s2Tr),fx=-0.5*kb*(td/s2Tr)*s2Va;
+  const rp=t=>Math.max(0,Math.min(1,t/s2Tr));
+  $('s2-nx').setAttribute('points',plot(t=>s2Y(kb*s2Va*(rp(t)-rp(t-2*td))),0,4,s2X,y=>y,400));
+  $('s2-fx').setAttribute('points',plot(t=>s2Y(t>=td&&t<=td+s2Tr?fx:0),0,4,s2X,y=>y,400));
+  $('s2-nxt').setAttribute('x',(s2X(s2Tr)+6).toFixed(1));$('s2-nxt').setAttribute('y',Math.max(34,s2Y(nx)-8).toFixed(1));
+  $('s2-fxt').setAttribute('x',(s2X(td+s2Tr)+6).toFixed(1));$('s2-fxt').setAttribute('y',Math.min(176,s2Y(fx)+16).toFixed(1));
+  /* 俯视 */
+  const yv=50+D*40,L=Lp*1.2,xs=(227-L/2).toFixed(1),xe=(227+L/2).toFixed(1);
+  $('s2-vic').setAttribute('d',`M60,124 H${(xs-24).toFixed(1)} L${xs},${yv.toFixed(1)} H${xe} L${(+xe+24).toFixed(1)},124 H400`);
+  $('s2-dl').setAttribute('d',`M${xs},142 V134 M${xs},138 H${xe} M${xe},142 V134`);
+  $('s2-dlt').textContent='平行 '+Lp+' mm';
+  /* 剖面 */
+  const hp=h*s2Sc,xa=230-D*s2Sc/2,xv=230+D*s2Sc/2,wp=s2W*s2Sc,yb=196+hp+6;
+  $('s2-die').setAttribute('height',hp.toFixed(1));$('s2-pl').setAttribute('y',(196+hp).toFixed(1));
+  $('s2-ca').setAttribute('x',(xa-wp/2).toFixed(1));$('s2-ca').setAttribute('width',wp);
+  $('s2-cv').setAttribute('x',(xv-wp/2).toFixed(1));$('s2-cv').setAttribute('width',wp);
+  $('s2-cat').setAttribute('x',xa.toFixed(1));$('s2-cat').setAttribute('y',(yb+16).toFixed(1));
+  $('s2-cvt').setAttribute('x',xv.toFixed(1));$('s2-cvt').setAttribute('y',(yb+16).toFixed(1));
+  $('s2-plt').setAttribute('y',yb.toFixed(1));
+  $('s2-dd').setAttribute('d',`M${xa},180 V186 M${xa},183 H${xv} M${xv},180 V186`);
+  $('s2-ddt').textContent='D '+D.toFixed(2)+' mm';
+  $('s2-dh').setAttribute('d',`M362,196 V${(196+hp).toFixed(1)} M356,196 H368 M356,${(196+hp).toFixed(1)} H368`);
+  $('s2-dht').setAttribute('y',(196+hp/2+4).toFixed(1));$('s2-dht').textContent='h '+h.toFixed(2)+' mm';
+  /* 读数 */
+  $('s2-dv').textContent=D.toFixed(2)+' mm';$('s2-d').setAttribute('aria-valuetext',D.toFixed(2)+' mm');
+  $('s2-lv').textContent=Lp+' mm';$('s2-l').setAttribute('aria-valuetext',Lp+' mm');
+  $('s2-hv').textContent=h.toFixed(2)+' mm';$('s2-h').setAttribute('aria-valuetext',h.toFixed(2)+' mm');
+  const ok3=Dv>=60;
+  $('s2-rd').textContent=(D/s2W).toFixed(2)+' W，边缘间距 '+(D-s2W).toFixed(2)+' mm';
+  $('s2-r3').textContent=ok3?'满足':'不满足，需 D ≥ 0.60 mm';
+  $('s2-kb').textContent=(kb*100).toFixed(1)+'%';
+  $('s2-td').textContent=(td*1000).toFixed(0)+' ps，饱和长度 '+lsat.toFixed(0)+' mm';
+  $('s2-rn').textContent=nx.toFixed(0)+' mV，'+(nx/s2Va*100).toFixed(1)+'%，'+(Lp<lsat?'未饱和':'已饱和');
+  $('s2-rf').textContent='−'+Math.abs(fx).toFixed(0)+' mV，'+(Math.abs(fx)/s2Va*100).toFixed(1)+'%';
+  const pk=Math.max(nx,Math.abs(fx))/s2Va;
+  if(pk>0.05)chip($('s2-st'),'超预算','bad');else if(pk>0.03)chip($('s2-st'),'接近预算','warn');else chip($('s2-st'),'可接受','on');
+  let n=pk>0.05?'串扰超过摆幅的 5%，会吃掉接收端的噪声容限，严重时误触发。':pk>0.03?'串扰在 5% 预算以内，但余量不多。':'串扰在 3% 以内，一般可以接受。';
+  n+=ok3?'':' 中心距不到 3W，先把线拉开。';
+  n+=Lp<lsat?' 平行段短于饱和长度，NEXT 还没长满，缩短平行段对 NEXT 和 FEXT 都有效。':' 平行段已超过饱和长度，再加长 NEXT 不变，只是平台变宽；FEXT 还在随长度线性增长。';
+  if(h>0.12)n+=' 参考平面偏远，同样的间距下 D/h 变小，耦合大得多。';
+  if(D/h<3)n+=' 线距只有 h 的 '+(D/h).toFixed(1)+' 倍，经验式在这里偏大，只看趋势。';
+  $('s2-note').textContent=n;
+}
+['s2-d','s2-l','s2-h'].forEach(id=>$(id).addEventListener('input',s2u));
+s2u();
+</script>
+</body>
+</html>

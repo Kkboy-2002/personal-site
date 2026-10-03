@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 08 课 参数化与 generate</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="08" data-root="../">
+
+<aside class="side">
+  <a class="brand" href="../index.html">Verilog 十二课<span>FPGA RTL 实训</span></a>
+  <ol></ol>
+  <div class="foot">
+    <button class="themer" type="button">主题</button>
+    <p>iverilog + GTKWave<br>Vivado / Quartus 可选</p>
+  </div>
+</aside>
+
+<main>
+<div class="ruler"></div>
+
+<p class="eyebrow">Lesson 08 <em>／ 复用与生成</em></p>
+<h1>参数化与 generate</h1>
+<p class="lede">同一个功能写第二遍,就说明第一遍写得不够通用。这一课把模块变成“可配置的零件”:位宽、级数、有没有某一块电路,全都由参数决定。<code>generate</code> 让你用四行代码生成八份相同的硬件,或者干脆让某块电路<em>根本不存在</em>。</p>
+
+<dl class="goals">
+  <dt>学完这一课你能</dt>
+  <dd>分清 <code>parameter</code>、<code>localparam</code> 和 <code>`define</code> 各自的场合</dd>
+  <dd>用 <code>generate for</code> 批量例化,并读懂 <code>gen_x[3].u_y</code> 这种层次路径</dd>
+  <dd>用 <code>generate if</code> 让一块电路按参数存在或消失</dd>
+  <dd>写出位宽任意的格雷码转换,并解释它为什么能用于跨时钟域</dd>
+</dl>
+
+<nav class="toc"><h2>本课路线</h2><ol></ol></nav>
+
+<h2 id="s1">三种“常量”,别搞混</h2>
+<div class="tw">
+<table>
+  <caption>parameter / localparam / `define</caption>
+  <thead><tr><th></th><th>作用域</th><th>能否被外部覆盖</th><th>用来做什么</th></tr></thead>
+  <tbody>
+    <tr><td><code>parameter</code></td><td>本模块</td><td><strong>能</strong>,例化时用 <code>#(.W(16))</code></td><td>位宽、深度、分频比 —— 一切调用者该决定的量</td></tr>
+    <tr><td><code>localparam</code></td><td>本模块</td><td>不能</td><td>状态编码、内部推导出来的常量</td></tr>
+    <tr><td><code>`define</code></td><td><strong>全局</strong>,从定义处到文件末尾(甚至跨文件)</td><td>用 <code>`undef</code> 取消</td><td>条件编译开关,别拿它当常量用</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="box pit">
+  <b>`define 是文本替换,不认作用域</b>
+  <p><code>`define W 8</code> 之后,<em>后面编译的所有文件</em>里的 <code>`W</code> 都被替换成 8。两个模块想用不同位宽就彻底冲突,而且报错信息指向替换后的行,极难定位。<strong>常量一律用 parameter / localparam</strong>,<code>`define</code> 只留给 <code>`ifdef SIM</code> 这类条件编译。</p>
+</div>
+
+<h2 id="s2">$clog2 和参数化的日常</h2>
+<p>参数化最常见的连锁反应是位宽:深度一改,地址线宽度就得跟着改。<code>$clog2</code> 把这件事自动化。</p>
+<figure class="file">
+  <figcaption><span class="path">写法示例</span><span class="note">参数之间可以互相引用,顺序从上到下</span></figcaption>
+  <div class="body"><pre><code>module fifo #(
+    parameter W     = 8,                 // 数据位宽
+    parameter DEPTH = 256,               // 深度
+    parameter AW    = $clog2(DEPTH)      // 地址位宽,由 DEPTH 推出来
+)(
+    input  wire [W-1:0]  din,
+    output wire [AW-1:0] used,           // 用了多少个位置
+    …
+);
+    localparam MAX_USED = DEPTH - 1;     // 内部常量,不给外面改
+    reg [W-1:0] mem [0:DEPTH-1];         // 存储阵列的两个维度都参数化了
+    …
+endmodule</code></pre></div>
+</figure>
+<div class="tw">
+<table>
+  <caption>$clog2 的取值,别记错</caption>
+  <thead><tr><th class="num">N</th><th class="num">$clog2(N)</th><th>能表示的范围</th><th>够不够计到 N</th></tr></thead>
+  <tbody>
+    <tr><td class="num">4</td><td class="num">2</td><td>0 – 3</td><td>不够(要 <code>$clog2(N+1)</code>)</td></tr>
+    <tr><td class="num">5</td><td class="num">3</td><td>0 – 7</td><td>够</td></tr>
+    <tr><td class="num">256</td><td class="num">8</td><td>0 – 255</td><td>不够</td></tr>
+    <tr><td class="num">257</td><td class="num">9</td><td>0 – 511</td><td>够</td></tr>
+  </tbody>
+</table>
+</div>
+<p>规律:<code>$clog2(N)</code> 位刚好够表示 <strong>0 到 N−1</strong>。当 <code>N</code> 是 2 的幂时最容易踩坑,因为差一位就是整个计数器失效(第 04 课练习一验证过这件事)。</p>
+
+<h2 id="s3">generate for:编译期展开</h2>
+<p><code>generate</code> 里的 <code>for</code> 和软件的循环<strong>完全不是一回事</strong>。它在编译期就被展开成 N 份并列的硬件,循环变量 <code>genvar</code> 只是个编译期的记号,芯片里根本没有它。</p>
+
+<figure class="dia">
+<svg viewBox="0 0 620 200" role="img" aria-label="generate for 的展开过程:四行循环代码在编译期展开成四个独立的触发器实例,分别命名为 g 中括号 0 到 3 点 u">
+  <defs>
+    <marker id="ar-8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon class="d-mk" points="0,1 10,5 0,9"/>
+    </marker>
+  </defs>
+
+  <text class="d-sub" x="139" y="40" text-anchor="middle">你写的四行</text>
+  <rect class="d-box" x="14" y="48" width="250" height="120"/>
+  <text class="d-tab" x="26" y="68">genvar i;</text>
+  <text class="d-tab" x="26" y="86">generate</text>
+  <text class="d-tab" x="26" y="104">  for (i=0; i&lt;4; i=i+1)</text>
+  <text class="d-tab" x="26" y="122">  begin : g</text>
+  <text class="d-tab" x="26" y="140">    dff u (.d(d[i]),.q(q[i]));</text>
+  <text class="d-tab" x="26" y="158">  end endgenerate</text>
+
+  <line class="d-arw-hl" x1="270" y1="108" x2="330" y2="108" marker-end="url(#ar-8)"/>
+  <text class="d-edge-hl" x="300" y="98" text-anchor="middle">编译期展开</text>
+
+  <text class="d-sub" x="465" y="40" text-anchor="middle">芯片里真实存在的四个实例</text>
+  <rect class="d-box" x="340" y="48" width="250" height="26"/>
+  <text class="d-tab" x="352" y="66">g[0].u   dff   d[0] → q[0]</text>
+  <rect class="d-box" x="340" y="82" width="250" height="26"/>
+  <text class="d-tab" x="352" y="100">g[1].u   dff   d[1] → q[1]</text>
+  <rect class="d-box" x="340" y="116" width="250" height="26"/>
+  <text class="d-tab" x="352" y="134">g[2].u   dff   d[2] → q[2]</text>
+  <rect class="d-box" x="340" y="150" width="250" height="26"/>
+  <text class="d-tab" x="352" y="168">g[3].u   dff   d[3] → q[3]</text>
+</svg>
+<figcaption><b>循环不是“跑四遍”,是“摊成四份”。</b>四个实例同时存在、同时工作,彼此毫无先后关系。右边那些名字不是装饰 —— <code>g[2].u</code> 就是波形窗口和时序报告里真正用来定位这个触发器的路径,所以 <code>begin : g</code> 那个<strong>名字必须起</strong>,而且要起得能看懂。</figcaption>
+</figure>
+
+<div class="box pit">
+  <b>generate 的 begin 必须命名</b>
+  <p><code>begin : gen_bit</code> 里的名字构成了层次路径。不起名字,有些工具直接报错,能过的工具也会给你生成 <code>genblk1</code> 这类自动名字 —— 于是波形里的路径变成 <code>u_top/genblk1[2]/u/q</code>,而且加一个 <code>generate</code> 块编号就全变了。<strong>起名字的成本是零,不起名字的成本是每次调试都要重新猜。</strong></p>
+</div>
+
+<h2 id="s4">generate if:让电路消失</h2>
+<p><code>generate if</code> 的条件必须是<strong>编译期常量</strong>(参数)。它决定的不是“运行时走哪条路”,而是“<em>要不要生成这块硬件</em>”。</p>
+<figure class="file">
+  <figcaption><span class="path">code/lesson08/pipe_reg.v</span><span class="note">可综合 · STAGES=0 时一个触发器都不生成</span></figcaption>
+  <div class="body"><pre><code>module pipe_reg #(
+    parameter W      = 8,        // 数据位宽
+    parameter STAGES = 3         // 流水级数,0 表示直通不打拍
+)(
+    input  wire         clk,
+    input  wire         rst_n,
+    input  wire [W-1:0] din,
+    output wire [W-1:0] dout
+);
+
+    generate
+        if (STAGES == 0) begin : gen_bypass
+            // 级数为 0 时,一个触发器都不生成,直接连线
+            assign dout = din;
+
+        end else begin : gen_pipe
+            reg [W-1:0] stage [0:STAGES-1];
+            integer k;
+
+            always @(posedge clk or negedge rst_n) begin
+                if (!rst_n) begin
+                    for (k = 0; k &lt; STAGES; k = k + 1)
+                        stage[k] &lt;= {W{1'b0}};
+                end else begin
+                    stage[0] &lt;= din;                    // 第一级收输入
+                    for (k = 1; k &lt; STAGES; k = k + 1)
+                        stage[k] &lt;= stage[k-1];         // 其余级依次往后传
+                end
+            end
+
+            assign dout = stage[STAGES-1];
+        end
+    endgenerate
+
+endmodule</code></pre></div>
+</figure>
+<p>这里有两种循环,别混:</p>
+<ul>
+  <li><code>generate</code> 外面那个 <code>if</code> —— 编译期判断,<strong>决定生成哪一块</strong>。</li>
+  <li><code>always</code> 里面的 <code>for</code>(用 <code>integer k</code>)—— 也是编译期展开,展开成 <code>stage[1]&lt;=stage[0]; stage[2]&lt;=stage[1];</code> 这样的并列语句。它<em>不是</em> <code>genvar</code> 循环,因为它没有例化东西,只是在生成赋值语句。</li>
+</ul>
+<div class="box tip">
+  <b>为什么 STAGES=0 要单独处理</b>
+  <p>因为 <code>reg [W-1:0] stage [0:-1];</code> 是非法的数组声明,编译直接报错。<code>generate if</code> 让这段代码在 <code>STAGES==0</code> 时<em>压根不参与编译</em> —— 这是它和运行时 <code>if</code> 最本质的区别。参数化模块要支持“退化情况”(0 级流水、深度 1 的 FIFO、位宽 1 的总线),几乎总要靠它。</p>
+</div>
+
+<h2 id="s5">格雷码:一个值得参数化的小零件</h2>
+<p>格雷码的性质是<strong>相邻两个值只差一位</strong>。这让它在两个地方不可替代:跨时钟域传计数值(第 06 课练习四),以及机械编码器(旋转到两格之间时,读数最多错一格而不是乱码)。</p>
+<figure class="file">
+  <figcaption><span class="path">code/lesson08/gray_conv.v</span><span class="note">可综合 · 一个文件里放了两个模块</span></figcaption>
+  <div class="body"><pre><code>// 二进制 → 格雷码
+// 规则:gray[i] = bin[i] ^ bin[i+1],最高位直接抄
+// 整个规则可以用一行移位加异或表达,不需要 generate
+module bin2gray #(
+    parameter W = 8
+)(
+    input  wire [W-1:0] bin,
+    output wire [W-1:0] gray
+);
+    assign gray = bin ^ (bin &gt;&gt; 1);
+endmodule
+
+
+// 格雷码 → 二进制
+// 规则:bin[i] = gray[W-1] ^ gray[W-2] ^ … ^ gray[i]
+// 每一位的表达式不同,用 generate 逐位生成
+module gray2bin #(
+    parameter W = 8
+)(
+    input  wire [W-1:0] gray,
+    output wire [W-1:0] bin
+);
+    genvar i;
+
+    generate
+        for (i = 0; i &lt; W; i = i + 1) begin : gen_bit
+            // gray &gt;&gt; i 之后高位补 0,归约异或正好等于 gray[W-1:i] 全部异或
+            assign bin[i] = ^(gray &gt;&gt; i);
+        end
+    endgenerate
+endmodule</code></pre></div>
+</figure>
+<div class="box tip">
+  <b>先想有没有一行写法,再想 generate</b>
+  <p><code>bin2gray</code> 本来也可以写成 <code>generate for</code> 逐位算 <code>gray[i] = bin[i] ^ bin[i+1]</code>,但 <code>bin ^ (bin &gt;&gt; 1)</code> 一行就完事、而且天生参数化。<code>gray2bin</code> 每一位的异或长度不同,才真的需要 <code>generate</code>。</p>
+  <p>判据:<strong>如果所有位的表达式形状相同,就用向量运算;只有形状逐位不同才用 generate。</strong></p>
+</div>
+
+<h2 id="s6">跑仿真</h2>
+<div class="term"><pre><span class="cmd">.\sim.bat lesson08 gray_tb</span>
+[TB] W=4,遍历全部 16 种取值
+[TB]  bin    gray   回转   与上一个相差几位
+     0000   0000   0000        0
+     0001   0001   0001        1
+     0010   0011   0010        1
+     0011   0010   0011        1
+     0100   0110   0100        1
+     0101   0111   0101        1
+     0110   0101   0110        1
+     0111   0100   0111        1
+     1000   1100   1000        1
+   ...
+     1111   1000   1111        1
+[结果] 往返一致,相邻只差一位 —— 全部通过
+
+<span class="cmd">.\sim.bat lesson08 pipe_reg_tb</span>
+[TB] 打一个 A5 进去。STAGES=3 应晚 3 拍出来,STAGES=0 应同拍出来
+[TB]  时刻     din   3级   0级
+[TB]   51 ns   a5    00    a5
+[TB]   71 ns   00    00    00
+[TB]   91 ns   00    00    00
+[TB]  111 ns   00    a5    00
+[TB]  131 ns   00    00    00
+[TB]  151 ns   00    00    00
+[TB]  171 ns   00    00    00
+[TB] A5 应出现在 0级 的第一行、3级 的第四行</pre></div>
+<p>格雷码那张表最值得盯的是最后一列:除了第一行(没有上一个可比),<strong>全是 1</strong>。这就是格雷码的全部价值。顺手看 <code>0111 → 1000</code> 这一步:二进制四位全翻,格雷码 <code>0100 → 1100</code> 只翻了最高位。</p>
+<div class="box tip">
+  <b>在波形里确认 generate 生成了几份</b>
+  <p>GTKWave 的 SST 面板里展开 <code>u_g2b</code>,能看到 <code>gen_bit[0]</code> 到 <code>gen_bit[3]</code> 四个子层级 —— 这就是 <code>generate for</code> 展开的直接证据。把 <code>W</code> 改成 6 再跑,层级会变成六个。<strong>看层级树是确认参数化生效的最快办法</strong>,比读综合报告快得多。</p>
+</div>
+
+<h2 id="ex">练习</h2>
+<ol class="tasks">
+<li>
+  <h3>换个位宽,看层级树<span class="lv">热身</span></h3>
+  <p>把 <code>gray_tb.v</code> 的 <code>W</code> 依次改成 3 和 6 重跑。3 位时应遍历 8 种、6 位时 64 种。在 GTKWave 里展开 <code>u_g2b</code>,数一数 <code>gen_bit</code> 有几个。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p><code>W=3</code> 时 8 行、3 个 <code>gen_bit</code>;<code>W=6</code> 时 64 行、6 个 <code>gen_bit</code>。DUT 一个字都没改。</p>
+    <p>顺手确认一件事:<code>bin2gray</code> 里没有 <code>generate</code>,所以它在层级树里<strong>没有子层级</strong> —— 一行向量运算就是一层。参数化不一定要靠 <code>generate</code>,这是本课的主要提醒。</p>
+  </div></details>
+</li>
+<li>
+  <h3>参数化位反转<span class="lv">动手</span></h3>
+  <p>写 <code>code/lesson08/bit_reverse.v</code>:任意位宽 <code>W</code>,把输入的比特顺序整个颠倒。写 TB 验 <code>W=8</code> 时 <code>8'b1100_1010</code> 反转成什么。这块电路占多少个 LUT?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <pre>module bit_reverse #(
+    parameter W = 8
+)(
+    input  wire [W-1:0] din,
+    output wire [W-1:0] dout
+);
+    genvar i;
+    generate
+        for (i = 0; i &lt; W; i = i + 1) begin : gen_rev
+            assign dout[i] = din[W-1-i];
+        end
+    endgenerate
+endmodule</pre>
+    <p><code>8'b1100_1010</code> 反转成 <code>8'b0101_0011</code>。</p>
+    <p>占 <strong>0 个 LUT</strong> —— 它只是把线换个接法,没有任何逻辑运算。这类“零成本”操作还包括固定位数的移位、拼接、取子段。<em>知道哪些操作免费,是估算资源的第一步。</em></p>
+    <p>用途:很多串行协议规定 LSB 先发(UART),而你的数据在寄存器里是 MSB 在左,反转一下就对齐了。第 10 课会遇到这个问题。</p>
+  </div></details>
+</li>
+<li>
+  <h3>功能可裁剪的计数器<span class="lv">动手</span></h3>
+  <p>写 <code>counter_cfg.v</code>:两个功能开关参数 —— <code>UPDOWN</code>(是否支持减计数)和 <code>LOADABLE</code>(是否支持置数)。用 <code>generate if</code> 让关掉的功能<strong>完全不生成硬件</strong>。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <pre>module counter_cfg #(
+    parameter W        = 8,
+    parameter UPDOWN   = 1,      // 1 = 生成减计数
+    parameter LOADABLE = 0       // 1 = 生成置数
+)(
+    input  wire         clk,
+    input  wire         rst_n,
+    input  wire         en,
+    input  wire         dir,       // 1=加 0=减(UPDOWN=0 时无效)
+    input  wire         load,
+    input  wire [W-1:0] load_val,
+    output reg  [W-1:0] cnt
+);
+    wire [W-1:0] step_val;
+
+    generate
+        if (UPDOWN) begin : gen_updown
+            assign step_val = dir ? cnt + 1'b1 : cnt - 1'b1;
+        end else begin : gen_uponly
+            assign step_val = cnt + 1'b1;      // 减法器根本不存在
+        end
+    endgenerate
+
+    generate
+        if (LOADABLE) begin : gen_load
+            always @(posedge clk or negedge rst_n) begin
+                if (!rst_n)    cnt &lt;= {W{1'b0}};
+                else if (load) cnt &lt;= load_val;
+                else if (en)   cnt &lt;= step_val;
+            end
+        end else begin : gen_noload
+            always @(posedge clk or negedge rst_n) begin
+                if (!rst_n)  cnt &lt;= {W{1'b0}};
+                else if (en) cnt &lt;= step_val;
+            end
+        end
+    endgenerate
+endmodule</pre>
+    <p>关掉的功能是真的不见了:<code>UPDOWN=0</code> 时没有减法器,<code>LOADABLE=0</code> 时 <code>cnt</code> 前面少一级选择器。<code>load</code> 和 <code>load_val</code> 两个端口还在(端口列表不能被 <code>generate</code> 裁剪),但没人用,综合时会被优化掉,只在综合日志里留一条“unused port”的提示。</p>
+    <p>这个模式在 IP 核里到处都是:一个模块带十几个功能开关,用户只为自己用到的功能付资源。</p>
+  </div></details>
+</li>
+<li>
+  <h3>genvar 和 integer 到底差在哪<span class="lv">想清楚</span></h3>
+  <p><code>gray2bin</code> 用 <code>genvar i</code>,<code>pipe_reg</code> 的 <code>always</code> 里用 <code>integer k</code>。为什么不能反过来?两种 <code>for</code> 循环有什么共同点?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p><strong><code>genvar</code> 是编译期的记号</strong>。它只在 <code>generate</code> 块展开的过程中存在,展开完就消失 —— 芯片里没有它,仿真波形里也看不到它。它的工作是给<em>被生成出来的东西</em>(实例、<code>assign</code>、命名块)编号。所以它只能出现在 <code>generate</code> 里。</p>
+    <p><strong><code>integer</code> 是一个真实存在的 32 位有符号变量</strong>,和 <code>reg</code> 一样属于运行时。放在 <code>always</code> 里当循环变量,或者在 Testbench 里计数。它不能用在 <code>generate</code> 的循环里,因为编译器展开时它还没有值。</p>
+    <p>共同点很关键:<strong>两种 <code>for</code> 都是展开,都不是“反复执行”</strong>。<code>always</code> 里的 <code>for (k=1; k&lt;STAGES; k=k+1) stage[k] &lt;= stage[k-1];</code> 综合出来就是 <code>STAGES-1</code> 条并列的赋值,不是一个会跑循环的电路。这也是为什么它的循环边界必须是常量 —— 边界不定,展开不出来。</p>
+    <p>一句话记法:<strong><code>genvar</code> 生成结构,<code>integer</code> 生成语句,两者都在编译期摊平。</strong></p>
+  </div></details>
+</li>
+</ol>
+
+<nav class="pager"></nav>
+</main>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

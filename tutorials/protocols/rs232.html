@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RS-232 工作流程 · 动态图解</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>RS-232 <span>串行接口</span>工作流程</h1>
+  <p>最经典的点对点串口标准 —— UART 逻辑 + 大摆幅负逻辑电平</p>
+</header>
+
+<nav>
+  <a href="index.html" class="home">🏠 协议总览</a>
+  <a href="#s1">① 连接拓扑</a>
+  <a href="#s2">② 电平标准</a>
+  <a href="#s3">③ DB9 引脚</a>
+  <a href="#s4">④ 硬件流控</a>
+  <a href="#s5">⑤ 特点与局限</a>
+</nav>
+
+<main>
+
+<!-- ① 拓扑 -->
+<section id="s1">
+  <h2><span class="num">1</span>连接拓扑:点对点、全双工</h2>
+  <p class="desc">
+    RS-232 的时序逻辑就是 UART,它规定的是<b>电气特性和接插件</b>。典型连接:PC(DTE 数据终端)通过
+    电平转换芯片(如 MAX232)与设备(DCE)相连。TXD/RXD 交叉,全双工,一对一。点击播放。
+  </p>
+  <div class="stage">
+    <svg id="svgTopo" viewBox="0 0 900 250" width="900" height="250">
+      <rect x="50" y="40" width="200" height="170" rx="14" fill="#1b2440" stroke="#2a3654" stroke-width="2"/>
+      <text x="150" y="72" fill="#e8edf7" font-size="17" text-anchor="middle" font-weight="bold">PC(DTE)</text>
+      <text x="150" y="94" fill="#5b6b8c" font-size="12" text-anchor="middle">UART + 电平转换</text>
+      <rect x="650" y="40" width="200" height="170" rx="14" fill="#1b2440" stroke="#2a3654" stroke-width="2"/>
+      <text x="750" y="72" fill="#e8edf7" font-size="17" text-anchor="middle" font-weight="bold">设备(DCE)</text>
+      <text x="750" y="94" fill="#5b6b8c" font-size="12" text-anchor="middle">调制解调器 / 仪器</text>
+      <line x1="250" y1="120" x2="650" y2="120" stroke="#4cc9f0" stroke-width="3"/>
+      <line x1="250" y1="155" x2="650" y2="155" stroke="#4ade80" stroke-width="3"/>
+      <line x1="250" y1="190" x2="650" y2="190" stroke="#5b6b8c" stroke-width="3"/>
+      <text x="450" y="112" fill="#4cc9f0" font-size="12" text-anchor="middle">TXD(3)→ RXD</text>
+      <text x="450" y="147" fill="#4ade80" font-size="12" text-anchor="middle">RXD(2)← TXD</text>
+      <text x="450" y="212" fill="#8fa0c0" font-size="12" text-anchor="middle">GND(5)共地</text>
+      <circle id="tb1" r="8" fill="#fbbf24" opacity="0"/>
+      <circle id="tb2" r="8" fill="#a78bfa" opacity="0"/>
+    </svg>
+  </div>
+  <div class="controls"><button id="btnTopo">▶ 播放:双向数据传输</button></div>
+  <div class="status" id="stTopo">最少 3 线即可工作:TXD、RXD、GND。距离建议 ≤15 米,速率通常 ≤115200bps。</div>
+</section>
+
+<!-- ② 电平 -->
+<section id="s2">
+  <h2><span class="num">2</span>电平标准:±12V 大摆幅,而且是「负逻辑」</h2>
+  <p class="desc">
+    这是 RS-232 最容易踩坑的一点:它与单片机 TTL 电平<b>不仅幅度不同,逻辑还是反的</b>——
+    逻辑 <b>1</b> 用 <b style="color:var(--lo)">-3V ~ -15V</b>,逻辑 <b>0</b> 用
+    <b style="color:var(--hi)">+3V ~ +15V</b>。所以单片机不能直接接 DB9,必须经过 MAX232 这类电平转换芯片。
+    播放动画对比同一串数据在两种电平下的波形。
+  </p>
+  <div class="stage">
+    <svg id="svgLv" viewBox="0 0 940 360" width="940" height="360">
+      <text x="60" y="42" fill="#4cc9f0" font-size="14" font-weight="bold">TTL 电平(单片机侧)</text>
+      <g stroke="#2a3654" stroke-width="1">
+        <line x1="90" y1="60" x2="910" y2="60"/><line x1="90" y1="110" x2="910" y2="110"/>
+      </g>
+      <text x="50" y="64" fill="#8fa0c0" font-size="11">3.3V</text>
+      <text x="58" y="114" fill="#8fa0c0" font-size="11">0V</text>
+      <path id="lvTTL" fill="none" stroke="#4cc9f0" stroke-width="3"/>
+      <text x="60" y="182" fill="#f0a04c" font-size="14" font-weight="bold">RS-232 电平(线缆侧,逻辑取反)</text>
+      <g stroke="#2a3654" stroke-width="1">
+        <line x1="90" y1="205" x2="910" y2="205"/>
+        <line x1="90" y1="255" x2="910" y2="255" stroke-dasharray="5 4"/>
+        <line x1="90" y1="305" x2="910" y2="305"/>
+      </g>
+      <text x="42" y="209" fill="#ff6b6b" font-size="11">+12V=0</text>
+      <text x="58" y="259" fill="#8fa0c0" font-size="11">0V</text>
+      <text x="44" y="309" fill="#4ade80" font-size="11">-12V=1</text>
+      <path id="lvRS" fill="none" stroke="#f0a04c" stroke-width="3"/>
+      <g id="lvGrid"></g>
+      <line id="lvScan" x1="0" y1="50" x2="0" y2="320" stroke="#fbbf24" stroke-width="2" opacity="0"/>
+      <text id="lvCur" x="470" y="345" fill="#fbbf24" font-size="15" text-anchor="middle" font-weight="bold"></text>
+    </svg>
+  </div>
+  <div class="controls"><button id="btnLv">▶ 播放:位序列 1 0 1 1 0 0 1 0</button></div>
+  <div class="status" id="stLv">±3V 以内是「不确定区」;大摆幅带来更强的抗干扰和更远的传输距离(相对 TTL 而言)。</div>
+</section>
+
+<!-- ③ DB9 -->
+<section id="s3">
+  <h2><span class="num">3</span>DB9 引脚:鼠标悬停查看每个引脚的作用</h2>
+  <p class="desc">最常用的 9 针接口(DTE 公头视角)。日常通信只用 2、3、5 三根,其余是调制解调器时代的握手信号。</p>
+  <div class="stage">
+    <svg id="svgDB9" viewBox="0 0 900 240" width="900" height="240">
+      <path d="M 250 60 L 650 60 Q 665 60 668 75 L 680 150 Q 683 168 665 168 L 235 168 Q 217 168 220 150 L 232 75 Q 235 60 250 60 Z"
+        fill="#1b2440" stroke="#8fa0c0" stroke-width="3"/>
+      <g id="db9pins"></g>
+      <text x="450" y="40" fill="#8fa0c0" font-size="13" text-anchor="middle">DB9 公头(正视)</text>
+    </svg>
+  </div>
+  <div class="field-info" id="dbInfo">👆 把鼠标移到引脚上试试。</div>
+</section>
+
+<!-- ④ 流控 -->
+<section id="s4">
+  <h2><span class="num">4</span>硬件流控:RTS / CTS 握手</h2>
+  <p class="desc">
+    发得太快、对方缓冲区装不下怎么办?硬件流控用两根额外的线解决:
+    发送方拉低 <b>RTS</b>(我想发),接收方缓冲区有空间就拉低 <b>CTS</b>(你可以发);
+    缓冲区快满时接收方撤销 CTS,发送方立刻暂停,数据一个不丢。点击播放全过程。
+  </p>
+  <div class="stage">
+    <svg id="svgFC" viewBox="0 0 900 300" width="900" height="300">
+      <rect x="50" y="60" width="190" height="180" rx="14" fill="#1b2440" stroke="#2a3654" stroke-width="2"/>
+      <text x="145" y="92" fill="#e8edf7" font-size="16" text-anchor="middle" font-weight="bold">发送方</text>
+      <rect x="660" y="60" width="190" height="180" rx="14" fill="#1b2440" stroke="#2a3654" stroke-width="2"/>
+      <text x="755" y="92" fill="#e8edf7" font-size="16" text-anchor="middle" font-weight="bold">接收方</text>
+      <!-- 接收缓冲区 -->
+      <rect x="700" y="120" width="110" height="26" rx="5" fill="#0a0f1c" stroke="#5b6b8c"/>
+      <rect id="fcBuf" x="700" y="120" width="0" height="26" rx="5" fill="#ff6b6b" opacity=".85"/>
+      <text x="755" y="168" fill="#8fa0c0" font-size="12" text-anchor="middle">接收缓冲区</text>
+      <!-- 信号线 -->
+      <line x1="240" y1="120" x2="660" y2="120" stroke="#4cc9f0" stroke-width="3"/>
+      <text x="450" y="112" fill="#4cc9f0" font-size="12" text-anchor="middle">TXD 数据 →</text>
+      <line id="fcRTS" x1="240" y1="170" x2="660" y2="170" stroke="#3a4460" stroke-width="3"/>
+      <text x="450" y="162" fill="#a78bfa" font-size="12" text-anchor="middle">RTS 请求发送 →</text>
+      <line id="fcCTS" x1="660" y1="215" x2="240" y2="215" stroke="#3a4460" stroke-width="3"/>
+      <text x="450" y="237" fill="#4ade80" font-size="12" text-anchor="middle">← CTS 允许发送</text>
+      <g id="fcBalls"></g>
+    </svg>
+  </div>
+  <div class="controls"><button id="btnFC">▶ 播放:流控全过程</button></div>
+  <div class="status" id="stFC">没有流控时只能靠软件协议(XON/XOFF)或祈祷对方处理得够快。</div>
+</section>
+
+<!-- ⑤ 特点 -->
+<section id="s5">
+  <h2><span class="num">5</span>特点与局限:为什么后来被 485 和 USB 取代</h2>
+  <table class="cmp">
+    <tr><th>维度</th><th>RS-232</th><th>说明</th></tr>
+    <tr><td>拓扑</td><td>点对点</td><td>只能一对一,无法组网</td></tr>
+    <tr><td>距离</td><td>≤15 m</td><td>单端信号,对地噪声直接叠加</td></tr>
+    <tr><td>速率</td><td>常用 ≤115.2 kbps</td><td>大电容负载限制摆率</td></tr>
+    <tr><td>电平</td><td>±3~±15V 负逻辑</td><td>需 MAX232 等转换芯片</td></tr>
+    <tr><td>抗干扰</td><td>一般</td><td>单端对地,不如差分</td></tr>
+  </table>
+  <div class="cards">
+    <div class="card"><b>为什么还在用?</b><br>简单、可靠、驱动免费——工控仪器、服务器 Console 口、调试串口至今大量使用。</div>
+    <div class="card"><b>被 RS-485 取代的场景</b><br>需要远距离(千米级)、多设备组网时,换成差分传输的 RS-485。</div>
+    <div class="card"><b>被 USB 取代的场景</b><br>PC 外设追求高速与即插即用;如今常见「USB 转串口」芯片(CH340/FT232)就是桥梁。</div>
+  </div>
+  <div class="status" style="margin-top:16px">
+    一句话总结:RS-232 = UART 时序 + ±12V 负逻辑电平 + 点对点 DB9 接口,胜在简单,败在距离、速度与组网。
+  </div>
+</section>
+
+</main>
+<footer>RS-232 工作流程动态图解 · <a href="index.html" style="color:var(--accent)">返回协议总览</a></footer>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const SVGNS="http://www.w3.org/2000/svg";
+function el(t,a,p){const e=document.createElementNS(SVGNS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ① 拓扑 */
+let tB=false;
+$("btnTopo").onclick=async()=>{
+  if(tB)return;tB=true;
+  const b1=$("tb1"),b2=$("tb2"),st=$("stTopo");
+  st.textContent="PC 发送 AT 指令,同时设备也在上报数据 —— 全双工互不等待。";
+  b1.setAttribute("opacity",1);b2.setAttribute("opacity",1);
+  b1.setAttribute("cy",120);b2.setAttribute("cy",155);
+  const t0=performance.now(),dur=2400;
+  await new Promise(res=>{(function s(now){
+    const p=Math.min((now-t0)/dur,1);
+    b1.setAttribute("cx",270+(630-270)*p);
+    b2.setAttribute("cx",630-(630-270)*p);
+    p<1?requestAnimationFrame(s):res();
+  })(t0);});
+  b1.setAttribute("opacity",0);b2.setAttribute("opacity",0);
+  st.textContent="传输完成。注意:线上跑的是 ±12V 的 RS-232 电平,进入芯片前要转回 TTL。";
+  tB=false;
+};
+
+/* ② 电平对比 */
+const lvBits=[1,0,1,1,0,0,1,0];
+(function grid(){
+  const g=$("lvGrid"),x0=90,bw=(910-90)/lvBits.length;
+  lvBits.forEach((b,i)=>{
+    el("line",{x1:x0+i*bw,y1:50,x2:x0+i*bw,y2:320,stroke:"#2a3654","stroke-dasharray":"4 5"},g);
+    const t=el("text",{x:x0+i*bw+bw/2,y:146,"font-size":15,"text-anchor":"middle",fill:"#fbbf24","font-weight":"bold"},g);
+    t.textContent=b;
+  });
+})();
+let lvB=false;
+$("btnLv").onclick=async()=>{
+  if(lvB)return;lvB=true;
+  const pT=$("lvTTL"),pR=$("lvRS"),scan=$("lvScan"),cur=$("lvCur");
+  pT.setAttribute("d","");pR.setAttribute("d","");
+  const x0=90,bw=(910-90)/lvBits.length;
+  const yT=b=>b?60:110;          // TTL: 1=高
+  const yR=b=>b?305:205;         // RS232: 1=-12V(下), 0=+12V(上)
+  let dT=`M ${x0} ${yT(lvBits[0])}`,dR=`M ${x0} ${yR(lvBits[0])}`;
+  scan.setAttribute("opacity",1);
+  for(let i=0;i<lvBits.length;i++){
+    const b=lvBits[i];
+    cur.textContent=b?`逻辑 1:TTL=3.3V(高) ←→ RS-232=-12V(负!)`:`逻辑 0:TTL=0V(低) ←→ RS-232=+12V(正!)`;
+    if(i>0){dT+=` L ${x0+i*bw} ${yT(b)}`;dR+=` L ${x0+i*bw} ${yR(b)}`;}
+    const t0=performance.now(),dur=600;
+    await new Promise(res=>{(function s(now){
+      const p=Math.min((now-t0)/dur,1),x=x0+i*bw+bw*p;
+      pT.setAttribute("d",dT+` L ${x} ${yT(b)}`);
+      pR.setAttribute("d",dR+` L ${x} ${yR(b)}`);
+      scan.setAttribute("x1",x);scan.setAttribute("x2",x);
+      p<1?requestAnimationFrame(s):res();
+    })(t0);});
+    dT+=` L ${x0+(i+1)*bw} ${yT(b)}`;dR+=` L ${x0+(i+1)*bw} ${yR(b)}`;
+  }
+  scan.setAttribute("opacity",0);
+  cur.textContent="对比完毕:两条波形正好上下颠倒 —— 这就是「负逻辑」。";
+  lvB=false;
+};
+
+/* ③ DB9 */
+const db9=[
+  {n:1,name:"DCD 载波检测",d:"调制解调器告诉终端:电话线上检测到了对方的载波信号。"},
+  {n:2,name:"RXD 接收数据",d:"★ 三大常用脚之一:本机从这根线接收数据。"},
+  {n:3,name:"TXD 发送数据",d:"★ 三大常用脚之一:本机从这根线发出数据。"},
+  {n:4,name:"DTR 终端就绪",d:"终端(PC)告诉设备:我已上电就绪。"},
+  {n:5,name:"GND 信号地",d:"★ 三大常用脚之一:公共参考地,没有它电平无从谈起。"},
+  {n:6,name:"DSR 设备就绪",d:"设备告诉终端:我已就绪,可以建立链路。"},
+  {n:7,name:"RTS 请求发送",d:"硬件流控:发送方请求发送数据。"},
+  {n:8,name:"CTS 允许发送",d:"硬件流控:接收方允许对方发送。"},
+  {n:9,name:"RI 振铃指示",d:"调制解调器检测到电话振铃时通知终端。"},
+];
+(function buildDB9(){
+  const g=$("db9pins"),info=$("dbInfo");
+  db9.forEach((p,i)=>{
+    const top=i<5;
+    const x=top?300+i*75:335+(i-5)*75;
+    const y=top?95:140;
+    const grp=el("g",{class:"frame-seg"},g);
+    p.c=el("circle",{cx:x,cy:y,r:15,fill:[1,2,4].includes(i)?"#26436b":"#1f2a47",stroke:"#8fa0c0","stroke-width":2},grp);
+    const t=el("text",{x,y:y+5,"font-size":13,"text-anchor":"middle",fill:"#e8edf7","font-weight":"bold"},grp);
+    t.textContent=p.n;
+    grp.addEventListener("mouseenter",()=>{
+      db9.forEach(o=>o.c.setAttribute("stroke","#8fa0c0"));
+      p.c.setAttribute("stroke","#fbbf24");
+      info.innerHTML=`<b>引脚 ${p.n} · ${p.name}</b> —— ${p.d}`;
+    });
+  });
+})();
+
+/* ④ 流控 */
+let fcB=false;
+$("btnFC").onclick=async()=>{
+  if(fcB)return;fcB=true;
+  const st=$("stFC"),rts=$("fcRTS"),cts=$("fcCTS"),buf=$("fcBuf"),balls=$("fcBalls");
+  rts.setAttribute("stroke","#3a4460");cts.setAttribute("stroke","#3a4460");
+  buf.setAttribute("width",0);buf.setAttribute("fill","#4ade80");balls.innerHTML="";
+  st.textContent="① 发送方有数据要发,拉有效 RTS:「我想发送」";
+  rts.setAttribute("stroke","#a78bfa");
+  await sleep(1400);
+  st.textContent="② 接收方缓冲区还空,拉有效 CTS:「可以,发吧」";
+  cts.setAttribute("stroke","#4ade80");
+  await sleep(1400);
+  st.textContent="③ 数据流动,接收缓冲区逐渐填满……";
+  let w=0;
+  const sendBall=async()=>{
+    const b=el("circle",{cx:270,cy:120,r:6,fill:"#fbbf24"},balls);
+    const t0=performance.now(),dur=700;
+    await new Promise(res=>{(function s(now){
+      const p=Math.min((now-t0)/dur,1);
+      b.setAttribute("cx",270+(640-270)*p);
+      p<1?requestAnimationFrame(s):res();
+    })(t0);});
+    b.remove();
+  };
+  for(let i=0;i<5;i++){
+    await sendBall();
+    w+=20;buf.setAttribute("width",w);
+    if(w>=80)buf.setAttribute("fill","#ff6b6b");
+  }
+  st.textContent="④ 缓冲区快满!接收方撤销 CTS:「停一下!」发送方立即暂停。";
+  cts.setAttribute("stroke","#3a4460");
+  await sleep(1800);
+  st.textContent="⑤ 接收方处理数据,缓冲区腾空……";
+  for(let i=0;i<4;i++){await sleep(400);w-=25;buf.setAttribute("width",Math.max(w,0));}
+  buf.setAttribute("fill","#4ade80");
+  st.textContent="⑥ 缓冲区有空间了,重新拉有效 CTS,传输继续 —— 全程零丢包。";
+  cts.setAttribute("stroke","#4ade80");
+  for(let i=0;i<3;i++){await sendBall();w+=20;buf.setAttribute("width",w);}
+  st.textContent="流控演示完毕:RTS/CTS 就像水龙头开关,按接收能力实时调节流量。";
+  fcB=false;
+};
+</script>
+</body>
+</html>

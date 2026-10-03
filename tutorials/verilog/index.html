@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verilog 十二课</title>
+<meta name="description" content="从与门到 UART 的 Verilog 实训课,每课配可综合 RTL、Testbench、波形与练习。">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-root="">
+
+<aside class="side">
+  <a class="brand" href="index.html">Verilog 十二课<span>FPGA RTL 实训</span></a>
+  <ol></ol>
+  <div class="foot">
+    <button class="themer" type="button">主题</button>
+    <p>iverilog + GTKWave<br>Vivado / Quartus 可选</p>
+  </div>
+</aside>
+
+<main>
+<div class="ruler"></div>
+
+<header class="hero">
+  <p class="eyebrow">Verilog-2001 <em>／ 仿真优先 ／ 00 → 11</em></p>
+  <h1>Verilog 十二课</h1>
+  <p>从一个两输入与门,练到能跑回环自检的 UART 收发器。每一课都配可综合的 <code>.v</code> 源码、能直接跑的 Testbench、该看的那几根波形,以及必须自己写完才算学会的练习。</p>
+</header>
+
+<div class="step-entry">
+  <div><strong>让寄存器的变化看得见</strong><p>15 个电路示例，左侧代码、右侧寄存器。单步、回退、看波形，也能修改代码后重新仿真。</p></div>
+  <a class="step-button" href="playground.html">打开网页步进台 →</a>
+</div>
+
+<div class="stats">
+  <div><b>12</b><span>节课 · 00 → 11</span></div>
+  <div><b>48</b><span>道练习 · 每课 4 题</span></div>
+  <div><b>iverilog</b><span>免费工具链全程够用</span></div>
+</div>
+
+<figure class="dia">
+<svg viewBox="0 0 920 210" role="img" aria-label="仿真闭环:写 RTL 经 iverilog 编译成 vvp 文件,运行后产生 vcd 波形,用 GTKWave 观察;波形不对则回到 RTL 修改,波形通过后才进入综合上板">
+  <defs>
+    <marker id="ar-h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon class="d-mk" points="0,1 10,5 0,9"/>
+    </marker>
+    <marker id="arh-h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon class="d-mk-hl" points="0,1 10,5 0,9"/>
+    </marker>
+  </defs>
+
+  <rect class="d-box" x="10"  y="58" width="136" height="54"/>
+  <text class="d-txt" x="78"  y="81">写 RTL</text>
+  <text class="d-sub" x="78"  y="99">文本编辑器</text>
+
+  <rect class="d-box" x="201" y="58" width="136" height="54"/>
+  <text class="d-txt" x="269" y="81">iverilog</text>
+  <text class="d-sub" x="269" y="99">编译</text>
+
+  <rect class="d-box" x="392" y="58" width="136" height="54"/>
+  <text class="d-txt" x="460" y="81">vvp</text>
+  <text class="d-sub" x="460" y="99">跑仿真</text>
+
+  <rect class="d-box-hl" x="583" y="58" width="136" height="54"/>
+  <text class="d-txt" x="651" y="81">GTKWave</text>
+  <text class="d-sub" x="651" y="99">看波形</text>
+
+  <rect class="d-box-dash" x="774" y="58" width="136" height="54"/>
+  <text class="d-txt" x="842" y="81">Vivado</text>
+  <text class="d-sub" x="842" y="99">综合上板</text>
+
+  <line class="d-arw" x1="151" y1="85" x2="194" y2="85" marker-end="url(#ar-h)"/>
+  <text class="d-edge" x="173" y="76" text-anchor="middle">*.v</text>
+  <line class="d-arw" x1="342" y1="85" x2="385" y2="85" marker-end="url(#ar-h)"/>
+  <text class="d-edge" x="364" y="76" text-anchor="middle">*.vvp</text>
+  <line class="d-arw" x1="533" y1="85" x2="576" y2="85" marker-end="url(#ar-h)"/>
+  <text class="d-edge" x="555" y="76" text-anchor="middle">*.vcd</text>
+  <line class="d-arw-dash" x1="724" y1="85" x2="767" y2="85" marker-end="url(#ar-h)"/>
+  <text class="d-edge" x="746" y="76" text-anchor="middle">通过</text>
+
+  <polyline class="d-arw-hl" points="651,112 651,170 78,170 78,116" marker-end="url(#arh-h)"/>
+  <text class="d-edge-hl" x="365" y="162" text-anchor="middle">波形不对 → 回去改代码</text>
+</svg>
+<figcaption><b>这门课的循环。</b>90% 的时间花在左边四个框里 —— 改代码、编译、跑、看波形。综合上板是波形通过之后才做的事,前十课不需要开发板也能全部完成。</figcaption>
+</figure>
+
+<h2 id="how">怎么上这套课</h2>
+<p>每一课的页面结构都一样,按顺序往下走就行:</p>
+<ol>
+  <li><strong>讲解</strong> —— 这一课的语法在硬件上到底对应什么,配波形或结构图。</li>
+  <li><strong>代码</strong> —— <code>code/lessonNN/</code> 下真实存在的 <code>.v</code> 文件,页面上的代码和磁盘上的完全一致。</li>
+  <li><strong>仿真</strong> —— 一条命令跑起来,以及“你应该看到什么”。看不到就是哪里错了。</li>
+  <li><strong>练习</strong> —— 4 道题,答案折叠着。<em>先自己写完再展开</em>,这是唯一一条硬规则。</li>
+</ol>
+<div class="box tip">
+  <b>只读不写等于没学</b>
+  <p>Verilog 的难点不在语法量,在于“这行代码综合出什么电路”。这件事只能靠自己写、跑仿真、看波形对不对,反复几十次形成直觉。所有练习都给了答案,但先写再看和直接看,结果完全不同。</p>
+</div>
+
+<h2 id="syllabus">课程清单</h2>
+<ol class="syllabus">
+  <li><a href="lessons/lesson00.html"><span class="n">00</span><span class="t">环境搭建与第一次仿真<span class="d">装好三样东西,把一个模块从编译一路跑到波形窗口。</span></span><span class="k">iverilog · vvp · $dumpfile</span></a></li>
+  <li><a href="lessons/lesson01.html"><span class="n">01</span><span class="t">模块、端口与 Testbench<span class="d">端口方向、位宽、例化,以及一个会自己判对错的 Testbench。</span></span><span class="k">module · input/output · $display</span></a></li>
+  <li><a href="lessons/lesson02.html"><span class="n">02</span><span class="t">组合逻辑:wire 与 assign<span class="d">运算符全表、拼接与归约,搭出全加器和优先编码器。</span></span><span class="k">assign · {} · ?:</span></a></li>
+  <li><a href="lessons/lesson03.html"><span class="n">03</span><span class="t">时序逻辑:always 与两种赋值<span class="d">触发器是怎么来的,阻塞与非阻塞到底差在哪一根波形上。</span></span><span class="k">posedge · 非阻塞 · 复位</span></a></li>
+  <li><a href="lessons/lesson04.html"><span class="n">04</span><span class="t">计数器、分频与流水灯<span class="d">计数器模板、用时钟使能取代分频,以及让仿真跑得动的技巧。</span></span><span class="k">计数器 · 时钟使能 · parameter</span></a></li>
+  <li><a href="lessons/lesson05.html"><span class="n">05</span><span class="t">if 与 case:译码与显示<span class="d">优先级还是并行,锁存器是怎么被写出来的,数码管动态扫描。</span></span><span class="k">case · default · 锁存器</span></a></li>
+  <li><a href="lessons/lesson06.html"><span class="n">06</span><span class="t">边沿检测与按键消抖<span class="d">打拍取沿、跨时钟同步,把机械抖动挡在逻辑外面。</span></span><span class="k">打两拍 · 沿脉冲 · 消抖</span></a></li>
+  <li><a href="lessons/lesson07.html"><span class="n">07</span><span class="t">状态机:三段式写法<span class="d">用序列检测器和交通灯,把三段式 FSM 写成肌肉记忆。</span></span><span class="k">FSM · Moore/Mealy · 编码</span></a></li>
+  <li><a href="lessons/lesson08.html"><span class="n">08</span><span class="t">参数化与 generate<span class="d">让一个模块适配任意位宽,批量例化出一整排相同电路。</span></span><span class="k">parameter · genvar · $clog2</span></a></li>
+  <li><a href="lessons/lesson09.html"><span class="n">09</span><span class="t">存储器:RAM、ROM 与 FIFO<span class="d">数组怎么被推断成块 RAM,以及同步 FIFO 的空满判断。</span></span><span class="k">$readmemh · ram_style · FIFO</span></a></li>
+  <li><a href="lessons/lesson10.html"><span class="n">10</span><span class="t">综合项目:UART 收发器<span class="d">发送、接收、波特率、过采样,最后用回环测试自己验证自己。</span></span><span class="k">UART · 过采样 · 自检 TB</span></a></li>
+  <li><a href="lessons/lesson11.html"><span class="n">11</span><span class="t">读懂时序图:SDRAM 初始化<span class="d">加餐。认识手册时序图的每一类标签,写出初始化状态机,用行为模型自检。</span></span><span class="k">时序图 · tRP/tRFC · 行为模型</span></a></li>
+</ol>
+
+<h2 id="tree">工程结构</h2>
+<figure class="file">
+  <figcaption><span class="path">D:\desktop\learn\FPGA</span><span class="note">页面与代码分开放,代码目录可以单独拷走</span></figcaption>
+  <div class="body"><pre>FPGA\
+├─ index.html              课程首页(就是本页)
+├─ README.md              工具链安装、命令速查、常见报错
+├─ assets\                样式与脚本(所有页面共用)
+│  ├─ style.css
+│  └─ app.js
+├─ playground.html        网页寄存器步进台
+├─ start-web.bat          启动网页版,支持修改代码后重新仿真
+├─ web\                   本地仿真服务与波形生成工具
+├─ lessons\               12 节课的讲解页
+│  ├─ lesson00.html  …  lesson11.html
+└─ code\                  真正能编译的 Verilog 工程
+   ├─ sim.bat             Windows 一键仿真
+   ├─ sim.sh              Linux / WSL / MSYS2 一键仿真
+   ├─ build\              编译产物与 .vcd 波形(自动生成)
+   ├─ lesson01\           and_gate.v      and_gate_tb.v      mux4.v …
+   ├─ lesson02\           full_adder.v    adder8.v           prio_enc8.v …
+   ├─ …
+   ├─ lesson10\           uart_tx.v       uart_rx.v          uart_loop_tb.v
+   └─ lesson11\           sdram_init.v    sdram_model.v      sdram_init_tb.v</pre></div>
+</figure>
+<p>页面里出现的每一段带文件名的代码,磁盘上都有对应文件。想改就直接改,<code>sim.bat</code> 会重新编译。</p>
+
+<h2 id="quick">五分钟跑通第一个仿真</h2>
+<ol class="steps">
+  <li>按 <a href="lessons/lesson00.html">第 00 课</a> 装好 <strong>Icarus Verilog</strong>(自带 <code>iverilog</code> 和 <code>vvp</code>)与 <strong>GTKWave</strong>,在 PowerShell 里 <code>iverilog -V</code> 能打印版本号即算成功。</li>
+  <li>进入代码目录:<code>cd D:\desktop\learn\FPGA\code</code>。</li>
+  <li>跑第 01 课的与门仿真:<code>.\sim.bat lesson01 and_gate_tb</code>。</li>
+  <li>终端里应该出现 4 行真值表和 <code>[PASS]</code>,随后自动弹出 GTKWave 波形窗口。</li>
+  <li>跑通了就从 <a href="lessons/lesson00.html">第 00 课</a> 开始按顺序往下走。</li>
+</ol>
+
+<div class="term"><pre><span class="cmd">cd D:\desktop\learn\FPGA\code</span>
+<span class="cmd">.\sim.bat lesson01 and_gate_tb</span>
+[编译] iverilog -g2012 -s and_gate_tb -o build/and_gate_tb.vvp lesson01/*.v
+[运行] vvp build/and_gate_tb.vvp
+       a=0 b=0 -&gt; y=0   期望 0   [PASS]
+       a=0 b=1 -&gt; y=0   期望 0   [PASS]
+       a=1 b=0 -&gt; y=0   期望 0   [PASS]
+       a=1 b=1 -&gt; y=1   期望 1   [PASS]
+[结果] 4/4 通过,0 处不符
+[波形] gtkwave build/and_gate_tb.vcd</pre></div>
+
+<h2 id="bench">练习台:写完按 F5</h2>
+<p>课程页面负责讲,<strong>练习台</strong>负责练。它是一个桌面小程序,把讲解、编辑器、编译、仿真、报错定位装在一个窗口里 —— 你写代码按 <kbd>F5</kbd>,它调用你装好的 iverilog 跑自检 Testbench,编译错误直接标到出问题那一行。</p>
+<ol class="steps">
+  <li>装一次依赖:<code>python -m pip install PySide6</code></li>
+  <li>双击 <code>bench\start.bat</code>,或者命令行 <code>python bench/app.py</code></li>
+  <li>左边选题 → 中间写代码 → <kbd>F5</kbd> → 右下角看 <strong>PASS</strong> 还是错误行</li>
+</ol>
+<p>题库 12 道题,和 12 节课一对一,每题都有骨架、自检 Testbench 和参考答案。工具链会自动探测:本机
+ <code>PATH</code> 里没有 <code>iverilog</code> 就去 WSL 里找,路径转换自动做。细节见 <code>bench/README.md</code>。</p>
+<div class="box tip">
+  <b>练习台和课程页面的分工</b>
+  <p>课程页面里的练习答案是折叠着给你看的,靠自觉;练习台里的答案要按按钮才出来,而且<strong>先跑一遍测试再决定要不要看</strong>。两者内容互补 —— 页面上四道题偏理解,练习台这一道偏动手写完整模块。</p>
+</div>
+
+<div class="box pit">
+  <b>只有一条命令要记</b>
+  <p><code>.\sim.bat &lt;课程目录&gt; &lt;顶层 Testbench 名&gt;</code> —— 它会编译该目录下所有 <code>.v</code>、指定顶层、运行仿真、把波形丢到 <code>build\</code> 并打开 GTKWave。后面每一课的仿真步骤都是这一条命令换个参数。</p>
+</div>
+</main>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

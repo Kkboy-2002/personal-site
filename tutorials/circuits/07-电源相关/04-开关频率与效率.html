@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>开关频率与效率</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.ls-c{fill:var(--copper)}.ls-s{fill:var(--low)}.ls-d{fill:var(--flow)}.ls-k{fill:var(--warn)}
+.eta{fill:none;stroke:currentColor;stroke-width:2}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#power">电源相关</a><span class="sp"></span><span>04 / 08</span></nav>
+<header>
+  <span class="eyebrow">电源相关 · 损耗 · 频率取舍</span>
+  <h1>开关频率与效率</h1>
+  <p class="lede">开关频率越高，电感电容越小，但每开关一次都要交一笔"过路费"。这页把损耗拆成四块，看频率和负载怎么改变它们的比例，以及轻载时芯片为什么要切到 PFM。</p>
+</header>
+
+<section id="loss">
+  <span class="eyebrow">损耗分解 · 频率扫描</span>
+  <h2>四种损耗，哪些跟频率有关</h2>
+  <ul>
+    <li><b>导通损耗</b> = Irms²·(Rds(on) + DCR)。只和电流有关，和频率无关。频率高了电感可以小，DCR 反而降低。</li>
+    <li><b>开关损耗</b> ≈ ½·Vin·Iout·(tr + tf)·f + ½·Coss·Vin²·f。开关切换的瞬间电压和电流同时不为零，每次都要损耗一点，所以和 f 成正比。</li>
+    <li><b>驱动损耗</b> = Qg·Vdrv·f。每个周期都要给栅极充放电一次，和负载无关。</li>
+    <li><b>磁芯损耗</b>：磁滞和涡流，随频率和磁通摆幅变化，一般比前几项小。</li>
+  </ul>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 300" role="img" aria-label="柱状堆叠图：九个开关频率下的导通、开关、驱动、磁芯损耗，叠加效率曲线">
+        <rect class="ls-c" x="56" y="7" width="10" height="10"/><text x="70" y="16" class="tm">导通</text>
+        <rect class="ls-s" x="116" y="7" width="10" height="10"/><text x="130" y="16" class="tm">开关</text>
+        <rect class="ls-d" x="176" y="7" width="10" height="10"/><text x="190" y="16" class="tm">驱动</text>
+        <rect class="ls-k" x="236" y="7" width="10" height="10"/><text x="250" y="16" class="tm">磁芯</text>
+        <path class="eta" d="M300,12 H320"/><text x="324" y="16" class="tm">效率（右轴）</text>
+        <text x="56" y="38" class="tm">损耗 / W</text>
+        <text x="470" y="38" text-anchor="end" class="tm">效率 / %</text>
+        <line class="gl" x1="56" y1="48" x2="470" y2="48"/><line class="gl" x1="56" y1="98.5" x2="470" y2="98.5"/>
+        <line class="gl" x1="56" y1="149" x2="470" y2="149"/><line class="gl" x1="56" y1="199.5" x2="470" y2="199.5"/>
+        <g id="f1-bars"></g>
+        <path class="ax" d="M56,48 V250 H470 V48"/>
+        <text id="f1-l4" x="50" y="52" text-anchor="end" class="v">2</text>
+        <text id="f1-l2" x="50" y="153" text-anchor="end" class="v">1</text>
+        <text x="50" y="254" text-anchor="end" class="v">0</text>
+        <text x="476" y="52" class="v">100</text>
+        <text x="476" y="153" class="v">75</text>
+        <text x="476" y="254" class="v">50</text>
+        <g id="f1-xl"></g>
+        <text x="263" y="290" text-anchor="middle" class="tm">开关频率 / Hz</text>
+        <polyline id="f1-eta" class="eta" points="79,100 447,100"/>
+        <g id="f1-edot"></g>
+        <text id="f1-tot" x="263" y="60" text-anchor="middle" class="v">0.74 W</text>
+      </svg>
+      <figcaption>示意模型：同步 Buck，12 V 转 3.3 V；两管 Rds(on) 各 20 mΩ，开关沿 tr + tf = 20 ns，Coss 200 pF，Qg 5 nC、驱动 5 V；电感按 ΔIL = 0.9 A 设计，DCR 随感值变化。数值只用来看趋势。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="f1-f">开关频率 f</label>
+        <span class="rv" id="f1-fv">1 MHz</span>
+        <input type="range" id="f1-f" min="0" max="8" step="1" value="5"></div>
+      <div class="ctl"><span class="ctl-l">负载电流</span>
+        <div class="seg" id="f1-i"><button id="f1-i-01" data-v="0.1" aria-pressed="false">0.1 A 轻载</button><button id="f1-i-1" data-v="1" aria-pressed="false">1 A</button><button id="f1-i-3" data-v="3" aria-pressed="true">3 A 满载</button></div></div>
+      <dl class="read">
+        <dt>所需电感 L</dt><dd id="f1-L">2.66 µH</dd>
+        <dt>电感 DCR（示意）</dt><dd id="f1-dcr">13 mΩ</dd>
+        <dt>导通损耗</dt><dd id="f1-pc">0.30 W</dd>
+        <dt>开关损耗</dt><dd id="f1-ps">0.37 W</dd>
+        <dt>驱动损耗</dt><dd id="f1-pd">50 mW</dd>
+        <dt>磁芯损耗</dt><dd id="f1-pk">20 mW</dd>
+        <dt>效率</dt><dd id="f1-eff">93%</dd>
+        <dt>判断</dt><dd><span id="f1-st" class="chip on">合理</span></dd>
+      </dl>
+      <p class="note" id="f1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="light">
+  <span class="eyebrow">轻载效率 · PFM / PSM</span>
+  <h2>轻载时效率为什么掉得厉害</h2>
+  <p>开关损耗、驱动损耗和负载电流关系不大，每秒开关多少次就损耗多少。满载时它们只占一小部分，负载降到几毫安时，这些固定开销就比输出功率还大。</p>
+  <p>解决办法是轻载时少开关：PFM（脉冲频率调制，有的厂家叫 PSM 省电模式或 Burst 模式）。芯片每次打一个固定峰值电流的脉冲，把电容充上去，然后停下来等输出掉下去再打下一个。负载越轻，脉冲越稀，损耗跟着负载一起变小。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 340" role="img" aria-label="上图为强制 PWM 与自动 PFM 两种模式下效率随负载电流变化的曲线，下图为当前负载下的电感电流波形">
+        <line class="gl" x1="56" y1="30" x2="500" y2="30"/><line class="gl" x1="56" y1="60" x2="500" y2="60"/>
+        <line class="gl" x1="56" y1="90" x2="500" y2="90"/><line class="gl" x1="56" y1="120" x2="500" y2="120"/>
+        <line class="gl" x1="204" y1="30" x2="204" y2="150"/><line class="gl" x1="352" y1="30" x2="352" y2="150"/>
+        <path class="ax" d="M56,30 V150 H500"/>
+        <text x="60" y="22" class="tm">效率 / %</text>
+        <text x="50" y="34" text-anchor="end" class="v">100</text>
+        <text x="50" y="94" text-anchor="end" class="v">50</text>
+        <text x="50" y="154" text-anchor="end" class="v">0</text>
+        <text x="56" y="166" text-anchor="middle" class="v">1 mA</text>
+        <text x="204" y="166" text-anchor="middle" class="v">10 mA</text>
+        <text x="352" y="166" text-anchor="middle" class="v">100 mA</text>
+        <text x="500" y="166" text-anchor="end" class="v">1 A</text>
+        <text x="500" y="182" text-anchor="end" class="tm">负载电流（对数坐标）</text>
+        <polyline id="f2-cp" class="real2" points="56,140 500,40"/>
+        <polyline id="f2-cf" class="real3" points="56,50 500,40"/>
+        <text x="130" y="128" class="t" style="fill:var(--low)">强制 PWM</text>
+        <text x="130" y="40" class="t" style="fill:var(--flow)">自动 PFM</text>
+        <circle id="f2-m" class="dot" cx="204" cy="100" r="5"/>
+        <line class="gl" x1="56" y1="214.5" x2="500" y2="214.5"/>
+        <path class="ax" d="M56,210 V310 M56,282.7 H500"/>
+        <text x="60" y="202" class="tm">电感电流 iL / A</text>
+        <text x="50" y="218.5" text-anchor="end" class="v">1.5</text>
+        <text x="50" y="286.7" text-anchor="end" class="v">0</text>
+        <text x="50" y="309" text-anchor="end" class="v">−0.5</text>
+        <line class="gl" x1="56" y1="305.5" x2="500" y2="305.5"/>
+        <text x="56" y="326" text-anchor="middle" class="v">0</text>
+        <text x="278" y="326" text-anchor="middle" class="v">5</text>
+        <text x="500" y="326" text-anchor="end" class="v">10 µs</text>
+        <polyline id="f2-il" class="real" points="56,282 500,282"/>
+      </svg>
+      <figcaption>同一个 1 MHz 同步 Buck（示意模型）。PFM 每个脉冲峰值电流 0.6 A；自动模式在负载大到脉冲频率追上 1 MHz 时切回 PWM。静态电流按 25 µA 计。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">工作模式</span>
+        <div class="seg" id="f2-mode"><button id="f2-mode-pwm" data-v="pwm" aria-pressed="true">强制 PWM</button><button id="f2-mode-pfm" data-v="pfm" aria-pressed="false">自动 PFM</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="f2-i">负载电流</label>
+        <span class="rv" id="f2-iv">10 mA</span>
+        <input type="range" id="f2-i" min="0" max="60" step="1" value="20"></div>
+      <dl class="read">
+        <dt>实际模式</dt><dd><span id="f2-st" class="chip warn">PWM</span></dd>
+        <dt>输出功率</dt><dd id="f2-po">33 mW</dd>
+        <dt>损耗</dt><dd id="f2-pl">98 mW</dd>
+        <dt>效率</dt><dd id="f2-eff">25%</dd>
+        <dt>等效开关频率</dt><dd id="f2-fs">1 MHz</dd>
+      </dl>
+      <p class="note" id="f2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="pick">
+  <span class="eyebrow">频率怎么定</span>
+  <h2>频率高低各有代价</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>对比项</th><th>频率高（1~3 MHz）</th><th>频率低（100~500 kHz）</th></tr></thead>
+    <tbody>
+      <tr><td>电感、电容</td><td>感值和容值小，体积小</td><td>感值大，体积大</td></tr>
+      <tr><td>开关、驱动损耗</td><td>大，重载和轻载都吃亏</td><td>小</td></tr>
+      <tr><td>导通损耗</td><td>电感小，DCR 小</td><td>电感大，DCR 大</td></tr>
+      <tr><td>环路带宽</td><td>可以做高，负载瞬态响应快</td><td>受限，瞬态响应慢</td></tr>
+      <tr><td>占空比范围</td><td>受最小导通时间限制，大降压比做不到</td><td>宽</td></tr>
+      <tr><td>EMI</td><td>开关沿产生的谐波能量更高</td><td>基波低，好滤</td></tr>
+    </tbody>
+  </table></div>
+  <p>常见的做法：手机、板卡上的小电流 Buck 选 1~3 MHz 换体积；大电流、高电压的选几百 kHz 保效率。车载电源常选 2.1 MHz 或 400 kHz 以下，为了避开 AM 广播频段（约 530~1710 kHz）。</p>
+  <p class="note">最小导通时间的例子：24 V 转 1 V，D ≈ 4%。在 2 MHz 下导通时间只有 21 ns，很多芯片的最小导通时间是 50~100 ns（典型值），根本做不到，只能降频。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>开关电源的损耗有哪些？</summary>
+      <div class="ans"><p>四类。导通损耗 I²R，来自 MOS 的 Rds(on) 和电感 DCR；开关损耗，开关切换时电压电流交叠，加上 Coss 充放电，和频率成正比；驱动损耗 Qg·Vdrv·f；电感磁芯损耗。异步 Buck 还要加上二极管的 VF·I 损耗。</p></div></details>
+    <details><summary>开关频率是不是越高越好？</summary>
+      <div class="ans"><p>不是。频率高电感电容小、体积小、环路可以做快，但开关损耗和驱动损耗按频率线性增加，效率下降，还受最小导通时间限制。高压大电流时开关损耗 ½·Vin·I·(tr + tf)·f 本身就大，大电流 MOS 的 Qg 也大，所以频率通常取几百 kHz；小电流、要体积的场合才往 MHz 走。</p></div></details>
+    <details><summary>轻载效率低怎么办？</summary>
+      <div class="ans"><p>用 PFM / PSM / Burst 模式。轻载时只在需要时打脉冲，开关次数随负载减少，固定损耗跟着下降，10 mA 级负载效率能从 20% 左右提到 80% 以上（示意）。代价是纹波变大、频率不固定，频率落进 20 kHz 以下还可能听到电感啸叫。对噪声敏感的场合选强制 PWM。</p></div></details>
+    <details><summary>怎么提高开关电源效率？</summary>
+      <div class="ans"><p>先看哪块损耗大。重载时换低 Rds(on) 的 MOS、低 DCR 的电感，二极管换同步整流；轻载时开 PFM，降低频率；开关损耗大就选开关更快、Qg 更小的 MOS，同时减小回路寄生电感，避免为了压尖峰而把驱动放得太慢。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="03-Boost拓扑.html"><span>上一页</span>Boost 拓扑</a><a class="next" href="05-纹波与噪声.html"><span>下一页</span>纹波与噪声</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 共用损耗模型（示意） */
+const F4={vin:12,vo:3.3,dI:0.9,rds:0.02,tsw:20e-9,coss:200e-12,qg:5e-9,vdr:5};
+F4.D=F4.vo/F4.vin;
+function f4Loss(f,io){
+  const L=(F4.vin-F4.vo)*F4.D/(f*F4.dI),dcr=0.008*Math.sqrt(L/1e-6);
+  const cond=(io*io+F4.dI*F4.dI/12)*(F4.rds+dcr);
+  const sw=0.5*F4.vin*io*F4.tsw*f+0.5*F4.coss*F4.vin*F4.vin*f;
+  const drv=2*F4.qg*F4.vdr*f,core=0.02*Math.sqrt(f/1e6);
+  const tot=cond+sw+drv+core,po=F4.vo*io;
+  return {L,dcr,cond,sw,drv,core,tot,eta:po/(po+tot)};
+}
+/* 1. 频率扫描 */
+const f1F=[100e3,200e3,300e3,500e3,700e3,1e6,1.5e6,2e6,3e6],f1Lb=['100k','200k','300k','500k','700k','1M','1.5M','2M','3M'];
+const f1={io:3},f1Cx=i=>56+46*(i+0.5),f1Ye=scale(50,100,250,48);
+f1Lb.forEach((t,i)=>$('f1-xl').append(svgEl('text',{x:f1Cx(i),y:266,'text-anchor':'middle',class:'tm'},t)));
+function f1u(){
+  const k=+$('f1-f').value,io=f1.io,all=f1F.map(f=>f4Loss(f,io));
+  const mx=Math.max(...all.map(a=>a.tot)),steps=[0.1,0.2,0.4,0.8,1,2,4];
+  const top=steps.find(s=>s>=mx*1.12)||4,Yl=scale(0,top,250,48);
+  $('f1-l4').textContent=top;$('f1-l2').textContent=+(top/2).toFixed(2);
+  const g=$('f1-bars');g.replaceChildren();
+  all.forEach((a,i)=>{let y=250;const op=i===k?1:0.35;
+    [['cond','ls-c'],['sw','ls-s'],['drv','ls-d'],['core','ls-k']].forEach(([key,cls])=>{
+      const h=250-Yl(a[key]);y-=h;g.append(svgEl('rect',{x:f1Cx(i)-13,y:y.toFixed(1),width:26,height:Math.max(h,0).toFixed(1),class:cls,'fill-opacity':op}));});});
+  $('f1-eta').setAttribute('points',all.map((a,i)=>f1Cx(i)+','+f1Ye(Math.max(a.eta*100,50)).toFixed(1)).join(' '));
+  const gd=$('f1-edot');gd.replaceChildren();
+  all.forEach((a,i)=>gd.append(svgEl('circle',{cx:f1Cx(i),cy:f1Ye(Math.max(a.eta*100,50)).toFixed(1),r:i===k?5:3,class:'dot'})));
+  const a=all[k],best=all.reduce((b,x,i)=>x.eta>all[b].eta?i:b,0);
+  $('f1-tot').setAttribute('x',f1Cx(k));$('f1-tot').setAttribute('y',(Yl(a.tot)-8).toFixed(1));$('f1-tot').textContent=fmtP(a.tot);
+  $('f1-fv').textContent=fmtF(f1F[k]);$('f1-f').setAttribute('aria-valuetext',fmtF(f1F[k]));
+  $('f1-L').textContent=(a.L*1e6).toFixed(2)+' µH';$('f1-dcr').textContent=fmtR(a.dcr);
+  $('f1-pc').textContent=fmtP(a.cond);$('f1-ps').textContent=fmtP(a.sw);$('f1-pd').textContent=fmtP(a.drv);$('f1-pk').textContent=fmtP(a.core);
+  $('f1-eff').textContent=(a.eta*100).toFixed(1)+'%';
+  const fixed=a.sw+a.drv+a.core;let n;
+  if(k===best){chip($('f1-st'),'这个负载下效率最高','on');}
+  else if(k<best){chip($('f1-st'),'频率偏低，电感偏大','off');}
+  else chip($('f1-st'),'频率偏高，开关损耗大','warn');
+  if(io<=0.1)n='轻载 0.1 A：导通损耗几乎为零，开关、驱动、磁芯这些"每开关一次交一次"的损耗占了 '+(fixed/a.tot*100).toFixed(0)+'%。频率越高效率越差，这就是下一节 PFM 要解决的问题。';
+  else if(k<best)n='频率低，开关损耗小，但为了把纹波压在 0.9 A，电感要 '+(a.L*1e6).toFixed(1)+' µH，DCR 也跟着变大。导通损耗占 '+(a.cond/a.tot*100).toFixed(0)+'%，电感体积也大。';
+  else if(k>best)n='频率高，电感只要 '+(a.L*1e6).toFixed(2)+' µH，体积小。但开关和驱动损耗随 f 线性增加，现在占总损耗的 '+((a.sw+a.drv)/a.tot*100).toFixed(0)+'%，效率比最优点低 '+((all[best].eta-a.eta)*100).toFixed(1)+' 个百分点。';
+  else n='这是当前负载下的效率最高点：导通损耗和开关损耗大致此消彼长。换个负载电流看看，最优频率会移动：负载越轻，和负载无关的开关、驱动损耗越突出，最优频率越低；负载越重，电感 DCR 的 I² 损耗越重要，稍高的频率（更小的电感）反而划算。';
+  $('f1-note').textContent=n;
+}
+$('f1-f').addEventListener('input',f1u);
+seg('f1-i',v=>{f1.io=parseFloat(v);f1u();});
+f1u();
+
+/* 2. 轻载与 PFM */
+const f2={mode:'pwm'},F2f=1e6,f2L=(F4.vin-F4.vo)*F4.D/(F2f*F4.dI),f2Ipk=0.6;
+const f2ton=f2L*f2Ipk/(F4.vin-F4.vo),f2toff=f2L*f2Ipk/F4.vo,f2Q=f2Ipk*(f2ton+f2toff)/2;
+const f2E=0.5*F4.coss*F4.vin*F4.vin+2*F4.qg*F4.vdr+0.5*F4.vin*f2Ipk*F4.tsw/2+f2Ipk*f2Ipk/3*(F4.rds+0.008*Math.sqrt(f2L/1e-6))*(f2ton+f2toff);
+const f2Iq=25e-6*F4.vin;
+function f2Pfm(io){const fp=io/f2Q;return {fp,loss:fp*f2E+f2Iq};}
+function f2Calc(io,mode){
+  const po=F4.vo*io;
+  if(mode==='pfm'&&io/f2Q<F2f){const p=f2Pfm(io);return {pfm:true,fs:p.fp,loss:p.loss,eta:po/(po+p.loss),po};}
+  const a=f4Loss(F2f,io);return {pfm:false,fs:F2f,loss:a.tot,eta:a.eta,po};
+}
+const f2X=v=>56+(Math.log10(v)+3)*148,f2Ye=scale(0,100,150,30),f2Xt=scale(0,10,56,500),f2Yi=scale(-0.6,1.6,310,210);
+$('f2-cp').setAttribute('points',plot(lg=>f2Calc(Math.pow(10,lg),'pwm').eta*100,-3,0,lg=>f2X(Math.pow(10,lg)),f2Ye,120));
+$('f2-cf').setAttribute('points',plot(lg=>f2Calc(Math.pow(10,lg),'pfm').eta*100,-3,0,lg=>f2X(Math.pow(10,lg)),f2Ye,120));
+function f2u(){
+  const io=1e-3*Math.pow(10,+$('f2-i').value/20),r=f2Calc(io,f2.mode);
+  $('f2-m').setAttribute('cx',f2X(io).toFixed(1));$('f2-m').setAttribute('cy',f2Ye(r.eta*100).toFixed(1));
+  $('f2-m').style.fill=r.pfm?'var(--flow)':'var(--low)';
+  const pts=[];
+  if(!r.pfm){const iv=io-F4.dI/2,ip=io+F4.dI/2;
+    for(let k=0;k<10;k++){pts.push(f2Xt(k).toFixed(1)+','+f2Yi(iv).toFixed(1));pts.push(f2Xt(k+F4.D).toFixed(1)+','+f2Yi(ip).toFixed(1));}
+    pts.push(f2Xt(10).toFixed(1)+','+f2Yi(iv).toFixed(1));}
+  else{const per=1e6/r.fs,a=f2ton*1e6,b=f2toff*1e6;pts.push(f2Xt(0)+','+f2Yi(0).toFixed(1));
+    for(let t=0.3;t<10;t+=per){pts.push(f2Xt(t).toFixed(1)+','+f2Yi(0).toFixed(1));pts.push(f2Xt(Math.min(t+a,10)).toFixed(1)+','+f2Yi(f2Ipk).toFixed(1));pts.push(f2Xt(Math.min(t+a+b,10)).toFixed(1)+','+f2Yi(0).toFixed(1));}
+    pts.push(f2Xt(10)+','+f2Yi(0).toFixed(1));}
+  $('f2-il').setAttribute('points',pts.join(' '));
+  const it=io<1?(io*1e3).toFixed(io<0.01?1:0)+' mA':'1 A';
+  $('f2-iv').textContent=it;$('f2-i').setAttribute('aria-valuetext',it);
+  chip($('f2-st'),r.pfm?'PFM 脉冲':'PWM 固定 1 MHz',r.pfm?'on':(r.eta<0.6?'warn':'on'));
+  $('f2-po').textContent=fmtP(r.po);$('f2-pl').textContent=fmtP(r.loss);$('f2-eff').textContent=(r.eta*100).toFixed(1)+'%';
+  $('f2-fs').textContent=fmtF(r.fs);
+  let n;
+  if(r.pfm)n='PFM：每个脉冲把电感电流从 0 推到 0.6 A 再放回 0，送出约 '+(f2Q*1e6).toFixed(2)+' µC 电荷，然后停下来。负载越轻脉冲越稀，现在每秒只打 '+Math.round(r.fs)+' 个，每个脉冲的开关和驱动损耗约 '+(f2E*1e9).toFixed(0)+' nJ，损耗随负载一起降。代价是纹波更大、频率不固定'+(r.fs<20e3?'，现在已落在 20 kHz 以下的音频段，电感和陶瓷电容可能啸叫。':'。');
+  else if(f2.mode==='pfm')n='负载大了，PFM 的脉冲频率已经追上 1 MHz，芯片自动切回固定频率 PWM。重载下两种模式一样。';
+  else if(io<F4.dI/2)n='强制 PWM：每秒照样开关 100 万次，开关、驱动、磁芯损耗约 '+fmtP(r.loss)+'，和负载无关。负载电流小于 ΔIL/2，电感电流在每个周期里还会反向流回输入，白白来回搬运能量。好处是频率固定、纹波小、噪声好滤。';
+  else n='负载足够大，固定损耗只占一小部分，PWM 效率很高。往左拖负载电流看看效率怎么掉。';
+  $('f2-note').textContent=n;
+}
+seg('f2-mode',v=>{f2.mode=v;f2u();});
+$('f2-i').addEventListener('input',f2u);
+f2u();
+</script>
+</body>
+</html>

@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 03 课 时序逻辑与两种赋值</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="03" data-root="../">
+
+<aside class="side">
+  <a class="brand" href="../index.html">Verilog 十二课<span>FPGA RTL 实训</span></a>
+  <ol></ol>
+  <div class="foot">
+    <button class="themer" type="button">主题</button>
+    <p>iverilog + GTKWave<br>Vivado / Quartus 可选</p>
+  </div>
+</aside>
+
+<main>
+<div class="ruler"></div>
+
+<p class="eyebrow">Lesson 03 <em>／ 时序逻辑 ／ 本课最关键</em></p>
+<h1>时序逻辑:always 与两种赋值</h1>
+<p class="lede">前两课的电路没有记忆。这一课加进时钟,电路开始能记住上一拍发生了什么 —— 计数器、状态机、FIFO 全都建立在这一件事上。同时把新手第一号杀手解决掉:<code>=</code> 和 <code>&lt;=</code> 到底差在哪一根波形上。</p>
+
+<dl class="goals">
+  <dt>学完这一课你能</dt>
+  <dd>看一眼 <code>always</code> 块就知道它会综合出触发器还是纯组合逻辑</dd>
+  <dd>说出同步复位与异步复位的真实差别,并在波形上指出来</dd>
+  <dd>解释阻塞赋值为什么会把三级移位寄存器塌成一级</dd>
+  <dd>写出这门课后面每一课都会重复的时序逻辑模板</dd>
+</dl>
+
+<nav class="toc"><h2>本课路线</h2><ol></ol></nav>
+
+<h2 id="s1">时序逻辑 = 组合逻辑 + 一排触发器</h2>
+<p>触发器只做一件事:<strong>在时钟上升沿的那一瞬间,把输入端的值抓住并保持到下一个沿</strong>。除此之外它不关心输入怎么抖。</p>
+<p>于是所有同步电路都是同一个形状:一堆组合逻辑算出“下一拍应该是什么”,一排触发器在时钟沿把它存下来,存下来的值又回头参与下一轮计算。<code>always @(posedge clk)</code> 里的每一个被赋值的信号,就是一个(或一组)触发器。</p>
+
+<h2 id="s2">两种 always,规矩完全不同</h2>
+<div class="vs">
+  <div class="good">
+    <b>时序:@(posedge clk) + &lt;=</b>
+    <pre>always @(posedge clk) begin
+    if (!rst_n) cnt &lt;= 8'd0;
+    else        cnt &lt;= cnt + 1'b1;
+end</pre>
+    <p>综合出触发器。没写到的情况自动保持原值 —— 这正是我们要的“记忆”。</p>
+  </div>
+  <div class="good">
+    <b>组合:@(*) + =</b>
+    <pre>always @(*) begin
+    y = 1'b0;              // 先给默认值
+    if (sel) y = a;
+end</pre>
+    <p>综合出纯逻辑。<strong>每个分支都必须给所有输出赋值</strong>,否则会生成锁存器。</p>
+  </div>
+</div>
+
+<div class="tw">
+<table>
+  <caption>两种 always 的对照</caption>
+  <thead><tr><th></th><th>组合 <code>always @(*)</code></th><th>时序 <code>always @(posedge clk)</code></th></tr></thead>
+  <tbody>
+    <tr><td>赋值符</td><td><code>=</code> 阻塞</td><td><code>&lt;=</code> 非阻塞</td></tr>
+    <tr><td>综合结果</td><td>LUT,没有存储</td><td>触发器 + 它前面的 LUT</td></tr>
+    <tr><td>分支没覆盖到</td><td><strong>出锁存器</strong>,是 bug</td><td>保持原值,是特性</td></tr>
+    <tr><td>信号声明</td><td><code>reg</code>(但不是寄存器)</td><td><code>reg</code>(真的是寄存器)</td></tr>
+    <tr><td>能否代替 assign</td><td>能,复杂条件下更好读</td><td>不能,它多了一拍延迟</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="box err">
+  <b>一个信号只能在一个 always 里被赋值</b>
+  <p>两个 <code>always</code> 块给同一个 <code>reg</code> 赋值,和两条 <code>assign</code> 驱动同一根 <code>wire</code> 是一样的错误。想在不同条件下改同一个信号,把这些条件写进<em>同一个</em> <code>always</code> 块的 <code>if/else</code> 里。</p>
+</div>
+
+<h2 id="s3">复位:同步还是异步</h2>
+<p>差别只有一句话:<strong>异步复位不等时钟,同步复位要等时钟</strong>。平时看不出来,给一个比时钟周期还窄的复位脉冲就原形毕露。</p>
+
+<figure class="file">
+  <figcaption><span class="path">code/lesson03/dff.v</span><span class="note">可综合 · 同一个 d,两种复位并排</span></figcaption>
+  <div class="body"><pre><code>module dff (
+    input  wire clk,
+    input  wire rst_n,       // 低有效复位
+    input  wire d,
+    output reg  q_async,     // 异步复位的触发器
+    output reg  q_sync       // 同步复位的触发器
+);
+
+    // ---- 异步复位:rst_n 一拉低立刻清零,不等时钟 ----
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) q_async &lt;= 1'b0;
+        else        q_async &lt;= d;
+    end
+
+    // ---- 同步复位:复位信号也要等时钟沿才被采样 ----
+    always @(posedge clk) begin
+        if (!rst_n) q_sync &lt;= 1'b0;
+        else        q_sync &lt;= d;
+    end
+
+endmodule</code></pre></div>
+</figure>
+
+<figure class="dia">
+<svg viewBox="0 0 440 226" role="img" aria-label="窄复位脉冲实验波形:95ns 到 99ns 一个 4ns 的复位脉冲,异步复位的输出立刻被清零并保持到 110ns 的时钟沿,同步复位的输出完全没有反应">
+  <rect class="w-span" x="240" y="24" width="16" height="178"/>
+
+  <line class="w-grid" x1="140" y1="24" x2="140" y2="202"/>
+  <line class="w-grid" x1="220" y1="24" x2="220" y2="202"/>
+  <line class="w-grid" x1="300" y1="24" x2="300" y2="202"/>
+  <line class="w-grid" x1="380" y1="24" x2="380" y2="202"/>
+
+  <text class="w-marktxt" x="248" y="18" text-anchor="middle">4ns 窄复位脉冲</text>
+
+  <text class="w-lbl" x="92" y="44" text-anchor="end">clk</text>
+  <polyline class="w-clk" points="100,50 140,50 140,30 180,30 180,50 220,50 220,30 260,30 260,50 300,50 300,30 340,30 340,50 380,50 380,30 420,30"/>
+
+  <text class="w-lbl" x="92" y="80" text-anchor="end">rst_n</text>
+  <polyline class="w-ink" points="100,66 240,66 240,86 256,86 256,66 420,66"/>
+
+  <text class="w-lbl" x="92" y="116" text-anchor="end">d</text>
+  <polyline class="w-ink" points="100,102 420,102"/>
+
+  <text class="w-lbl" x="92" y="152" text-anchor="end">q_async</text>
+  <polyline class="w-sig" points="100,138 240,138 240,158 300,158 300,138 420,138"/>
+  <text class="w-marktxt" x="270" y="152" text-anchor="middle">被清零</text>
+
+  <text class="w-lbl" x="92" y="188" text-anchor="end">q_sync</text>
+  <polyline class="w-sig" points="100,174 420,174"/>
+  <text class="w-marktxt" x="272" y="192" text-anchor="middle">毫无反应</text>
+
+  <text class="w-note" x="100" y="216" text-anchor="middle">60ns</text>
+  <text class="w-note" x="180" y="216" text-anchor="middle">80ns</text>
+  <text class="w-note" x="260" y="216" text-anchor="middle">100ns</text>
+  <text class="w-note" x="340" y="216" text-anchor="middle">120ns</text>
+  <text class="w-note" x="420" y="216" text-anchor="middle">140ns</text>
+</svg>
+<figcaption><b>窄脉冲把两种复位区分开了。</b><code>rst_n</code> 在 95ns 拉低、99ns 拉回,中间没有任何时钟沿。异步复位在<em>拉低的那一刻</em>就把输出清零,一直保持到 110ns 的沿才重新装载 <code>d</code>;同步复位要等时钟沿去采样 <code>rst_n</code>,而它等到 110ns 时 <code>rst_n</code> 已经恢复,于是这个脉冲对它<em>根本不存在</em>。</figcaption>
+</figure>
+
+<div class="tw">
+<table>
+  <caption>该用哪种</caption>
+  <thead><tr><th></th><th>异步复位</th><th>同步复位</th></tr></thead>
+  <tbody>
+    <tr><td>响应速度</td><td>立刻,不需要时钟</td><td>要等时钟沿</td></tr>
+    <tr><td>时钟没起来时</td><td>照样有效 —— 上电初始化靠它</td><td>无效</td></tr>
+    <tr><td>毛刺</td><td>复位线上一个毛刺就能误复位</td><td>窄毛刺被时钟采样天然滤掉</td></tr>
+    <tr><td>释放时刻</td><td>若靠近时钟沿,有恢复时间风险</td><td>无此问题</td></tr>
+    <tr><td>资源</td><td>用触发器专用复位端,不占逻辑</td><td>复位并进数据路径,可能多一层逻辑</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="box tip">
+  <b>工程上的标准答案:异步复位、同步释放</b>
+  <p>两者的优点都要:复位<strong>加</strong>的时候异步,立刻生效;复位<strong>撤</strong>的时候同步,避开恢复时间风险。做法是把外部复位先打两拍再送给全局:</p>
+  <pre>reg [1:0] rst_sync;
+always @(posedge clk or negedge rst_n_ext) begin
+    if (!rst_n_ext) rst_sync &lt;= 2'b00;
+    else            rst_sync &lt;= {rst_sync[0], 1'b1};
+end
+wire rst_n = rst_sync[1];   // 全局用这个</pre>
+  <p>这段几乎每个工程的顶层都有一份。第 06 课讲跨时钟同步时会再回到它。</p>
+</div>
+
+<h2 id="s4">阻塞与非阻塞:差别在这一张波形上</h2>
+<p>规则本身两句话:</p>
+<ul>
+  <li><strong>阻塞 <code>=</code></strong> —— 立刻生效。下一行读到的是刚写进去的<em>新</em>值,像普通编程语言。</li>
+  <li><strong>非阻塞 <code>&lt;=</code></strong> —— 块里所有右边表达式<em>先全部用旧值算完</em>,然后一起更新。这正是一排触发器在同一个时钟沿的真实行为。</li>
+</ul>
+<p>光看规则记不住。下面两个模块的代码<strong>除了赋值符完全一样</strong>,行为差了三倍。</p>
+
+<div class="vs">
+  <div class="good">
+    <b>shift3_nb.v · 非阻塞</b>
+    <pre>always @(posedge clk) begin
+    q1 &lt;= din;   // 右边取旧值
+    q2 &lt;= q1;    // 旧的 q1
+    q3 &lt;= q2;    // 旧的 q2
+end</pre>
+    <p>三个触发器串成一条链,数据一拍走一级。写的顺序无所谓,调换三行结果不变。</p>
+  </div>
+  <div class="bad">
+    <b>shift3_b.v · 阻塞</b>
+    <pre>always @(posedge clk) begin
+    q1 = din;    // 立刻生效
+    q2 = q1;     // 拿到的是 din
+    q3 = q2;     // 也是 din
+end</pre>
+    <p><code>din</code> 一个沿冲到底,三级塌成一级。而且行为<strong>依赖书写顺序</strong> —— 调换三行结果就变。</p>
+  </div>
+</div>
+
+<figure class="dia">
+<svg viewBox="0 0 440 195" role="img" aria-label="同一个单周期脉冲送进两个三级移位寄存器:非阻塞版本在 110ns 才从第三级输出,阻塞版本在 70ns 同一个时钟沿就直接输出">
+  <line class="w-grid" x1="120" y1="24" x2="120" y2="166"/>
+  <line class="w-grid" x1="160" y1="24" x2="160" y2="166"/>
+  <line class="w-grid" x1="200" y1="24" x2="200" y2="166"/>
+  <line class="w-grid" x1="240" y1="24" x2="240" y2="166"/>
+  <line class="w-grid" x1="280" y1="24" x2="280" y2="166"/>
+  <line class="w-grid" x1="320" y1="24" x2="320" y2="166"/>
+  <line class="w-grid" x1="360" y1="24" x2="360" y2="166"/>
+  <line class="w-grid" x1="400" y1="24" x2="400" y2="166"/>
+
+  <line class="w-mark" x1="160" y1="24" x2="160" y2="166"/>
+  <line class="w-mark" x1="240" y1="24" x2="240" y2="166"/>
+  <text class="w-marktxt" x="158" y="18" text-anchor="middle">70ns 采样</text>
+  <text class="w-marktxt" x="252" y="18" text-anchor="middle">110ns</text>
+
+  <text class="w-lbl" x="92" y="44" text-anchor="end">clk</text>
+  <polyline class="w-clk" points="100,50 120,50 120,30 140,30 140,50 160,50 160,30 180,30 180,50 200,50 200,30 220,30 220,50 240,50 240,30 260,30 260,50 280,50 280,30 300,30 300,50 320,50 320,30 340,30 340,50 360,50 360,30 380,30 380,50 400,50 400,30 420,30"/>
+
+  <text class="w-lbl" x="92" y="80" text-anchor="end">din</text>
+  <polyline class="w-ink" points="100,86 120,86 120,66 162,66 162,86 420,86"/>
+
+  <text class="w-lbl" x="92" y="116" text-anchor="end">dout 非阻塞</text>
+  <polyline class="w-sig" points="100,122 240,122 240,102 280,102 280,122 420,122"/>
+
+  <text class="w-lbl" x="92" y="152" text-anchor="end">dout 阻塞</text>
+  <polyline class="w-sig" points="100,158 160,158 160,138 200,138 200,158 420,158"/>
+
+  <text class="w-note" x="100" y="182" text-anchor="middle">40ns</text>
+  <text class="w-note" x="180" y="182" text-anchor="middle">80ns</text>
+  <text class="w-note" x="260" y="182" text-anchor="middle">120ns</text>
+  <text class="w-note" x="340" y="182" text-anchor="middle">160ns</text>
+  <text class="w-note" x="420" y="182" text-anchor="middle">200ns</text>
+</svg>
+<figcaption><b>同一段代码,只换了赋值符。</b><code>din</code> 上的脉冲在 70ns 那个沿被采样。非阻塞版本要再经过 90ns、110ns 两个沿才推到第三级,输出延迟三个时钟沿 —— 这才是三级移位寄存器。阻塞版本在 70ns <em>这一个沿</em>就冲到了输出,三个触发器退化成了一个。</figcaption>
+</figure>
+
+<div class="box err">
+  <b>为什么阻塞赋值在时序块里是真 bug,而不只是“风格问题”</b>
+  <ul>
+    <li>结果依赖<strong>书写顺序</strong>。把三行调个顺序,电路就变了 —— 而硬件里那三个触发器本来是并列的,没有顺序。</li>
+    <li>如果两个 <code>always</code> 块都用阻塞赋值、又互相读对方的信号,<strong>谁先执行由仿真器决定</strong>。同一份代码在不同仿真器上可能给出不同结果,更糟的是仿真通过、上板不对。</li>
+    <li>综合工具的解读可能和仿真器不一致,于是出现最难查的一类 bug:<em>仿真是对的,芯片是错的</em>。</li>
+  </ul>
+</div>
+
+<h2 id="s5">跑仿真</h2>
+<div class="term"><pre><span class="cmd">.\sim.bat lesson03 dff_tb</span>
+[TB] 65 ns  q_async=1 q_sync=1   (两个都应该是 1)
+[TB] 105 ns  q_async=0 q_sync=1   &lt;== 差别在这里
+[TB] 125 ns  q_async=1 q_sync=1   (下一个沿之后又都是 1)
+[TB] 结论:异步复位抓住了这个窄脉冲,同步复位完全没看见
+
+<span class="cmd">.\sim.bat lesson03 shift_cmp_tb</span>
+[TB] 时刻      非阻塞 {q3,q2,q1} dout    阻塞 {q3,q2,q1} dout
+[TB]   71 ns        001        0            111        1
+[TB]   91 ns        010        0            000        0
+[TB]  111 ns        100        1            000        0
+[TB]  131 ns        000        0            000        0
+[TB]  151 ns        000        0            000        0
+[TB]  171 ns        000        0            000        0
+[TB] 非阻塞:脉冲一级一级往前走,三个沿之后从 dout 出来
+[TB] 阻塞  :第一个沿就冲到底,三级移位塌成了一级</pre></div>
+<p>看 <code>{q3,q2,q1}</code> 这一列:非阻塞版本是 <code>001 → 010 → 100</code>,一个 1 在三级之间走;阻塞版本第一拍就是 <code>111</code>,三级同时被填满,下一拍又同时清空。<strong>波形和终端日志说的是同一件事</strong>,两个都要会看。</p>
+
+<h2 id="s6">三条不许违反的规矩</h2>
+<ol class="steps">
+  <li><strong>时序 <code>always</code> 一律用 <code>&lt;=</code>,组合 <code>always</code> 一律用 <code>=</code>。</strong>不要在同一个 <code>always</code> 块里混用两种赋值符。</li>
+  <li><strong>一个信号只在一个 <code>always</code> 块里被赋值。</strong>违反就是多驱动。</li>
+  <li><strong>组合 <code>always</code> 的每个分支都要给所有输出赋值</strong>,做不到就在块开头统一给默认值。否则综合出锁存器(第 05 课会专门看它长什么样)。</li>
+</ol>
+<div class="box tip">
+  <b>模板背下来,后面八课都在用它</b>
+  <pre>// 时序:寄存 + 复位
+always @(posedge clk or negedge rst_n) begin
+    if (!rst_n) q &lt;= 复位值;
+    else if (en) q &lt;= 新值;      // 没有 en 就保持,不用写 else
+end
+
+// 组合:先默认值,再分情况
+always @(*) begin
+    y = 默认值;
+    case (sel)
+        …: y = …;
+        default: y = 默认值;
+    endcase
+end</pre>
+</div>
+
+<h2 id="ex">练习</h2>
+<ol class="tasks">
+<li>
+  <h3>把阻塞版本的三行倒过来写<span class="lv">热身</span></h3>
+  <p>把 <code>shift3_b.v</code> 里的三行改成 <code>q3 = q2; q2 = q1; q1 = din;</code>(顺序反过来),重跑 <code>shift_cmp_tb</code>。现在两列一样了吗?这个结果说明了什么?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>一样了。倒着写时,每一行读到的都还是这个沿之前的旧值,于是<em>碰巧</em>等价于非阻塞。</p>
+    <p>但这恰恰是不能用阻塞赋值的理由:<strong>正确性建立在“行的顺序刚好写对”上</strong>。三行还能人肉检查,十几行加上 <code>if</code>、<code>case</code> 嵌套就无从检查了;而且下一个改代码的人不知道这个顺序是有意义的,随手一调就出 bug。非阻塞赋值把顺序这件事从等式里彻底消掉。</p>
+  </div></details>
+</li>
+<li>
+  <h3>8 位串入并出移位寄存器<span class="lv">动手</span></h3>
+  <p>写 <code>code/lesson03/shift8.v</code>:每个时钟沿把 <code>din</code> 从低位移进来,输出 8 位 <code>q</code>。核心只有一行。写 TB 依次送入 <code>1 0 1 1 0 0 1 0</code>,验证 8 拍后 <code>q</code> 等于 <code>8'b1011_0010</code>。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <pre>module shift8 (
+    input  wire       clk,
+    input  wire       rst_n,
+    input  wire       din,
+    output reg  [7:0] q
+);
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) q &lt;= 8'd0;
+        else        q &lt;= {q[6:0], din};   // 整体左移一位,din 补到最低位
+    end
+endmodule</pre>
+    <p>要凑出 <code>8'b1011_0010</code>,得<strong>先送最高位</strong>:依次送 <code>1,0,1,1,0,0,1,0</code>。因为最先进来的那一位会被后面 7 次移位一路推到最高位 —— 这就是串行协议里“MSB first”的含义。UART 恰恰相反,是 LSB first,第 10 课会用到。</p>
+    <p>顺手体会一下:8 位移位寄存器和 8 位并行寄存器占用的触发器数量<strong>完全一样</strong>,区别只在前面接的组合逻辑不同。</p>
+  </div></details>
+</li>
+<li>
+  <h3>两级流水加法器<span class="lv">动手</span></h3>
+  <p>写 <code>pipe_add.v</code>:第一级把 <code>a</code>、<code>b</code> 寄存下来,第二级寄存它们的和,输出 9 位 <code>sum</code>。写 TB 观察:给一组输入后,正确结果在第几拍出现?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <pre>module pipe_add (
+    input  wire       clk,
+    input  wire       rst_n,
+    input  wire [7:0] a,
+    input  wire [7:0] b,
+    output reg  [8:0] sum
+);
+    reg [7:0] a_r, b_r;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            a_r &lt;= 8'd0;
+            b_r &lt;= 8'd0;
+            sum &lt;= 9'd0;
+        end else begin
+            a_r &lt;= a;                // 第一级:寄存输入
+            b_r &lt;= b;
+            sum &lt;= a_r + b_r;        // 第二级:用的是上一拍的 a_r、b_r
+        end
+    end
+endmodule</pre>
+    <p>结果在<strong>第 2 拍</strong>出现。关键就在 <code>sum &lt;= a_r + b_r;</code> 用的是旧的 <code>a_r</code>、<code>b_r</code> —— 写在同一个 <code>always</code> 里也照样是两级,这正是非阻塞赋值带来的便利。</p>
+    <p>为什么要这么做:把长组合路径切成几段,每段之间插一排触发器,主频就能提上去。代价是延迟变成 2 拍。<strong>吞吐率换延迟</strong>,是 FPGA 设计里最常用的一招。</p>
+  </div></details>
+</li>
+<li>
+  <h3>Testbench 里的激励为什么也用 <code>&lt;=</code><span class="lv">想清楚</span></h3>
+  <p><code>shift_cmp_tb.v</code> 里写的是 <code>din &lt;= 1'b1;</code> 而不是 <code>din = 1'b1;</code>。把它改成阻塞赋值,重跑几次。为什么在 <code>@(posedge clk)</code> 之后驱动 DUT 输入时,非阻塞更安全?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>因为会出现<strong>竞争</strong>。<code>@(posedge clk)</code> 醒来之后,TB 和 DUT 的 <code>always</code> 块都排在同一时刻等着执行,谁先跑由仿真器决定:</p>
+    <ul>
+      <li>DUT 先跑 → 采到 <code>din</code> 的旧值(这是真实硬件的行为)。</li>
+      <li>TB 先跑,用阻塞赋值立刻改了 <code>din</code> → DUT 采到<em>新</em>值,凭空少了一拍延迟。</li>
+    </ul>
+    <p>用 <code>din &lt;= 1'b1;</code> 后,这次更新被推到非阻塞更新阶段,一定发生在所有 <code>always</code> 块读完信号之后。DUT 必然采到旧值,行为确定。</p>
+    <p>所以规矩再补一条:<strong>TB 里凡是对齐时钟沿驱动 DUT 输入的赋值,也用 <code>&lt;=</code></strong>。只有产生时钟本身(<code>always #10 clk = ~clk;</code>)和纯延时序列里才用 <code>=</code>。</p>
+  </div></details>
+</li>
+</ol>
+
+<nav class="pager"></nav>
+</main>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

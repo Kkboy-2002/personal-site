@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>采样电阻过流保护</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#protect">保护电路</a><span class="sp"></span><span>02 / 08</span></nav>
+<header>
+  <span class="eyebrow">保护电路 · 电流检测</span>
+  <h1>采样电阻加比较器过流保护</h1>
+  <p class="lede">电流没法直接比大小，先用一个很小的采样电阻把它变成电压，再交给比较器和参考电压比。超限就关断 MOS 或报警。下面看这条链路每一级的电压，以及采样电阻放在哪、怎么接线。</p>
+</header>
+
+<section id="chain">
+  <span class="eyebrow">检测链路 · 电流变电压</span>
+  <h2>采样、放大、比较、关断</h2>
+  <p>采样电阻 Rs 串在电流回路里，两端电压 V = I·Rs。Rs 要小，因为它上面的压降和发热都是浪费，常用几 mΩ 到几十 mΩ。代价是信号很小：10 mΩ 过 5 A 只有 50 mV。</p>
+  <p>50 mV 直接送比较器也能用，但比较器失调电压有几 mV，噪声也有几 mV，阈值误差会到 10% 左右。所以通常先用运放放大几十倍，再和 1 V 左右的参考电压比较，精度和抗干扰都好得多。</p>
+  <p class="eq">Vs = I·Rs　　Vamp = G·Vs　　过流条件：G·I·Rs > Vref　　Rs 功耗 P = I²·Rs</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 300" role="img" aria-label="12 V 经负载、NMOS、采样电阻 Rs 到地；Rs 电压经放大器送比较器正端，与 Vref 比较，输出经驱动控制 NMOS 栅极">
+        <text x="110" y="18" text-anchor="middle" class="v">12 V</text>
+        <path class="w" d="M98,26 H122 M110,26 V46 M110,90 V130 V142 H118 M118,168 H110 V196 M110,236 V260 M96,260 H124 M101,265 H119 M106,270 H114"/>
+        <rect id="s1-load" class="box lit" x="86" y="46" width="48" height="44" rx="4"/>
+        <text x="110" y="73" text-anchor="middle" class="t">负载</text>
+        <line class="bar" x1="118" y1="136" x2="118" y2="174"/>
+        <path class="w" d="M126,140 V170"/>
+        <polygon class="ah" points="117,168 109,164 109,172"/>
+        <text x="60" y="160" text-anchor="end" class="t">Q1</text>
+        <text x="60" y="176" text-anchor="end" class="tm">NMOS</text>
+        <text x="100" y="138" text-anchor="end" class="tm">D</text>
+        <text x="100" y="178" text-anchor="end" class="tm">S</text>
+        <rect class="r" x="101" y="196" width="18" height="40" rx="2"/>
+        <text x="92" y="214" text-anchor="end" class="t">Rs</text>
+        <text x="92" y="230" text-anchor="end" class="v">10 mΩ</text>
+        <circle class="dot" cx="110" cy="190" r="3.5"/>
+        <path class="w" d="M110,190 H160 V178 H196"/>
+        <text id="s1-vsn" x="130" y="206" class="v">30 mV</text>
+        <g id="s1-g-amp">
+          <polygon class="box" points="196,158 196,198 236,178"/>
+          <text x="211" y="182" text-anchor="middle" class="tm">×20</text>
+          <text x="216" y="152" text-anchor="middle" class="tm">放大</text>
+        </g>
+        <path id="s1-g-dir" class="w" d="M196,178 H236" hidden/>
+        <path class="w" d="M236,178 H290"/>
+        <text id="s1-van" x="262" y="170" text-anchor="middle" class="v">0.6 V</text>
+        <polygon class="box" points="290,164 290,216 340,190"/>
+        <text x="296" y="182" class="t">+</text>
+        <text x="296" y="210" class="t">−</text>
+        <path class="w" d="M254,204 H290"/>
+        <text id="s1-vref" x="250" y="208" text-anchor="end" class="v">Vref 1 V</text>
+        <text x="315" y="236" text-anchor="middle" class="tm">比较器</text>
+        <path id="s1-cmp" class="w s-lo" style="stroke-width:2.5" d="M340,190 H412 V172"/>
+        <text id="s1-cmpt" x="380" y="206" class="v lo">低</text>
+        <rect class="box" x="380" y="130" width="64" height="40" rx="4"/>
+        <text x="412" y="148" text-anchor="middle" class="t">驱动</text>
+        <text x="412" y="163" text-anchor="middle" class="tm">锁存</text>
+        <path id="s1-gate" class="w s-hi" style="stroke-width:2.5" d="M126,155 H134 V110 H412 V130"/>
+        <text id="s1-gt" x="270" y="102" text-anchor="middle" class="v hi">栅极 10 V，导通</text>
+        <path id="s1-flow" class="flow" d="M110,30 V44 M110,92 V142 H114 V168 H110 V258"/>
+      </svg>
+      <figcaption>低边采样示例：Rs = 10 mΩ，放大 20 倍，过流阈值 5 A。绿色虚线是负载电流路径。比较器输出高时驱动级锁存并拉低栅极，NMOS 关断。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">比较方式</span>
+        <div class="seg" id="s1-m"><button id="s1-m-amp" data-v="amp" aria-pressed="true">先放大 ×20</button><button id="s1-m-dir" data-v="dir" aria-pressed="false">直接比较</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-rng">负载电流</label>
+        <span class="rv" id="s1-rv">3 A</span>
+        <input type="range" id="s1-rng" min="0" max="8" step="0.5" value="3"></div>
+      <dl class="read">
+        <dt>采样电压 I·Rs</dt><dd id="s1-vs">30 mV</dd>
+        <dt>送比较器的电压</dt><dd id="s1-va">0.6 V</dd>
+        <dt>参考电压 Vref</dt><dd id="s1-vr">1 V</dd>
+        <dt>Rs 功耗</dt><dd id="s1-p">90 mW</dd>
+        <dt>比较器失调 ±5 mV 引起的阈值误差</dt><dd id="s1-err">±0.5%</dd>
+        <dt>MOS</dt><dd><span id="s1-st" class="chip on">导通</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="hys">
+  <span class="eyebrow">迟滞 · 防抖动</span>
+  <h2>电流在阈值附近晃，输出会来回跳</h2>
+  <p>实际电流上叠着开关纹波和噪声。没有迟滞时，信号在阈值附近每晃一下，比较器就翻转一次，MOS 被反复开关，发热还会产生干扰。</p>
+  <p>办法是给比较器加正反馈，做成迟滞比较器：上升时要超过高阈值才翻转，回落时要低于低阈值才恢复，中间那段宽度吃掉噪声。常见接法是信号经 R1 进同相端，输出经 R2 反馈到同相端。</p>
+  <p class="eq">迟滞宽度 ΔV = VOH·R1 / R2（输出低电平为 0 V 时）</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 300" role="img" aria-label="采样电压带噪声地越过阈值，下方是比较器输出。无迟滞时输出反复跳变，有迟滞时只翻转一次">
+        <line class="gl" x1="56" y1="40" x2="500" y2="40"/>
+        <line class="gl" x1="56" y1="106" x2="500" y2="106"/>
+        <path class="ax" d="M56,30 V172 H500"/>
+        <text x="50" y="44" text-anchor="end" class="v">1.2</text>
+        <text x="50" y="110" text-anchor="end" class="v">0.9</text>
+        <text x="50" y="176" text-anchor="end" class="v">0.6</text>
+        <text x="60" y="24" class="tm">放大后采样电压 V</text>
+        <rect id="s2-band" class="zone-sat" x="56" y="84" width="444" height="0"/>
+        <line id="s2-th" class="ax" x1="56" y1="84" x2="500" y2="84" style="stroke:var(--danger);stroke-dasharray:5 4"/>
+        <line id="s2-tl" class="ax" x1="56" y1="84" x2="500" y2="84" style="stroke:var(--low);stroke-dasharray:5 4"/>
+        <text id="s2-thl" x="496" y="78" text-anchor="end" class="tm">上阈值 1.0 V</text>
+        <text id="s2-tll" x="496" y="98" text-anchor="end" class="tm" hidden>下阈值</text>
+        <polyline id="s2-sig" class="real" points=""/>
+        <path class="ax" d="M56,200 V262 H500"/>
+        <text x="50" y="214" text-anchor="end" class="v">高</text>
+        <text x="50" y="258" text-anchor="end" class="v">低</text>
+        <text x="60" y="194" class="tm">比较器输出</text>
+        <polyline id="s2-out" class="real2" points=""/>
+        <text x="56" y="278" text-anchor="middle" class="v">0</text>
+        <text x="278" y="278" text-anchor="middle" class="v">5</text>
+        <text x="500" y="278" text-anchor="end" class="v">10</text>
+        <text x="500" y="295" text-anchor="end" class="tm">时间 ms</text>
+      </svg>
+      <figcaption>示意：电流先升后降，峰值略超阈值，采样电压上叠加纹波和噪声。红虚线是上阈值，蓝虚线是下阈值，中间色带是迟滞窗口。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-rng">迟滞宽度 ΔV</label>
+        <span class="rv" id="s2-rv">0 mV</span>
+        <input type="range" id="s2-rng" min="0" max="160" step="10" value="0"></div>
+      <div class="ctl"><span class="ctl-l">噪声大小</span>
+        <div class="seg" id="s2-n"><button id="s2-n-1" data-v="0.03" aria-pressed="true">小</button><button id="s2-n-2" data-v="0.06" aria-pressed="false">大</button></div></div>
+      <dl class="read">
+        <dt>上 / 下阈值</dt><dd id="s2-thv">1.00 V / 1.00 V</dd>
+        <dt>噪声峰峰值约</dt><dd id="s2-npp">90 mV</dd>
+        <dt>输出翻转次数</dt><dd id="s2-cnt">0</dd>
+        <dt>结论</dt><dd><span id="s2-st" class="chip bad">抖动</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="side">
+  <span class="eyebrow">低边与高边</span>
+  <h2>采样电阻放在地线上还是电源线上</h2>
+  <p>低边采样把 Rs 放在负载和地之间。Rs 一端就是地，放大器对地测量即可，普通运放就行，简单便宜。缺点是负载的地被抬高了 I·Rs，而且负载对地短路时电流不经过 Rs，检测不到。</p>
+  <p>高边采样把 Rs 放在电源和负载之间。负载的地是干净的，对地短路也能检测到。但 Rs 两端都在 12 V 左右，要在很高的共模电压上测几十 mV 的差，普通运放的输入范围不够，要用差分放大器或专用电流检测芯片。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 290" role="img" aria-label="低边采样与高边采样两种接法，以及负载对地短路时的电流路径">
+        <text x="80" y="18" text-anchor="middle" class="v">12 V</text>
+        <path class="w" d="M68,26 H92 M80,26 V40"/>
+        <path class="w" d="M18,250 H42 M23,255 H37 M28,260 H32"/>
+        <g id="s3-g-lo">
+          <path class="w" d="M80,40 V50 M80,100 V150 M80,190 V250 M66,250 H94 M71,255 H89 M76,260 H84"/>
+          <rect id="s3-ld-lo" class="box lit" x="56" y="50" width="48" height="50" rx="4"/>
+          <text x="80" y="80" text-anchor="middle" class="t">负载</text>
+          <rect class="r" x="71" y="150" width="18" height="40" rx="2"/>
+          <text x="62" y="168" text-anchor="end" class="t">Rs</text>
+          <circle class="dot" cx="80" cy="130" r="3.5"/>
+          <path class="w" d="M80,130 H190"/>
+          <rect class="box" x="190" y="110" width="110" height="40" rx="4"/>
+          <text x="245" y="128" text-anchor="middle" class="t">普通运放 ×20</text>
+          <text x="245" y="143" text-anchor="middle" class="tm">对地测量</text>
+          <path class="w" d="M300,130 H330"/>
+          <text x="334" y="134" class="tm">至比较器</text>
+          <text x="92" y="122" class="tm">负载地</text>
+          <path id="s3-sh-lo" class="w s-bad dash" d="M80,40 H30 V250" hidden/>
+          <circle class="dot" cx="80" cy="40" r="3.5"/>
+          <path id="s3-f-lo" class="flow" d="M80,30 V48 M80,102 V248"/>
+          <path id="s3-fs-lo" class="flow bad" d="M80,30 V40 H30 V248" hidden/>
+        </g>
+        <g id="s3-g-hi" hidden>
+          <path class="w" d="M80,40 V50 M80,90 V130 M80,180 V250 M66,250 H94 M71,255 H89 M76,260 H84"/>
+          <rect class="r" x="71" y="50" width="18" height="40" rx="2"/>
+          <text x="62" y="68" text-anchor="end" class="t">Rs</text>
+          <circle class="dot" cx="80" cy="44" r="3.5"/>
+          <circle class="dot" cx="80" cy="96" r="3.5"/>
+          <path class="w" d="M80,44 H160 V60 H190 M80,96 H160 V84 H190"/>
+          <rect class="box" x="190" y="44" width="130" height="56" rx="4"/>
+          <text x="255" y="66" text-anchor="middle" class="t">电流检测放大器</text>
+          <text x="255" y="84" text-anchor="middle" class="tm">差分输入，耐高共模</text>
+          <path class="w" d="M320,72 H350"/>
+          <text x="354" y="76" class="tm">至比较器</text>
+          <rect id="s3-ld-hi" class="box lit" x="56" y="130" width="48" height="50" rx="4"/>
+          <text x="80" y="160" text-anchor="middle" class="t">负载</text>
+          <circle class="dot" cx="80" cy="115" r="3.5"/>
+          <path id="s3-sh-hi" class="w s-bad dash" d="M80,115 H30 V250" hidden/>
+          <path id="s3-f-hi" class="flow" d="M80,30 V128 M80,182 V248"/>
+          <path id="s3-fs-hi" class="flow bad" d="M80,30 V115 H30 V248" hidden/>
+        </g>
+        <text id="s3-shl" x="24" y="200" class="t" style="fill:var(--danger)" hidden>对地短路</text>
+      </svg>
+      <figcaption>示意：正常负载电流 3 A，Rs = 10 mΩ；对地短路电流按 20 A 计（实际受电源限流决定）。红色虚线是负载正端对机壳地的短路。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">采样位置</span>
+        <div class="seg" id="s3-m"><button id="s3-m-lo" data-v="lo" aria-pressed="true">低边</button><button id="s3-m-hi" data-v="hi" aria-pressed="false">高边</button></div></div>
+      <div class="ctl"><span class="ctl-l">故障</span>
+        <div class="seg" id="s3-f"><button id="s3-f-0" data-v="0" aria-pressed="true">正常</button><button id="s3-f-1" data-v="1" aria-pressed="false">负载对地短路</button></div></div>
+      <dl class="read">
+        <dt>电源输出电流</dt><dd id="s3-i">3 A</dd>
+        <dt>流过 Rs 的电流</dt><dd id="s3-irs">3 A</dd>
+        <dt>采样电压</dt><dd id="s3-vs">30 mV</dd>
+        <dt>Rs 两端共模电压</dt><dd id="s3-cm">≈ 0 V</dd>
+        <dt>负载地被抬高</dt><dd id="s3-gnd">30 mV</dd>
+        <dt>能否发现过流</dt><dd><span id="s3-st" class="chip on">正常</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="kelvin">
+  <span class="eyebrow">开尔文连接 · 四线采样</span>
+  <h2>采样线要从电阻焊盘内侧单独引出</h2>
+  <p>毫欧级的 Rs 和焊盘、焊锡、走线的电阻是同一个量级。如果采样线从大电流走线上随便取，测到的是 Rs 加上一段铜皮的压降，读数偏大，阈值就偏了。</p>
+  <p>开尔文连接让大电流走一对线，采样走另一对线，采样线从 Rs 焊盘内侧单独引出。采样线里几乎没有电流，它自己的电阻不产生压降，测到的就只是 Rs 本身。四端采样电阻就是为这个设计的。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 460 250" role="img" aria-label="采样电阻两端的焊盘与大电流走线，两线接法从走线取采样，开尔文接法从焊盘内侧取采样">
+        <path class="w" style="stroke-width:6" d="M20,90 H150 M310,90 H440"/>
+        <rect class="box" x="150" y="76" width="34" height="28" rx="2"/>
+        <rect class="box" x="276" y="76" width="34" height="28" rx="2"/>
+        <rect class="r" x="184" y="80" width="92" height="20" rx="2"/>
+        <text x="230" y="70" text-anchor="middle" class="t">Rs 10 mΩ</text>
+        <text x="167" y="124" text-anchor="middle" class="tm">焊盘</text>
+        <text x="293" y="124" text-anchor="middle" class="tm">焊盘</text>
+        <text x="60" y="78" class="tm">大电流走线</text>
+        <text id="s4-par" x="230" y="30" text-anchor="middle" class="tm">每侧焊盘 + 焊锡 + 一段铜皮 ≈ 1 mΩ（示意）</text>
+        <path id="s4-f" class="flow" d="M22,90 H438"/>
+        <g id="s4-g-2w">
+          <circle class="dot" cx="110" cy="90" r="3.5"/>
+          <circle class="dot" cx="350" cy="90" r="3.5"/>
+          <path class="w s-bad" d="M110,90 V190 H190 M350,90 V190 H270"/>
+        </g>
+        <g id="s4-g-4w" hidden>
+          <circle class="dot" cx="180" cy="100" r="3.5"/>
+          <circle class="dot" cx="280" cy="100" r="3.5"/>
+          <path class="w s-ok" d="M180,100 V150 H200 V190 M280,100 V150 H260 V190"/>
+        </g>
+        <rect class="box" x="190" y="186" width="80" height="36" rx="4"/>
+        <text x="230" y="209" text-anchor="middle" class="t">放大器</text>
+        <text id="s4-lab" x="230" y="244" text-anchor="middle" class="tm">采样点在走线上：测到 Rs + 两段寄生电阻</text>
+      </svg>
+      <figcaption>粗线是大电流路径，细线是采样线。开尔文接法下采样线只接在 Rs 焊盘内侧，几乎没有电流流过。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">采样接法</span>
+        <div class="seg" id="s4-m"><button id="s4-m-2" data-v="2" aria-pressed="true">从走线上取</button><button id="s4-m-4" data-v="4" aria-pressed="false">开尔文连接</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s4-rng">真实电流</label>
+        <span class="rv" id="s4-rv">5 A</span>
+        <input type="range" id="s4-rng" min="1" max="10" step="0.5" value="5"></div>
+      <dl class="read">
+        <dt>采样路径里的电阻</dt><dd id="s4-r">12 mΩ</dd>
+        <dt>测得电压</dt><dd id="s4-v">60 mV</dd>
+        <dt>按 10 mΩ 换算的电流</dt><dd id="s4-i">6 A</dd>
+        <dt>测量误差</dt><dd id="s4-e">+20%</dd>
+        <dt>5 A 阈值实际在</dt><dd><span id="s4-st" class="chip bad">4.17 A</span></dd>
+      </dl>
+      <p class="note" id="s4-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>怎么用采样电阻和比较器做过流保护？</summary>
+      <div class="ans"><p>在电流回路里串一个毫欧级采样电阻，把电流变成电压 V = I·Rs。这个电压一般先用运放放大几十倍，再送比较器和参考电压比较。超过阈值时比较器翻转，经驱动级关断 MOS，或者给 MCU 报警。通常还会锁存，避免关断后电流归零又自动打开。</p></div></details>
+    <details><summary>采样电阻阻值怎么选？</summary>
+      <div class="ans"><p>是折中。阻值大，信号大，精度高；但压降和功耗 I²·Rs 也大。一般让满量程时采样电压在几十到一两百 mV，再用放大器补足。还要注意额定功率、温度系数，以及用四端电阻或开尔文走线。</p></div></details>
+    <details><summary>低边采样和高边采样有什么区别？</summary>
+      <div class="ans"><p>低边采样电阻接地，共模电压接近 0，用普通运放就行，简单便宜。缺点是负载地被抬高，而且负载对地短路时电流绕过采样电阻，检测不到。高边采样能发现对地短路，负载地也干净，但采样电阻两端共模电压接近电源电压，要用差分放大器或专用电流检测芯片。</p></div></details>
+    <details><summary>比较器为什么要加迟滞？</summary>
+      <div class="ans"><p>电流上有纹波和噪声，在阈值附近会让比较器反复翻转，MOS 被反复开关。加正反馈做成迟滞比较器后，上升和下降的阈值分开，差值大于噪声峰峰值就不会抖。迟滞宽度约为 VOH·R1 / R2。</p></div></details>
+    <details><summary>什么是开尔文连接？</summary>
+      <div class="ans"><p>就是四线接法。大电流走一对线，采样另走一对线，从采样电阻焊盘内侧引出。采样线里几乎没有电流，焊盘、焊锡和走线的电阻不会算进测量值。毫欧级采样电阻不这样接，误差能到百分之几十。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="01-保险丝与自恢复保险丝.html"><span>上一页</span>保险丝与自恢复保险丝</a><a class="next" href="03-TVS与齐纳过压保护.html"><span>下一页</span>TVS与齐纳过压保护</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/*SCRIPT*/
+</script>
+</body>
+</html>

@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>反馈环路稳定性</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#power">电源相关</a><span class="sp"></span><span>06 / 08</span></nav>
+<header>
+  <span class="eyebrow">电源相关 · 环路补偿 · 伯德图</span>
+  <h1>反馈环路稳定性</h1>
+  <p class="lede">开关电源靠负反馈稳压。反馈太弱，稳压不准、响应慢；反馈太猛、相位又落后太多，负反馈就变成正反馈，输出振铃甚至自激。这页回答两个问题：稳定看什么指标，补偿零点和穿越频率怎么定。</p>
+</header>
+
+<section id="loop">
+  <span class="eyebrow">闭环框图 · 环路增益 T</span>
+  <h2>误差绕一圈回来，被放大了多少</h2>
+  <p>分压网络 H 把 Vout 缩小后和基准 Vref 比较，误差经误差放大器和补偿网络 Gc 放大，去调 PWM 占空比，功率级 Gp 再把占空比变成输出电压。信号沿这个环绕一圈的总增益叫环路增益：</p>
+  <p class="eq">T = Gc·Gp·H　　扰动到输出：d → d / (1 + T)</p>
+  <p>低频时 |T| 很大，负载跳变、输入纹波这类扰动被压小 |T| 倍，这就是稳压精度的来源。频率越高 |T| 越小，|T| = 1（0 dB）的频率叫穿越频率 fc，再往上环路就管不了了。麻烦在相移：每个极点都让信号更落后，如果到 fc 附近相移已经接近 −180°，负反馈就变成正反馈，1 + T 接近 0，扰动反而被放大。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 250" role="img" aria-label="电源反馈环路框图：Vref 与反馈比较得到误差，经补偿网络 Gc、PWM 与功率级 Gp 得到 Vout，扰动 d 叠加在输出上，Vout 经分压网络 H 反馈回比较点">
+        <text x="14" y="85" class="t">Vref</text>
+        <path class="w" d="M50,80 H84"/>
+        <polygon class="ah" points="86,80 77,76 77,84"/>
+        <circle class="r" cx="100" cy="80" r="14"/>
+        <path class="w" style="stroke-width:1.5" d="M93,80 H107 M100,73 V87"/>
+        <text x="78" y="66" class="t">+</text>
+        <text x="108" y="112" class="t">−</text>
+        <path class="w" d="M114,80 H146"/>
+        <polygon class="ah" points="150,80 141,76 141,84"/>
+        <text x="132" y="70" text-anchor="middle" class="tm">e</text>
+        <rect class="box" x="150" y="56" width="104" height="48" rx="5"/>
+        <text x="202" y="76" text-anchor="middle" class="t">误差放大 + 补偿</text>
+        <text x="202" y="95" text-anchor="middle" class="v">Gc(s)</text>
+        <path class="w" d="M254,80 H286"/>
+        <polygon class="ah" points="290,80 281,76 281,84"/>
+        <rect class="box" x="290" y="56" width="104" height="48" rx="5"/>
+        <text x="342" y="76" text-anchor="middle" class="t">PWM + 功率级</text>
+        <text x="342" y="95" class="v" text-anchor="middle">Gp(s)</text>
+        <path class="w" d="M394,80 H416"/>
+        <polygon class="ah" points="420,80 411,76 411,84"/>
+        <circle class="r" cx="430" cy="80" r="10"/>
+        <path class="w" style="stroke-width:1.5" d="M425,80 H435 M430,75 V85"/>
+        <path class="w" d="M430,34 V66"/>
+        <polygon class="ah" points="430,70 426,61 434,61"/>
+        <text x="422" y="26" text-anchor="end" class="t">扰动 d</text>
+        <text id="s1-dv" x="438" y="30" class="v">100 mV</text>
+        <path id="s1-ow" class="w" style="stroke-width:3" d="M440,80 H506"/>
+        <circle class="dot" cx="460" cy="80" r="3.5"/>
+        <text x="506" y="70" text-anchor="end" class="t">Vout</text>
+        <text id="s1-ov" x="510" y="104" text-anchor="end" class="v">0.2 mV</text>
+        <path class="w" d="M460,80 V180 H334"/>
+        <polygon class="ah" points="330,180 339,176 339,184"/>
+        <rect class="box" x="226" y="158" width="104" height="44" rx="5"/>
+        <text x="278" y="177" text-anchor="middle" class="t">分压网络</text>
+        <text x="278" y="195" text-anchor="middle" class="v">H</text>
+        <path class="w" d="M226,180 H100 V98"/>
+        <polygon class="ah" points="100,94 96,103 104,103"/>
+        <path id="s1-fl" class="flow thin" d="M116,86 H148 M256,86 H288 M396,86 H418 M442,86 H454 V174 H334 M224,174 H106 V100"/>
+        <text x="260" y="236" text-anchor="middle" class="t">环路增益 T = Gc·Gp·H：信号绕环一圈的总增益</text>
+      </svg>
+      <figcaption>绿色虚线是信号绕环的方向。扰动 d 按 100 mV 正弦计，右侧读数是它在输出上剩下的幅度。环路参数和下一节的默认设计一致（示意）。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">补偿设计</span>
+        <div class="seg" id="s1-d"><button id="s1-d-ok" data-v="5e3" aria-pressed="true">零点 5 kHz</button><button id="s1-d-bad" data-v="50e3" aria-pressed="false">零点 50 kHz</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-f">扰动频率 f</label>
+        <span class="rv" id="s1-fv">1 kHz</span>
+        <input type="range" id="s1-f" min="0" max="9" step="1" value="2"></div>
+      <dl class="read">
+        <dt>相位裕度 PM</dt><dd id="s1-pm">61°</dd>
+        <dt>|T|</dt><dd id="s1-tm">—</dd>
+        <dt>∠T</dt><dd id="s1-tp">—</dd>
+        <dt>|1 + T|</dt><dd id="s1-st1">—</dd>
+        <dt>输出剩下的波动</dt><dd id="s1-out">—</dd>
+        <dt>环路效果</dt><dd><span id="s1-st" class="chip on">压下</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="bode">
+  <span class="eyebrow">相位裕度 · 增益裕度 · 阶跃响应</span>
+  <h2>伯德图上读两个裕度</h2>
+  <p>在环路增益 T 的伯德图上找两个点。幅频曲线穿过 0 dB 的频率是 fc，这时相位离 −180° 还差多少，就是相位裕度 PM。相位到达 −180° 的频率上，增益比 0 dB 低多少，就是增益裕度 GM。</p>
+  <p class="eq">PM = 180° + ∠T(fc)　　GM = −20·lg|T(f180)|</p>
+  <p>工程判据（典型值）：<b>PM > 45°，通常取 45°~60°；GM > 6~10 dB；fc 取开关频率的 1/10~1/5</b>。PM 越小，阶跃响应振铃越多；PM 接近 90° 也不是越大越好，往往说明增益给得保守，响应偏慢。fc 越高，负载跳变时下冲越小，良好阻尼时 ΔV ≈ ΔI / (2π·fc·Cout)。但 fc 不能逼近 fsw/2：PWM 每个周期才更新一次占空比，是采样系统，fsw/2 附近有额外相移，开关纹波也会被环路放大。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 566" role="img" aria-label="环路增益伯德图：上为幅频曲线，中为相频曲线，标出穿越频率、相位裕度和增益裕度；下为负载阶跃 1 安时的输出电压偏差">
+        <g id="s2-axm"></g>
+        <g id="s2-axp"></g>
+        <g id="s2-axs"></g>
+        <line class="ax dash" x1="56" y1="114" x2="500" y2="114"/>
+        <line class="ax dash" x1="56" y1="260" x2="500" y2="260"/>
+        <text x="496" y="254" text-anchor="end" class="tm">−180°</text>
+        <line id="s2-fcl" class="ax dash" x1="0" y1="30" x2="0" y2="320"/>
+        <line id="s2-gml" style="stroke:var(--danger);stroke-width:2" x1="0" y1="114" x2="0" y2="114"/>
+        <text id="s2-gmt" x="0" y="0" class="v" style="fill:var(--danger)">GM</text>
+        <polyline id="s2-mag" class="real" points=""/>
+        <polyline id="s2-ph" class="real2" points=""/>
+        <line id="s2-pml" style="stroke:var(--flow);stroke-width:3" x1="0" y1="260" x2="0" y2="260"/>
+        <text id="s2-pmt" x="0" y="0" class="v" style="fill:var(--flow)">PM</text>
+        <text id="s2-fct" x="0" y="44" class="v hi">fc</text>
+        <polyline id="s2-step" class="real3" points=""/>
+        <text id="s2-dvt" x="0" y="0" class="v">ΔV</text>
+      </svg>
+      <figcaption>示意模型：峰值电流模式 Buck，fsw 500 kHz，Cout 100 µF，负载 1.65 Ω（3.3 V、2 A），输出极点约 1 kHz。补偿网络是积分 + 一个零点 fz + 一个高频极点（放在 fsw），PWM 采样的双极点放在 fsw/2。下图是 10 µs 时负载突然增加 1 A 的输出偏差。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">典型情况</span>
+        <div class="seg" id="s2-pre"><button id="s2-pre-ok" data-v="4,4" aria-pressed="true">推荐</button><button id="s2-pre-zh" data-v="7,4" aria-pressed="false">零点太高</button><button id="s2-pre-zl" data-v="0,4" aria-pressed="false">零点太低</button><button id="s2-pre-fc" data-v="4,7" aria-pressed="false">fc 太高</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s2-z">补偿零点 fz</label>
+        <span class="rv" id="s2-zv">5 kHz</span>
+        <input type="range" id="s2-z" min="0" max="8" step="1" value="4"></div>
+      <div class="ctl"><label class="ctl-l" for="s2-c">穿越频率 fc（调补偿增益）</label>
+        <span class="rv" id="s2-cv">50 kHz</span>
+        <input type="range" id="s2-c" min="0" max="8" step="1" value="4"></div>
+      <dl class="read">
+        <dt>fc / fsw</dt><dd id="s2-rc">1/10</dd>
+        <dt>相位裕度 PM</dt><dd id="s2-pm">—</dd>
+        <dt>增益裕度 GM</dt><dd id="s2-gm">—</dd>
+        <dt>下冲 ΔV</dt><dd id="s2-dv">—</dd>
+        <dt>估算 ΔI/(2π·fc·C)</dt><dd id="s2-est">—</dd>
+        <dt>振铃</dt><dd id="s2-ring">—</dd>
+        <dt>恢复到 ±5%</dt><dd id="s2-ts">—</dd>
+        <dt>结论</dt><dd><span id="s2-st" class="chip on">稳定</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="tune">
+  <span class="eyebrow">怎么调 · 怎么测</span>
+  <h2>看现象反推补偿</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>现象</th><th>原因</th><th>调法</th></tr></thead>
+    <tbody>
+      <tr><td>负载跳变后连续振铃</td><td>fc 处相移太大：零点放得比 fc 还高，或 fc 太靠近 fsw/2</td><td>零点往低频挪到 fc/10 附近，或降低 fc</td></tr>
+      <tr><td>下冲大、回得慢</td><td>fc 太低，环路反应慢</td><td>加大补偿增益，把 fc 提到 fsw 的 1/10 左右；或加大 Cout</td></tr>
+      <tr><td>恢复带一条长拖尾</td><td>零点太低，恢复尾巴的时间常数约 1/(2π·fz)</td><td>零点提高到 fc/10 附近，用一点相位裕度换恢复速度</td></tr>
+      <tr><td>只在某个负载或输入电压下振荡</td><td>输出极点随负载移动，环路增益随 Vin 变化</td><td>按最坏情况校核：最大 Vin、最小有效 Cout（算上直流偏压降额）、轻载和满载</td></tr>
+      <tr><td>电解电容换成陶瓷后不稳</td><td>ESR 零点原本在帮忙补相位，换成陶瓷后跑到很高的频率</td><td>重新补偿；电压模式改用 Type III</td></tr>
+    </tbody>
+  </table></div>
+  <p>电压模式和电流模式的补偿不一样。电压模式 Buck 的功率级是 LC 低通，谐振频率附近相位骤降接近 180°，要用带两个零点的 Type III 补偿把相位抬回来。电流模式先用内环控制电感电流，电感相当于受控电流源，功率级只剩一个输出极点，用一个零点的 Type II 就够，所以好补偿得多。</p>
+  <p>实测环路：在反馈分压电阻的上端串一个 10~50 Ω 的注入电阻，环路分析仪经隔离变压器在电阻两端注入小信号扫频，两端信号之比就是 T，直接得到伯德图。没有仪器时用电子负载做阶跃：振铃在一两个周期内衰减完，相位裕度大致够；振铃一串，裕度就不够。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>怎么判断一个开关电源的环路稳不稳定？</summary>
+      <div class="ans"><p>测环路增益 T = Gc·Gp·H 的伯德图，看两个裕度：穿越频率处相位裕度大于 45°，通常取 45°~60°；相位到 −180° 处增益裕度大于 6~10 dB。穿越 0 dB 时斜率最好是 −20 dB/十倍频。没有环路分析仪就做负载阶跃，看振铃多少。</p></div></details>
+    <details><summary>相位裕度为什么要 45° 以上？越大越好吗？</summary>
+      <div class="ans"><p>相位裕度小，fc 附近 1 + T 接近 0，扰动不但不被压下反而被放大，阶跃响应就振铃。元件容差、温度、负载和输入电压变化都会吃掉裕度，所以要留余量。也不是越大越好，接近 90° 一般说明增益给得保守，响应慢。60° 左右兼顾阻尼和速度。</p></div></details>
+    <details><summary>穿越频率为什么取开关频率的 1/10~1/5？</summary>
+      <div class="ans"><p>fc 越高，负载跳变时下冲越小，ΔV ≈ ΔI / (2π·fc·Cout)，恢复也越快。但 PWM 每个开关周期才更新一次占空比，是采样系统，fsw/2 附近有额外相移，fc 一靠近相位裕度就迅速变差；开关纹波也会进入环路被放大，造成占空比抖动。1/10~1/5 是两者的折中。</p></div></details>
+    <details><summary>补偿零点放在哪？</summary>
+      <div class="ans"><p>电流模式用 Type II，零点一般放在 fc 的 1/10 附近，不低于输出极点。零点在 fc 处补回将近 +90° 的相位，抵消输出极点的相移，相位裕度就够。零点离 fc 太近甚至更高，fc 处相位接近 −180°，会振铃；放得太低，相位裕度虽然大，但负载跳变后恢复尾巴的时间常数约 1/(2π·fz)，拖得很长。电压模式用 Type III，两个零点放在 LC 谐振频率附近。</p></div></details>
+    <details><summary>环路增益怎么实测？</summary>
+      <div class="ans"><p>在反馈分压电阻上端串一个 10~50 Ω 的注入电阻，用环路分析仪经隔离变压器注入扫频小信号，测电阻两侧的信号比，就是环路增益的幅度和相位。注入幅度要小，保证电路工作在线性区。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="05-纹波与噪声.html"><span>上一页</span>纹波与噪声</a><a class="next" href="07-电感选型.html"><span>下一页</span>电感选型</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 共用环路模型（示意）：峰值电流模式 Buck。T = K·(1 + s/ωz) / [s·(1 + s/ωpc)] · R/(1 + s·R·C) · 采样双极点 */
+const LP={fsw:500e3,C:100e-6,R:1.65,Q:0.6};
+LP.fpo=1/(2*Math.PI*LP.R*LP.C);LP.fn=LP.fsw/2;LP.fpc=LP.fsw;
+const D2R=Math.PI/180;
+function lpRaw(f,fz){
+  const x=f/LP.fn,w=2*Math.PI*f;
+  const mag=LP.R/w*Math.hypot(1,f/fz)/Math.hypot(1,f/LP.fpc)/Math.hypot(1,f/LP.fpo)/Math.hypot(1-x*x,x/LP.Q);
+  const ph=-90+(Math.atan(f/fz)-Math.atan(f/LP.fpc)-Math.atan(f/LP.fpo)-Math.atan2(x/LP.Q,1-x*x))/D2R;
+  return {mag,ph};
+}
+/* 把增益 K 定成 |T(fc)| = 1 */
+function lpT(f,fz,fc){const k=1/lpRaw(fc,fz).mag,r=lpRaw(f,fz);return {mag:r.mag*k,ph:r.ph,k};}
+function lpPM(fz,fc){return 180+lpRaw(fc,fz).ph;}
+const fmtDeg=d=>(d<0?'−':'')+Math.abs(d).toFixed(0)+'°';
+const fmtMv=v=>(v>=10?v.toFixed(0):v>=1?v.toFixed(1):v.toFixed(2))+' mV';
+
+/* 1. 扰动被压下多少 */
+const S1F=[100,300,1e3,3e3,1e4,2e4,5e4,1e5,2e5,5e5],s1={fz:5e3},S1FC=50e3;
+function s1u(){
+  const f=S1F[+$('s1-f').value],t=lpT(f,s1.fz,S1FC),pm=lpPM(s1.fz,S1FC);
+  const re=1+t.mag*Math.cos(t.ph*D2R),im=t.mag*Math.sin(t.ph*D2R),s=Math.hypot(re,im),g=1/s,out=100*g;
+  $('s1-fv').textContent=fmtF(f);$('s1-f').setAttribute('aria-valuetext',fmtF(f));
+  $('s1-pm').textContent=pm.toFixed(0)+'°';
+  $('s1-tm').textContent=(t.mag>=10?t.mag.toFixed(0):t.mag.toFixed(2))+' 倍，'+(20*Math.log10(t.mag)).toFixed(1)+' dB';
+  $('s1-tp').textContent=fmtDeg(t.ph);
+  $('s1-st1').textContent=s>=10?s.toFixed(0):s.toFixed(2);
+  $('s1-out').textContent=fmtMv(out)+'，扰动 100 mV';
+  $('s1-ov').textContent=fmtMv(out);
+  const amp=g>1.25,sup=g<0.8;
+  $('s1-ow').classList.toggle('s-bad',amp);$('s1-ow').classList.toggle('s-ok',sup);
+  $('s1-ov').style.fill=amp?'var(--danger)':sup?'var(--flow)':'';
+  $('s1-fl').classList.toggle('bad',amp);
+  let n;
+  if(amp){chip($('s1-st'),'放大 '+g.toFixed(1)+' 倍','bad');
+    n='这里 |T| ≈ 1，而 ∠T = '+fmtDeg(t.ph)+'，离 −180° 只差 '+(180+t.ph).toFixed(0)+'°，T 接近 −1，1 + T 只剩 '+s.toFixed(2)+'。反馈回来的信号和原来的扰动几乎同相叠加，负反馈变成了正反馈，扰动被放大。阶跃响应里的振铃就是这个频率。';}
+  else if(sup&&f<S1FC){chip($('s1-st'),'压小 '+s.toFixed(s>=10?0:1)+' 倍','on');
+    n=fmtF(f)+' 低于穿越频率 50 kHz，|T| 很大，负反馈把扰动压小约 |1 + T| 倍。频率越低 |T| 越大，所以低频稳压最准；积分器让直流处 |T| 趋于无穷，静态误差为零。';}
+  else if(f>S1FC*1.5){chip($('s1-st'),'环路不管','off');
+    n='高于穿越频率，|T| 远小于 1，环路已经跟不上，扰动原样到输出。这部分只能靠输出电容、后级 LC 滤波来压。';}
+  else{chip($('s1-st'),'基本不管','off');
+    n='接近穿越频率，|T| ≈ 1，环路基本压不住扰动。相位裕度 '+pm.toFixed(0)+'° 够大，1 + T 不会太小，所以也不会放大。换成零点 50 kHz 的设计再看这个频率。';}
+  $('s1-note').textContent=n;
+}
+seg('s1-d',v=>{s1.fz=+v;s1u();});
+$('s1-f').addEventListener('input',s1u);
+s1u();
+
+/* 2. 伯德图 + 负载阶跃 */
+const S2Z=[200,500,1e3,2e3,5e3,1e4,2e4,5e4,1e5],S2C=[1e4,2e4,3e4,4e4,5e4,7e4,1e5,1.5e5,2e5];
+const s2X=scale(2,6,56,500),s2Ym=scale(-40,60,170,30),s2Yp=scale(-300,-60,320,200),s2Xt=scale(0,200,56,500),s2Ys=scale(-200,100,526,386);
+(function(){
+  const am=$('s2-axm'),ap=$('s2-axp'),as=$('s2-axs'),L=['100','1k','10k','100k','1M'],neg=v=>String(v).replace('-','−');
+  const hl=(g,y,t)=>g.append(svgEl('line',{class:'gl',x1:56,y1:y,x2:500,y2:y}),svgEl('text',{x:50,y:y+4,'text-anchor':'end',class:'v'},t));
+  [-40,-20,0,20,40,60].forEach(v=>hl(am,s2Ym(v),neg(v)));
+  [-270,-180,-90].forEach(v=>hl(ap,s2Yp(v),neg(v)));
+  [-200,-100,0,100].forEach(v=>hl(as,s2Ys(v),neg(v)));
+  [2,3,4,5,6].forEach((d,i)=>{const x=s2X(d);
+    am.append(svgEl('line',{class:'gl',x1:x,y1:30,x2:x,y2:170}));
+    ap.append(svgEl('line',{class:'gl',x1:x,y1:200,x2:x,y2:320}),svgEl('text',{x,y:336,'text-anchor':i===4?'end':'middle',class:'v'},L[i]));});
+  [0,50,100,150,200].forEach((t,i)=>{const x=s2Xt(t);
+    as.append(svgEl('line',{class:'gl',x1:x,y1:386,x2:x,y2:526}),svgEl('text',{x,y:542,'text-anchor':i===4?'end':'middle',class:'v'},t));});
+  am.append(svgEl('path',{class:'ax',d:'M56,30 V170 H500'}),svgEl('text',{x:60,y:22,class:'tm'},'环路增益 |T| / dB'));
+  ap.append(svgEl('path',{class:'ax',d:'M56,200 V320 H500'}),svgEl('text',{x:60,y:194,class:'tm'},'相位 ∠T / °'),svgEl('text',{x:500,y:352,'text-anchor':'end',class:'tm'},'频率 / Hz（对数）'));
+  as.append(svgEl('path',{class:'ax',d:'M56,386 V526 H500'}),svgEl('text',{x:60,y:378,class:'tm'},'负载 +1 A 时 Vout 偏差 / mV'),svgEl('text',{x:500,y:558,'text-anchor':'end',class:'tm'},'时间 / µs'));
+})();
+/* 时域仿真：积分 + 零点 + 高频极点 → 电流内环（采样双极点）→ 输出电容与负载；10 µs 时负载加 1 A */
+function s2sim(fz,fc){
+  const k=1/lpRaw(fc,fz).mag,wz=2*Math.PI*fz,wp=2*Math.PI*LP.fpc,wn=2*Math.PI*LP.fn,Q=LP.Q,R=LP.R,C=LP.C,dt=1e-8;
+  let q=0,y=0,i=0,di=0,v=0;const vs=[];
+  for(let n=0;n<=20000;n++){
+    if(n%50===0)vs.push(v*1e3);
+    const io=n*dt>=10e-6?1:0,e=-v;
+    q+=e*dt;y+=wp*(k*(q+e/wz)-y)*dt;
+    di+=(wn*wn*(y-i)-wn/Q*di)*dt;i+=di*dt;
+    v+=(i-io-v/R)/C*dt;
+    if(Math.abs(v)>2)v=Math.sign(v)*2;
+  }
+  return vs;
+}
+
+function s2u(){
+  const fz=S2Z[+$('s2-z').value],fc=S2C[+$('s2-c').value],k=1/lpRaw(fc,fz).mag;
+  const mag=lg=>{const v=20*Math.log10(k*lpRaw(Math.pow(10,lg),fz).mag);return v<-40||v>60?NaN:v;};
+  const phs=lg=>{const v=lpRaw(Math.pow(10,lg),fz).ph;return v<-300?NaN:v;};
+  $('s2-mag').setAttribute('points',plot(mag,2,6,s2X,s2Ym,240));
+  $('s2-ph').setAttribute('points',plot(phs,2,6,s2X,s2Yp,240));
+  const xc=s2X(Math.log10(fc)),pc=lpRaw(fc,fz).ph,pm=180+pc,rt=xc>380,sd=rt?-8:8,an=rt?'end':'start';
+  ['x1','x2'].forEach(a=>{$('s2-fcl').setAttribute(a,xc.toFixed(1));$('s2-pml').setAttribute(a,xc.toFixed(1));});
+  const ft=$('s2-fct');ft.setAttribute('x',(xc+sd).toFixed(1));ft.setAttribute('text-anchor',an);ft.textContent='fc '+fmtF(fc);
+  const yp=s2Yp(Math.max(pc,-300));$('s2-pml').setAttribute('y2',yp.toFixed(1));
+  const pt=$('s2-pmt');pt.setAttribute('x',(xc+sd).toFixed(1));pt.setAttribute('text-anchor',an);
+  pt.setAttribute('y',((260+yp)/2+4).toFixed(1));pt.textContent='PM '+pm.toFixed(0)+'°';
+  let f180=null;for(let lg=2;lg<=7;lg+=0.002){if(lpRaw(Math.pow(10,lg),fz).ph<=-180){f180=Math.pow(10,lg);break;}}
+  const gm=f180?-20*Math.log10(k*lpRaw(f180,fz).mag):Infinity,inR=!!f180&&f180<=1e6,gl=$('s2-gml'),gt=$('s2-gmt');
+  show(gl,inR);show(gt,inR);
+  if(inR){const xg=s2X(Math.log10(f180)),yg=s2Ym(Math.max(-40,Math.min(60,-gm))),y0=s2Ym(0);
+    ['x1','x2'].forEach(a=>gl.setAttribute(a,xg.toFixed(1)));gl.setAttribute('y1',y0);gl.setAttribute('y2',yg.toFixed(1));
+    gt.setAttribute('x',(xg+(xg>380?-8:8)).toFixed(1));gt.setAttribute('text-anchor',xg>380?'end':'start');
+    gt.setAttribute('y',(Math.max(yg,y0)+16).toFixed(1));gt.textContent='GM '+gm.toFixed(0)+' dB';}
+  const mv=s2sim(fz,fc),j0=20;
+  $('s2-step').setAttribute('points',mv.map((v,j)=>s2Xt(j*0.5).toFixed(1)+','+s2Ys(Math.max(-200,Math.min(100,v))).toFixed(1)).join(' '));
+  let mn=0,jm=j0;mv.forEach((v,j)=>{if(v<mn){mn=v;jm=j;}});
+  const thr=Math.abs(mn)*0.05;let os=0,ring=0,last=j0;
+  for(let j=jm+1;j<mv.length-1;j++){os=Math.max(os,mv[j]);
+    if(Math.abs(mv[j])>thr&&((mv[j]>mv[j-1]&&mv[j]>=mv[j+1])||(mv[j]<mv[j-1]&&mv[j]<=mv[j+1])))ring++;}
+  mv.forEach((v,j)=>{if(Math.abs(v)>thr)last=j;});
+  const unst=pm<=0||gm<=0,slow=!unst&&last>=mv.length-2,dvt=$('s2-dvt'),xm=s2Xt(jm*0.5);
+  dvt.setAttribute('x',(xm+8).toFixed(1));dvt.setAttribute('y',(Math.min(522,s2Ys(Math.max(-200,mn))+14)).toFixed(1));
+  dvt.textContent=unst?'持续振荡':'下冲 '+Math.abs(mn).toFixed(0)+' mV';
+  const est=1e3/(2*Math.PI*fc*LP.C),r=LP.fsw/fc;
+  $('s2-zv').textContent=fmtF(fz);$('s2-z').setAttribute('aria-valuetext',fmtF(fz));
+  $('s2-cv').textContent=fmtF(fc);$('s2-c').setAttribute('aria-valuetext',fmtF(fc));
+  $('s2-rc').textContent='1/'+(+r.toFixed(1));
+  $('s2-pm').textContent=pm.toFixed(0)+'°';
+  $('s2-gm').textContent=isFinite(gm)?gm.toFixed(1)+' dB':'相位到不了 −180°';
+  $('s2-dv').textContent=unst?'越振越大':Math.abs(mn).toFixed(0)+' mV';
+  $('s2-est').textContent=est.toFixed(0)+' mV';
+  $('s2-ring').textContent=unst?'不收敛':ring===0?'无振铃':ring+' 个峰'+(os>thr?'，过冲 '+(os/Math.abs(mn)*100).toFixed(0)+'%':'');
+  $('s2-ts').textContent=unst||last>=mv.length-2?'超过 190 µs':((last-j0)*0.5).toFixed(0)+' µs';
+  let c,n;const rs='fc = fsw 的 1/'+(+r.toFixed(1)),tz=1e6/(2*Math.PI*fz);
+  if(unst){c=['不稳定，自激','bad'];n='相位裕度已经是负的：到 fc 时相位越过了 −180°，环路在 fc 附近变成正反馈，扰动越振越大。'+(fc>=1e5?rs+'，太靠近 fsw/2，采样双极点和补偿高频极点吃掉了太多相位。':'零点太高，积分器和输出极点的 −180° 没有被抵消。');}
+  else if(pm<45){c=[pm<30?'振铃严重':'裕度不足',pm<30?'bad':'warn'];
+    n=fz>fc/2?'零点 '+fmtF(fz)+' 离 fc 太近甚至更高，到穿越频率时零点还没起作用，积分器 −90° 加输出极点 −90°，相位接近 −180°。把零点挪回 fc/10 附近，相位裕度立刻回来。'
+      :rs+'，PWM 采样双极点和补偿高频极点在 fc 处已经带来很大相移。下冲确实小了，但振铃多，对元件参数变化也敏感。';}
+  else if(slow){c=['稳定，但拖尾','warn'];n='零点太低：相位裕度很大，可恢复后半段是一条慢慢爬回来的尾巴，时间常数约 1/(2π·fz) = '+tz.toFixed(0)+' µs。零点以下环路才有积分作用，零点越低，把最后那点误差消掉就越慢。';}
+  else if(fc<=2e4){c=['稳定，但偏慢','off'];n=rs+'，环路太慢：下冲按 ΔV ≈ ΔI/(2π·fc·Cout) 估算约 '+est.toFixed(0)+' mV，恢复也慢。提高补偿增益把 fc 往 fsw/10 推。';}
+  else{c=['稳定','on'];n='PM '+pm.toFixed(0)+'°'+(isFinite(gm)?'、GM '+gm.toFixed(0)+' dB':'')+'，都在推荐范围。下冲接近 ΔI/(2π·fc·Cout) 的估算值，'+(ring===0?'没有振铃':'振铃 '+ring+' 个峰就收住')+'；恢复尾巴的时间常数约 1/(2π·fz) = '+tz.toFixed(0)+' µs。把零点再往上挪能回得更快，代价是相位裕度变小。';}
+  chip($('s2-st'),c[0],c[1]);$('s2-note').textContent=n;
+}
+seg('s2-pre',v=>{const [a,b]=v.split(',');$('s2-z').value=a;$('s2-c').value=b;s2u();});
+['s2-z','s2-c'].forEach(id=>$(id).addEventListener('input',()=>{$('s2-pre').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed','false'));s2u();}));
+s2u();
+</script>
+</body>
+</html>

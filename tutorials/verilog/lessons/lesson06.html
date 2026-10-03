@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 06 课 边沿检测与按键消抖</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="06" data-root="../">
+
+<aside class="side">
+  <a class="brand" href="../index.html">Verilog 十二课<span>FPGA RTL 实训</span></a>
+  <ol></ol>
+  <div class="foot">
+    <button class="themer" type="button">主题</button>
+    <p>iverilog + GTKWave<br>Vivado / Quartus 可选</p>
+  </div>
+</aside>
+
+<main>
+<div class="ruler"></div>
+
+<p class="eyebrow">Lesson 06 <em>／ 输入处理</em></p>
+<h1>边沿检测与按键消抖</h1>
+<p class="lede">来自芯片外面的信号 —— 按键、传感器、别的芯片 —— 和你的时钟毫无关系,随时可能在时钟沿上变化。这一课把三个必备套路练熟:<strong>打两拍同步</strong>、<strong>取沿变脉冲</strong>、<strong>计时消抖</strong>。它们短得像模板,但少一个就是上板不稳定的根源。</p>
+
+<dl class="goals">
+  <dt>学完这一课你能</dt>
+  <dd>说清亚稳态是什么,以及为什么两级触发器能压住它</dd>
+  <dd>用三个触发器 + 一个与门把电平变成单周期脉冲</dd>
+  <dd>写出带计时确认的按键消抖,并用注入抖动的 Testbench 证明它有效</dd>
+  <dd>解释为什么消抖时间要选 10–20ms 这个量级</dd>
+</dl>
+
+<nav class="toc"><h2>本课路线</h2><ol></ol></nav>
+
+<h2 id="s1">先打两拍,再干别的</h2>
+<p>触发器要求输入在时钟沿前后各稳定一小段时间(建立时间和保持时间)。异步信号不遵守这个约定,如果它正好在沿上跳变,触发器的输出会进入一个既不是 0 也不是 1 的中间状态,并持续一段<strong>不确定</strong>的时间才随机落到某一边 —— 这就是<strong>亚稳态</strong>。</p>
+<p>亚稳态没法消除,只能<em>降低它传播出去的概率</em>。办法是再打一拍:给第一级触发器整整一个时钟周期的时间去稳定下来,第二级几乎总能采到一个干净的 0 或 1。</p>
+
+<figure class="dia">
+<svg viewBox="0 0 600 160" role="img" aria-label="同步与取沿的结构:异步输入经过 d0、d1 两级触发器同步,d2 再打一拍保存历史值,rise 由 d1 与非 d2 相与得到">
+  <defs>
+    <marker id="ar-6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon class="d-mk" points="0,1 10,5 0,9"/>
+    </marker>
+  </defs>
+
+  <line class="d-arw" x1="106" y1="32" x2="272" y2="32"/>
+  <line class="d-arw" x1="106" y1="28" x2="106" y2="36"/>
+  <line class="d-arw" x1="272" y1="28" x2="272" y2="36"/>
+  <text class="d-sub" x="189" y="24" text-anchor="middle">两级同步器</text>
+
+  <text class="d-tab" x="44" y="66" text-anchor="end">sig_in</text>
+  <text class="d-sub" x="44" y="82" text-anchor="end">(异步)</text>
+  <line class="d-arw" x1="50" y1="68" x2="102" y2="68" marker-end="url(#ar-6)"/>
+
+  <rect class="d-box" x="106" y="44" width="60" height="48"/>
+  <text class="d-txt" x="136" y="74">d0</text>
+  <line class="d-arw" x1="168" y1="68" x2="208" y2="68" marker-end="url(#ar-6)"/>
+
+  <rect class="d-box" x="212" y="44" width="60" height="48"/>
+  <text class="d-txt" x="242" y="74">d1</text>
+  <line class="d-arw" x1="274" y1="68" x2="314" y2="68" marker-end="url(#ar-6)"/>
+
+  <rect class="d-box" x="318" y="44" width="60" height="48"/>
+  <text class="d-txt" x="348" y="74">d2</text>
+  <text class="d-sub" x="348" y="112">上一拍的历史值</text>
+  <line class="d-arw" x1="380" y1="68" x2="422" y2="68" marker-end="url(#ar-6)"/>
+  <text class="d-edge" x="401" y="60" text-anchor="middle">d2</text>
+
+  <rect class="d-box-hl" x="426" y="44" width="150" height="48"/>
+  <text class="d-txt" x="501" y="66">rise</text>
+  <text class="d-sub" x="501" y="84">= d1 &amp; ~d2</text>
+
+  <circle class="d-dot" cx="294" cy="68" r="3.5"/>
+  <polyline class="d-arw-hl" points="294,68 294,132 480,132 480,96" marker-end="url(#ar-6)"/>
+  <text class="d-edge-hl" x="410" y="126" text-anchor="middle">d1</text>
+</svg>
+<figcaption><b>三个触发器,一个与门,全部套路都在这里。</b><code>d0</code> 有可能采到亚稳态,给它一整个周期去落定;<code>d1</code> 是干净的同步电平;<code>d2</code> 是 <code>d1</code> 上一拍的值。“现在是 1 而上一拍是 0”就是上升沿,于是 <code>rise = d1 &amp; ~d2</code> 天然只高一个时钟周期。</figcaption>
+</figure>
+
+<div class="box pit">
+  <b>两级够不够</b>
+  <p>够不够取决于失效间隔(MTBF),它随同步级数呈<strong>指数</strong>改善。50MHz、信号跳变率不高的场合,两级的 MTBF 已经是几百年量级 —— 完全够。高频(几百 MHz)或跳变很频繁时才考虑三级。</p>
+  <p>但两条规矩不能破:一是<strong>被同步的信号必须是单比特</strong>。多比特总线各位的同步结果可能来自不同拍,拼出一个从未存在过的数值 —— 多比特要用握手或异步 FIFO(第 09 课)。二是<strong>同步链上不许插组合逻辑</strong>,<code>d0</code> 到 <code>d1</code> 之间必须是直连。</p>
+</div>
+
+<h2 id="srst">复位本身也是异步的:异步复位、同步释放</h2>
+<p>第 00 课和第 03 课都欠了这笔账,现在还上 —— 因为它用的正是刚才那个打两拍的电路。</p>
+<p>问题在这里:复位信号来自按键或电源监控芯片,它<strong>什么时候撤销和你的时钟毫无关系</strong>。如果撤销时刻正好落在时钟沿附近,芯片里成千上万个触发器不会同时退出复位 —— 有的赶上了这一拍,有的要等下一拍。状态机于是可能落进一个<em>非法状态组合</em>,而这种失败是概率性的、每次上电表现都不同。</p>
+<p>手册里管这叫<strong>恢复时间(recovery time)</strong>违例。解法是把两者的优点都要:</p>
+<ul>
+  <li><strong>加复位时异步</strong> —— 不管有没有时钟,拉低就立刻生效。上电时钟还没起来也管用。</li>
+  <li><strong>撤复位时同步</strong> —— 让释放动作对齐到时钟沿,全芯片同一拍退出复位。</li>
+</ul>
+
+<figure class="dia">
+<svg viewBox="0 0 460 200" role="img" aria-label="异步复位同步释放的波形:外部复位在两个时钟沿之间撤销,经过两级触发器后,全局复位的撤销对齐到了时钟沿">
+  <rect class="w-span" x="155" y="24" width="85" height="146"/>
+  <text class="w-marktxt" x="197" y="18" text-anchor="middle">撤销被同步 2 拍</text>
+  <line class="w-mark" x1="155" y1="24" x2="155" y2="170"/>
+
+  <text class="w-lbl" x="92" y="44" text-anchor="end">clk</text>
+  <polyline class="w-clk" points="100,50 120,50 120,30 150,30 150,50 180,50 180,30 210,30 210,50 240,50 240,30 270,30 270,50 300,50 300,30 330,30 330,50 360,50 360,30 390,30 390,50 420,50 420,30 440,30"/>
+
+  <text class="w-lbl" x="92" y="80" text-anchor="end">rst_n_ext</text>
+  <polyline class="w-ink" points="100,86 155,86 155,66 440,66"/>
+
+  <text class="w-lbl" x="92" y="116" text-anchor="end">rst_sync[0]</text>
+  <polyline class="w-ink" points="100,122 180,122 180,102 440,102"/>
+
+  <text class="w-lbl" x="92" y="152" text-anchor="end">rst_n 全局</text>
+  <polyline class="w-sig" points="100,158 240,158 240,138 440,138"/>
+
+  <text class="w-note" x="248" y="180" text-anchor="start">撤销时刻对齐到时钟沿,全芯片同一拍退出复位</text>
+  <text class="w-note" x="100" y="194" text-anchor="start">(拉低时是异步的:图中没画,rst_n_ext 一低,三个都立刻变 0)</text>
+</svg>
+<figcaption><b>撤销被推迟到时钟沿,加复位却仍然是立刻的。</b><code>rst_n_ext</code> 在两个沿之间撤销 —— 这个时刻不受你控制。经过两级触发器后,全局 <code>rst_n</code> 的上升沿<em>一定</em>落在时钟沿上。而复位<strong>拉低</strong>那一路走的是触发器的异步复位端,不需要时钟,所以上电阶段依然有效。</figcaption>
+</figure>
+
+<figure class="file">
+  <figcaption><span class="path">写法示例</span><span class="note">几乎每个工程的顶层都有一份</span></figcaption>
+  <div class="body"><pre><code>// 外部复位进来,同步化之后再分发给全芯片
+reg [1:0] rst_sync;
+
+always @(posedge clk or negedge rst_n_ext) begin
+    if (!rst_n_ext) rst_sync &lt;= 2'b00;             // 异步:立刻清零
+    else            rst_sync &lt;= {rst_sync[0], 1'b1}; // 同步:1 一级一级顶上来
+end
+
+wire rst_n = rst_sync[1];    // 全设计都用这一个</code></pre></div>
+</figure>
+<p>看那句 <code>{rst_sync[0], 1'b1}</code> —— 复位释放后,一个 <code>1</code> 从低位往高位挤,两拍之后 <code>rst_sync[1]</code> 才变高。这就是第 03 课练习二那个移位寄存器,换了个用途。</p>
+<div class="box pit">
+  <b>三条容易漏的细节</b>
+  <ul>
+    <li><strong>这个模块自己用的是异步复位</strong>(敏感列表里有 <code>negedge rst_n_ext</code>),它是全芯片唯一一个直接吃外部复位的地方。其余所有模块都用同步化之后的 <code>rst_n</code>。</li>
+    <li><strong>每个时钟域各要一份</strong>。设计里有两个时钟,就要两条这样的链,各自用自己的时钟。共用一份等于又制造了一次跨时钟域。</li>
+    <li>Vivado 里给 <code>rst_sync</code> 加 <code>(* async_reg = "true" *)</code>,和同步器一个道理。</li>
+  </ul>
+</div>
+
+<h2 id="s2">边沿检测:把电平变成脉冲</h2>
+<figure class="file">
+  <figcaption><span class="path">code/lesson06/edge_det.v</span><span class="note">可综合 · 三个触发器 + 三个门</span></figcaption>
+  <div class="body"><pre><code>module edge_det (
+    input  wire clk,
+    input  wire rst_n,
+    input  wire sig_in,       // 可能来自外部引脚或别的时钟域
+    output wire sig_sync,     // 同步到本时钟域之后的稳定电平
+    output wire rise,         // 上升沿:只高一个时钟周期
+    output wire fall,         // 下降沿:只高一个时钟周期
+    output wire both          // 任意跳变
+);
+
+    // 在 Vivado 里给 d0/d1 加 (* async_reg = "true" *) 属性,
+    // 工具会把这两个触发器摆得尽量近,减少亚稳态传播的机会。
+    reg d0, d1, d2;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            d0 &lt;= 1'b0;
+            d1 &lt;= 1'b0;
+            d2 &lt;= 1'b0;
+        end else begin
+            d0 &lt;= sig_in;     // 第一拍:有可能采到亚稳态
+            d1 &lt;= d0;         // 第二拍:基本已经稳定
+            d2 &lt;= d1;         // 第三拍:上一拍的历史,用来比较
+        end
+    end
+
+    assign sig_sync = d1;
+    assign rise     =  d1 &amp; ~d2;    // 现在是 1、上一拍是 0
+    assign fall     = ~d1 &amp;  d2;    // 现在是 0、上一拍是 1
+    assign both     =  d1 ^  d2;
+
+endmodule</code></pre></div>
+</figure>
+
+<figure class="dia">
+<svg viewBox="0 0 480 258" role="img" aria-label="边沿检测波形:sig_in 在时钟沿之间跳变,经过 d0、d1 两拍同步后,d1 与 d2 错开一拍,rise 在两次上升沿各产生一个恰好一个周期宽的脉冲">
+  <line class="w-grid" x1="100" y1="24" x2="100" y2="236"/>
+  <line class="w-grid" x1="140" y1="24" x2="140" y2="236"/>
+  <line class="w-grid" x1="180" y1="24" x2="180" y2="236"/>
+  <line class="w-grid" x1="220" y1="24" x2="220" y2="236"/>
+  <line class="w-grid" x1="260" y1="24" x2="260" y2="236"/>
+  <line class="w-grid" x1="300" y1="24" x2="300" y2="236"/>
+  <line class="w-grid" x1="340" y1="24" x2="340" y2="236"/>
+  <line class="w-grid" x1="380" y1="24" x2="380" y2="236"/>
+  <line class="w-grid" x1="420" y1="24" x2="420" y2="236"/>
+  <line class="w-grid" x1="460" y1="24" x2="460" y2="236"/>
+
+  <text class="w-lbl" x="92" y="44" text-anchor="end">clk</text>
+  <polyline class="w-clk" points="100,50 100,30 120,30 120,50 140,50 140,30 160,30 160,50 180,50 180,30 200,30 200,50 220,50 220,30 240,30 240,50 260,50 260,30 280,30 280,50 300,50 300,30 320,30 320,50 340,50 340,30 360,30 360,50 380,50 380,30 400,30 400,50 420,50 420,30 440,30 440,50 460,50 460,30"/>
+
+  <text class="w-lbl" x="92" y="80" text-anchor="end">sig_in</text>
+  <polyline class="w-ink" points="100,86 116,86 116,66 250,66 250,86 332,86 332,66 398,66 398,86 460,86"/>
+
+  <text class="w-lbl" x="92" y="116" text-anchor="end">d0</text>
+  <polyline class="w-ink" points="100,122 140,122 140,102 260,102 260,122 340,122 340,102 420,102 420,122 460,122"/>
+
+  <text class="w-lbl" x="92" y="152" text-anchor="end">d1</text>
+  <polyline class="w-ink" points="100,158 180,158 180,138 300,138 300,158 380,158 380,138 460,138 460,158"/>
+
+  <text class="w-lbl" x="92" y="188" text-anchor="end">d2</text>
+  <polyline class="w-ink" points="100,194 220,194 220,174 340,174 340,194 420,194 420,174 460,174"/>
+
+  <text class="w-lbl" x="92" y="224" text-anchor="end">rise</text>
+  <polyline class="w-sig" points="100,230 180,230 180,210 220,210 220,230 380,230 380,210 420,210 420,230 460,230"/>
+
+  <text class="w-note" x="100" y="250" text-anchor="middle">50ns</text>
+  <text class="w-note" x="180" y="250" text-anchor="middle">90ns</text>
+  <text class="w-note" x="260" y="250" text-anchor="middle">130ns</text>
+  <text class="w-note" x="340" y="250" text-anchor="middle">170ns</text>
+  <text class="w-note" x="420" y="250" text-anchor="middle">210ns</text>
+</svg>
+<figcaption><b>看 d1 和 d2 之间那一格错位。</b><code>sig_in</code> 在 58ns 跳高(两个时钟沿之间),<code>d0</code> 在 70ns 采到它,<code>d1</code> 在 90ns 跟上。此后 <code>d1</code> 和 <code>d2</code> 永远错开一格,只在这一格里 <code>d1=1、d2=0</code> —— <code>rise</code> 因此<em>恰好</em>一个时钟周期宽,不多不少。</figcaption>
+</figure>
+
+<div class="box tip">
+  <b>为什么一定要变成单周期脉冲</b>
+  <p>因为下游几乎总是写 <code>if (rise) cnt &lt;= cnt + 1;</code> 这种代码。如果直接用电平去使能,按键按住 0.2 秒就是一千万个时钟周期,计数器会一路加到爆。<strong>“一次事件对应一个脉冲”</strong>是整个同步设计的基本约定,状态机的启动信号、FIFO 的读写使能、串口的发送请求,全都依赖它。</p>
+</div>
+
+<h2 id="s3">按键抖动:金属片真的会弹</h2>
+<p>机械按键的两片金属接触时会物理弹跳几次,电气上表现为几毫秒内高低乱跳十几次。在 50MHz 时钟看来,这是<strong>几十万个时钟周期</strong>的混乱 —— 你写的边沿检测会老老实实报告十几个上升沿。</p>
+
+<figure class="dia">
+<svg viewBox="0 0 480 160" role="img" aria-label="按键消抖示意:key_in 在按下和松开时各有几次机械抖动,key_state 只在输入稳定超过设定时长后才翻转,key_down 因此只产生一个脉冲">
+  <rect class="w-span" x="140" y="24" width="38" height="110"/>
+  <rect class="w-span" x="300" y="24" width="14" height="110"/>
+  <text class="w-marktxt" x="159" y="18" text-anchor="middle">机械抖动</text>
+
+  <line class="w-mark" x1="178" y1="24" x2="178" y2="146"/>
+  <line class="w-mark" x1="210" y1="24" x2="210" y2="146"/>
+  <line class="w-mark" x1="178" y1="142" x2="210" y2="142"/>
+  <text class="w-marktxt" x="216" y="146" text-anchor="start">稳定 STABLE 个时钟才认账</text>
+
+  <text class="w-lbl" x="92" y="44" text-anchor="end">key_in</text>
+  <polyline class="w-ink" points="100,30 140,30 140,50 152,50 152,30 160,30 160,50 172,50 172,30 178,30 178,50 300,50 300,30 308,30 308,50 314,50 314,30 460,30"/>
+
+  <text class="w-lbl" x="92" y="80" text-anchor="end">key_state</text>
+  <polyline class="w-sig" points="100,86 210,86 210,66 346,66 346,86 460,86"/>
+
+  <text class="w-lbl" x="92" y="116" text-anchor="end">key_down</text>
+  <polyline class="w-sig" points="100,122 210,122 210,102 218,102 218,122 460,122"/>
+</svg>
+<figcaption><b>抖动被时间挡在了外面。</b><code>key_in</code> 低电平表示按下,按下和松开时各有几次弹跳。<code>key_state</code> 的更新条件是“输入和当前认定值持续不同超过 STABLE 个时钟”,任何一次抖动都会把计数器清零重数,所以整段抖动只换来<em>一个</em> <code>key_down</code> 脉冲。图为示意,时间未按比例。</figcaption>
+</figure>
+
+<figure class="file">
+  <figcaption><span class="path">code/lesson06/key_debounce.v</span><span class="note">可综合 · 同步 → 计时 → 取沿</span></figcaption>
+  <div class="body"><pre><code>module key_debounce #(
+    parameter STABLE = 1_000_000      // 要稳定这么多个时钟才认账(50MHz → 20ms)
+)(
+    input  wire clk,
+    input  wire rst_n,
+    input  wire key_in,
+    output reg  key_state,            // 消抖后的稳定电平,1 = 按下
+    output wire key_down,             // 按下瞬间的单周期脉冲
+    output wire key_up                // 松开瞬间的单周期脉冲
+);
+
+    // ---- 第一步:同步进本时钟域,顺手把低有效翻成高有效 ----
+    reg d0, d1;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            d0 &lt;= 1'b0;
+            d1 &lt;= 1'b0;
+        end else begin
+            d0 &lt;= ~key_in;
+            d1 &lt;= d0;
+        end
+    end
+
+    // ---- 第二步:输入和当前认定值不一致就开始数,数满 STABLE 才更新 ----
+    reg [$clog2(STABLE)-1:0] cnt;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            cnt       &lt;= 0;
+            key_state &lt;= 1'b0;
+        end else if (d1 != key_state) begin
+            if (cnt == STABLE - 1) begin
+                key_state &lt;= d1;      // 稳定够久了,承认这次变化
+                cnt       &lt;= 0;
+            end else begin
+                cnt &lt;= cnt + 1'b1;    // 还不够久,继续数
+            end
+        end else begin
+            cnt &lt;= 0;                 // 又抖回去了,清零重新数
+        end
+    end
+
+    // ---- 第三步:在已经干净的 key_state 上取沿 ----
+    reg key_state_d;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) key_state_d &lt;= 1'b0;
+        else        key_state_d &lt;= key_state;
+    end
+
+    assign key_down =  key_state &amp; ~key_state_d;
+    assign key_up   = ~key_state &amp;  key_state_d;
+
+endmodule</code></pre></div>
+</figure>
+<p>整个模块的关键就是那个 <code>else cnt &lt;= 0;</code> 分支 —— <strong>只要输入抖回去一次,计时就从头开始</strong>。这比“检测到边沿后延时若干毫秒再采样一次”的写法更稳:后者如果延时结束时恰好落在另一次抖动上,照样会判错。</p>
+
+<div class="tw">
+<table>
+  <caption>STABLE 该选多大</caption>
+  <thead><tr><th>取值(50MHz)</th><th>对应时间</th><th>后果</th></tr></thead>
+  <tbody>
+    <tr><td class="num">50_000</td><td>1 ms</td><td>比抖动时间还短,抖动会漏过去</td></tr>
+    <tr><td class="num">1_000_000</td><td>20 ms</td><td><strong>常用值</strong>,机械按键抖动一般 5–10ms</td></tr>
+    <tr><td class="num">5_000_000</td><td>100 ms</td><td>手感发黏,快速连按会丢键</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s4">跑仿真</h2>
+<div class="term"><pre><span class="cmd">.\sim.bat lesson06 edge_det_tb</span>
+[TB]  110 ns  rise 脉冲
+[TB]  170 ns  fall 脉冲
+[TB]  210 ns  rise 脉冲
+[TB]  250 ns  fall 脉冲
+[TB] rise 共 2 次,fall 共 2 次(各应为 2)
+[结果] 通过
+
+<span class="cmd">.\sim.bat lesson06 key_debounce_tb</span>
+[TB] STABLE=5 个时钟。按一次键,途中抖动 4 次
+[TB]  230 ns  key_down 脉冲
+[TB] 松开,途中抖动 2 次
+[TB]  670 ns  key_up   脉冲
+[TB] key_down 共 1 次,key_up 共 1 次(各应为 1)
+[结果] 消抖成功,抖动一次都没漏过去</pre></div>
+<div class="box tip">
+  <b>验证消抖的正确姿势</b>
+  <p>不要只测“按一下能不能识别”,那太容易通过了。要测的是<strong>抖动能不能被挡住</strong> —— 所以 <code>key_debounce_tb.v</code> 里的 <code>press</code> 任务故意用 17ns、9ns、13ns、7ns 这种<em>非整数倍时钟周期</em>的奇怪延时来造抖动。整数倍的抖动是最容易通过的一种,专挑它测等于没测。</p>
+  <p>把 <code>press</code> 里最后那段稳定时间从 <code>#400</code> 改成 <code>#60</code>(不够 STABLE),再跑一次:<code>key_down</code> 应该一次都不出现。测“该不响应的时候不响应”和测“该响应的时候响应”同样重要。</p>
+</div>
+
+<h2 id="ex">练习</h2>
+<ol class="tasks">
+<li>
+  <h3>能不能少用一个触发器<span class="lv">热身</span></h3>
+  <p>把 <code>edge_det.v</code> 里的 <code>d2</code> 删掉,改成 <code>assign rise = d1 &amp; ~d0;</code>,重跑 <code>edge_det_tb</code>。脉冲数还对吗?这样写有什么隐患?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>脉冲数仍然是 2 和 2,只是每个脉冲提前了一拍出现 —— 功能上“对”。</p>
+    <p>隐患在于 <code>d0</code> <strong>可能正处于亚稳态</strong>。把一个还没落定的信号送进组合逻辑,那个中间电平会在与门、非门里被放大成毛刺,再扩散给所有用到 <code>rise</code> 的下游 —— 一次亚稳态污染一片电路。</p>
+    <p>所以同步链有一条硬规矩:<strong>第一级的输出只能接第二级,不许参与任何其他逻辑</strong>。省下的那一个触发器,是 FPGA 里最不值得省的资源。</p>
+  </div></details>
+</li>
+<li>
+  <h3>按键计数器<span class="lv">动手</span></h3>
+  <p>写 <code>code/lesson06/key_cnt.v</code>:例化 <code>key_debounce</code>,每按一次键让 8 位 <code>led</code> 加一。写 TB 连按三次,验证 <code>led</code> 恰好是 3。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <pre>module key_cnt #(
+    parameter STABLE = 1_000_000
+)(
+    input  wire       clk,
+    input  wire       rst_n,
+    input  wire       key_in,
+    output reg  [7:0] led
+);
+    wire key_down;
+
+    key_debounce #(.STABLE(STABLE)) u_key (
+        .clk       (clk),
+        .rst_n     (rst_n),
+        .key_in    (key_in),
+        .key_state (),                 // 用不到,悬空
+        .key_down  (key_down),
+        .key_up    ()
+    );
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)        led &lt;= 8'd0;
+        else if (key_down) led &lt;= led + 1'b1;   // 一个脉冲加一次
+    end
+endmodule</pre>
+    <p>这就是把电平变成脉冲的回报:计数逻辑只有一行,而且不管按住多久都只加一。如果这里换成 <code>if (key_state)</code>,按住半秒就能加两千五百万次。</p>
+  </div></details>
+</li>
+<li>
+  <h3>长按检测<span class="lv">动手</span></h3>
+  <p>写 <code>key_long.v</code>:在 <code>key_debounce</code> 之外再加一层,按住超过 <code>LONG</code> 个时钟就输出一个 <code>long_press</code> 单周期脉冲,而且按住不放也只输出一次。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <pre>module key_long #(
+    parameter STABLE = 1_000_000,
+    parameter LONG   = 50_000_000     // 50MHz → 1 秒
+)(
+    input  wire clk,
+    input  wire rst_n,
+    input  wire key_in,
+    output reg  long_press
+);
+    wire key_state, key_up;
+
+    key_debounce #(.STABLE(STABLE)) u_key (
+        .clk(clk), .rst_n(rst_n), .key_in(key_in),
+        .key_state(key_state), .key_down(), .key_up(key_up)
+    );
+
+    reg [$clog2(LONG)-1:0] hold;
+    reg                    fired;      // 这次按住已经报过了
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            hold       &lt;= 0;
+            fired      &lt;= 1'b0;
+            long_press &lt;= 1'b0;
+        end else begin
+            long_press &lt;= 1'b0;        // 默认只高一拍
+
+            if (!key_state) begin      // 松开了 → 全部复位,等下一次
+                hold  &lt;= 0;
+                fired &lt;= 1'b0;
+            end else if (!fired) begin
+                if (hold == LONG - 1) begin
+                    long_press &lt;= 1'b1;
+                    fired      &lt;= 1'b1;   // 打上标记,按住也不再报
+                end else begin
+                    hold &lt;= hold + 1'b1;
+                end
+            end
+        end
+    end
+endmodule</pre>
+    <p>两个技巧值得记住:<code>long_press &lt;= 1'b0;</code> 写在块开头当默认值,后面某个分支再拉高 —— 这样自动就是单周期脉冲,不用另写清零逻辑;<code>fired</code> 标志保证“一次按住只报一次”,松开时清掉。这两招在状态机里天天用。</p>
+  </div></details>
+</li>
+<li>
+  <h3>为什么多比特不能各自打两拍<span class="lv">想清楚</span></h3>
+  <p>一个 8 位计数器在另一个时钟域里跑,你想把它同步过来看。如果给 8 位各接一条两级同步器,会出什么问题?举一个具体的数值例子。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>计数器从 <code>8'h7F</code> 加到 <code>8'h80</code> 时,<strong>8 位同时翻转</strong>。八条同步链是各自独立的,某几位可能采到了新值、另几位还是旧值 —— 你读到的可能是 <code>8'hFF</code>、<code>8'h00</code>、<code>8'hBF</code>…… 全都是<em>从未真实存在过</em>的数值。而且它不是每次都错,概率性出现,极难复现。</p>
+    <p>三种正确做法:</p>
+    <ul>
+      <li><strong>格雷码</strong>。让相邻两个值只差一位,这样最坏情况也只是采到旧值或新值,不会采到第三个值。异步 FIFO 的读写指针就用它。</li>
+      <li><strong>握手</strong>。数据放在普通寄存器里保持稳定不动,只把一位 <code>valid</code> 同步过去;对方看到 <code>valid</code> 才去取数据。单比特同步是安全的,数据靠“稳定不动”来保证。</li>
+      <li><strong>异步 FIFO</strong>。上面两招的成品封装,吞吐量大时用它。</li>
+    </ul>
+    <p>记住这条边界:<strong>两级同步器只对单比特有效</strong>。它是这一课唯一一个用错了会随机出错、而仿真通常抓不到的地方。</p>
+  </div></details>
+</li>
+</ol>
+
+<nav class="pager"></nav>
+</main>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

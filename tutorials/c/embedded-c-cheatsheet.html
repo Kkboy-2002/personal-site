@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>嵌入式C考点速成</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#f4f6f3; --surface:#ffffff; --ink:#1d2620; --muted:#5c6862;
+  --accent:#0d6e4f; --accent-soft:#e2efe8; --accent-line:#c3ddd0;
+  --copper:#a8622a; --copper-soft:#f5ead9;
+  --warn:#ad3a2b; --warn-soft:#f7e5e0;
+  --border:#dde3dc; --code-bg:#eef1ec; --code-ink:#243028;
+  --toc-w:250px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121814; --surface:#1a221c; --ink:#e5ebe6; --muted:#98a59d;
+    --accent:#54c68f; --accent-soft:#1d332a; --accent-line:#2c4a3b;
+    --copper:#e0a362; --copper-soft:#33271a;
+    --warn:#f08a75; --warn-soft:#38201a;
+    --border:#2a352d; --code-bg:#101611; --code-ink:#d6e2d8;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121814; --surface:#1a221c; --ink:#e5ebe6; --muted:#98a59d;
+  --accent:#54c68f; --accent-soft:#1d332a; --accent-line:#2c4a3b;
+  --copper:#e0a362; --copper-soft:#33271a;
+  --warn:#f08a75; --warn-soft:#38201a;
+  --border:#2a352d; --code-bg:#101611; --code-ink:#d6e2d8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:-apple-system,"Segoe UI","Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif;
+  font-size:15px;line-height:1.75;
+}
+code,pre,.mono{font-family:"JetBrains Mono",Consolas,"Courier New",monospace}
+
+/* ===== 布局 ===== */
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px;display:grid;
+  grid-template-columns:var(--toc-w) minmax(0,1fr);gap:36px}
+@media (max-width:860px){.wrap{grid-template-columns:1fr;gap:0}}
+
+/* ===== 页头 ===== */
+header{max-width:1080px;margin:0 auto;padding:44px 20px 26px}
+.eyebrow{display:flex;gap:10px;align-items:center;color:var(--accent);
+  font-size:12px;letter-spacing:.14em;font-weight:600;text-transform:uppercase;margin-bottom:10px}
+.eyebrow::before{content:"";width:26px;height:2px;background:var(--copper)}
+h1{font-size:clamp(26px,4.5vw,36px);font-weight:800;letter-spacing:.01em;line-height:1.25}
+.sub{color:var(--muted);margin-top:10px;max-width:60ch;font-size:14px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.meta span{font-size:12px;border:1px solid var(--border);background:var(--surface);
+  color:var(--muted);padding:3px 10px;border-radius:99px}
+
+/* ===== 目录 ===== */
+nav{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow-y:auto;
+  padding:18px 0 30px;font-size:13.5px}
+nav .nav-title{font-size:11px;letter-spacing:.16em;color:var(--muted);font-weight:700;
+  text-transform:uppercase;margin-bottom:10px}
+nav ol{list-style:none}
+nav a{display:flex;gap:8px;align-items:baseline;padding:5px 10px;color:var(--muted);
+  text-decoration:none;border-left:2px solid var(--border);line-height:1.4}
+nav a .no{font-family:"JetBrains Mono",Consolas,monospace;font-size:11px;color:var(--accent-line);min-width:2ch}
+nav a:hover{color:var(--ink)}
+nav a.on{color:var(--accent);border-left-color:var(--accent);background:var(--accent-soft);font-weight:600}
+nav a.on .no{color:var(--accent)}
+nav a:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+@media (max-width:860px){
+  nav{position:static;max-height:none;border:1px solid var(--border);background:var(--surface);
+    border-radius:10px;padding:14px 16px;margin:10px 0 4px}
+  nav ol{columns:2;column-gap:24px}
+  nav a{border-left:none;border-bottom:2px solid transparent;padding:4px 2px}
+  nav a.on{border-left:none;border-bottom-color:var(--accent);background:none}
+}
+
+/* ===== 章节 ===== */
+main{padding:10px 0 80px;min-width:0}
+section{margin-bottom:52px}
+.ch-head{display:flex;align-items:baseline;gap:12px;border-bottom:2px solid var(--accent-line);
+  padding-bottom:10px;margin-bottom:18px}
+.ch-no{font-family:"JetBrains Mono",Consolas,monospace;font-size:13px;font-weight:600;
+  color:var(--copper);letter-spacing:.06em}
+h2{font-size:21px;font-weight:800;text-wrap:balance}
+h3{font-size:15px;font-weight:700;margin:20px 0 8px;color:var(--accent)}
+p{margin:8px 0;max-width:68ch}
+section ul{margin:8px 0 8px 1.4em;max-width:66ch}
+section li{margin:5px 0}
+section li::marker{color:var(--copper)}
+strong{font-weight:700}
+em{font-style:normal;color:var(--accent);font-weight:600}
+
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px;
+  vertical-align:2px;letter-spacing:.04em}
+.badge.freq{background:var(--copper-soft);color:var(--copper);border:1px solid var(--copper)}
+.badge.trap{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn)}
+
+pre{background:var(--code-bg);color:var(--code-ink);border:1px solid var(--border);
+  border-left:3px solid var(--accent);border-radius:6px;padding:12px 14px;
+  font-size:12.8px;line-height:1.65;overflow-x:auto;margin:10px 0}
+code{background:var(--code-bg);border:1px solid var(--border);border-radius:4px;
+  padding:1px 5px;font-size:.88em;color:var(--code-ink)}
+pre code{background:none;border:none;padding:0}
+.kw{color:var(--accent);font-weight:600}
+.cm{color:var(--muted)}
+
+.tip{border:1px solid var(--warn);border-left-width:4px;background:var(--warn-soft);
+  border-radius:6px;padding:10px 14px;margin:12px 0;font-size:13.5px}
+.tip b{color:var(--warn)}
+.note{border:1px solid var(--accent-line);border-left:4px solid var(--accent);
+  background:var(--accent-soft);border-radius:6px;padding:10px 14px;margin:12px 0;font-size:13.5px}
+.note b{color:var(--accent)}
+
+.tbl{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--surface)}
+th,td{border:1px solid var(--border);padding:6px 12px;text-align:left}
+th{background:var(--accent-soft);color:var(--ink);font-weight:700}
+td.num{font-family:"JetBrains Mono",Consolas,monospace;font-variant-numeric:tabular-nums}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--surface) 92%,var(--bg))}
+
+footer{border-top:1px solid var(--border);color:var(--muted);font-size:12.5px;
+  padding:18px 0 40px;text-align:center}
+@media print{
+  nav,.meta{display:none}
+  .wrap{display:block;max-width:none}
+  pre{white-space:pre-wrap}
+  body{background:#fff;color:#000}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Embedded C · Crash Course</div>
+  <h1>嵌入式C考点速成</h1>
+  <p class="sub">面向嵌入式方向的 C 语言高频考点，按十二章组织：先语言基础，再指针与内存，专章覆盖数据结构与算法，最后嵌入式专项。标 <span class="badge freq">★高频</span> 的是笔试面试常客，标 <span class="badge trap">易错</span> 的是经典陷阱，含可默写的手撕代码。</p>
+  <p class="sub">初次学习提示：前几章会提前用到后面的概念（如 CH.03 提到结构体），凡带「见 CHxx」的地方都附了一句大白话——看不懂注释可以先跳过，读完对应章节再回头。</p>
+  <div class="meta">
+    <span>12 章</span><span>笔试 / 面试向</span><span>指针·内存·结构体强化</span><span>含数据结构与算法</span><span>含寄存器与中断专题</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+<nav id="toc" aria-label="目录">
+  <div class="nav-title">目录</div>
+  <ol>
+    <li><a href="#ch1"><span class="no">01</span>数据类型与存储</a></li>
+    <li><a href="#ch2"><span class="no">02</span>运算符与位操作</a></li>
+    <li><a href="#ch3"><span class="no">03</span>控制流与函数</a></li>
+    <li><a href="#ch4"><span class="no">04</span>指针（核心）</a></li>
+    <li><a href="#ch5"><span class="no">05</span>数组与字符串</a></li>
+    <li><a href="#ch6"><span class="no">06</span>结构体·联合体·内存对齐</a></li>
+    <li><a href="#ch7"><span class="no">07</span>关键字：static/const/volatile</a></li>
+    <li><a href="#ch8"><span class="no">08</span>内存管理</a></li>
+    <li><a href="#ch9"><span class="no">09</span>数据结构：链表·栈·队列·树</a></li>
+    <li><a href="#ch10"><span class="no">10</span>算法：排序·查找·复杂度</a></li>
+    <li><a href="#ch11"><span class="no">11</span>预处理与多文件编程</a></li>
+    <li><a href="#ch12"><span class="no">12</span>嵌入式专项考点</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ============ 01 ============ -->
+<section id="ch1">
+  <div class="ch-head"><span class="ch-no">CH.01</span><h2>数据类型与存储</h2></div>
+
+  <h3>基本类型大小 <span class="badge freq">★高频</span></h3>
+  <div class="tbl"><table>
+    <tr><th>类型</th><th>典型 32 位 MCU</th><th>64 位 PC (Windows)</th><th>说明</th></tr>
+    <tr><td class="num">char</td><td class="num">1</td><td class="num">1</td><td>标准只规定 =1 字节；是否有符号由编译器决定（ARM GCC 默认无符号！）</td></tr>
+    <tr><td class="num">short</td><td class="num">2</td><td class="num">2</td><td>≥2 字节</td></tr>
+    <tr><td class="num">int</td><td class="num">4</td><td class="num">4</td><td>寄存器字长，嵌入式最常用</td></tr>
+    <tr><td class="num">long</td><td class="num">4</td><td class="num">4</td><td>Linux 64 位下为 8（LP64 模型）</td></tr>
+    <tr><td class="num">float / double</td><td class="num">4 / 8</td><td class="num">4 / 8</td><td>部分 Cortex-M0 无 FPU，浮点靠软件模拟</td></tr>
+    <tr><td class="num">指针</td><td class="num">4</td><td class="num">8</td><td>sizeof(指针) 与指向类型无关</td></tr>
+  </table></div>
+  <div class="note"><b>工程习惯：</b>嵌入式代码用 <code>&lt;stdint.h&gt;</code> 的 <code>uint8_t / int16_t / uint32_t</code> 等定宽类型，保证跨平台一致。</div>
+
+  <h3>signed / unsigned 与整型提升 <span class="badge trap">易错</span></h3>
+  <ul>
+    <li>参与运算时 <code>char/short</code> 先提升为 <code>int</code>；有符号与无符号混合运算，<em>有符号会被隐式转成无符号</em>。</li>
+    <li>经典陷阱：<code>if (-1 &lt; 0U)</code> 结果为 <strong>false</strong>（-1 转成 4294967295）。</li>
+    <li>截断：<code>uint8_t x = 300;</code> → x = 44（300 &amp; 0xFF）。</li>
+    <li>循环倒计数坑：<code>for (unsigned i = n; i &gt;= 0; i--)</code> 死循环（无符号永远 ≥0）。</li>
+  </ul>
+
+  <h3>sizeof 考点 <span class="badge freq">★高频</span></h3>
+  <pre><code><span class="kw">char</span> str[] = <span class="cm">"hello"</span>;   <span class="cm">// sizeof(str) == 6（含 '\0'），strlen == 5</span>
+<span class="kw">char</span> *p = str;           <span class="cm">// sizeof(p) == 4/8（指针本身）</span>
+<span class="kw">void</span> f(<span class="kw">char</span> a[100]);    <span class="cm">// 函数内 sizeof(a) == 4/8！数组形参退化为指针</span></code></pre>
+  <ul>
+    <li><code>sizeof</code> 是<em>编译期</em>运算符（VLA 除外），不是函数；操作数不求值：<code>sizeof(i++)</code> 中 i 不变。</li>
+  </ul>
+</section>
+
+<!-- ============ 02 ============ -->
+<section id="ch2">
+  <div class="ch-head"><span class="ch-no">CH.02</span><h2>运算符与位操作</h2></div>
+
+  <h3>位操作四件套 <span class="badge freq">★高频·必背</span></h3>
+  <pre><code><span class="cm">/* 寄存器操作标准宏，1U 防止符号问题。
+   宏 = 编译前的文本替换，见 CH.11；寄存器 = MCU 里控制硬件的内存地址，见 CH.12。
+   这四行看不懂不影响本章，记住口诀即可 */</span>
+<span class="kw">#define</span> BIT_SET(reg, n)   ((reg) |=  (1U &lt;&lt; (n)))   <span class="cm">// 置位第 n 位</span>
+<span class="kw">#define</span> BIT_CLR(reg, n)   ((reg) &amp;= ~(1U &lt;&lt; (n)))   <span class="cm">// 清零第 n 位</span>
+<span class="kw">#define</span> BIT_GET(reg, n)   (((reg) &gt;&gt; (n)) &amp; 1U)     <span class="cm">// 读取第 n 位</span>
+<span class="kw">#define</span> BIT_TOG(reg, n)   ((reg) ^=  (1U &lt;&lt; (n)))   <span class="cm">// 翻转第 n 位</span></code></pre>
+  <ul>
+    <li><code>&amp;</code> 按位与（清零/取位）、<code>|</code> 按位或（置位）、<code>^</code> 异或（翻转/判不同）、<code>~</code> 取反。</li>
+    <li>面试手撕：不用临时变量交换 → <code>a ^= b; b ^= a; a ^= b;</code></li>
+    <li>判断 2 的幂：<code>(x &amp; (x-1)) == 0 &amp;&amp; x != 0</code>；统计 1 的个数：循环 <code>x &amp;= x-1</code>。</li>
+  </ul>
+
+  <h3>移位与优先级 <span class="badge trap">易错</span></h3>
+  <ul>
+    <li>移位量必须在 <code>[0, 位宽)</code> 内，否则<em>未定义行为</em>（未定义行为 = 标准对结果不做任何保证，编译器可以任意处置，换个平台/优化等级结果就变——总之：别写）：<code>1 &lt;&lt; 32</code>（int）是 UB。</li>
+    <li><code>&lt;&lt;</code> 优先级低于 <code>+ -</code>：<code>1 &lt;&lt; 2 + 3</code> 是 <code>1 &lt;&lt; 5</code>；写宏时全加括号。</li>
+    <li>优先级速记：<code>!~++</code> → 乘除 → 加减 → 移位 → 关系 → 相等 → <code>&amp;</code> → <code>^</code> → <code>|</code> → <code>&amp;&amp;</code> → <code>||</code> → 三目 → 赋值。</li>
+    <li><code>i = i++</code>、同一表达式多次修改同一变量均为未定义行为，考试别玩花。</li>
+  </ul>
+
+  <h3>逻辑 vs 短路</h3>
+  <ul>
+    <li><code>&amp;&amp; / ||</code> 有短路特性：<code>p &amp;&amp; *p</code> 是合法的空指针防护写法。</li>
+    <li><code>!</code> 优先级高于算术运算：<code>!a + b</code> 是 <code>(!a) + b</code>。</li>
+  </ul>
+</section>
+
+<!-- ============ 03 ============ -->
+<section id="ch3">
+  <div class="ch-head"><span class="ch-no">CH.03</span><h2>控制流与函数</h2></div>
+
+  <h3>函数基础 <span class="badge freq">★高频</span></h3>
+  <ul>
+    <li>C 只有<em>值传递</em>：传数组/指针可改内容，传结构体是拷贝（大结构体传 <code>const T*</code>）。<span class="cm">（结构体 = 把几个不同类型的变量打包成一个整体，见 CH.06；指针 = 存"变量地址"的变量，见 CH.04；<code>const T*</code> = 只许读不许通过它改的指针，见 CH.07。初次学可先只记结论）</span></li>
+    <li>未写返回类型的函数默认 <code>int</code>（C89）；C99 起必须显式写。</li>
+    <li>局部变量不初始化是<strong>随机值</strong>；<code>static</code> 局部变量自动清零且只初始化一次（<code>static</code> 在这里 = "让局部变量活过函数调用、常驻内存"，完整讲法见 CH.07）。</li>
+  </ul>
+  <pre><code><span class="kw">int</span> counter(<span class="kw">void</span>){
+    <span class="kw">static int</span> n = 0;   <span class="cm">// 只初始化一次，函数退出后仍存在。存 .data/.bss = 全局变量住的静态区，见 CH.08</span>
+    <span class="kw">return</span> ++n;          <span class="cm">// 连续调用返回 1,2,3...</span>
+}</code></pre>
+
+  <h3>switch 细节 <span class="badge trap">易错</span></h3>
+  <ul>
+    <li>case 必须是<em>整型常量表达式</em>；忘写 <code>break</code> 会贯穿（fall-through）。</li>
+    <li>case 值不能重复；default 可放任意位置。</li>
+  </ul>
+
+  <h3>递归 vs 迭代</h3>
+  <ul>
+    <li>递归每层压栈，嵌入式栈空间小（常 1~8KB），<em>深度递归可能栈溢出</em>；面试常问阶乘/斐波那契两种写法。</li>
+    <li>函数调用开销：压栈参数、返回地址、保存寄存器——资源受限场合循环优于递归。</li>
+  </ul>
+</section>
+
+<!-- ============ 04 ============ -->
+<section id="ch4">
+  <div class="ch-head"><span class="ch-no">CH.04</span><h2>指针（核心）</h2></div>
+
+  <h3>const 与指针 <span class="badge freq">★高频·必背</span></h3>
+  <pre><code><span class="kw">const int</span> *p;        <span class="cm">// 指向常量的指针：*p 不可改，p 可改（左定值）</span>
+<span class="kw">int</span> *<span class="kw">const</span> p;        <span class="cm">// 常量指针：p 不可改，*p 可改（右定址）</span>
+<span class="kw">const int</span> *<span class="kw">const</span> p;  <span class="cm">// 都不可改</span>
+<span class="cm">/* 记忆：const 在 * 左边 → 数据只读；在 * 右边 → 指针只读 */</span></code></pre>
+
+  <h3>指针运算 <span class="badge freq">★高频</span></h3>
+  <ul>
+    <li><code>p + n</code> 前进 <code>n × sizeof(*p)</code> 字节——按<em>元素</em>移动而非按字节。</li>
+    <li>两指针相减 = 相差的元素个数；指针比较/相减仅对同一数组内有意义。</li>
+    <li><code>a[i]</code> 完全等价于 <code>*(a+i)</code>，所以 <code>i[a]</code> 也合法（面试冷知识）。</li>
+    <li><code>void*</code> 无类型指针：不能解引用、不能算术（GCC 扩展按 1 字节），malloc 返回它，作万能参数。</li>
+  </ul>
+
+  <h3>多级指针与函数指针 <span class="badge freq">★高频</span></h3>
+  <pre><code><span class="kw">int</span> **pp;                     <span class="cm">// 二级指针：修改调用者的指针本身（如 my_malloc(&p)）</span>
+
+<span class="kw">int</span> (*fp)(<span class="kw">int</span>, <span class="kw">int</span>);          <span class="cm">// 函数指针：指向"参数(int,int)返回int"的函数</span>
+<span class="kw">int</span> (*arr[10])(<span class="kw">void</span>);         <span class="cm">// 函数指针数组（跳转表）</span>
+<span class="kw">int</span> (*(f(<span class="kw">int</span>)))(<span class="kw">void</span>);        <span class="cm">// 返回函数指针的函数</span>
+fp = add; <span class="kw">int</span> r = fp(1,2);    <span class="cm">// 调用；回调函数、中断向量表、驱动 ops 都靠它</span></code></pre>
+  <p>读复杂声明的口诀：<em>从变量名出发，右结合优先，遇括号回头</em>。<code>int (*(*p)[5])(void)</code> = p 是指针 → 指向「5 个函数指针的数组」→ 每个函数返回 int。</p>
+
+  <h3>手撕代码：指针四连 <span class="badge freq">★高频·必默写</span></h3>
+  <pre><code><span class="cm">// 1) 交换两变量的值——必须传二级地址，否则改的是副本</span>
+<span class="kw">void</span> swap(<span class="kw">int</span> *a, <span class="kw">int</span> *b){ <span class="kw">int</span> t=*a; *a=*b; *b=t; }
+
+<span class="cm">// 2) 修改调用者的指针本身 → 二级指针（如分配链表头）。malloc = 运行时向"堆"申请内存，见 CH.08</span>
+<span class="kw">void</span> alloc(<span class="kw">int</span> **pp){ *pp = (<span class="kw">int</span>*)malloc(<span class="kw">sizeof</span>(<span class="kw">int</span>)*10); }
+
+<span class="cm">// 3) 手写 memcpy：返回 dst 支持链式，逐字节拷贝</span>
+<span class="kw">void</span> *my_memcpy(<span class="kw">void</span> *dst, <span class="kw">const void</span> *src, <span class="kw">size_t</span> n){
+    <span class="kw">char</span> *d = dst; <span class="kw">const char</span> *s = src;
+    <span class="kw">while</span> (n--) *d++ = *s++;
+    <span class="kw">return</span> dst;
+}
+
+<span class="cm">// 4) 判断 1 出现的次数 / 反转字符串等也常靠双指针</span></code></pre>
+  <div class="tip"><b>易错：</b>memcpy 源目<strong>不可重叠</strong>（重叠用 memmove，先判方向再拷）；swap 传 <code>int</code> 而非 <code>int*</code> 则无效——这是值传递最经典的坑。</div>
+
+  <h3>野指针与悬空指针 <span class="badge trap">易错</span></h3>
+  <ul>
+    <li>野指针：未初始化就使用。防御：定义时 <code>= NULL</code>，用完置 NULL，解引用前判空。</li>
+    <li>悬空指针：指向已释放的堆内存或已出作用域的栈变量（<em>绝不能 return 局部变量的地址</em>）。</li>
+    <li><code>NULL</code> 与 <code>'\0'</code> 与 <code>0</code>：空指针 / 字符零 / 整型零，语义不同。</li>
+  </ul>
+</section>
+
+<!-- ============ 05 ============ -->
+<section id="ch5">
+  <div class="ch-head"><span class="ch-no">CH.05</span><h2>数组与字符串</h2></div>
+
+  <h3>数组与指针的区别 <span class="badge freq">★高频</span></h3>
+  <div class="tbl"><table>
+    <tr><th></th><th>数组 char a[10]</th><th>指针 char *p</th></tr>
+    <tr><td>本质</td><td>一块连续内存（左值不可改地址）</td><td>存地址的变量（p++ 合法）</td></tr>
+    <tr><td>sizeof</td><td>10（定义作用域内）</td><td>4/8</td></tr>
+    <tr><td>作函数参数</td><td colspan="2">退化为指针，丢失长度信息 → 必须额外传 size</td></tr>
+  </table></div>
+  <pre><code><span class="kw">char</span> *s = <span class="cm">"abc"</span>;    <span class="cm">// 字符串字面量存只读段，s[0]='x' 是未定义行为（可能硬件异常）</span>
+<span class="kw">char</span> a[] = <span class="cm">"abc"</span>;    <span class="cm">// 拷贝到栈上，可修改</span></code></pre>
+
+  <h3>字符串函数考点 <span class="badge freq">★高频</span></h3>
+  <ul>
+    <li><code>strlen</code> 数到 <code>'\0'</code> 为止、<em>不含 '\0'</em>，参数必须是以 '\0' 结尾的串。</li>
+    <li><code>strcpy(dst, src)</code> 不检查 dst 大小 → <em>缓冲区溢出</em>；安全版本 <code>strncpy</code>（注意可能不补 '\0'）。</li>
+    <li><code>strcmp</code> 返回 &lt;0 / 0 / &gt;0；不能用 <code>==</code> 比较字符串内容（那是比较地址）。</li>
+    <li>手写 strcpy 是面试保留节目：返回 dst 支持链式、逐字节拷到 '\0'。</li>
+    <li>经典一行：<code>while (*dst++ = *src++);</code>——赋值表达式非零则继续，拷完 '\0' 退出。</li>
+  </ul>
+
+  <h3>多维数组</h3>
+  <ul>
+    <li><code>int m[3][4]</code> 按行存储；<code>m[i][j]</code> 地址 = 基址 + (i×4+j)×4。</li>
+    <li>传参必须给出列数：<code>void f(int a[][4], int rows);</code></li>
+  </ul>
+</section>
+
+<!-- ============ 06 ============ -->
+<section id="ch6">
+  <div class="ch-head"><span class="ch-no">CH.06</span><h2>结构体·联合体·内存对齐</h2></div>
+
+  <h3>内存对齐 <span class="badge freq">★高频·必考</span></h3>
+  <p>规则：① 每个成员的偏移必须是「min(自身对齐, pack值)」的倍数，不足则填充；② 总大小是最大对齐值的倍数。</p>
+  <pre><code><span class="kw">struct</span> S { <span class="kw">char</span> a; <span class="kw">int</span> b; <span class="kw">short</span> c; };
+<span class="cm">// a:偏移0(1B) + 填3B | b:偏移4(4B) | c:偏移8(2B) + 填2B</span>
+<span class="cm">// sizeof(S) == 12，而不是 1+4+2 = 7</span>
+
+<span class="cm">// 省内存技巧：成员按大小降序排列</span>
+<span class="kw">struct</span> T { <span class="kw">int</span> b; <span class="kw">short</span> c; <span class="kw">char</span> a; };  <span class="cm">// sizeof(T) == 8</span>
+
+<span class="kw">#pragma pack</span>(1)   <span class="cm">// 取消填充：协议头/寄存器映射常用；代价是可能非对齐访问（Cortex-M0 会 HardFault）</span></code></pre>
+
+  <h3>联合体 union <span class="badge freq">★高频</span></h3>
+  <ul>
+    <li>所有成员<em>共享同一块内存</em>，同一时刻只有一个有效；大小 = 最大成员（对齐后）。</li>
+    <li>用途：判断大小端、节省内存（互斥字段）、原始字节访问（拆包）。</li>
+  </ul>
+  <pre><code><span class="cm">/* 判断大小端——笔试标准答案 */</span>
+<span class="kw">int</span> is_little_endian(<span class="kw">void</span>){
+    <span class="kw">union</span> { <span class="kw">int</span> i; <span class="kw">char</span> c; } u = { .i = 1 };
+    <span class="kw">return</span> u.c == 1;    <span class="cm">// 低地址存了低位字节 → 小端</span>
+}</code></pre>
+
+  <h3>位域 bit-field</h3>
+  <pre><code><span class="kw">struct</span> { <span class="kw">uint32_t</span> en:1, mode:3, rsv:28; } ctl;  <span class="cm">// 按位打包寄存器配置</span></code></pre>
+  <ul>
+    <li>位域分配顺序（从低位还是高位起）是<em>实现定义</em>的 → 跨平台协议解析别用位域，改用移位掩码。</li>
+  </ul>
+
+  <h3>结构体其他考点</h3>
+  <ul>
+    <li><code>struct</code> 赋值是整体拷贝；传参用 <code>const struct T*</code> 避免拷贝（小结构体如 4 字节可直接传值）。</li>
+    <li><code>-&gt;</code> 用于指针，<code>.</code> 用于实体：<code>p-&gt;member</code> ≡ <code>(*p).member</code>；优先级最高。</li>
+    <li>柔性数组 <code>int data[];</code>（C99，必须是最后一个成员，sizeof 不计入）配合 malloc 做变长包。</li>
+    <li>typedef 起别名简化声明：<code>typedef struct Node Node; struct Node { int v; Node *next; };</code></li>
+  </ul>
+
+  <h3>offsetof 与自引用结构体 <span class="badge freq">★高频</span></h3>
+  <pre><code><span class="cm">// offsetof 算某成员偏移量（&lt;stddef.h&gt;），验证对齐结果常用</span>
+<span class="kw">#define</span> OFFSETOF(type, m)  ((<span class="kw">size_t</span>)&amp;((type*)0)-&gt;m)   <span class="cm">// 经典手写版：把 0 当结构体首地址</span>
+
+<span class="cm">// 自引用结构体：链表/树节点的基础，指针成员指向同类型</span>
+<span class="kw">typedef struct</span> Node {
+    <span class="kw">int</span> data;
+    <span class="kw">struct</span> Node *next;   <span class="cm">// 必须写 struct Node，不能只写 Node（类型未定义完）</span>
+} Node;
+
+<span class="cm">// 嵌入式常见：用 struct 封装外设的一组寄存器 + 操作函数指针（面向对象风格）</span>
+<span class="kw">struct</span> device_ops { <span class="kw">int</span> (*init)(<span class="kw">void</span>); <span class="kw">int</span> (*read)(<span class="kw">uint8_t</span>*); };  <span class="cm">// Linux 驱动模型核心</span></code></pre>
+  <div class="note"><b>追问：</b>结构体能不能比较？→ C 语言<strong>没有</strong>结构体 <code>==</code> 运算符（因有填充字节，逐字节比也不可靠），必须逐成员比较或 memcmp 慎用。</div>
+</section>
+
+<!-- ============ 07 ============ -->
+<section id="ch7">
+  <div class="ch-head"><span class="ch-no">CH.07</span><h2>关键字：static / const / volatile</h2></div>
+
+  <h3>static <span class="badge freq">★高频·必考</span></h3>
+  <div class="tbl"><table>
+    <tr><th>修饰对象</th><th>效果</th><th>存储位置</th></tr>
+    <tr><td>局部变量</td><td>生命周期延长到程序结束，只初始化一次</td><td>.data / .bss（静态区）</td></tr>
+    <tr><td>全局变量</td><td>作用域限制在本文件（内部链接），防命名冲突</td><td>.data / .bss</td></tr>
+    <tr><td>函数</td><td>仅本文件可见——模块封装的基本手段</td><td>—</td></tr>
+  </table></div>
+  <p>追问常考：static 全局变量与普通全局变量的区别？→ <strong>作用域（链接属性）不同，存储位置相同</strong>。</p>
+
+  <h3>volatile <span class="badge freq">★高频·嵌入式灵魂</span></h3>
+  <ul>
+    <li>含义：该变量<em>可能在程序控制流之外被改变</em>，禁止编译器优化缓存，每次访问都必须真正读写内存。</li>
+    <li>三个必用场景：<strong>① 硬件寄存器映射；② 中断与主循环共享的标志变量；③ 多线程/RTOS 共享变量</strong>（多线程还需配合原子操作/锁，volatile 不保证原子性）。</li>
+  </ul>
+  <pre><code><span class="cm">// 不加 volatile：编译器可能把 while 里的读取优化成只读一次 → 死循环</span>
+<span class="kw">volatile int</span> flag = 0;             <span class="cm">// 中断里置 1，主循环轮询</span>
+<span class="kw">void</span> poll(<span class="kw">void</span>){ <span class="kw">while</span> (!flag) ; }
+
+<span class="cm">// 组合考法：const volatile —— 只读的硬件状态寄存器（软件不许写，硬件会变）</span>
+<span class="kw">const volatile uint32_t</span> *status = (<span class="kw">uint32_t</span> *)0x40021010;</code></pre>
+
+  <h3>const <span class="badge freq">★高频</span></h3>
+  <ul>
+    <li>作用：只读保护（编译期查错）、给编译器优化提示、修饰指针参数表明不改数据。</li>
+    <li>const vs #define：const 有类型检查、占内存（或 ROM）、有作用域；宏无类型、纯文本替换。</li>
+    <li>const 全局数组放 <strong>Flash/ROM</strong>（如字库、查找表），省 RAM——嵌入式必知。</li>
+    <li>强制去 const（<code>(int*)&amp;cv</code> 后修改）是未定义行为。</li>
+  </ul>
+
+  <h3>extern / register / inline / restrict</h3>
+  <ul>
+    <li><code>extern</code>：声明别处定义的全局变量/函数（声明≠定义，不分配存储）；<code>extern "C"</code> 用于 C++ 调 C 时关闭名字改编。</li>
+    <li><code>register</code>：建议放寄存器；现代编译器基本忽略，且不能取地址。</li>
+    <li><code>inline</code>：建议内联展开省调用开销；C99 语义下通常仍需一处 extern 定义。</li>
+    <li><code>restrict</code>（C99）：承诺指针是访问该数据的唯一途径，允许更激进优化（memcpy 原型里有）。</li>
+  </ul>
+</section>
+
+<!-- ============ 08 ============ -->
+<section id="ch8">
+  <div class="ch-head"><span class="ch-no">CH.08</span><h2>内存管理</h2></div>
+
+  <h3>内存分区 <span class="badge freq">★高频·必背</span></h3>
+  <div class="tbl"><table>
+    <tr><th>区域</th><th>存放内容</th><th>特点</th></tr>
+    <tr><td>栈区 stack</td><td>局部变量、函数参数、返回地址</td><td>自动分配释放，速度快；嵌入式中很小（溢出 → HardFault）</td></tr>
+    <tr><td>堆区 heap</td><td>malloc/calloc/realloc 的内存</td><td>手动管理，灵活；有碎片和泄漏风险</td></tr>
+    <tr><td>.data</td><td>已初始化的全局/静态变量</td><td>启动代码从 Flash 拷到 RAM</td></tr>
+    <tr><td>.bss</td><td>未初始化（或=0）的全局/静态变量</td><td>启动时清零，不占固件体积</td></tr>
+    <tr><td>常量区 rodata</td><td>字符串字面量、const 全局</td><td>放 Flash，只读</td></tr>
+    <tr><td>代码区 text</td><td>机器指令</td><td>只读、可共享</td></tr>
+  </table></div>
+  <p>追问：栈和堆的区别？→ 分配方式（自动/手动）、速度、大小限制、增长方向（相向而生）、碎片问题。</p>
+
+  <h3>malloc 系列与陷阱 <span class="badge freq">★高频</span></h3>
+  <pre><code><span class="kw">int</span> *p = (<span class="kw">int</span> *)malloc(10 * <span class="kw">sizeof</span>(<span class="kw">int</span>));
+<span class="kw">if</span> (p == NULL) { <span class="cm">/* 必须判空！ */</span> }
+<span class="cm">/* ...使用... */</span>
+free(p); p = NULL;   <span class="cm">// 置空防悬空指针；free(NULL) 安全；重复 free 是严重错误</span></code></pre>
+  <ul>
+    <li><code>malloc</code> 不清零、<code>calloc</code> 清零、<code>realloc</code> 扩缩容（可能整体搬家，必须接收返回值）。</li>
+    <li>内存泄漏：malloc 后丢失指针 / 忘记 free；检测思路：封装计数、valgrind。</li>
+    <li><em>嵌入式观点（面试加分）：</em>实时系统通常<strong>避免动态分配</strong>——不确定何时失败、产生碎片；改用静态内存池 / RTOS 的固定块分配。</li>
+  </ul>
+
+  <h3>realloc 与内存池 <span class="badge freq">★高频</span></h3>
+  <pre><code><span class="cm">// realloc 陷阱：失败返回 NULL 但原块仍在，不能直接覆盖原指针！</span>
+<span class="kw">int</span> *tmp = (<span class="kw">int</span>*)realloc(p, new_size);
+<span class="kw">if</span> (tmp) p = tmp; <span class="kw">else</span> { <span class="cm">/* 失败，p 仍可用 */</span> }
+
+<span class="cm">// 嵌入式替代动态分配：静态内存池（固定块，无碎片，O(1) 分配）</span>
+<span class="kw">static uint8_t</span> pool[POOL_N][BLOCK_SZ];   <span class="cm">// 启动时一次性占好 RAM</span>
+<span class="kw">static</span> <span class="kw">bool</span> used[POOL_N];                <span class="cm">// 位图管理空闲块</span></code></pre>
+
+  <h3>内存泄漏定位</h3>
+  <ul>
+    <li>四种典型泄漏：① 分配后指针被覆盖；② 异常分支提前 return 未 free；③ 只 free 了结构体没 free 其指针成员；④ realloc 失败覆盖了原指针。</li>
+    <li>工具：Linux <code>valgrind</code>；嵌入式无 OS 时用「分配/释放配对计数宏」或链接器统计 .bss 用量。</li>
+    <li>排查思路：先确定是泄漏（占用持续增长）还是越界（随机崩溃），前者查 free，后者查边界与栈深。</li>
+  </ul>
+
+  <h3>经典错误清单 <span class="badge trap">易错</span></h3>
+  <ul>
+    <li>返回栈上局部变量的地址（出函数即失效）。</li>
+    <li>数组越界写：<code>int a[8]; a[8]=1;</code> 可能踩坏相邻变量/返回地址。</li>
+    <li>free 后继续使用（use-after-free）；两个指针指向同一块内存各自 free（double free）。</li>
+    <li><code>memcpy</code> 源目重叠应用 <code>memmove</code>；<code>calloc(n,size)</code> 参数顺序与 malloc 不同。</li>
+  </ul>
+</section>
+
+<!-- ============ 09 数据结构 ============ -->
+<section id="ch9">
+  <div class="ch-head"><span class="ch-no">CH.09</span><h2>数据结构：链表·栈·队列·树</h2></div>
+
+  <h3>单链表手撕代码 <span class="badge freq">★高频·必默写</span></h3>
+  <pre><code><span class="kw">typedef struct</span> Node { <span class="kw">int</span> data; <span class="kw">struct</span> Node *next; } Node;
+
+<span class="cm">// 反转链表——笔试出现率第一，三种写法都要会</span>
+Node *reverse(Node *head){
+    Node *prev = NULL, *cur = head;
+    <span class="kw">while</span> (cur) {
+        Node *next = cur-&gt;next;  <span class="cm">// 先存后继，防断链</span>
+        cur-&gt;next = prev;        <span class="cm">// 翻转指向</span>
+        prev = cur; cur = next;  <span class="cm">// 双指针前进</span>
+    }
+    <span class="kw">return</span> prev;                 <span class="cm">// prev 是新头</span>
+}
+
+<span class="cm">// 合并两个有序链表（GeeksforGeeks 高频题）</span>
+Node *merge(Node *a, Node *b){
+    Node dummy = {0, NULL}, *tail = &amp;dummy;   <span class="cm">// 哑结点省去判空头</span>
+    <span class="kw">while</span> (a &amp;&amp; b) {
+        <span class="kw">if</span> (a-&gt;data &lt;= b-&gt;data) { tail-&gt;next = a; a = a-&gt;next; }
+        <span class="kw">else</span>                    { tail-&gt;next = b; b = b-&gt;next; }
+        tail = tail-&gt;next;
+    }
+    tail-&gt;next = a ? a : b;                   <span class="cm">// 接上剩余段</span>
+    <span class="kw">return</span> dummy.next;
+}
+
+<span class="cm">// 快慢指针找中点 / 判环（Floyd 判圈算法）</span>
+<span class="kw">int</span> has_cycle(Node *head){
+    Node *slow = head, *fast = head;
+    <span class="kw">while</span> (fast &amp;&amp; fast-&gt;next) {
+        slow = slow-&gt;next; fast = fast-&gt;next-&gt;next;
+        <span class="kw">if</span> (slow == fast) <span class="kw">return</span> 1;   <span class="cm">// 相遇即有环</span>
+    }
+    <span class="kw">return</span> 0;
+}
+
+<span class="cm">// 删除节点通用套路：操作前驱 pre，使 pre-&gt;next 跳过目标；删除头节点单独处理或用二级指针</span>
+<span class="kw">void</span> del(Node **head, <span class="kw">int</span> val){
+    Node **pp = head;                          <span class="cm">// 二级指针统一处理头节点</span>
+    <span class="kw">while</span> (*pp) {
+        <span class="kw">if</span> ((*pp)-&gt;data == val) {
+            Node *dead = *pp;
+            *pp = dead-&gt;next; free(dead); <span class="kw">return</span>;
+        }
+        pp = &amp;(*pp)-&gt;next;
+    }
+}</code></pre>
+  <div class="tip"><b>易错：</b>反转时不先保存 <code>next</code> 就改 <code>cur-&gt;next</code> → 链表断裂；删除节点直接操作当前节点而非前驱 → 头节点删不掉；遍历循环条件漏判 <code>fast-&gt;next</code> → 空指针解引用。</div>
+
+  <h3>链表 vs 数组 <span class="badge freq">★高频</span></h3>
+  <div class="tbl"><table>
+    <tr><th></th><th>数组</th><th>单链表</th></tr>
+    <tr><td>随机访问 a[i]</td><td class="num">O(1)</td><td class="num">O(n)</td></tr>
+    <tr><td>头部插入/删除</td><td class="num">O(n) 需搬移</td><td class="num">O(1)</td></tr>
+    <tr><td>内存</td><td>连续、需预知大小</td><td>离散、按需分配、额外指针开销</td></tr>
+    <tr><td>缓存友好性</td><td>好（局部性）</td><td>差（节点分散）</td></tr>
+  </table></div>
+  <ul>
+    <li>变种：双向链表（含 prev，删除 O(1)）、循环链表（尾接回，RTOS 任务列表常用）。</li>
+    <li>嵌入式场景：链表节点从<em>静态内存池</em>取，避免运行期 malloc 碎片。</li>
+  </ul>
+
+  <h3>栈与队列 <span class="badge freq">★高频</span></h3>
+  <ul>
+    <li><strong>栈</strong>（LIFO）：数组实现只需 <code>top</code> 下标；push 前判满（<code>top == N-1</code>）、pop 前判空——<em>两个边界判断必写</em>。</li>
+    <li><strong>队列</strong>（FIFO）：循环队列用数组最优，浪费一个格区分空/满，或用 size 计数。</li>
+  </ul>
+  <pre><code><span class="cm">// 循环队列核心三式（笔试常考"队满条件"）</span>
+入队: rear = (rear + 1) % N;
+出队: front = (front + 1) % N;
+队满: (rear + 1) % N == front;   <span class="cm">// 队空: rear == front</span>
+
+<span class="cm">// 用两个栈实现队列 / 用队列实现栈：经典设计题</span></code></pre>
+  <ul>
+    <li>应用考点：括号匹配、表达式求值（中缀转后缀）、函数调用栈原理、递归改迭代都要栈。</li>
+    <li>嵌入式场景：<em>中断数据缓冲用环形缓冲区（ring buffer）</em>——就是循环队列，UART DMA 接收必备。</li>
+  </ul>
+
+  <h3>树 <span class="badge freq">★高频</span></h3>
+  <pre><code><span class="kw">typedef struct</span> TreeNode { <span class="kw">int</span> val; <span class="kw">struct</span> TreeNode *l, *r; } TNode;
+
+<span class="cm">// 三种深度遍历——递归版必须秒写；层序遍历用队列</span>
+<span class="kw">void</span> inorder(TNode *t){          <span class="cm">// 中序：左根右（BST 得到有序序列！）</span>
+    <span class="kw">if</span> (!t) <span class="kw">return</span>;
+    inorder(t-&gt;l); printf(<span class="cm">"%d "</span>, t-&gt;val); inorder(t-&gt;r);
+}
+<span class="kw">int</span> depth(TNode *t){              <span class="cm">// 求树深：递归三行</span>
+    <span class="kw">if</span> (!t) <span class="kw">return</span> 0;
+    <span class="kw">int</span> l = depth(t-&gt;l), r = depth(t-&gt;r);
+    <span class="kw">return</span> (l &gt; r ? l : r) + 1;
+}</code></pre>
+  <ul>
+    <li>二叉搜索树 BST：左 &lt; 根 &lt; 右，查找/插入平均 O(log n)，<em>退化成链表时 O(n)</em>。</li>
+    <li>BST 中序遍历 = 升序输出——高频结论题。</li>
+    <li>先序+中序可唯一还原二叉树（重建题）；平衡因子、AVL 概念了解即可。</li>
+  </ul>
+</section>
+
+<!-- ============ 10 算法 ============ -->
+<section id="ch10">
+  <div class="ch-head"><span class="ch-no">CH.10</span><h2>算法：排序·查找·复杂度</h2></div>
+
+  <h3>必会排序手撕 <span class="badge freq">★高频·必默写</span></h3>
+  <pre><code><span class="cm">// 冒泡：每轮把最大值"冒"到末尾；加 swapped 标志可提前退出</span>
+<span class="kw">void</span> bubble(<span class="kw">int</span> a[], <span class="kw">int</span> n){
+    <span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; n-1; i++) {
+        <span class="kw">int</span> swapped = 0;
+        <span class="kw">for</span> (<span class="kw">int</span> j = 0; j &lt; n-1-i; j++)
+            <span class="kw">if</span> (a[j] &gt; a[j+1]) { <span class="kw">int</span> t=a[j]; a[j]=a[j+1]; a[j+1]=t; swapped=1; }
+        <span class="kw">if</span> (!swapped) <span class="kw">break</span>;              <span class="cm">// 本轮无交换 → 已有序</span>
+    }
+}
+
+<span class="cm">// 插入排序：像整理扑克牌；近乎有序时接近 O(n)，小数组首选</span>
+<span class="kw">void</span> insert(<span class="kw">int</span> a[], <span class="kw">int</span> n){
+    <span class="kw">for</span> (<span class="kw">int</span> i = 1; i &lt; n; i++) {
+        <span class="kw">int</span> key = a[i], j = i - 1;
+        <span class="kw">while</span> (j &gt;= 0 &amp;&amp; a[j] &gt; key) { a[j+1] = a[j]; j--; }
+        a[j+1] = key;
+    }
+}
+
+<span class="cm">// 快排：分治+partition，平均 O(nlogn)，面试最常考"手写快排"</span>
+<span class="kw">void</span> quick(<span class="kw">int</span> a[], <span class="kw">int</span> lo, <span class="kw">int</span> hi){
+    <span class="kw">if</span> (lo &gt;= hi) <span class="kw">return</span>;
+    <span class="kw">int</span> pivot = a[hi], i = lo;            <span class="cm">// 取末元素为基准</span>
+    <span class="kw">for</span> (<span class="kw">int</span> j = lo; j &lt; hi; j++)
+        <span class="kw">if</span> (a[j] &lt; pivot) { <span class="kw">int</span> t=a[i]; a[i]=a[j]; a[j]=t; i++; }
+    <span class="kw">int</span> t=a[i]; a[i]=a[hi]; a[hi]=t;       <span class="cm">// 基准归位</span>
+    quick(a, lo, i-1); quick(a, i+1, hi);
+}
+
+<span class="cm">// 选择排序：每轮选最小的放到前面，交换次数最少 O(n)——Flash/功耗敏感场合有用</span></code></pre>
+
+  <h3>排序对比表 <span class="badge freq">★高频·必背</span></h3>
+  <div class="tbl"><table>
+    <tr><th>算法</th><th>平均</th><th>最坏</th><th>空间</th><th>稳定</th><th>备注</th></tr>
+    <tr><td>冒泡</td><td class="num">O(n²)</td><td class="num">O(n²)</td><td class="num">O(1)</td><td>✔</td><td>加 swapped 优化后，有序数据 O(n)</td></tr>
+    <tr><td>插入</td><td class="num">O(n²)</td><td class="num">O(n²)</td><td class="num">O(1)</td><td>✔</td><td>基本有序时最快</td></tr>
+    <tr><td>选择</td><td class="num">O(n²)</td><td class="num">O(n²)</td><td class="num">O(1)</td><td>✘</td><td>任何情况都 O(n²)</td></tr>
+    <tr><td>快速</td><td class="num">O(nlogn)</td><td class="num">O(n²)</td><td class="num">O(logn)</td><td>✘</td><td>最坏发生在已有序+固定基准</td></tr>
+    <tr><td>归并</td><td class="num">O(nlogn)</td><td class="num">O(nlogn)</td><td class="num">O(n)</td><td>✔</td><td>稳定且无最坏退化，链表归并可 O(1) 空间</td></tr>
+    <tr><td>堆</td><td class="num">O(nlogn)</td><td class="num">O(nlogn)</td><td class="num">O(1)</td><td>✘</td><td>Top-K 问题首选</td></tr>
+  </table></div>
+  <ul>
+    <li>「稳定」= 相等元素保持原相对顺序；口诀：<em>不稳定的是「快些选一堆」（快排、希尔、选择、堆）</em>。</li>
+    <li>追问：为什么嵌入式很少用快排递归版？→ 栈深不可控，实时系统改用插入/归并或限制递归深度。</li>
+  </ul>
+
+  <h3>查找 <span class="badge freq">★高频</span></h3>
+  <pre><code><span class="cm">// 二分查找——边界写法是重灾区，必须一次写对</span>
+<span class="kw">int</span> bsearch(<span class="kw">int</span> a[], <span class="kw">int</span> n, <span class="kw">int</span> key){
+    <span class="kw">int</span> lo = 0, hi = n - 1;
+    <span class="kw">while</span> (lo &lt;= hi) {                       <span class="cm">// 闭区间用 &lt;=</span>
+        <span class="kw">int</span> mid = lo + (hi - lo) / 2;        <span class="cm">// 防 (lo+hi) 溢出！</span>
+        <span class="kw">if</span> (a[mid] == key) <span class="kw">return</span> mid;
+        <span class="kw">else if</span> (a[mid] &lt; key) lo = mid + 1;
+        <span class="kw">else</span> hi = mid - 1;
+    }
+    <span class="kw">return</span> -1;
+}</code></pre>
+  <ul>
+    <li>二分三大易错：循环条件 <code>&lt;=</code> vs <code>&lt;</code>、区间收缩 ±1、mid 溢出写法。</li>
+    <li>变体：找第一个 ≥ key 的位置（lower_bound）、旋转数组查找——大厂笔试常客。</li>
+    <li>顺序查找 O(n) 无序可用；二分 O(log n) <em>必须有序</em>；哈希 O(1) 均摊但费内存。</li>
+  </ul>
+
+  <h3>高频算法小题 <span class="badge freq">★高频</span></h3>
+  <ul>
+    <li><strong>斐波那契</strong>：递归 O(2ⁿ) 会重复计算 → 迭代 O(n) 或记忆化；笔试必写两种并说复杂度。</li>
+    <li><strong>字符串反转</strong>：双指针首尾交换到相遇，O(n)/O(1)。</li>
+    <li><strong>数组去重/找唯一数</strong>：全员异或——成对的抵消，剩下的就是答案（位运算+数组经典结合）。</li>
+    <li><strong>判断回文</strong>：双指针从两端向中间。</li>
+    <li><strong>Top-K</strong>：维护 K 大小的堆或快速选择。</li>
+    <li><strong>大 O 速判</strong>：单层循环 O(n)、嵌套 O(n²)、每轮减半 O(log n)、排序后处理 O(nlogn)。</li>
+  </ul>
+  <div class="note"><b>答题模板：</b>先说思路 → 说复杂度 → 写代码 → 主动说边界（空输入、单元素、重复值）。面试官最看重的是边界处理意识。</div>
+</section>
+
+<!-- ============ 11 ============ -->
+<section id="ch11">
+  <div class="ch-head"><span class="ch-no">CH.11</span><h2>预处理与多文件编程</h2></div>
+
+  <h3>宏定义 <span class="badge freq">★高频·必考</span></h3>
+  <pre><code><span class="kw">#define</span> SQUARE(x) ((x) * (x))   <span class="cm">// 参数和整体都加括号！</span>
+<span class="kw">#define</span> MAX(a,b)  ((a) &gt; (b) ? (a) : (b))
+
+<span class="cm">// 陷阱演示：</span>
+SQUARE(a + b)   <span class="cm">// 不加括号 → a + b*a + b，错</span>
+SQUARE(i++)     <span class="cm">// 即使加括号，i 也被自增两次 → 带副作用的实参是宏的天敌</span></code></pre>
+  <ul>
+    <li>宏 vs 函数：宏是<em>编译前文本替换</em>，无类型检查、无调用开销、代码膨胀、可传类型/表达式作参数；函数有类型检查、有调用开销。</li>
+    <li><code>#</code> 把参数变字符串（stringify），<code>##</code> 拼接记号：<code>#define REG(n) GPIO##n</code> → <code>REG(A)</code> 展开为 <code>GPIOA</code>。</li>
+    <li>do{...}while(0) 包裹多语句宏，保证在 if/else 中语法正确。</li>
+  </ul>
+
+  <h3>头文件与条件编译 <span class="badge freq">★高频</span></h3>
+  <pre><code><span class="cm">/* include guard：防止重复包含——每个头文件的标配 */</span>
+<span class="kw">#ifndef</span> __UART_H__
+<span class="kw">#define</span> __UART_H__
+<span class="cm">/* 头文件只放：声明（函数原型、extern 变量、类型、宏），不放定义 */</span>
+<span class="kw">#endif</span>
+
+<span class="kw">#ifdef</span> DEBUG
+    printf(<span class="cm">"dbg: x=%d\n"</span>, x);
+<span class="kw">#endif</span></code></pre>
+  <ul>
+    <li><code>#include &lt;file&gt;</code> 搜系统路径，<code>"file"</code> 先搜当前目录。</li>
+    <li>预处理四步：展开宏 → 处理条件编译 → 插入头文件 → 删除注释；之后才是编译、汇编、链接。</li>
+    <li><code>#error</code> / <code>#pragma</code> / 预定义宏 <code>__FILE__ __LINE__ __func__ __DATE__</code>（日志和断言常用）。</li>
+    <li>重复定义 vs 重复声明：链接期重复<strong>定义</strong>报 multiple definition；声明可以多次。</li>
+  </ul>
+</section>
+
+<!-- ============ 12 ============ -->
+<section id="ch12">
+  <div class="ch-head"><span class="ch-no">CH.12</span><h2>嵌入式专项考点</h2></div>
+
+  <h3>寄存器操作 <span class="badge freq">★高频·必背</span></h3>
+  <pre><code><span class="cm">// 绝对地址访问的标准写法：volatile 防优化 + 强制类型转换 + 解引用</span>
+<span class="kw">#define</span> REG32(addr)  (*(volatile <span class="kw">uint32_t</span> *)(addr))
+
+REG32(0x40021018) |=  (1U &lt;&lt; 3);    <span class="cm">// 置位（读-改-写）</span>
+REG32(0x40021018) &amp;= ~(1U &lt;&lt; 3);    <span class="cm">// 清零</span>
+<span class="kw">while</span> (REG32(UART_SR) &amp; (1U &lt;&lt; 7)) ; <span class="cm">// 轮询等待标志位</span></code></pre>
+  <p>追问「读-改-写」的风险：多中断/多核并发时非原子 → 关中断或用位带（bit-band）操作。</p>
+
+  <h3>大小端 <span class="badge freq">★高频</span></h3>
+  <ul>
+    <li>小端：低字节存低地址（x86、ARM 默认）；大端：高字节存低地址（网络字节序、部分 PowerPC）。</li>
+    <li><code>0x12345678</code> 在小端内存中依次是 <code>78 56 34 12</code>。</li>
+    <li>判断方法：union 法（见 CH.06）或 <code>*(char*)&amp;x</code> 法；转换：<code>htons/htonl/ntohs/ntohl</code>。</li>
+  </ul>
+
+  <h3>中断与 C <span class="badge freq">★高频</span></h3>
+  <ul>
+    <li>ISR 编写准则：<strong>短小</strong>（只置标志/存数据，处理放主循环）、<em>不调用 printf/malloc 等非可重入函数</em>、不能返回值和带参数（硬件决定）、共享变量必须 volatile。</li>
+    <li>可重入函数：不依赖静态/全局可变状态的函数才安全被中断打断后再次进入。</li>
+    <li>中断里改了标志、主循环 while 死等却不加 volatile → 编译器 -O2 把标志缓存进寄存器 → 死循环。这是最经典的嵌入式 C 综合题。</li>
+    <li>C 与汇编混合：启动文件（startup.s）设栈、拷贝 .data、清 .bss，再跳 main；ISR 入口保存现场。</li>
+  </ul>
+
+  <h3>高频笔试小题速答</h3>
+  <div class="tbl"><table>
+    <tr><th>题目</th><th>要点</th></tr>
+    <tr><td>static 全局 vs 普通全局</td><td>链接属性不同（文件内 vs 全工程），都在静态区</td></tr>
+    <tr><td>const 与 #define 谁好</td><td>const 有类型检查、可调试；宏纯替换、可带参但有副作用风险</td></tr>
+    <tr><td>指针与数组的区别</td><td>见 CH.05 表格：sizeof、可否自增、传参退化</td></tr>
+    <tr><td>char *s="abc" 与 char s[]="abc"</td><td>只读段（改是 UB） vs 栈上副本（可改）</td></tr>
+    <tr><td>结构体大小计算</td><td>对齐规则，见 CH.06 例题</td></tr>
+    <tr><td>堆和栈的区别</td><td>见 CH.08 分区表</td></tr>
+    <tr><td>volatile 三场景</td><td>寄存器、中断共享标志、多线程共享变量</td></tr>
+    <tr><td>反转单链表</td><td>三指针 prev/cur/next 迭代，见 CH.09；递归版要会说栈开销</td></tr>
+    <tr><td>判断链表有环</td><td>快慢指针相遇即有环（Floyd），见 CH.09</td></tr>
+    <tr><td>快排/二分复杂度与边界</td><td>O(nlogn)/O(logn)，二分防溢出 <code>lo+(hi-lo)/2</code>，见 CH.10</td></tr>
+    <tr><td>define 写"一年多少秒"</td><td><code>#define SEC_YEAR (365UL*24UL*60UL*60UL)</code>——加 U/L 防溢出、加括号</td></tr>
+    <tr><td>找错：<code>*p++</code></td><td>先取 *p 再 p++（后置++优先级更高）；等价 *(p++)</td></tr>
+    <tr><td>大端小端互转 32 位</td><td><code>x = (x&gt;&gt;24)|(x&lt;&lt;24)|((x&gt;&gt;8)&amp;0xFF00)|((x&amp;0xFF00)&lt;&lt;8)</code></td></tr>
+  </table></div>
+
+  <div class="note"><b>面试策略：</b>嵌入式 C 笔试面试两条主线——<strong>语言与硬件</strong>：volatile、内存对齐、位操作宏、static/const、堆栈分区、中断共享变量；<strong>代码能力</strong>：反转链表、快慢指针、二分、快排/冒泡、memcpy/strcpy/swap。把这十项练到"能默写、能讲边界"即可覆盖九成题目。</div>
+</section>
+
+</main>
+</div>
+
+<footer>嵌入式C考点速成 · 按章速查，考前过一遍 ★高频 项即可覆盖主要考点</footer>
+
+<script>
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav a'));
+  var secs = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+  function spy(){
+    var idx = 0, y = window.scrollY + 90;
+    for (var i = 0; i < secs.length; i++){
+      if (secs[i] && secs[i].offsetTop <= y) idx = i;
+    }
+    links.forEach(function(a, i){ a.classList.toggle('on', i === idx); });
+  }
+  var ticking = false;
+  window.addEventListener('scroll', function(){
+    if (!ticking){
+      ticking = true;
+      requestAnimationFrame(function(){ spy(); ticking = false; });
+    }
+  }, {passive:true});
+  window.addEventListener('resize', spy);
+  spy();
+})();
+</script>
+
+</body>
+</html>

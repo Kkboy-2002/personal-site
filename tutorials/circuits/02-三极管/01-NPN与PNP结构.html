@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NPN与PNP结构</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.rg{stroke:var(--line);stroke-width:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#bjt">三极管</a><span class="sp"></span><span>01 / 09</span></nav>
+<header>
+  <span class="eyebrow">三极管 · 结构与符号</span>
+  <h1>NPN 与 PNP 结构</h1>
+  <p class="lede">三极管是三块半导体夹成的两个 PN 结。三块区域的掺杂和尺寸故意做得不一样，所以它能放大，也因此 C 和 E 不能互换。</p>
+</header>
+
+<section id="struct">
+  <span class="eyebrow">三区两结</span>
+  <h2>三块区域，各有分工</h2>
+  <p>发射区负责"发"载流子，所以掺杂最浓。基区负责"放行"，所以做得很薄、掺杂很淡，载流子穿过去时来不及被复合掉。集电区负责"收"，所以面积最大，掺杂较淡，好承受高反压。</p>
+  <p>放大时的偏置条件只有一句话：<b>发射结正偏，集电结反偏</b>。NPN 和 PNP 结构完全对偶，把 N、P 对调，所有电压极性和电流方向一起反过来。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 240" role="img" aria-label="三极管剖面：左边发射区、中间很薄的基区、右边面积最大的集电区，可切换 NPN 和 PNP 查看载流子和电流方向">
+        <rect id="r1-ze" class="rg zone-sat" x="60" y="78" width="90" height="100"/>
+        <rect id="r1-zb" class="rg zone-cut" x="150" y="78" width="44" height="100"/>
+        <rect id="r1-zc" class="rg zone-sat" x="194" y="78" width="226" height="100"/>
+        <line class="ax dash" x1="150" y1="72" x2="150" y2="184"/>
+        <line class="ax dash" x1="194" y1="72" x2="194" y2="184"/>
+        <text x="146" y="66" text-anchor="end" class="tm">发射结</text>
+        <text x="198" y="66" class="tm">集电结</text>
+        <text x="105" y="108" text-anchor="middle" class="t">发射区</text>
+        <text id="r1-de" x="105" y="128" text-anchor="middle" class="v">N+ 高掺杂</text>
+        <text id="r1-db" x="172" y="118" text-anchor="middle" class="v">P</text>
+        <text x="307" y="108" text-anchor="middle" class="t">集电区</text>
+        <text id="r1-dc" x="307" y="128" text-anchor="middle" class="v">N 低掺杂 · 面积大</text>
+        <path class="w" d="M60,158 H28 M420,158 H452 M172,78 V40"/>
+        <text x="22" y="162" text-anchor="end" class="t">E</text>
+        <text x="458" y="162" class="t">C</text>
+        <text x="172" y="32" text-anchor="middle" class="t">B</text>
+        <text id="r1-ve" x="44" y="148" text-anchor="middle" class="v lo">0 V</text>
+        <text id="r1-vc" x="436" y="148" text-anchor="middle" class="v hi">5 V</text>
+        <text id="r1-vb" x="182" y="56" class="v lo">0.7 V</text>
+        <path id="r1-fm" class="flow" d="M66,158 H414"/>
+        <path id="r1-fb" class="flow thin" d="M172,82 V154"/>
+        <text x="172" y="202" text-anchor="middle" class="tm">基区很薄</text>
+        <text id="r1-cl" x="452" y="202" text-anchor="end" class="t">多子电子：E → 基区 → C</text>
+        <text x="60" y="226" class="tm">橙底 = N 型，蓝底 = P 型，宽度示意</text>
+      </svg>
+      <figcaption>绿色虚线在"载流子"模式下表示多子的运动方向，在"电流方向"模式下表示常规电流方向。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">管型</span>
+        <div class="seg" id="r1-t"><button id="r1-t-npn" data-v="npn" aria-pressed="true">NPN</button><button id="r1-t-pnp" data-v="pnp" aria-pressed="false">PNP</button></div></div>
+      <div class="ctl"><span class="ctl-l">看什么</span>
+        <div class="seg" id="r1-m"><button id="r1-m-car" data-v="car" aria-pressed="true">载流子</button><button id="r1-m-cur" data-v="cur" aria-pressed="false">电流方向</button></div></div>
+      <dl class="read">
+        <dt>偏置</dt><dd><span id="r1-st" class="chip on">放大偏置</span></dd>
+        <dt>E / B / C 区</dt><dd id="r1-reg">N+ / P / N</dd>
+        <dt>发射结</dt><dd id="r1-je">Ube = 0.7 V，正偏</dd>
+        <dt>集电结</dt><dd id="r1-jc">Ucb = 4.3 V，反偏</dd>
+        <dt>主要载流子</dt><dd id="r1-car">电子</dd>
+        <dt>常规电流</dt><dd id="r1-cur">C 流入，E 流出</dd>
+      </dl>
+      <p class="note" id="r1-note"></p>
+    </div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>区域</th><th>掺杂</th><th>几何特点</th><th>为什么这样做</th></tr></thead>
+    <tbody>
+      <tr><td>发射区 E</td><td>最高</td><td>较小</td><td>多子浓度高，向基区注入的载流子远多于基区反向注入的，发射效率高</td></tr>
+      <tr><td>基区 B</td><td>最低</td><td>很薄，微米级</td><td>薄且淡，载流子穿过时几乎不复合，只有很小一部分变成 Ib</td></tr>
+      <tr><td>集电区 C</td><td>较低</td><td>面积最大</td><td>面积大好收集载流子、好散热；掺杂低使集电结耗尽层宽，耐压高</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="symbol">
+  <span class="eyebrow">符号 · 箭头方向</span>
+  <h2>箭头就是发射结正偏时的电流方向</h2>
+  <p>符号上只有发射极带箭头。箭头指的方向，就是发射结正偏时常规电流的方向，也就是 P 指向 N。NPN 箭头朝外，电流从 E 流出；PNP 箭头朝里，电流从 E 流入。三个电流永远满足 Ie = Ib + Ic。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 360 292" role="img" aria-label="基本放大电路中的 NPN 或 PNP 符号，显示基极、集电极、发射极电流的方向">
+        <text x="220" y="18" text-anchor="middle" class="v">Vcc 5 V</text>
+        <path class="w" d="M208,26 H232 M220,26 V50"/>
+        <path class="w" d="M150,172 H198 M54,172 H100"/>
+        <rect class="r" x="100" y="164" width="50" height="16" rx="2"/>
+        <text x="125" y="156" text-anchor="middle" class="v">Rb 47 kΩ</text>
+        <circle class="r" cx="50" cy="172" r="4"/>
+        <text x="50" y="196" text-anchor="middle" class="t">Vb</text>
+        <text id="r2-vs" x="50" y="154" text-anchor="middle" class="v hi">1.64 V</text>
+        <text x="186" y="164" text-anchor="end" class="tm">B</text>
+        <g id="r2-gn">
+          <rect class="r" x="211" y="50" width="18" height="40" rx="2"/>
+          <text x="236" y="74" class="v">Rc 1 kΩ</text>
+          <path class="w" d="M220,90 V150 M198,164 L220,150 M198,180 L220,194 V250 M206,250 H234 M211,255 H229 M216,260 H224"/>
+          <line class="bar" x1="198" y1="154" x2="198" y2="190"/>
+          <polygon class="ah" points="217,192 208,191 212,184"/>
+          <text x="228" y="158" class="tm">C</text>
+          <text x="228" y="198" class="tm">E</text>
+          <text x="258" y="178" class="t">NPN</text>
+          <path id="r2-fn" class="flow" d="M220,30 V150 L202,162 V182 L220,194 V248"/>
+          <path id="r2-fnb" class="flow thin" d="M54,172 H196"/>
+        </g>
+        <g id="r2-gp" hidden>
+          <path class="w" d="M220,50 V150 L198,164 M198,180 L220,194 V204 M220,244 V256 M206,256 H234 M211,261 H229 M216,266 H224"/>
+          <line class="bar" x1="198" y1="154" x2="198" y2="190"/>
+          <polygon class="ah" points="203,161 212,160 208,153"/>
+          <rect class="r" x="211" y="204" width="18" height="40" rx="2"/>
+          <text x="204" y="236" text-anchor="end" class="v">Rc 1 kΩ</text>
+          <text x="228" y="158" class="tm">E</text>
+          <text x="228" y="198" class="tm">C</text>
+          <text x="258" y="178" class="t">PNP</text>
+          <path id="r2-fp" class="flow" d="M220,30 V148 L202,160 V184 L220,196 V254"/>
+          <path id="r2-fpb" class="flow thin" d="M196,172 H54"/>
+        </g>
+        <text id="r2-tt" x="232" y="118" class="v">Ic 2.00 mA</text>
+        <text id="r2-tb" x="240" y="226" class="v">Ie 2.02 mA</text>
+        <text id="r2-tib" x="76" y="214" class="v">Ib 20 µA</text>
+        <text id="r2-key" x="180" y="286" text-anchor="middle" class="t">箭头朝外：电流从 E 流出</text>
+      </svg>
+      <figcaption>绿色虚线是常规电流方向。β 取 100，Vcc 5 V，Rc 1 kΩ，Rb 47 kΩ，Ube 按 0.7 V 估算。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">管型</span>
+        <div class="seg" id="r2-t"><button id="r2-t-npn" data-v="npn" aria-pressed="true">NPN</button><button id="r2-t-pnp" data-v="pnp" aria-pressed="false">PNP</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="r2-ib">基极电流 Ib</label>
+        <span class="rv" id="r2-ibv">20 µA</span>
+        <input type="range" id="r2-ib" min="0" max="40" step="5" value="20"></div>
+      <dl class="read">
+        <dt>管子状态</dt><dd><span id="r2-st" class="chip on">放大</span></dd>
+        <dt>Ic = β·Ib</dt><dd id="r2-ic">2.00 mA</dd>
+        <dt>Ie = Ib + Ic</dt><dd id="r2-ie">2.02 mA</dd>
+        <dt>集射电压</dt><dd id="r2-uce">Uce = 3.00 V</dd>
+        <dt>发射极箭头</dt><dd id="r2-ar">朝外</dd>
+      </dl>
+      <p class="note" id="r2-note"></p>
+    </div>
+  </div>
+  <p>记忆口诀：箭头从 P 指向 N。NPN 的 P 在中间（基极），所以箭头从基区指向发射极，朝外；PNP 的 N 在中间，箭头从发射极指向基区，朝里。</p>
+</section>
+
+<section id="swap">
+  <span class="eyebrow">C 与 E 能互换吗</span>
+  <h2>结构不对称，倒过来用几乎不放大</h2>
+  <p>从外面看 NPN 就是 N-P-N，好像左右对称。但发射区掺杂浓、集电区掺杂淡、面积大。倒过来接，原来的淡掺杂集电区被迫去当发射区，注入效率很差，β 从上百掉到个位数以下；原来的发射结被迫承受反压，而它掺杂浓、耗尽层窄，只能扛几伏。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 236" role="img" aria-label="NPN 剖面上的注入示意：正常接法时发射区大量注入电子，倒置时注入少而空穴反注入多">
+        <rect class="rg zone-sat" x="60" y="72" width="90" height="100"/>
+        <rect class="rg zone-cut" x="150" y="72" width="44" height="100"/>
+        <rect class="rg zone-sat" x="194" y="72" width="226" height="100"/>
+        <text x="105" y="96" text-anchor="middle" class="v">N+ 浓</text>
+        <text x="172" y="96" text-anchor="middle" class="v">P</text>
+        <text x="307" y="96" text-anchor="middle" class="v">N 淡 · 面积大</text>
+        <path class="w" d="M60,140 H28 M420,140 H452 M172,72 V40"/>
+        <text id="r3-l" x="24" y="30" class="t">E 发射</text>
+        <text id="r3-r" x="456" y="30" text-anchor="end" class="t">C 收集</text>
+        <text x="180" y="52" class="tm">B</text>
+        <path id="r3-inj" class="flow" d="M70,124 H410" style="stroke-width:6"/>
+        <path id="r3-back" class="flow thin bad" d="M168,152 H84"/>
+        <text x="60" y="198" class="t" style="fill:var(--flow)">绿：发射端注入的电子，大部分成为 Ic</text>
+        <text x="60" y="220" class="t" style="fill:var(--danger)">红：基区反注入的空穴，只白白消耗 Ib</text>
+      </svg>
+      <figcaption>线宽示意载流子数量的相对多少，不是按比例。β 与耐压用的是小信号管典型值。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">接法</span>
+        <div class="seg" id="r3-m"><button id="r3-m-n" data-v="n" aria-pressed="true">正常接法</button><button id="r3-m-r" data-v="r" aria-pressed="false">C、E 对调</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="r3-u">外加 C-E 电压</label>
+        <span class="rv" id="r3-uv">10 V</span>
+        <input type="range" id="r3-u" min="1" max="30" step="1" value="10"></div>
+      <dl class="read">
+        <dt>电流放大倍数</dt><dd id="r3-b">β ≈ 150</dd>
+        <dt>Ib = 50 µA 时 Ic</dt><dd id="r3-ic">7.5 mA</dd>
+        <dt>承受反压的结</dt><dd id="r3-j">集电结，耐压约 40 V</dd>
+        <dt>结论</dt><dd><span id="r3-st" class="chip on">正常放大</span></dd>
+      </dl>
+      <p class="note" id="r3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>三极管的三个区在结构上有什么特点？</summary>
+      <div class="ans"><p>发射区掺杂最浓，用来发射载流子；基区很薄、掺杂最淡，让载流子快速穿过、少复合；集电区面积最大、掺杂较淡，用来收集载流子并承受高反压。这三点是三极管能放大的结构基础。</p></div></details>
+    <details><summary>三极管放大的外部条件是什么？</summary>
+      <div class="ans"><p>发射结正偏，集电结反偏。NPN 就是 Uc &gt; Ub &gt; Ue；PNP 反过来，Ue &gt; Ub &gt; Uc。</p></div></details>
+    <details><summary>怎么从符号上区分 NPN 和 PNP？</summary>
+      <div class="ans"><p>看发射极箭头。箭头方向就是发射结正偏时的电流方向，从 P 指向 N。箭头朝外是 NPN，电流从 E 流出；箭头朝里是 PNP，电流从 E 流入。</p></div></details>
+    <details><summary>集电极和发射极能不能互换使用？</summary>
+      <div class="ans"><p>能导通，但几乎不放大，也不耐压。因为结构不对称：倒过来后淡掺杂的集电区去当发射区，注入效率低，β 通常只剩零点几到几；原来浓掺杂的发射结改为承受反压，击穿电压一般只有 5~7 V（典型值）。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="next" href="02-三个工作区.html"><span>下一页</span>三个工作区</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 结构剖面 */
+const r1={t:'npn',m:'car'};
+const r1D={
+  npn:{d:['N+ 高掺杂','P','N 低掺杂 · 面积大'],z:['zone-sat','zone-cut','zone-sat'],v:[0,0.7,5],reg:'N+ / P / N',car:'电子',
+    je:'Ube = 0.7 V，正偏',jc:'Ucb = 4.3 V，反偏',cur:'C 流入，E 流出',main:'M452,158 H28',base:'M172,40 V154'},
+  pnp:{d:['P+ 高掺杂','N','P 低掺杂 · 面积大'],z:['zone-cut','zone-sat','zone-cut'],v:[5,4.3,0],reg:'P+ / N / P',car:'空穴',
+    je:'Ueb = 0.7 V，正偏',jc:'Ubc = 4.3 V，反偏',cur:'E 流入，C 流出',main:'M28,158 H452',base:'M172,154 V40'}
+};
+function r1u(){
+  const d=r1D[r1.t],cur=r1.m==='cur',npn=r1.t==='npn';
+  const zs=[$('r1-ze'),$('r1-zb'),$('r1-zc')],ds=[$('r1-de'),$('r1-db'),$('r1-dc')],vs=[$('r1-ve'),$('r1-vb'),$('r1-vc')];
+  zs.forEach((z,i)=>z.setAttribute('class','rg '+d.z[i]));
+  ds.forEach((t,i)=>t.textContent=d.d[i]);
+  vs.forEach((t,i)=>{t.textContent=d.v[i]+' V';setLv(t,null,d.v[i]>2.5);});
+  $('r1-fm').setAttribute('d',cur?d.main:'M66,158 H414');
+  $('r1-fb').setAttribute('d',cur?d.base:'M172,82 V154');
+  $('r1-cl').textContent=cur?'常规电流：'+d.cur:'多子'+d.car+'：E → 基区 → C';
+  chip($('r1-st'),npn?'放大偏置 Uc > Ub > Ue':'放大偏置 Ue > Ub > Uc','on');
+  $('r1-reg').textContent=d.reg;$('r1-je').textContent=d.je;$('r1-jc').textContent=d.jc;
+  $('r1-car').textContent=d.car;$('r1-cur').textContent=d.cur;
+  const e=npn?'电子':'空穴',h=npn?'空穴':'电子';
+  $('r1-note').textContent=cur
+    ?(npn?'电子带负电，电子从 E 跑向 C，常规电流就是从 C 流向 E。基极电流流入，补充基区里被复合掉的空穴。'
+        :'空穴带正电，空穴从 E 跑向 C，常规电流也就是从 E 流向 C。基极电流流出，和 NPN 正好相反。')
+    :'发射结正偏，发射区大量'+e+'注入基区。基区很薄，绝大部分'+e+'来不及和基区的'+h+'复合，就被集电结的反向电场拉进集电区。被复合掉的那一小部分，由基极补充，这就是 Ib。';
+}
+seg('r1-t',v=>{r1.t=v;r1u();});
+seg('r1-m',v=>{r1.m=v;r1u();});
+r1u();
+
+/* 2. 符号与电流方向 */
+const r2={t:'npn'};
+function r2u(){
+  const npn=r2.t==='npn',ibu=+$('r2-ib').value,ib=ibu*1e-6,ic=100*ib,ie=ib+ic,on=ib>0;
+  show($('r2-gn'),npn);show($('r2-gp'),!npn);
+  show($('r2-fn'),on);show($('r2-fnb'),on);show($('r2-fp'),on);show($('r2-fpb'),on);
+  const vb=npn?(on?0.7+ib*47e3:0):(on?5-0.7-ib*47e3:5);
+  $('r2-vs').textContent=fmtV(vb);setLv($('r2-vs'),null,vb>2.5);
+  $('r2-ibv').textContent=ibu+' µA';$('r2-ib').setAttribute('aria-valuetext',ibu+' µA');
+  $('r2-tt').textContent=npn?'Ic '+fmtA(ic):'Ie '+fmtA(ie);
+  $('r2-tb').textContent=npn?'Ie '+fmtA(ie):'Ic '+fmtA(ic);
+  $('r2-tib').textContent='Ib '+ibu+' µA';
+  $('r2-tt').style.visibility=$('r2-tb').style.visibility=on?'visible':'hidden';
+  $('r2-key').textContent=npn?'箭头朝外：电流从 E 流出':'箭头朝里：电流从 E 流入';
+  chip($('r2-st'),on?'放大':'截止',on?'on':'off');
+  $('r2-ic').textContent=on?fmtA(ic):'≈ 0';$('r2-ie').textContent=on?fmtA(ie):'≈ 0';
+  $('r2-uce').textContent=(npn?'Uce = ':'Uec = ')+fmtV(5-ic*1e3);
+  $('r2-ar').textContent=npn?'朝外，P（基区）指向 N（发射区）':'朝里，P（发射区）指向 N（基区）';
+  $('r2-note').textContent=!on?'Ib = 0，发射结没有正偏电流，三个电流都约等于零，管子截止。往右拖一点试试。'
+    :npn?'Ib 从基极流入，Ic 从集电极流入，两股电流在管子里汇合，从发射极流出，方向正好是箭头方向。Ie 比 Ic 只大 1%，所以常说 Ic ≈ Ie。'
+    :'PNP 所有方向反过来：电流从发射极流入，分成两股，大的一股从集电极流出去负载，小的一股从基极流出。基极要比发射极低 0.7 V 才导通。';
+}
+seg('r2-t',v=>{r2.t=v;r2u();});
+$('r2-ib').addEventListener('input',r2u);
+r2u();
+
+/* 3. C、E 能否互换 */
+const r3={rev:false};
+function r3u(){
+  const u=+$('r3-u').value,rev=r3.rev,b=rev?1:150,bv=rev?6:40,brk=u>bv,ic=b*50e-6;
+  $('r3-uv').textContent=u+' V';$('r3-u').setAttribute('aria-valuetext',u+' V');
+  $('r3-l').textContent=rev?'E 被当收集端':'E 发射';$('r3-r').textContent=rev?'C 被当发射端':'C 收集';
+  const inj=$('r3-inj'),bk=$('r3-back');
+  inj.setAttribute('d',rev?'M410,124 H70':'M70,124 H410');inj.style.strokeWidth=rev?'2.5':'6';
+  bk.setAttribute('d',rev?'M176,152 H404':'M168,152 H84');bk.style.strokeWidth=rev?'5':'2';
+  $('r3-b').textContent=rev?'β ≈ 1（倒置 β，典型 0.1~几）':'β ≈ 150';
+  $('r3-ic').textContent=brk?'击穿，不受 Ib 控制':fmtA(ic);
+  $('r3-j').textContent=rev?'原发射结，耐压约 6 V':'集电结，耐压约 40 V';
+  if(brk)chip($('r3-st'),'反偏结击穿','bad');else chip($('r3-st'),rev?'能导通，几乎不放大':'正常放大',rev?'warn':'on');
+  $('r3-note').textContent=brk
+    ?(rev?'原发射结掺杂浓、耗尽层窄，反向击穿电压典型只有 5~7 V。超过它就雪崩，电流不再受基极控制，还可能损伤管子。':'超过了 BVCEO，集电结击穿。正常接法下这个耐压是几十伏。')
+    :rev?'淡掺杂的集电区去注入，电子少；基区反而向它注入大量空穴，基极电流大半被浪费。小小的发射区还收不全电子，于是 β 只剩个位数以下。'
+    :'浓掺杂的发射区向基区注入大量电子，基区往发射区反注入的空穴很少，所以一点点 Ib 就能控制很大的 Ic。集电结掺杂淡、耗尽层宽，能扛几十伏。';
+}
+seg('r3-m',v=>{r3.rev=v==='r';r3u();});
+$('r3-u').addEventListener('input',r3u);
+r3u();
+</script>
+</body>
+</html>

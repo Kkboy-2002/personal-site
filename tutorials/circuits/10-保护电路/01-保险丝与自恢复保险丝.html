@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>保险丝与自恢复保险丝</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#protect">保护电路</a><span class="sp"></span><span>01 / 08</span></nav>
+<header>
+  <span class="eyebrow">保护电路 · 过流保护</span>
+  <h1>保险丝与自恢复保险丝</h1>
+  <p class="lede">保险丝靠电流发热把自己烧断，一次性；PPTC 靠发热让自己的电阻暴涨，断电冷却后还能恢复。下面看它们在不同过载电流下多久动作，动作后电路里还剩多少电流。</p>
+</header>
+
+<section id="melt">
+  <span class="eyebrow">一次性保险丝 · I²t</span>
+  <h2>保险丝为什么会熔断：热量攒够了</h2>
+  <p>熔体有电阻 R，电流流过发热 P = I²·R。热量一边攒在熔体里，一边往外散。电流小时发热和散热平衡，温度停在熔点以下，不断。电流大到一定程度，温度一直往上爬，到熔点就断开。</p>
+  <p>电流很大时热量来不及散，熔断只看攒下的能量，所以熔断时间和电流平方成反比，I²·t 近似是常数。规格书里的熔化热能值 I²t 就是这个量。快断型熔体细、热容小，I²t 小；慢断型热容大，能扛住电机启动、电容充电这类短时冲击。</p>
+  <p class="eq">熔断条件：∫ I²·R dt 攒到熔化所需热量；大电流时 I²·t ≈ 常数</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 330" role="img" aria-label="12 V 电源经保险丝 F1 接负载；下方是过载后电流与熔体发热量随时间的变化">
+        <text x="46" y="58" text-anchor="end" class="v">12 V</text>
+        <path class="w" d="M50,40 V68 M50,54 H110 M160,54 H300"/>
+        <rect class="r" x="110" y="46" width="50" height="16" rx="2"/>
+        <path id="s1-fe" class="w" d="M110,54 H160"/>
+        <path id="s1-fgap" class="w s-bad" d="M110,54 H128 M142,54 H160" hidden/>
+        <text x="135" y="36" text-anchor="middle" class="t">F1 保险丝</text>
+        <text x="135" y="82" text-anchor="middle" class="v">In = 1 A</text>
+        <rect id="s1-load" class="box" x="300" y="34" width="64" height="40" rx="4"/>
+        <text x="332" y="59" text-anchor="middle" class="t">负载</text>
+        <path class="w" d="M364,54 H430 V92 M416,92 H444 M421,97 H439 M426,102 H434"/>
+        <text id="s1-lt" x="332" y="94" text-anchor="middle" class="tm">过载</text>
+        <path id="s1-flow" class="flow" d="M52,54 H298 M366,54 H430 V90"/>
+        <line class="gl" x1="56" y1="150" x2="500" y2="150"/>
+        <line id="s1-mline" class="ax" x1="56" y1="172.5" x2="500" y2="172.5" style="stroke-dasharray:4 4"/>
+        <text x="496" y="166" text-anchor="end" class="tm">熔化所需热量 100%</text>
+        <path class="ax" d="M56,144 V286 H500"/>
+        <text x="50" y="176" text-anchor="end" class="v">1</text>
+        <text x="50" y="290" text-anchor="end" class="v">0</text>
+        <text x="60" y="140" class="tm">归一化值</text>
+        <text x="56" y="304" text-anchor="middle" class="v">0</text>
+        <text id="s1-t1" x="167" y="304" text-anchor="middle" class="v"></text>
+        <text id="s1-t2" x="278" y="304" text-anchor="middle" class="v"></text>
+        <text id="s1-t3" x="389" y="304" text-anchor="middle" class="v"></text>
+        <text id="s1-t4" x="500" y="304" text-anchor="end" class="v"></text>
+        <text x="500" y="322" text-anchor="end" class="tm">过载开始后的时间</text>
+        <polyline id="s1-i" class="real" points="56,172 500,172"/>
+        <polyline id="s1-h" class="real2" points="56,286 500,286"/>
+        <text x="64" y="192" class="t" style="fill:var(--copper)">电流 I / I过载</text>
+        <text id="s1-hl" x="0" y="0" class="t" style="fill:var(--low)">熔体发热量</text>
+      </svg>
+      <figcaption>橙线是电流，蓝线是熔体里攒下的热量（相对熔化所需量）。蓝线碰到虚线就熔断，电流归零。曲线为示意，按"发热 − 散热"一阶热模型计算。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">保险丝类型</span>
+        <div class="seg" id="s1-k"><button id="s1-k-fast" data-v="fast" aria-pressed="true">快断</button><button id="s1-k-slow" data-v="slow" aria-pressed="false">慢断</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-rng">过载电流（额定 In = 1 A）</label>
+        <span class="rv" id="s1-rv">3 A</span>
+        <input type="range" id="s1-rng" min="0" max="7" step="1" value="3"></div>
+      <dl class="read">
+        <dt>电流 / 额定</dt><dd id="s1-m">3.0 倍</dd>
+        <dt>熔断时间</dt><dd id="s1-tb">—</dd>
+        <dt>熔断前 I²·t</dt><dd id="s1-i2t">—</dd>
+        <dt>保险丝</dt><dd><span id="s1-st" class="chip bad">熔断</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="pptc">
+  <span class="eyebrow">自恢复保险丝 · PPTC</span>
+  <h2>PPTC：不是断开，是电阻暴涨</h2>
+  <p>PPTC 是高分子聚合物里掺了导电碳粒。常温下碳粒连成导电链，电阻只有几十到几百 mΩ。过流发热到一百多摄氏度，聚合物膨胀，把导电链拉断，电阻上升几个数量级，这就是正温度系数（PTC）。</p>
+  <p>动作后它并没有断开。电源一直加着，它靠自己上面的那点功耗维持高温，把电流压到几十 mA，这叫"锁住"。只有断电或排除故障让它冷却，电阻才会回落。回落后的电阻比出厂时大，规格书用 R1max 表示动作一次后一小时的最大电阻。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 330" role="img" aria-label="12 V 经 PPTC 接负载；下方是 PPTC 电阻随温度变化的曲线，对数坐标，工作点随阶段移动">
+        <text id="s2-vs" x="46" y="58" text-anchor="end" class="v">12 V</text>
+        <path class="w" d="M50,40 V68 M50,54 H110 M160,54 H300"/>
+        <rect class="r" x="110" y="46" width="50" height="16" rx="2"/>
+        <path class="w" d="M100,74 H112 L170,34"/>
+        <text x="174" y="34" class="tm">+t°</text>
+        <text x="135" y="94" text-anchor="middle" class="t">PPTC</text>
+        <text x="104" y="36" text-anchor="end" class="v">Ihold 1.1 A</text>
+        <rect id="s2-load" class="box" x="300" y="34" width="64" height="40" rx="4"/>
+        <text id="s2-lt" x="332" y="59" text-anchor="middle" class="t">负载</text>
+        <path class="w" d="M364,54 H430 V92 M416,92 H444 M421,97 H439 M426,102 H434"/>
+        <path id="s2-flow" class="flow" d="M52,54 H298 M366,54 H430 V90"/>
+        <line class="gl" x1="56" y1="140" x2="500" y2="140"/>
+        <line class="gl" x1="56" y1="176" x2="500" y2="176"/>
+        <line class="gl" x1="56" y1="212" x2="500" y2="212"/>
+        <line class="gl" x1="56" y1="248" x2="500" y2="248"/>
+        <path class="ax" d="M56,134 V284 H500"/>
+        <text x="50" y="144" text-anchor="end" class="v">1k</text>
+        <text x="50" y="180" text-anchor="end" class="v">100</text>
+        <text x="50" y="216" text-anchor="end" class="v">10</text>
+        <text x="50" y="252" text-anchor="end" class="v">1</text>
+        <text x="50" y="288" text-anchor="end" class="v">0.1</text>
+        <text x="60" y="128" class="tm">电阻 Ω（对数）</text>
+        <text x="56" y="302" text-anchor="middle" class="v">20</text>
+        <text x="158" y="302" text-anchor="middle" class="v">50</text>
+        <text x="261" y="302" text-anchor="middle" class="v">80</text>
+        <text x="363" y="302" text-anchor="middle" class="v">110</text>
+        <text x="500" y="302" text-anchor="end" class="v">150</text>
+        <text x="500" y="320" text-anchor="end" class="tm">器件温度 °C</text>
+        <polyline id="s2-rt" class="real" points=""/>
+        <circle id="s2-pt" class="dot" cx="73" cy="284" r="6" style="fill:var(--danger)"/>
+        <text id="s2-ptl" x="0" y="0" class="t" style="fill:var(--danger)"></text>
+      </svg>
+      <figcaption>电阻-温度曲线为示意，典型 PPTC 在 120 °C 附近电阻陡升。红点是当前工作点。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">阶段</span>
+        <div class="seg" id="s2-s"><button id="s2-s-0" data-v="0" aria-pressed="true">正常工作</button><button id="s2-s-1" data-v="1" aria-pressed="false">短路发热</button><button id="s2-s-2" data-v="2" aria-pressed="false">动作锁住</button><button id="s2-s-3" data-v="3" aria-pressed="false">断电冷却</button></div></div>
+      <dl class="read">
+        <dt>PPTC 温度</dt><dd id="s2-t">25 °C</dd>
+        <dt>PPTC 电阻</dt><dd id="s2-r">0.1 Ω</dd>
+        <dt>回路电流</dt><dd id="s2-i">0.99 A</dd>
+        <dt>PPTC 压降</dt><dd id="s2-v">0.1 V</dd>
+        <dt>PPTC 功耗</dt><dd id="s2-p">0.1 W</dd>
+        <dt>状态</dt><dd><span id="s2-st" class="chip on">低阻导通</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="tc">
+  <span class="eyebrow">时间-电流曲线 · 对比</span>
+  <h2>同样过载，谁先动作</h2>
+  <p>保险丝和 PPTC 都用时间-电流曲线描述：横轴是电流，纵轴是动作时间，两轴都取对数。曲线越靠左下越灵敏。PPTC 有两个关键电流：Ihold 以下保证不动作，Itrip 以上保证动作，两者之间可能动也可能不动，Itrip 通常约为 Ihold 的 2 倍。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 300" role="img" aria-label="对数坐标时间-电流曲线：快断保险丝、慢断保险丝、PPTC 三条曲线，竖线为当前电流">
+        <rect id="s3-zone" class="zone-sat" x="0" y="30" width="0" height="220"/>
+        <g id="s3-grid"></g>
+        <path class="ax" d="M60,30 V250 H500"/>
+        <text x="64" y="22" class="tm">动作时间（对数）</text>
+        <text x="500" y="292" text-anchor="end" class="tm">电流 A（对数）</text>
+        <polyline id="s3-cf" class="real" points=""/>
+        <polyline id="s3-cs" class="real2" points=""/>
+        <polyline id="s3-cp" class="real3" points=""/>
+        <g id="s3-lab"></g>
+        <line id="s3-cur" class="ax" x1="0" y1="30" x2="0" y2="250" style="stroke:var(--danger);stroke-dasharray:4 3"/>
+        <circle id="s3-df" class="dot" r="5" cx="0" cy="0" style="fill:var(--copper)"/>
+        <circle id="s3-ds" class="dot" r="5" cx="0" cy="0" style="fill:var(--low)"/>
+        <circle id="s3-dp" class="dot" r="5" cx="0" cy="0" style="fill:var(--flow)"/>
+        <text x="0" y="0" id="s3-zl" class="tm">PPTC 不确定区</text>
+      </svg>
+      <figcaption>示意：保险丝额定 1 A；PPTC 取 Ihold = 1 A、Itrip = 2 A。浅色带是 PPTC 在 Ihold 和 Itrip 之间的不确定区。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s3-rng">过载电流</label>
+        <span class="rv" id="s3-rv">5 A</span>
+        <input type="range" id="s3-rng" min="0" max="8" step="1" value="5"></div>
+      <dl class="read">
+        <dt>快断保险丝</dt><dd id="s3-tf">—</dd>
+        <dt>慢断保险丝</dt><dd id="s3-ts">—</dd>
+        <dt>PPTC</dt><dd id="s3-tp">—</dd>
+        <dt>最先动作</dt><dd><span id="s3-st" class="chip on">快断</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>对比项</th><th>一次性保险丝</th><th>PPTC 自恢复保险丝</th></tr></thead>
+    <tbody>
+      <tr><td>动作后</td><td>断开，需更换</td><td>高阻锁住，断电冷却后恢复</td></tr>
+      <tr><td>动作速度</td><td>快断型大电流下可到 ms 级</td><td>慢，大电流下也要几十 ms 到数秒（典型值）</td></tr>
+      <tr><td>正常电阻</td><td>很小，几 mΩ 到几十 mΩ</td><td>较大，几十 mΩ 到几 Ω，动作后还会变大</td></tr>
+      <tr><td>动作后残余电流</td><td>0</td><td>几十 mA 级，电源电压几乎全落在它上面</td></tr>
+      <tr><td>受温度影响</td><td>较小</td><td>大，环境温度高时 Ihold 明显下降，要降额</td></tr>
+      <tr><td>典型用途</td><td>电源入口、安规要求的最后一道保护</td><td>USB 口、接口供电、可能被用户短路的输出</td></tr>
+    </tbody>
+  </table></div>
+  <div class="tbl"><table>
+    <thead><tr><th>选型参数</th><th>怎么选</th></tr></thead>
+    <tbody>
+      <tr><td>额定电流 In / Ihold</td><td>大于正常最大工作电流，并按最高环境温度降额，常留 20%~30% 余量</td></tr>
+      <tr><td>额定电压 Vmax</td><td>不小于电路可能出现的最高电压，否则断开时可能拉弧或击穿</td></tr>
+      <tr><td>分断能力 / Imax</td><td>大于电源可能提供的最大短路电流</td></tr>
+      <tr><td>I²t</td><td>保险丝熔化 I²t 要明显大于上电浪涌的 I²t，否则一开机就烧；不够就改选慢断</td></tr>
+      <tr><td>快断还是慢断</td><td>保护半导体、敏感负载选快断；电机、容性负载有启动冲击选慢断</td></tr>
+      <tr><td>Itrip 与动作时间</td><td>PPTC 要确认故障电流大于 Itrip，且动作时间短于被保护器件能扛的时间</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>保险丝和自恢复保险丝有什么区别？</summary>
+      <div class="ans"><p>保险丝过流时熔体熔断，一次性，断开后电流为零。自恢复保险丝是 PPTC，过流发热后电阻上升几个数量级，把电流限到很小，断电冷却后恢复。PPTC 的缺点是动作慢、正常电阻大、动作后仍有漏电流，而且受环境温度影响大。</p></div></details>
+    <details><summary>保险丝的 I²t 是什么意思？</summary>
+      <div class="ans"><p>是熔断所需的热能量指标。大电流时热量来不及散，只要 I²·t 攒够就熔断，所以电流越大熔断越快，时间和电流平方成反比。选型时保险丝的 I²t 要大于上电浪涌的 I²t，否则开机冲击就会误熔断。</p></div></details>
+    <details><summary>什么时候用慢断保险丝？</summary>
+      <div class="ans"><p>负载有正常的短时大电流时，比如电机启动、大电容上电充电、变压器励磁涌流。慢断型热容大，能扛住这些短时冲击，持续过载才熔断。保护半导体器件时用快断。</p></div></details>
+    <details><summary>PPTC 的 Ihold 和 Itrip 分别是什么？</summary>
+      <div class="ans"><p>Ihold 是在规定温度下长期通过也不会动作的最大电流，Itrip 是保证动作的最小电流，Itrip 一般约为 Ihold 的两倍。两者之间可能动作也可能不动作。环境温度升高，两者都会下降，所以要降额使用。</p></div></details>
+    <details><summary>PPTC 动作后拔掉故障就恢复了吗？</summary>
+      <div class="ans"><p>不一定。只要电源还加着，PPTC 靠自己的功耗维持高温，会一直锁在高阻态。要断电或让电压降下来，冷却后才恢复，恢复时间是秒到分钟级，恢复后的电阻比初始值略大。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="next" href="02-采样电阻加比较器过流保护.html"><span>下一页</span>采样电阻加比较器过流保护</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 共用：一阶热模型。m 为电流倍数，m0 为最小动作倍数，tau 为热时间常数（示意） */
+function tTrip(m,p){return m<=p.m0?Infinity:p.tau*Math.log(m*m/(m*m-p.m0*p.m0));}
+const secFmt=s=>!isFinite(s)?'不动作':s>=1?(s>=10?s.toFixed(0):s.toFixed(1))+' s':fmtT(s);
+const devP={fast:{tau:0.12,m0:1.3},slow:{tau:6,m0:1.3},pptc:{tau:20,m0:1.5}};
+
+/* 1. 熔断过程 */
+const s1={k:'fast'},s1M=[1.1,1.5,2,3,5,10,20,40];
+function s1u(){
+  const p=devP[s1.k],m=s1M[Math.round(+$('s1-rng').value)],I=m,tb=tTrip(m,p),blown=isFinite(tb);
+  const Tm=blown?tb*1.4:4*p.tau,X=scale(0,Tm,56,500),Y=scale(0,1.2,286,142);
+  const k2=(m/p.m0)*(m/p.m0);
+  const heat=t=>t<=tb?k2*(1-Math.exp(-t/p.tau)):Math.exp(-(t-tb)/p.tau);
+  $('s1-h').setAttribute('points',plot(heat,0,Tm,X,Y,200));
+  const xb=(blown?X(tb):500).toFixed(1),y1=Y(1).toFixed(1);
+  $('s1-i').setAttribute('points',blown?`56,${y1} ${xb},${y1} ${xb},286 500,286`:`56,${y1} 500,${y1}`);
+  const hy=Y(heat(Tm*0.55));
+  $('s1-hl').setAttribute('x',(X(Tm*0.55)+6).toFixed(1));$('s1-hl').setAttribute('y',Math.min(hy+18,280).toFixed(1));
+  $('s1-mline').setAttribute('y1',y1);$('s1-mline').setAttribute('y2',y1);
+  ['s1-t1','s1-t2','s1-t3','s1-t4'].forEach((id,i)=>$(id).textContent=secFmt(Tm*(i+1)/4));
+  $('s1-rv').textContent=I+' A';$('s1-rng').setAttribute('aria-valuetext',I+' A');
+  $('s1-m').textContent=m.toFixed(1)+' 倍';
+  $('s1-tb').textContent=blown?secFmt(tb):'不熔断';
+  $('s1-i2t').textContent=blown?(I*I*tb).toFixed(I*I*tb<1?3:1)+' A²s':'热量散得掉，攒不起来';
+  chip($('s1-st'),blown?'熔断':'不熔断',blown?'bad':'on');
+  show($('s1-fe'),!blown);show($('s1-fgap'),blown);show($('s1-flow'),!blown);
+  $('s1-flow').classList.toggle('bad',true);
+  $('s1-lt').textContent=blown?'已断电':'轻微过载';
+  $('s1-load').classList.toggle('lit',!blown);
+  const adi=(p.tau*p.m0*p.m0).toFixed(p.tau<1?2:1);
+  $('s1-note').textContent=!blown
+    ?'电流只比额定大一点，发热和散热在熔点以下达到平衡，蓝线停在虚线下面，保险丝长期不断。所以保险丝不是一过额定就断，要到约 1.3 倍以上才会熔断（示意值，具体看规格书）。'
+    :m>=10?`电流很大，热量几乎来不及散，攒到熔化量只看能量：I²·t 接近常数 ${adi} A²s（本例${s1.k==='fast'?'快断':'慢断'}的示意值）。电流再翻倍，时间约缩短到四分之一。`
+    :s1.k==='fast'?'快断型熔体热容小，中等过载也很快熔断。适合保护怕过流的半导体，但扛不住上电浪涌。'
+    :'慢断型热容大，同样的过载要熬更久才断。电机启动、电容充电这种几十 ms 的冲击它扛得住，持续过载才断。';
+}
+seg('s1-k',v=>{s1.k=v;s1u();});
+$('s1-rng').addEventListener('input',s1u);
+s1u();
+
+/* 2. PPTC 电阻-温度 */
+const rT=T=>Math.pow(10,-1+0.003*(T-25)+4/(1+Math.exp(-(T-120)/3)));
+const s2X=scale(20,150,56,500),s2Y=scale(-1,3,284,140);
+$('s2-rt').setAttribute('points',plot(T=>Math.log10(rT(T)),20,150,s2X,s2Y,200));
+const s2S=[
+  {T:25,RL:12,k:1,st:['低阻导通','on'],lt:'负载',n:'常温下 PPTC 只有约 0.1 Ω，负载电流约 1 A，小于 Ihold，压降和功耗都很小，它就像一段导线。'},
+  {T:100,RL:0.8,k:1,st:['发热中','warn'],lt:'短路',n:'负载短路，电流冲到十几安。PPTC 功耗 I²·R 有几十瓦，温度飞快上升，但在 120 °C 以前电阻只是缓慢变大，电流还没被限住。这段时间就是它的动作时间。'},
+  {T:124,RL:0.8,k:1,st:['高阻锁住','bad'],lt:'短路',n:'过了约 120 °C，电阻陡增几个数量级，电流被压到几十 mA。几乎全部 12 V 都落在 PPTC 上，它靠这不到 1 W 的功耗维持高温，锁在高阻态。即使故障撤掉，只要电源不断，它也不恢复。'},
+  {T:25,RL:12,k:1.6,st:['已恢复','on'],lt:'负载',n:'断电后 PPTC 冷却，聚合物收缩，导电链重新接上，电阻回落。回落后的电阻比出厂时大一些（规格书 R1max），恢复需要秒到分钟级。'}
+];
+function s2u(i){
+  const s=s2S[i],R=rT(s.T)*s.k,I=12/(R+s.RL),off=i===3;
+  const pt=$('s2-pt'),cx=s2X(s.T),cy=s2Y(Math.log10(R));
+  pt.setAttribute('cx',cx.toFixed(1));pt.setAttribute('cy',cy.toFixed(1));
+  const lb=$('s2-ptl'),rt=cx>360;
+  lb.textContent=off?'恢复后 R 略大':i===2?'高阻态':i===1?'升温中':'常温低阻';
+  lb.setAttribute('x',(cx+(rt?-10:10)).toFixed(1));lb.setAttribute('y',(cy-10).toFixed(1));lb.setAttribute('text-anchor',rt?'end':'start');
+  $('s2-t').textContent=s.T+' °C';$('s2-r').textContent=fmtR(R);
+  $('s2-i').textContent=off?'0，重新上电约 '+fmtA(I):fmtA(I);
+  $('s2-v').textContent=off?'0':fmtV(I*R);$('s2-p').textContent=off?'0':fmtP(I*I*R);
+  chip($('s2-st'),s.st[0],s.st[1]);
+  $('s2-vs').textContent=off?'0 V':'12 V';$('s2-lt').textContent=s.lt;
+  show($('s2-flow'),!off);$('s2-flow').classList.toggle('bad',i===1);$('s2-flow').classList.toggle('thin',i===2);
+  $('s2-load').classList.toggle('lit',i===0);
+  $('s2-note').textContent=s.n;
+}
+seg('s2-s',v=>s2u(+v));
+s2u(0);
+
+/* 3. 时间-电流曲线 */
+const s3X=scale(-0.30103,1.69897,60,500),s3Y=scale(-3,3,250,30),s3I=[0.8,1,1.5,2,3,5,10,20,40];
+[0.5,1,2,5,10,20,50].forEach(a=>{const x=s3X(Math.log10(a)).toFixed(1);
+  $('s3-grid').append(svgEl('line',{class:'gl',x1:x,y1:30,x2:x,y2:250}),svgEl('text',{x:x,y:266,'text-anchor':a===50?'end':'middle',class:'v'},String(a)));});
+['1 ms','10 ms','0.1 s','1 s','10 s','100 s','1000 s'].forEach((t,i)=>{const y=s3Y(i-3).toFixed(1);
+  $('s3-grid').append(svgEl('line',{class:'gl',x1:60,y1:y,x2:500,y2:y}),svgEl('text',{x:54,y:+y+4,'text-anchor':'end',class:'v'},t));});
+const s3curve=p=>plot(u=>{const l=Math.log10(tTrip(Math.pow(10,u),p));return l>3||l<-3?NaN:l;},-0.30103,1.69897,s3X,s3Y,240);
+$('s3-cf').setAttribute('points',s3curve(devP.fast));
+$('s3-cs').setAttribute('points',s3curve(devP.slow));
+$('s3-cp').setAttribute('points',s3curve(devP.pptc));
+[['fast',1.7,'快断','var(--copper)'],['slow',9,'慢断','var(--low)'],['pptc',4,'PPTC','var(--flow)']].forEach(([k,a,n,c])=>{
+  $('s3-lab').append(svgEl('text',{x:(s3X(Math.log10(a))+8).toFixed(1),y:(s3Y(Math.log10(tTrip(a,devP[k])))-6).toFixed(1),class:'t',style:'fill:'+c},n));});
+const zx0=s3X(0),zx1=s3X(Math.log10(2));
+$('s3-zone').setAttribute('x',zx0.toFixed(1));$('s3-zone').setAttribute('width',(zx1-zx0).toFixed(1));
+$('s3-zl').setAttribute('x',(zx0+4).toFixed(1));$('s3-zl').setAttribute('y',244);
+function s3u(){
+  const I=s3I[Math.round(+$('s3-rng').value)],x=s3X(Math.log10(I)).toFixed(1);
+  $('s3-rv').textContent=I+' A';$('s3-rng').setAttribute('aria-valuetext',I+' A');
+  $('s3-cur').setAttribute('x1',x);$('s3-cur').setAttribute('x2',x);
+  const res={};
+  [['fast','s3-df','s3-tf'],['slow','s3-ds','s3-ts'],['pptc','s3-dp','s3-tp']].forEach(([k,d,r])=>{
+    const t=tTrip(I,devP[k]),l=Math.log10(t),vis=isFinite(t)&&l<=3&&l>=-3;res[k]=t;
+    show($(d),vis);if(vis){$(d).setAttribute('cx',x);$(d).setAttribute('cy',s3Y(l).toFixed(1));}
+    $(r).textContent=secFmt(t);});
+  if(I>1&&I<2)$('s3-tp').textContent+='（不确定区）';
+  if(!isFinite(res.fast))chip($('s3-st'),'都不动作','off');else chip($('s3-st'),'快断','on');
+  $('s3-note').textContent=I<=1?'额定电流以内，三者都不动作，这是正常工作区。'
+    :I<2?'刚超过额定。保险丝要超过约 1.3 倍才会熔断，而且要熬很久；PPTC 处在 Ihold 与 Itrip 之间，动不动作要看环境温度和散热，不能依赖它。'
+    :I<10?`同样 ${I} A，快断 ${secFmt(res.fast)}，慢断 ${secFmt(res.slow)}，PPTC 要 ${secFmt(res.pptc)}。PPTC 最慢，它适合限住持续短路，不适合保护怕瞬间过流的器件。`
+    :`大电流时曲线都趋于 I²·t = 常数，在双对数坐标上是斜率 −2 的直线。快断几乎瞬间断开，PPTC 仍要 ${secFmt(res.pptc)}，这段时间里下游器件要扛得住。`;
+}
+$('s3-rng').addEventListener('input',s3u);
+s3u();
+</script>
+</body>
+</html>

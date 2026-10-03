@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>纹波与噪声</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#power">电源相关</a><span class="sp"></span><span>05 / 08</span></nav>
+<header>
+  <span class="eyebrow">电源相关 · 输出纹波 · 测量</span>
+  <h1>纹波与噪声</h1>
+  <p class="lede">输出电压上的"毛刺"其实分两种：开关频率上的纹波，由电感电流流过输出电容产生；开关沿上的高频尖峰，由寄生电感和寄生电容振铃产生。两者成因不同，测法也不同。</p>
+</header>
+
+<section id="ripple">
+  <span class="eyebrow">纹波 · 两个分量</span>
+  <h2>纹波 = ESR 分量 + 电容充放电分量</h2>
+  <p>电感电流的交流部分全部流进输出电容，负载只拿走直流。这个电容电流流过电容的等效串联电阻 ESR，产生和电流同形状的压降；同时给电容充放电，产生积分出来的电压波动。Buck 的估算公式：</p>
+  <p class="eq">ΔV ≈ ESR·ΔIL + ΔIL / (8·f·C)</p>
+  <p>两项的峰值不在同一时刻出现，直接相加是偏保守的上限。电解电容 ESR 大，ESR 分量为主；陶瓷电容 ESR 只有几 mΩ，容性分量为主。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 330" role="img" aria-label="上图为输出纹波的 ESR 分量、电容分量和合成纹波，下图为输出电容电流">
+        <line class="gl" x1="56" y1="30" x2="430" y2="30"/><line class="gl" x1="56" y1="65" x2="430" y2="65"/>
+        <line class="gl" x1="56" y1="135" x2="430" y2="135"/><line class="gl" x1="56" y1="170" x2="430" y2="170"/>
+        <line class="gl" x1="243" y1="30" x2="243" y2="170"/><line class="gl" x1="243" y1="214" x2="243" y2="286"/>
+        <path class="ax" d="M56,30 V170 M56,100 H430"/>
+        <text x="60" y="22" class="tm">输出纹波 / mV</text>
+        <text id="r1-y1" x="50" y="34" text-anchor="end" class="v">20</text>
+        <text id="r1-y2" x="50" y="69" text-anchor="end" class="v">10</text>
+        <text x="50" y="104" text-anchor="end" class="v">0</text>
+        <text id="r1-y3" x="50" y="139" text-anchor="end" class="v">−10</text>
+        <text id="r1-y4" x="50" y="174" text-anchor="end" class="v">−20</text>
+        <polyline id="r1-ve" class="real" points="56,100 430,100"/>
+        <polyline id="r1-vc" class="real2" points="56,100 430,100"/>
+        <polyline id="r1-vt" class="real3" points="56,100 430,100"/>
+        <text id="r1-le" x="436" y="90" class="t" style="fill:var(--copper)">ESR 分量</text>
+        <text id="r1-lc" x="436" y="104" class="t" style="fill:var(--low)">电容分量</text>
+        <text id="r1-lt" x="436" y="118" class="t" style="fill:var(--flow)">合成纹波</text>
+        <path class="ax" d="M56,214 V286 M56,250 H430"/>
+        <text x="60" y="206" class="tm">电容电流 iC / A</text>
+        <text id="r1-iy1" x="50" y="218" text-anchor="end" class="v">1</text>
+        <text x="50" y="254" text-anchor="end" class="v">0</text>
+        <text id="r1-iy2" x="50" y="290" text-anchor="end" class="v">−1</text>
+        <polyline id="r1-ic" class="cv" points="56,250 430,250"/>
+        <text x="56" y="304" text-anchor="middle" class="v">0</text>
+        <text id="r1-x1" x="243" y="304" text-anchor="middle" class="v">2</text>
+        <text id="r1-x2" x="430" y="304" text-anchor="middle" class="v">4</text>
+        <text x="430" y="322" text-anchor="end" class="tm">时间 / µs</text>
+      </svg>
+      <figcaption>Buck：12 V 转 3.3 V，L 4.7 µH，负载 2 A。Boost：5 V 转 12 V，L 4.7 µH，负载 1 A。ESR 分量和电容电流同形状，电容分量是电容电流的积分。忽略 ESL。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">拓扑</span>
+        <div class="seg" id="r1-top"><button id="r1-top-bk" data-v="buck" aria-pressed="true">Buck 输出</button><button id="r1-top-bs" data-v="boost" aria-pressed="false">Boost 输出</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="r1-esr">电容 ESR</label>
+        <span class="rv" id="r1-esrv">10 mΩ</span>
+        <input type="range" id="r1-esr" min="0" max="7" step="1" value="3"></div>
+      <div class="ctl"><label class="ctl-l" for="r1-c">输出电容 C</label>
+        <span class="rv" id="r1-cv">22 µF</span>
+        <input type="range" id="r1-c" min="0" max="5" step="1" value="2"></div>
+      <div class="ctl"><label class="ctl-l" for="r1-f">开关频率 f</label>
+        <span class="rv" id="r1-fv">500 kHz</span>
+        <input type="range" id="r1-f" min="0" max="4" step="1" value="2"></div>
+      <dl class="read">
+        <dt>电感纹波 ΔIL</dt><dd id="r1-di">1.02 A</dd>
+        <dt>ESR 分量峰峰值</dt><dd id="r1-pe">10.2 mV</dd>
+        <dt>电容分量峰峰值</dt><dd id="r1-pc">11.6 mV</dd>
+        <dt>合成纹波峰峰值</dt><dd id="r1-pt">15 mV</dd>
+        <dt>公式估算（上限）</dt><dd id="r1-est">21.8 mV</dd>
+        <dt>主导分量</dt><dd><span id="r1-st" class="chip on">两者相当</span></dd>
+      </dl>
+      <p class="note" id="r1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="measure">
+  <span class="eyebrow">纹波 vs 尖峰 · 测量方法</span>
+  <h2>示波器上看到的尖峰，有多少是地线夹"量"出来的</h2>
+  <p>开关沿上的尖峰频率在几十到几百 MHz，来自功率回路的寄生电感和 MOS 结电容振铃。它和开关频率上的纹波是两回事，指标里的"纹波"一般指 20 MHz 带宽内的峰峰值。</p>
+  <p>探头的长地线夹本身就是一个几十到上百 nH 的电感，和探头输入电容谐振，还会像天线一样拾取电感附近的磁场。这样量出来的尖峰很多是测量引入的，不是电路本身的。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 250" role="img" aria-label="示波器测到的输出纹波波形，开关沿处有高频尖峰">
+        <rect class="box" x="56" y="20" width="444" height="180" style="stroke-width:1"/>
+        <line class="gl" x1="56" y1="65" x2="500" y2="65"/><line class="gl" x1="56" y1="110" x2="500" y2="110"/><line class="gl" x1="56" y1="155" x2="500" y2="155"/>
+        <line class="gl" x1="167" y1="20" x2="167" y2="200"/><line class="gl" x1="278" y1="20" x2="278" y2="200"/><line class="gl" x1="389" y1="20" x2="389" y2="200"/>
+        <text x="50" y="24" text-anchor="end" class="v">200</text>
+        <text x="50" y="114" text-anchor="end" class="v">0</text>
+        <text x="50" y="204" text-anchor="end" class="v">−200</text>
+        <text x="60" y="14" class="tm">AC 耦合 / mV</text>
+        <polyline id="r2-w" class="real3" points="56,110 500,110"/>
+        <text x="56" y="218" text-anchor="middle" class="v">0</text>
+        <text x="278" y="218" text-anchor="middle" class="v">2</text>
+        <text x="500" y="218" text-anchor="end" class="v">4</text>
+        <text x="500" y="236" text-anchor="end" class="tm">时间 / µs</text>
+        <text id="r2-lb" x="496" y="36" text-anchor="end" class="tm">全带宽</text>
+      </svg>
+      <figcaption>示意：Buck 500 kHz，真实纹波约 15 mV。电路本身的开关尖峰按 20 mV、200 MHz 振铃取值；15 cm 长地线夹引入的振铃按 150 mV、约 120 MHz 取值。20 MHz 带宽限制按一阶低通计算。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">探头接地</span>
+        <div class="seg" id="r2-g"><button id="r2-g-long" data-v="long" aria-pressed="true">长地线夹 15 cm</button><button id="r2-g-spr" data-v="spring" aria-pressed="false">弹簧接地针</button></div></div>
+      <div class="ctl"><span class="ctl-l">示波器带宽</span>
+        <div class="seg" id="r2-b"><button id="r2-b-full" data-v="full" aria-pressed="true">全带宽</button><button id="r2-b-20" data-v="20" aria-pressed="false">20 MHz 限制</button></div></div>
+      <dl class="read">
+        <dt>真实纹波</dt><dd id="r2-true">15 mV</dd>
+        <dt>示波器读数 Vpp</dt><dd id="r2-pp">300 mV</dd>
+        <dt>读数</dt><dd><span id="r2-st" class="chip bad">被尖峰污染</span></dd>
+      </dl>
+      <p class="note" id="r2-note"></p>
+    </div>
+  </div>
+  <p>测纹波的标准做法：</p>
+  <ol>
+    <li>打开示波器 20 MHz 带宽限制，只看开关频率及其低次谐波。</li>
+    <li>AC 耦合，垂直档位调到 mV 级，让纹波占满屏幕。</li>
+    <li>拔掉长地线夹，换成弹簧接地针，或者用"针尖加地环"的方法，把地回路面积压到最小。</li>
+    <li>直接量在输出电容两端，而不是远处的走线上。</li>
+    <li>先把探头针尖和地都接到同一个地点上看底噪，底噪大说明环境拾取严重。</li>
+  </ol>
+  <p class="note">要看开关尖峰时反过来：关掉带宽限制，同样用短地，测 SW 节点或 MOS 的 Vds 振铃。</p>
+</section>
+
+<section id="reduce">
+  <span class="eyebrow">怎么降</span>
+  <h2>降纹波和降尖峰是两套办法</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>问题</th><th>办法</th><th>原因</th></tr></thead>
+    <tbody>
+      <tr><td>ESR 分量大</td><td>换陶瓷或聚合物电容，多颗并联</td><td>ESR 并联后变小</td></tr>
+      <tr><td>容性分量大</td><td>加大 C，提高 f</td><td>ΔIL / (8·f·C)，f 同时也让 ΔIL 变小</td></tr>
+      <tr><td>纹波电流大</td><td>加大电感</td><td>ΔIL 减小，两个分量同时变小</td></tr>
+      <tr><td>还不够</td><td>后级加 LC 滤波或 LDO</td><td>二级 LC 对开关频率衰减 40 dB/十倍频</td></tr>
+      <tr><td>开关尖峰大</td><td>缩小"输入电容 → 上管 → 下管"热回路面积，高频小电容紧贴 MOS</td><td>寄生电感越小振铃越小</td></tr>
+      <tr><td>振铃严重</td><td>加 RC 缓冲（snubber），适当加大栅极电阻</td><td>吸收谐振能量，放缓 di/dt 和 dv/dt</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">陶瓷电容有直流偏压效应：10 µF、6.3 V 的 X5R 电容加 5 V 偏压，实际容量可能只剩一半左右（典型值，看厂家曲线）。算纹波时要用降额后的容量。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>输出纹波由什么决定？</summary>
+      <div class="ans"><p>电感纹波电流 ΔIL 流进输出电容，产生两部分电压：ESR·ΔIL 和 ΔIL / (8·f·C)。所以纹波由 ΔIL、电容的 ESR、容量和开关频率决定。电解电容以 ESR 分量为主，陶瓷电容以容性分量为主。</p></div></details>
+    <details><summary>纹波和噪声有什么区别？</summary>
+      <div class="ans"><p>纹波在开关频率上，是周期性的，形状像三角波或抛物线。噪声主要是开关沿上的高频尖峰和振铃，频率几十到几百 MHz，来自寄生参数。测纹波要开 20 MHz 带宽限制，看尖峰要全带宽。</p></div></details>
+    <details><summary>测纹波时为什么不能用长地线夹？</summary>
+      <div class="ans"><p>长地线夹是一个几十到上百 nH 的电感，和探头电容谐振出振铃，而且它和探头围成的环路会拾取电感附近的交变磁场。量出来的尖峰可能比真实值大好几倍。要用弹簧接地针或针尖加地环，把地回路缩到最短。</p></div></details>
+    <details><summary>纹波太大怎么办？</summary>
+      <div class="ans"><p>先判断是哪个分量：波形跟着电流一起跳的是 ESR 分量，换低 ESR 电容或并联；平滑起伏的是容性分量，加大电容或提高频率；两者都大就加大电感减小 ΔIL。要求特别高时后级加 LC 滤波或 LDO。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="04-开关频率与效率.html"><span>上一页</span>开关频率与效率</a><a class="next" href="06-反馈环路稳定性.html"><span>下一页</span>反馈环路稳定性</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 纹波分量 */
+const R1E=[1,2,5,10,20,50,100,200],R1C=[4.7,10,22,47,100,220],R1F=[200e3,300e3,500e3,1e6,2e6];
+const r1={top:'buck'},R1N=400;
+const r1Nice=v=>{const e=Math.pow(10,Math.floor(Math.log10(v)));for(const m of [1,2,2.5,5,10])if(m*e>=v)return m*e;return 10*e;};
+function r1Sim(top,esr,C,f){
+  const T=1/f,L=4.7e-6,ic=[];let D,dI,io,IL=0;
+  if(top==='buck'){const vin=12,vo=3.3;io=2;D=vo/vin;dI=(vin-vo)*D/(L*f);
+    for(let k=0;k<=R1N;k++){const x=k/R1N;ic.push(x<D?-dI/2+dI*x/D:dI/2-dI*(x-D)/(1-D));}}
+  else{const vin=5,vo=12;io=1;D=1-vin/vo;IL=io/(1-D);dI=vin*D/(L*f);
+    for(let k=0;k<=R1N;k++){const x=k/R1N;ic.push(x<D?-io:IL+dI/2-dI*(x-D)/(1-D)-io);}}
+  const vc=[0],dt=T/R1N;for(let k=1;k<=R1N;k++)vc.push(vc[k-1]+(ic[k]+ic[k-1])/2*dt/C);
+  const m=vc.reduce((a,b)=>a+b,0)/vc.length;for(let k=0;k<=R1N;k++)vc[k]-=m;
+  const ve=ic.map(i=>i*esr),vt=ve.map((v,k)=>v+vc[k]);
+  const pp=a=>Math.max(...a)-Math.min(...a);
+  return {T,D,dI,io,IL,ic,vc,ve,vt,ppe:pp(ve),ppc:pp(vc),ppt:pp(vt)};
+}
+function r1u(){
+  const esr=R1E[+$('r1-esr').value]*1e-3,C=R1C[+$('r1-c').value]*1e-6,f=R1F[+$('r1-f').value],s=r1Sim(r1.top,esr,C,f);
+  const mx=Math.max(...s.vt.map(Math.abs),...s.ve.map(Math.abs),...s.vc.map(Math.abs))*1e3,ym=r1Nice(mx*1.1);
+  const X=scale(0,2*R1N,56,430),Y=scale(-ym,ym,170,30);
+  const line=a=>{const p=[];for(let k=0;k<=2*R1N;k+=2){const v=a[k%R1N]*1e3;p.push(X(k).toFixed(1)+','+Y(v).toFixed(1));}return p.join(' ');};
+  $('r1-ve').setAttribute('points',line(s.ve));$('r1-vc').setAttribute('points',line(s.vc));$('r1-vt').setAttribute('points',line(s.vt));
+  $('r1-y1').textContent=+ym.toFixed(2);$('r1-y2').textContent=+(ym/2).toFixed(2);$('r1-y3').textContent='−'+(+(ym/2).toFixed(2));$('r1-y4').textContent='−'+(+ym.toFixed(2));
+  const ends=[['r1-le',s.ve[0]],['r1-lc',s.vc[0]],['r1-lt',s.vt[0]]].map(([id,v])=>({id,y:Y(v*1e3)+4})).sort((a,b)=>a.y-b.y);
+  for(let i=1;i<3;i++)if(ends[i].y-ends[i-1].y<14)ends[i].y=ends[i-1].y+14;
+  const over=ends[2].y-176;if(over>0)ends.forEach(e=>e.y-=over);
+  ends.forEach(e=>$(e.id).setAttribute('y',e.y.toFixed(1)));
+  const im=r1Nice(Math.max(...s.ic.map(Math.abs))*1.1),Yi=scale(-im,im,286,214);
+  $('r1-iy1').textContent=+im.toFixed(2);$('r1-iy2').textContent='−'+(+im.toFixed(2));
+  const pi=[];for(let k=0;k<=2*R1N;k+=2)pi.push(X(k).toFixed(1)+','+Yi(s.ic[k%R1N]).toFixed(1));
+  $('r1-ic').setAttribute('points',pi.join(' '));
+  $('r1-x1').textContent=+(s.T*1e6).toFixed(2);$('r1-x2').textContent=+(2*s.T*1e6).toFixed(2);
+  const el=R1E[+$('r1-esr').value]+' mΩ',cl=R1C[+$('r1-c').value]+' µF',fl=fmtF(f);
+  $('r1-esrv').textContent=el;$('r1-cv').textContent=cl;$('r1-fv').textContent=fl;
+  $('r1-esr').setAttribute('aria-valuetext',el);$('r1-c').setAttribute('aria-valuetext',cl);$('r1-f').setAttribute('aria-valuetext',fl);
+  const mv=v=>(v*1e3).toFixed(v<0.01?2:1)+' mV';
+  $('r1-di').textContent=fmtA(s.dI);$('r1-pe').textContent=mv(s.ppe);$('r1-pc').textContent=mv(s.ppc);$('r1-pt').textContent=mv(s.ppt);
+  const est=r1.top==='buck'?esr*s.dI+s.dI/(8*f*C):esr*(s.IL+s.dI/2)+s.io*s.D/(f*C);
+  $('r1-est').textContent=mv(est)+(r1.top==='buck'?'，ESR·ΔIL + ΔIL/(8fC)':'，ESR·Ipk + Iout·D/(fC)');
+  const ratio=s.ppe/s.ppc;
+  if(ratio>2)chip($('r1-st'),'ESR 分量为主','warn');else if(ratio<0.5)chip($('r1-st'),'电容分量为主','on');else chip($('r1-st'),'两者相当','on');
+  let n;
+  if(r1.top==='boost')n='Boost 的输出电容电流是断续的：Q 导通时负载全靠电容，iC = −Iout；关断瞬间二极管电流跳到峰值。所以 ESR 分量是带台阶的方波状，电容分量是三角波（导通期间线性下降）。同样条件下纹波比 Buck 大得多。';
+  else if(ratio>2)n='ESR 大，合成纹波几乎就是 ESR 分量，和电感电流一样是三角波，峰值对齐开关时刻。加电容没用，要换低 ESR 电容或多颗并联。';
+  else if(ratio<0.5)n='ESR 很小（陶瓷电容），合成纹波由电容充放电决定，是分段抛物线，看起来接近正弦，峰值落在电流过零点。要降就加大 C 或提高 f。';
+  else n='两个分量相当。ESR 分量（三角）峰值在开关时刻，电容分量（抛物线）峰值在电流过零时刻，两者错开四分之一周期，所以合成值比两项直接相加小。';
+  $('r1-note').textContent=n;
+}
+seg('r1-top',v=>{r1.top=v;r1u();});
+['r1-esr','r1-c','r1-f'].forEach(id=>$(id).addEventListener('input',r1u));
+r1u();
+
+/* 2. 测量：长地线与带宽限制 */
+const r2={g:'long',bw:'full'},R2s=r1Sim('buck',0.01,22e-6,500e3);
+function r2u(){
+  const dt=0.2e-9,n=20000,T=R2s.T,tau20=1/(2*Math.PI*20e6),al=dt/(tau20+dt);
+  const edges=[];for(let k=0;k<2;k++){edges.push([k*T,1]);edges.push([k*T+R2s.D*T,-1]);}
+  const w=new Float64Array(n);let y=0;
+  for(let i=0;i<n;i++){const t=i*dt,idx=Math.floor((t%T)/T*R1N);let v=R2s.vt[idx];
+    for(const [te,sg] of edges){if(t<te)continue;const x=t-te;if(x>150e-9)continue;
+      v+=sg*0.02*Math.exp(-x/5e-9)*Math.sin(2*Math.PI*200e6*x);
+      if(r2.g==='long')v+=sg*0.15*Math.exp(-x/15e-9)*Math.sin(2*Math.PI*120e6*x);}
+    if(r2.bw==='20'){y+=al*(v-y);v=y;}
+    w[i]=v;}
+  const X=scale(0,n,56,500),Y=scale(-0.2,0.2,200,20),cols=444,per=n/cols,pts=[];
+  let mn=Infinity,mx=-Infinity;
+  for(let c=0;c<cols;c++){let a=Infinity,b=-Infinity;for(let i=Math.floor(c*per);i<Math.floor((c+1)*per);i++){if(w[i]<a)a=w[i];if(w[i]>b)b=w[i];}
+    if(c>2){mn=Math.min(mn,a);mx=Math.max(mx,b);}
+    const cl=v=>Math.max(-0.2,Math.min(0.2,v));
+    pts.push((56+c).toFixed(1)+','+Y(cl(a)).toFixed(1));pts.push((56+c).toFixed(1)+','+Y(cl(b)).toFixed(1));}
+  $('r2-w').setAttribute('points',pts.join(' '));
+  const pp=mx-mn,tr=R2s.ppt;
+  $('r2-lb').textContent=(r2.bw==='20'?'20 MHz 带宽限制':'全带宽')+' · '+(r2.g==='long'?'长地线夹':'弹簧接地针');
+  $('r2-true').textContent=(tr*1e3).toFixed(1)+' mV';$('r2-pp').textContent=(pp*1e3).toFixed(1)+' mV';
+  const ok=pp<tr*1.6;
+  chip($('r2-st'),ok?'读数可信':pp<tr*4?'偏大':'被尖峰污染',ok?'on':pp<tr*4?'warn':'bad');
+  let t;
+  if(r2.g==='long'&&r2.bw==='full')t='长地线夹 + 全带宽：屏幕上最显眼的是开关沿上上百 mV 的振铃，大部分是地线夹电感和探头电容谐振、加上环路拾取磁场造成的。读数比真实纹波大了 '+(pp/tr).toFixed(0)+' 倍。';
+  else if(r2.g==='long')t='开了 20 MHz 带宽，高频振铃被削掉大半，但地线夹引入的能量太大，剩下的毛刺仍把读数抬高了。带宽限制只是治标，还要把地线缩短。';
+  else if(r2.bw==='full')t='换成弹簧接地针后，测量引入的振铃基本消失，剩下的约 20 mV、200 MHz 尖峰是电路本身的开关噪声。想评估 EMI 或 MOS 应力时就这样看。';
+  else t='短地 + 20 MHz 限制：看到的就是开关频率上的真实纹波，这才是规格书里"输出纹波"的测法。';
+  $('r2-note').textContent=t;
+}
+seg('r2-g',v=>{r2.g=v;r2u();});
+seg('r2-b',v=>{r2.bw=v;r2u();});
+r2u();
+</script>
+</body>
+</html>

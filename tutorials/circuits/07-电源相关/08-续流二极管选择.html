@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>续流二极管选择</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.zone-bad{fill:var(--danger);fill-opacity:.14}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#power">电源相关</a><span class="sp"></span><span>08 / 08</span></nav>
+<header>
+  <span class="eyebrow">电源相关 · 肖特基 · 同步整流</span>
+  <h1>续流二极管选择</h1>
+  <p class="lede">Buck 上管关断时，电感电流靠续流二极管接着流。它每个周期都要在几十纳秒内从导通切到截止，所以第一要快，第二压降要低。电流再大、电压再低时，二极管的压降都嫌大，就换成同步整流 MOS。</p>
+</header>
+
+<section id="trr">
+  <span class="eyebrow">反向恢复 · 为什么要肖特基</span>
+  <h2>上管一开，慢二极管就变成短路</h2>
+  <p>上管导通的瞬间，续流二极管要从正向导通变成反向截止。普通 PN 结二极管里存着少数载流子，要先被反向抽走才能关断，这段时间叫反向恢复时间 trr。在这期间二极管反向导通，Vin 经上管、二极管直接到地，上管开通电流多出一个尖峰 Irr，能量 Vin·Qrr 每周期烧一次。</p>
+  <p>肖特基是金属和半导体接触，靠多数载流子导电，没有少子存储，基本没有反向恢复，只有结电容充电的一点电流；VF 也只有 0.3~0.5 V。代价是耐压低（常见 ≤ 100 V 左右，典型值）、反向漏电大。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 290" role="img" aria-label="上管开通瞬间的电流波形：二极管电流下降过零后出现反向恢复电流，上管电流多出同样大小的尖峰">
+        <g id="s1-ax"></g>
+        <polygon id="s1-qrr" class="zone-bad" points=""/>
+        <line class="ax dash" x1="100.4" y1="40" x2="100.4" y2="250"/>
+        <text x="106" y="52" class="tm">上管开通</text>
+        <polyline id="s1-iq" class="real" points=""/>
+        <polyline id="s1-id" class="real2" points=""/>
+        <text x="62" y="80" class="t" style="fill:var(--low)">二极管 iD</text>
+        <text x="62" y="176" class="t" style="fill:var(--copper)">上管 iQ1</text>
+        <text id="s1-irt" x="0" y="0" class="v" style="fill:var(--danger)">−Irr</text>
+        <text id="s1-qpt" x="0" y="0" class="v hi">峰值</text>
+      </svg>
+      <figcaption>示意：Buck 输出 3.3 V、3 A，500 kHz，上管开通时电流变化率取 200 A/µs。红色面积是反向恢复电荷 Qrr。普通整流管的 trr 按 2 µs 量级（典型值），反向电流在图上按上管限流 20 A 截断。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">续流二极管</span>
+        <div class="seg" id="s1-d"><button id="s1-d-sch" data-v="sch" aria-pressed="true">肖特基</button><button id="s1-d-fr" data-v="fr" aria-pressed="false">超快恢复</button><button id="s1-d-st" data-v="st" aria-pressed="false">普通整流</button></div></div>
+      <div class="ctl"><span class="ctl-l">输入电压 Vin</span>
+        <div class="seg" id="s1-v"><button id="s1-v-12" data-v="12" aria-pressed="true">12 V</button><button id="s1-v-24" data-v="24" aria-pressed="false">24 V</button><button id="s1-v-48" data-v="48" aria-pressed="false">48 V</button></div></div>
+      <dl class="read">
+        <dt>型号类比</dt><dd id="s1-pn">—</dd>
+        <dt>反向恢复 trr</dt><dd id="s1-trr">—</dd>
+        <dt>反向峰值 Irr</dt><dd id="s1-irr">—</dd>
+        <dt>上管开通峰值</dt><dd id="s1-qpk">—</dd>
+        <dt>恢复损耗 Vin·Qrr·f</dt><dd id="s1-prr">—</dd>
+        <dt>导通损耗 VF·Iout·(1 − D)</dt><dd id="s1-pc">—</dd>
+        <dt>耐压 VRRM</dt><dd id="s1-vr">—</dd>
+        <dt>结论</dt><dd><span id="s1-st" class="chip on">合适</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="sync">
+  <span class="eyebrow">损耗对比 · 同步整流</span>
+  <h2>低压大电流，二极管压降就嫌大了</h2>
+  <p>二极管导通损耗是 VF·Iout·(1 − D)。VF 基本固定在 0.3~0.5 V，Vout 越低，这零点几伏占的比例越大，D 越小，二极管导通的时间也越长。同步整流把二极管换成下管 MOS，导通压降只有 Iout·Rds(on)：</p>
+  <p class="eq">P_二极管 = VF·Iout·(1 − D)　　P_同步 = Iout²·Rds(on)·(1 − D) + 死区损耗 + 驱动损耗</p>
+  <p>上下管绝不能同时导通，切换时两个都关的一小段叫死区时间。这时电感电流只能走下管的<a href="../03-MOS管/07-体二极管.html">体二极管</a>，VF 约 0.7~1 V，还有反向恢复。每周期两段死区，损耗约 VF_body·Iout·2·tdt·f。有的设计在下管旁再并一个肖特基，专门接住死区电流。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 280" role="img" aria-label="续流损耗随负载电流变化：肖特基二极管与同步整流 MOS 两条曲线，标出当前负载下的损耗">
+        <g id="s2-ax"></g>
+        <line id="s2-vl" class="ax dash" x1="0" y1="30" x2="0" y2="230"/>
+        <polyline id="s2-cs" class="real" points=""/>
+        <polyline id="s2-cm" class="real3" points=""/>
+        <circle id="s2-ds" class="dot" cx="0" cy="0" r="5" style="fill:var(--copper)"/>
+        <circle id="s2-dm" class="dot" cx="0" cy="0" r="5" style="fill:var(--flow)"/>
+        <text id="s2-ls" x="0" y="0" class="t" style="fill:var(--copper)">肖特基</text>
+        <text id="s2-lm" x="0" y="0" class="t" style="fill:var(--flow)">同步 MOS</text>
+        <text id="s2-xt" x="0" y="0" class="tm">交叉</text>
+      </svg>
+      <figcaption>示意参数：Vin 12 V，500 kHz。肖特基 VF 按 0.32 V + 18 mΩ·I 估算；同步下管 Rds(on) 10 mΩ，死区 2 × 20 ns，体二极管 VF 0.8 V，驱动 Qg 10 nC × 5 V，体二极管反向恢复 10 nC。只比较续流这一侧的损耗。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-i">输出电流 Iout</label>
+        <span class="rv" id="s2-iv">3.0 A</span>
+        <input type="range" id="s2-i" min="0.2" max="10" step="0.1" value="3"></div>
+      <div class="ctl"><label class="ctl-l" for="s2-d">占空比 D（Vout = D·Vin）</label>
+        <span class="rv" id="s2-dv">0.28</span>
+        <input type="range" id="s2-d" min="0.05" max="0.9" step="0.01" value="0.28"></div>
+      <dl class="read">
+        <dt>Vout / Pout</dt><dd id="s2-po">—</dd>
+        <dt>二极管平均电流 (1 − D)·Iout</dt><dd id="s2-ia">—</dd>
+        <dt>肖特基损耗</dt><dd id="s2-ps">—</dd>
+        <dt>同步：I²·Rds(on)·(1 − D)</dt><dd id="s2-pm1">—</dd>
+        <dt>同步：死区体二极管</dt><dd id="s2-pm2">—</dd>
+        <dt>同步：驱动 + 恢复</dt><dd id="s2-pm3">—</dd>
+        <dt>同步合计</dt><dd id="s2-pm">—</dd>
+        <dt>占输出功率</dt><dd id="s2-eff">—</dd>
+        <dt>更划算</dt><dd><span id="s2-st" class="chip on">同步整流</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="pick">
+  <span class="eyebrow">选型清单</span>
+  <h2>一颗续流二极管要核对的参数</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>参数</th><th>要求</th><th>原因</th></tr></thead>
+    <tbody>
+      <tr><td>类型</td><td>肖特基；上百伏的高压场合用超快恢复或 SiC 肖特基</td><td>反向恢复快、VF 低</td></tr>
+      <tr><td>反向耐压 VRRM</td><td>大于 Vin(max)，一般留 20%~50% 余量</td><td>上管导通时二极管反偏承受 Vin，SW 节点还有振铃尖峰</td></tr>
+      <tr><td>平均电流 IF(AV)</td><td>≥ (1 − D)·Iout，按最小 D（最高 Vin）算，再留余量</td><td>输出短路时 D 接近 0，二极管几乎扛全部电流</td></tr>
+      <tr><td>峰值电流</td><td>≥ Iout + ΔIL/2</td><td>上管关断瞬间，二极管接住的是电感峰值电流</td></tr>
+      <tr><td>VF</td><td>越低越好</td><td>导通损耗 VF·Iout·(1 − D)</td></tr>
+      <tr><td>反向漏电 IR</td><td>看高温下的值</td><td>漏电损耗约 IR·Vin·D，肖特基高温漏电大</td></tr>
+      <tr><td>封装热阻</td><td>用损耗算结温</td><td>例：1 W 损耗、热阻 50 °C/W，温升约 50 °C（示意）</td></tr>
+    </tbody>
+  </table></div>
+  <p>肖特基的软肋是漏电。温度大致每升高 10 °C 左右漏电翻一倍（典型值），漏电损耗让它更热，漏电又更大，可能热失控。高温场合要看数据手册里高温下的 IR，必要时选耐压高一档、漏电小的型号。二极管基础见 <a href="../01-二极管/04-续流二极管.html">续流二极管</a>。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>Buck 的续流二极管怎么选？</summary>
+      <div class="ans"><p>选肖特基，因为它没有反向恢复、VF 低。反向耐压大于最高 Vin 并留 20%~50% 余量；平均电流按 (1 − D)·Iout 算，取最小 D，并考虑输出短路时二极管几乎扛全部电流；峰值电流不小于 Iout + ΔIL/2。最后用 VF·Iout·(1 − D) 算损耗和结温，高温下再核对漏电。</p></div></details>
+    <details><summary>为什么不能用 1N4007 做开关电源的续流二极管？</summary>
+      <div class="ans"><p>1N4007 是工频整流管，trr 在微秒量级。几百 kHz 时一个周期只有几微秒，上管开通时它还在反向导通，Vin 经上管和二极管直通到地，电流尖峰很大，每周期都烧掉 Vin·Qrr 的能量，很快发热损坏。它只适合 50 Hz 整流。</p></div></details>
+    <details><summary>二极管和同步整流的损耗各怎么算？</summary>
+      <div class="ans"><p>二极管：VF·Iout·(1 − D)，再加少量漏电损耗。同步整流：Iout²·Rds(on)·(1 − D) 是导通损耗；死区时间体二极管导通，约 VF_body·Iout·2·tdt·f；再加栅极驱动 Qg·Vdrv·f 和体二极管反向恢复。</p></div></details>
+    <details><summary>什么时候用同步整流？</summary>
+      <div class="ans"><p>低压大电流。Vout 越低，0.4 V 左右的 VF 占比越大；D 越小，二极管导通时间越长。比如 12 V 转 1.2 V、5 A，肖特基大约吃掉输出功率的三成，换成 10 mΩ 的 MOS 只剩百分之几（示意）。轻载时同步整流的驱动损耗是固定开销，可能反而不如二极管；高压小电流的场合用二极管更简单。</p></div></details>
+    <details><summary>死区时间是什么？太长太短会怎样？</summary>
+      <div class="ans"><p>上下管切换时两个都关的一段时间。太短，一个还没关断另一个就开了，上下管直通，电流很大；太长，体二极管导通时间长，损耗和反向恢复都变大，效率下降。所以死区要按 MOS 的开关速度取最小安全值，常见几纳秒到几十纳秒。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="07-电感选型.html"><span>上一页</span>电感选型</a><a class="next" href="../index.html#power"><span>下一页</span>返回目录</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 1. 反向恢复：三角形恢复模型（示意），ta = tb，Irr = di/dt·ta */
+const S1D={
+  sch:{pn:'SS34 类，40 V / 3 A',vf:0.45,vr:40,cap:true},
+  fr:{pn:'ES3B 类，100 V / 3 A',vf:0.85,vr:100,ta:15},
+  st:{pn:'1N5408 类，1000 V / 3 A',vf:0.95,vr:1000,ta:1000}
+};
+const s1={d:'sch',vin:12},S1IO=3,S1F=500e3,S1DI=0.2,s1X=scale(-20,180,56,500),s1Y=scale(-8,10,250,40);
+(function(){const g=$('s1-ax');
+  [-8,-4,0,4,8].forEach(v=>g.append(svgEl('line',{class:'gl',x1:56,y1:s1Y(v),x2:500,y2:s1Y(v)}),svgEl('text',{x:50,y:s1Y(v)+4,'text-anchor':'end',class:'v'},String(v).replace('-','−'))));
+  [0,50,100,150].forEach(t=>g.append(svgEl('text',{x:s1X(t),y:266,'text-anchor':'middle',class:'v'},t)));
+  g.append(svgEl('path',{class:'ax',d:'M56,40 V250 H500'}),svgEl('line',{class:'ax',x1:56,y1:s1Y(0),x2:500,y2:s1Y(0)}),
+    svgEl('text',{x:60,y:32,class:'tm'},'电流 / A'),svgEl('text',{x:500,y:284,'text-anchor':'end',class:'tm'},'时间 / ns，0 为上管开通时刻'));
+})();
+function s1u(){
+  const P=S1D[s1.d],vin=s1.vin,D=3.3/vin,t0=S1IO/S1DI;let ta,irr,q;
+  if(P.cap){q=150e-3*vin;irr=Math.sqrt(q*S1DI);ta=irr/S1DI;}else{ta=P.ta;irr=Math.min(S1DI*ta,20);}
+  const tf=irr/S1DI,hold=Math.max(0,2*ta-2*tf);if(!P.cap)q=irr*tf+irr*hold;
+  const iD=t=>{if(t<0)return S1IO;if(t<t0)return S1IO-S1DI*t;const u=t-t0;
+    if(u<tf)return -S1DI*u;if(u<tf+hold)return -irr;const r=u-tf-hold;return r<tf?-irr+irr*r/tf:0;};
+  const cl=v=>Math.max(-8,Math.min(10,v)),pd=[],pq=[],pa=[];
+  for(let k=0;k<=400;k++){const t=-20+k*0.5,d=iD(t),x=s1X(t).toFixed(1);
+    pd.push(x+','+s1Y(cl(d)).toFixed(1));pq.push(x+','+s1Y(cl(t<0?0:S1IO-d)).toFixed(1));
+    if(d<0)pa.push(x+','+s1Y(cl(d)).toFixed(1));}
+  $('s1-id').setAttribute('points',pd.join(' '));$('s1-iq').setAttribute('points',pq.join(' '));
+  const y0=s1Y(0).toFixed(1);
+  $('s1-qrr').setAttribute('points',pa.length?pa[0].split(',')[0]+','+y0+' '+pa.join(' ')+' '+pa[pa.length-1].split(',')[0]+','+y0:'');
+  const xm=s1X(Math.min(t0+tf,170))+6,capd=irr>=20;
+  const it=$('s1-irt');it.setAttribute('x',xm.toFixed(1));it.setAttribute('y',Math.min(s1Y(-Math.min(irr,8))+14,240).toFixed(1));
+  it.textContent='−Irr '+(capd?'> 20 A':fmtA(irr));
+  const qt=$('s1-qpt');qt.setAttribute('x',xm.toFixed(1));qt.setAttribute('y',(s1Y(Math.min(S1IO+irr,10))-8).toFixed(1));
+  qt.textContent='上管峰值 '+(capd?'> 23 A':fmtA(S1IO+irr));
+  const prr=vin*q*1e-9*S1F,pc=P.vf*S1IO*(1-D);
+  $('s1-pn').textContent=P.pn;
+  $('s1-trr').textContent=P.cap?'几乎没有，只有结电容电荷 '+q.toFixed(1)+' nC':s1.d==='fr'?'约 30 ns':'约 2 µs，和整个开关周期一样长';
+  $('s1-irr').textContent=capd?'> 20 A，被上管限流截住':fmtA(irr);
+  $('s1-qpk').textContent=capd?'> 23 A':fmtA(S1IO+irr)+'，Iout 3 A 加 Irr';
+  $('s1-prr').textContent=prr>100?'> 100 W，烧管子':fmtP(prr);
+  $('s1-pc').textContent=fmtP(pc)+'，D = '+D.toFixed(2);
+  const vm=P.vr/vin;$('s1-vr').textContent=P.vr+' V，'+(vm<1?'低于 Vin，会击穿':vm<1.2?'余量不足':'余量够');
+  let n;
+  if(vm<1){chip($('s1-st'),'耐压不够','bad');n='肖特基的耐压普遍不高，SS34 只有 40 V，接在 48 V 上，上管一开它就反向击穿。高压要选耐压够的肖特基（如 100 V、150 V 型号），VF 和漏电会大一些；再往上用超快恢复或 SiC 肖特基。';}
+  else if(s1.d==='st'){chip($('s1-st'),'关不断，直通','bad');n='普通整流管的 trr 在微秒量级，和 500 kHz 的整个周期一样长。上管一开，二极管长时间反向导通，Vin 经上管、二极管直接对地，相当于直通短路，上管和二极管都会烧。它只适合 50 Hz 工频整流。';}
+  else if(s1.d==='fr'){chip($('s1-st'),'能用，但损耗偏大','warn');n='超快恢复管 trr 约 30 ns。上管开通时二极管先反向导通，上管电流多出约 '+fmtA(irr)+' 的尖峰，每周期损耗 Vin·Qrr，还会激起振铃和 EMI；VF 也比肖特基高。只有在肖特基耐压不够的高压场合才用它。';}
+  else{chip($('s1-st'),'合适','on');n='肖特基没有少子存储，电流过零后只有结电容充电的一点反向电流，上管开通几乎没有额外尖峰。损耗主要是导通损耗 VF·Iout·(1 − D) = '+fmtP(pc)+'。Vin 越高 D 越小，二极管导通时间越长，这部分损耗越大。';}
+  $('s1-note').textContent=n;
+}
+seg('s1-d',v=>{s1.d=v;s1u();});
+seg('s1-v',v=>{s1.vin=+v;s1u();});
+s1u();
+
+/* 2. 肖特基 vs 同步整流（示意参数） */
+const S2P={vin:12,f:500e3,rds:0.01,tdt:20e-9,vfb:0.8,qg:10e-9,vdr:5,qrr:10e-9};
+const s2VF=i=>0.32+0.018*i;
+function s2Loss(io,D){const k=1-D,ps=s2VF(io)*io*k,m1=io*io*S2P.rds*k,m2=S2P.vfb*io*2*S2P.tdt*S2P.f,
+  m3=S2P.qg*S2P.vdr*S2P.f+S2P.vin*S2P.qrr*S2P.f;return {ps,m1,m2,m3,pm:m1+m2+m3};}
+const s2X=scale(0,10,56,500),s2Top=[0.4,0.8,2,4,8];
+function s2u(){
+  const io=+$('s2-i').value,D=+$('s2-d').value,L=s2Loss(io,D),e10=s2Loss(10,D);
+  const top=s2Top.find(v=>v>=Math.max(e10.ps,e10.pm)*1.08)||8,Y=scale(0,top,230,30),g=$('s2-ax');
+  g.textContent='';
+  for(let k=0;k<=4;k++){const v=top*k/4,y=Y(v);g.append(svgEl('line',{class:'gl',x1:56,y1:y,x2:500,y2:y}),svgEl('text',{x:50,y:y+4,'text-anchor':'end',class:'v'},+v.toFixed(2)));}
+  [0,2,4,6,8,10].forEach((v,i)=>g.append(svgEl('text',{x:s2X(v),y:246,'text-anchor':i===5?'end':'middle',class:'v'},v)));
+  g.append(svgEl('path',{class:'ax',d:'M56,30 V230 H500'}),svgEl('text',{x:60,y:22,class:'tm'},'续流侧损耗 / W'),svgEl('text',{x:500,y:266,'text-anchor':'end',class:'tm'},'输出电流 Iout / A'));
+  $('s2-cs').setAttribute('points',plot(i=>s2Loss(i,D).ps,0,10,s2X,Y,100));
+  $('s2-cm').setAttribute('points',plot(i=>s2Loss(i,D).pm,0,10,s2X,Y,100));
+  const x=s2X(io).toFixed(1);['x1','x2'].forEach(a=>$('s2-vl').setAttribute(a,x));
+  $('s2-ds').setAttribute('cx',x);$('s2-ds').setAttribute('cy',Y(L.ps).toFixed(1));
+  $('s2-dm').setAttribute('cx',x);$('s2-dm').setAttribute('cy',Y(L.pm).toFixed(1));
+  const ls=$('s2-ls'),lm=$('s2-lm');ls.setAttribute('x','496');ls.setAttribute('text-anchor','end');ls.setAttribute('y',(Y(e10.ps)-8).toFixed(1));
+  lm.setAttribute('x','496');lm.setAttribute('text-anchor','end');lm.setAttribute('y',Math.min(Y(e10.pm)+18,224).toFixed(1));
+  let ix=null;for(let i=0.01;i<=10;i+=0.01){const a=s2Loss(i,D);if(a.ps>a.pm){ix=i;break;}}
+  const xt=$('s2-xt');show(xt,ix!==null&&ix>0.05);
+  if(ix){xt.setAttribute('x',(s2X(ix)+8).toFixed(1));xt.setAttribute('y',(Y(s2Loss(ix,D).pm)-10).toFixed(1));xt.textContent='交叉 '+ix.toFixed(1)+' A';}
+  const vo=D*S2P.vin,po=vo*io;
+  $('s2-iv').textContent=io.toFixed(1)+' A';$('s2-i').setAttribute('aria-valuetext',io.toFixed(1)+' A');
+  $('s2-dv').textContent=D.toFixed(2);$('s2-d').setAttribute('aria-valuetext',D.toFixed(2));
+  $('s2-po').textContent=fmtV(vo)+' / '+fmtP(po);
+  $('s2-ia').textContent=fmtA((1-D)*io);
+  $('s2-ps').textContent=fmtP(L.ps)+'，VF ≈ '+s2VF(io).toFixed(2)+' V';
+  $('s2-pm1').textContent=fmtP(L.m1);$('s2-pm2').textContent=fmtP(L.m2);$('s2-pm3').textContent=fmtP(L.m3);
+  $('s2-pm').textContent=fmtP(L.pm);
+  $('s2-eff').textContent='肖特基 '+(L.ps/po*100).toFixed(1)+'%，同步 '+(L.pm/po*100).toFixed(1)+'%';
+  let n;
+  if(L.ps<L.pm*0.9){chip($('s2-st'),'二极管更省','warn');
+    n='负载只有 '+io.toFixed(1)+' A。同步整流的驱动和体二极管恢复是和电流无关的固定开销，约 '+fmtP(L.m3)+'，比二极管的导通损耗还大。所以同步 Buck 轻载时常切到 PFM，减少开关次数，并在电流过零时关掉下管。';}
+  else if(L.pm<L.ps*0.9){chip($('s2-st'),'同步整流，省 '+fmtP(L.ps-L.pm),'on');
+    n=vo<2.5?'Vout 只有 '+fmtV(vo,1)+'，二极管约 '+s2VF(io).toFixed(2)+' V 的压降相对 Vout 很大，而且它要导通周期的 '+((1-D)*100).toFixed(0)+'%。换成 10 mΩ 的 MOS，导通压降只有 Iout·Rds(on) = '+(io*S2P.rds*1e3).toFixed(0)+' mV，效率差距 '+((L.ps-L.pm)/po*100).toFixed(0)+' 个百分点。这就是低压大电流必须用同步整流的原因。'
+      :'MOS 的导通损耗 I²·Rds(on) 随电流平方增长，但 Rds(on) 很小，仍比二极管的 VF·I 小得多。电流越大、D 越小，同步整流越划算。死区里体二极管还有约 '+fmtP(L.m2)+'，缩短死区或并一个肖特基可以再省一点。';}
+  else{chip($('s2-st'),'差不多','off');n='两者损耗接近。这时选二极管电路简单、不用死区控制；选同步整流要多一路驱动，但重载时更省。';}
+  $('s2-note').textContent=n;
+}
+['s2-i','s2-d'].forEach(id=>$(id).addEventListener('input',s2u));
+s2u();
+</script>
+</body>
+</html>

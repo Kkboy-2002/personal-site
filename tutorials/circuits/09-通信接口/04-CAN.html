@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CAN 总线</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.txt{font:500 15px var(--mono);padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);width:6.5em;max-width:100%}
+.ids{display:flex;flex-wrap:wrap;gap:10px}
+.ids .ctl{gap:4px}
+.smp{fill:var(--flow)}.smp.warn{fill:var(--warn)}.smp.bad{fill:var(--danger)}
+.mk{stroke:var(--flow);stroke-width:1.2}.mk.warn{stroke:var(--warn)}.mk.bad{stroke:var(--danger)}
+.zone-bad{fill:var(--danger);fill-opacity:.1}
+.devs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:460px){.devs{grid-template-columns:minmax(0,1fr)}}
+.devs .ctl .seg button{padding:6px 8px;font-size:13px}
+.ctl .seg button{padding:6px 11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#bus">通信接口</a><span class="sp"></span><span>04 / 05</span></nav>
+<header>
+  <span class="eyebrow">通信接口 · 差分多主总线</span>
+  <h1>CAN 总线</h1>
+  <p class="lede">CAN 用一对差分线把汽车、工控里的几十个节点连在一起。它没有主机，谁都能发；几个节点同时发时，靠显性覆盖隐性的线与逻辑逐位比较 ID，ID 小的赢，而且赢的那一帧毫发无损。</p>
+</header>
+
+<section id="level">
+  <span class="eyebrow">显性 0 · 隐性 1</span>
+  <h2>显性和隐性：为什么 0 能盖住 1</h2>
+  <p>收发器发显性（逻辑 0）时，内部上管把 CAN_H 往上推到约 3.5 V，下管把 CAN_L 往下拉到约 1.5 V，差压约 2 V。发隐性（逻辑 1）时两个管子都关，收发器什么也不驱动，两根线经终端电阻连在一起，都停在约 2.5 V，差压约 0。</p>
+  <p>所以只要有一个节点发显性，总线就是显性，别的节点发隐性等于没说话。这和 I2C 开漏的线与是一回事：0 占优。接收器看差压：大于 0.9 V 判显性，小于 0.5 V 判隐性。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 540 240" role="img" aria-label="CAN_H 和 CAN_L 两根线两端各接 120 欧终端电阻，三个节点挂在总线上">
+        <path class="w" d="M40,60 V75 M40,115 V130"/>
+        <rect class="r" x="31" y="75" width="18" height="40" rx="2"/>
+        <text x="56" y="100" class="v">120 Ω</text>
+        <path class="w" d="M500,60 V75 M500,115 V130"/>
+        <rect class="r" x="491" y="75" width="18" height="40" rx="2"/>
+        <text x="484" y="100" text-anchor="end" class="v">120 Ω</text>
+        <path id="s1-h" class="w s-hi" style="stroke-width:3" d="M40,60 H500"/>
+        <path id="s1-l" class="w s-lo" style="stroke-width:3" d="M40,130 H500"/>
+        <text x="70" y="50" class="v">CAN_H</text>
+        <text x="70" y="150" class="v">CAN_L</text>
+        <text id="s1-vh" x="484" y="50" text-anchor="end" class="v hi">3.5 V</text>
+        <text id="s1-vl" x="484" y="150" text-anchor="end" class="v lo">1.5 V</text>
+        <path class="w" d="M135,60 V172 M165,130 V172 M255,60 V172 M285,130 V172 M375,60 V172 M405,130 V172"/>
+        <circle class="dot" cx="135" cy="60" r="3.5"/><circle class="dot" cx="165" cy="130" r="3.5"/>
+        <circle class="dot" cx="255" cy="60" r="3.5"/><circle class="dot" cx="285" cy="130" r="3.5"/>
+        <circle class="dot" cx="375" cy="60" r="3.5"/><circle class="dot" cx="405" cy="130" r="3.5"/>
+        <rect id="s1-ba" class="box" x="105" y="172" width="90" height="54" rx="6"/>
+        <rect id="s1-bb" class="box" x="225" y="172" width="90" height="54" rx="6"/>
+        <rect id="s1-bc" class="box" x="345" y="172" width="90" height="54" rx="6"/>
+        <text x="150" y="194" text-anchor="middle" class="t">节点 A</text>
+        <text x="270" y="194" text-anchor="middle" class="t">节点 B</text>
+        <text x="390" y="194" text-anchor="middle" class="t">节点 C</text>
+        <text id="s1-ta" x="150" y="214" text-anchor="middle" class="tm">显性 0</text>
+        <text id="s1-tb" x="270" y="214" text-anchor="middle" class="tm">隐性 1</text>
+        <text id="s1-tc" x="390" y="214" text-anchor="middle" class="tm">隐性 1</text>
+        <path id="s1-fl" class="flow thin" d="M135,170 V62 H42 V128 H165 V170"/>
+        <path id="s1-fr" class="flow thin" d="M135,170 V62 H498 V128 H165 V170"/>
+      </svg>
+      <figcaption>橙色表示 CAN_H 被推高，蓝色表示 CAN_L 被拉低，黑色表示没人驱动。绿色虚线是显性时的驱动电流：从 CAN_H 出发，分两路经两端终端电阻流到 CAN_L，再回到收发器。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="devs">
+        <div class="ctl"><span class="ctl-l">节点 A</span><div class="seg" id="s1-a"><button id="s1-a-1" data-v="1" aria-pressed="false">隐性 1</button><button id="s1-a-0" data-v="0" aria-pressed="true">显性 0</button></div></div>
+        <div class="ctl"><span class="ctl-l">节点 B</span><div class="seg" id="s1-b"><button id="s1-b-1" data-v="1" aria-pressed="true">隐性 1</button><button id="s1-b-0" data-v="0" aria-pressed="false">显性 0</button></div></div>
+        <div class="ctl"><span class="ctl-l">节点 C</span><div class="seg" id="s1-c"><button id="s1-c-1" data-v="1" aria-pressed="true">隐性 1</button><button id="s1-c-0" data-v="0" aria-pressed="false">显性 0</button></div></div>
+      </div>
+      <dl class="read">
+        <dt>CAN_H</dt><dd id="s1-rh">3.5 V</dd>
+        <dt>CAN_L</dt><dd id="s1-rl">1.5 V</dd>
+        <dt>差压 H − L</dt><dd id="s1-rd">2.0 V</dd>
+        <dt>各节点回读</dt><dd id="s1-rb">—</dd>
+        <dt>总线</dt><dd><span id="s1-st" class="chip on">显性 0</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="arb">
+  <span class="eyebrow">非破坏性逐位仲裁</span>
+  <h2>三个节点同时发，谁赢</h2>
+  <p>总线空闲时，想发的节点都可以开始发，从帧起始位 SOF 开始逐位往外送 ID，高位在前。每个节点边发边回读总线。发的是隐性 1、读回来却是显性 0，说明有人的 ID 更小，它就立刻停发，转为接收。发显性的节点根本察觉不到有过冲突，继续发自己的帧。</p>
+  <p>所以 ID 越小，前面的 0 越多，优先级越高。赢家的帧没被打断、不用重发，这叫非破坏性仲裁。输家等总线空闲后自动重发。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 560 280" role="img" aria-label="三个 CAN 节点同时发送不同 ID 的仲裁时序，逐位比较，发隐性却读到显性的节点退出">
+        <rect id="s2-hl" class="zone-ok" x="70" y="30" width="34" height="202"/>
+        <g id="s2-grid"></g>
+        <text id="s2-idt" x="300" y="18" text-anchor="middle" class="tm">标识符 ID10 → ID0，高位先发</text>
+        <text x="60" y="70" text-anchor="end" class="t">节点 A</text>
+        <text x="60" y="118" text-anchor="end" class="t">节点 B</text>
+        <text id="s2-cn" x="60" y="166" text-anchor="end" class="t">节点 C</text>
+        <text x="60" y="218" text-anchor="end" class="t">总线</text>
+        <g id="s2-w"></g>
+        <g id="s2-lab"></g>
+        <path class="ax" d="M70,244 H540"/>
+        <g id="s2-ax"></g>
+        <text x="540" y="276" text-anchor="end" class="tm">时间 µs，按 500 kbit/s</text>
+      </svg>
+      <figcaption>高电平是隐性 1，低电平是显性 0。实线是节点自己在发，虚线是退出仲裁后改为接收、只输出隐性。总线一行是所有节点的线与。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">参与的节点数</span>
+        <div class="seg" id="s2-n"><button id="s2-n-2" data-v="2" aria-pressed="false">2 个</button><button id="s2-n-3" data-v="3" aria-pressed="true">3 个</button></div></div>
+      <div class="ids">
+        <div class="ctl"><label class="ctl-l" for="s2-ia">A 的 ID</label><input class="txt" type="text" id="s2-ia" value="0x120" maxlength="5" autocomplete="off"></div>
+        <div class="ctl"><label class="ctl-l" for="s2-ib">B 的 ID</label><input class="txt" type="text" id="s2-ib" value="0x128" maxlength="5" autocomplete="off"></div>
+        <div class="ctl" id="s2-icw"><label class="ctl-l" for="s2-ic">C 的 ID</label><input class="txt" type="text" id="s2-ic" value="0x124" maxlength="5" autocomplete="off"></div>
+      </div>
+      <div class="ctl"><label class="ctl-l" for="s2-bit">仲裁进行到</label>
+        <span class="rv" id="s2-bv">RTR</span>
+        <input type="range" id="s2-bit" min="0" max="12" step="1" value="12">
+        <div class="seg"><button id="s2-play" aria-pressed="false">▶ 从头逐位播放</button></div></div>
+      <dl class="read">
+        <dt>这一位各节点发</dt><dd id="s2-tx">—</dd>
+        <dt>总线</dt><dd id="s2-bus">—</dd>
+        <dt>还在仲裁</dt><dd id="s2-in">—</dd>
+        <dt>结果</dt><dd><span id="s2-st" class="chip on">A 赢</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="term">
+  <span class="eyebrow">终端电阻 · 反射</span>
+  <h2>两端各 120 Ω，少一个会怎样</h2>
+  <p>双绞线的特性阻抗约 120 Ω。信号跑到线的尽头，如果端接电阻等于特性阻抗，能量被电阻吸收；如果开路，信号原样反射回来，和后面的信号叠加，形成振铃。所以总线两端各接一个 120 Ω，两个并联是 60 Ω。</p>
+  <p>终端电阻还有第二个作用：隐性时收发器不驱动，是终端电阻把 CAN_H、CAN_L 之间的电荷放掉，差压才回到 0。没有它，显性到隐性的边沿又慢又拖尾。</p>
+  <p class="eq">反射系数 Γ = (RT − Z0) / (RT + Z0)；RT = Z0 = 120 Ω 时 Γ = 0，开路时 Γ = +1</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 560 330" role="img" aria-label="上方是两端终端电阻的示意，下方是差分电压波形，终端不匹配时出现振铃和拖尾">
+        <rect class="box" x="16" y="24" width="60" height="68" rx="5"/>
+        <text x="46" y="62" text-anchor="middle" class="t">节点 1</text>
+        <rect class="box" x="484" y="24" width="60" height="68" rx="5"/>
+        <text x="514" y="62" text-anchor="middle" class="t">节点 2</text>
+        <path class="w" d="M76,30 H484 M76,86 H484"/>
+        <text x="280" y="24" text-anchor="middle" class="tm">CAN_H</text>
+        <text x="280" y="102" text-anchor="middle" class="tm">CAN_L</text>
+        <text x="280" y="62" text-anchor="middle" class="tm">双绞线 Z0 ≈ 120 Ω，示意长 40 m</text>
+        <g id="s3-rt1">
+          <path class="w" d="M110,30 V38 M110,78 V86"/>
+          <rect class="r" x="101" y="38" width="18" height="40" rx="2"/>
+          <text x="126" y="62" class="v">120 Ω</text>
+          <circle class="dot" cx="110" cy="30" r="3.5"/><circle class="dot" cx="110" cy="86" r="3.5"/>
+        </g>
+        <g id="s3-rt2">
+          <path class="w" d="M450,30 V38 M450,78 V86"/>
+          <rect class="r" x="441" y="38" width="18" height="40" rx="2"/>
+          <text x="434" y="62" text-anchor="end" class="v">120 Ω</text>
+          <circle class="dot" cx="450" cy="30" r="3.5"/><circle class="dot" cx="450" cy="86" r="3.5"/>
+        </g>
+        <rect class="zone-bad" x="70" y="218" width="470" height="16"/>
+        <line class="gl" x1="70" y1="174" x2="540" y2="174"/>
+        <line class="ax" x1="70" y1="218" x2="540" y2="218" style="stroke-dasharray:2 4"/>
+        <line class="ax" x1="70" y1="234" x2="540" y2="234" style="stroke-dasharray:2 4"/>
+        <path class="ax" d="M70,120 V290 M70,254 H540"/>
+        <text x="64" y="178" text-anchor="end" class="v">2 V</text>
+        <text x="64" y="222" text-anchor="end" class="v">0.9</text>
+        <text x="64" y="238" text-anchor="end" class="v">0.5</text>
+        <text x="64" y="258" text-anchor="end" class="v">0</text>
+        <text x="76" y="146" class="tm">差压 H − L</text>
+        <text x="536" y="230" text-anchor="end" class="tm">不确定区</text>
+        <g id="s3-lab"></g>
+        <polyline id="s3-ideal" class="ideal" points="70,254 540,254"/>
+        <polyline id="s3-wave" class="real" points="70,254 540,254"/>
+        <g id="s3-mk"></g>
+        <g id="s3-ax"></g>
+        <text x="540" y="324" text-anchor="end" class="tm">时间 µs</text>
+      </svg>
+      <figcaption>虚线是理想波形，橙线是节点 2 收到的差压。竖线是每位 75% 处的采样点：绿色判对，黄色落在 0.5~0.9 V 的不确定区，红色判错。振铃幅度和衰减是示意，实际取决于线长、分支和收发器。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">终端电阻</span>
+        <div class="seg" id="s3-t"><button id="s3-t-none" data-v="none" aria-pressed="false">没有</button><button id="s3-t-one" data-v="one" aria-pressed="false">只有一端</button><button id="s3-t-two" data-v="two" aria-pressed="true">两端各 120 Ω</button></div></div>
+      <div class="ctl"><span class="ctl-l">波特率</span>
+        <div class="seg" id="s3-br"><button id="s3-br-125" data-v="125" aria-pressed="false">125 k</button><button id="s3-br-500" data-v="500" aria-pressed="true">500 k</button><button id="s3-br-1000" data-v="1000" aria-pressed="false">1 M</button></div></div>
+      <dl class="read">
+        <dt>断电量 H、L 间电阻</dt><dd id="s3-req">60 Ω</dd>
+        <dt>两端反射系数</dt><dd id="s3-gam">—</dd>
+        <dt>显性差压，示意</dt><dd id="s3-vd">2.0 V</dd>
+        <dt>最大过冲</dt><dd id="s3-os">—</dd>
+        <dt>8 位采样</dt><dd id="s3-err">—</dd>
+        <dt>结论</dt><dd><span id="s3-st" class="chip on">干净</span></dd>
+      </dl>
+      <p class="note" id="s3-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="fmt">
+  <span class="eyebrow">帧结构 · 简述</span>
+  <h2>一个标准数据帧</h2>
+  <p>CAN 不只是物理层，帧格式、仲裁、校验、应答、出错重发都由 CAN 控制器硬件完成。标准数据帧按顺序如下，扩展帧把 ID 扩到 29 位。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>段</th><th class="n">位数</th><th>作用</th></tr></thead>
+    <tbody>
+      <tr><td>帧起始 SOF</td><td class="n">1</td><td>一个显性位，所有节点以它的下降沿同步</td></tr>
+      <tr><td>仲裁段</td><td class="n">11 + 1</td><td>11 位 ID 加 RTR 位，数据帧 RTR 为显性，远程帧为隐性，所以同 ID 时数据帧优先</td></tr>
+      <tr><td>控制段</td><td class="n">6</td><td>IDE、保留位 r0，加 4 位 DLC 表示数据字节数</td></tr>
+      <tr><td>数据段</td><td class="n">0 ~ 64</td><td>0 ~ 8 个字节；CAN FD 最多 64 字节，且数据段可以提速</td></tr>
+      <tr><td>CRC 段</td><td class="n">15 + 1</td><td>15 位 CRC 加 1 位隐性界定符</td></tr>
+      <tr><td>ACK 段</td><td class="n">1 + 1</td><td>发送方在 ACK 槽发隐性，任何一个正确收到的节点把它改写成显性；再加 1 位界定符</td></tr>
+      <tr><td>帧结束 EOF</td><td class="n">7</td><td>7 个隐性位，之后至少 3 位帧间隔</td></tr>
+    </tbody>
+  </table></div>
+  <p>从 SOF 到 CRC，发送方每连续发 5 个相同的位，就自动插入 1 个相反的位，叫位填充。因为 CAN 没有时钟线，接收方要靠边沿不停地重新同步，位填充保证边沿足够多。连续 6 个相同位出现在这一段里就是错误，节点会发错误帧。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>什么是显性和隐性？为什么显性能覆盖隐性？</summary>
+      <div class="ans"><p>显性是逻辑 0，收发器主动把 CAN_H 推到约 3.5 V、CAN_L 拉到约 1.5 V，差压约 2 V。隐性是逻辑 1，收发器不驱动，两线都在约 2.5 V，差压约 0。一个是主动驱动、一个是放手不管，所以只要有人发显性总线就是显性，相当于线与。</p></div></details>
+    <details><summary>CAN 仲裁是怎么做的？为什么叫非破坏性？</summary>
+      <div class="ans"><p>多个节点同时发，从 ID 最高位开始逐位比较，边发边回读。发隐性却读回显性的节点知道自己输了，马上停发转为接收。ID 越小越早出现 0，优先级越高。赢家的帧没有被打断，也不用重发，所以叫非破坏性。这也要求同一个 ID 只能由一个节点发送。</p></div></details>
+    <details><summary>终端电阻为什么是 120 Ω？万用表量出来应该是多少？</summary>
+      <div class="ans"><p>因为双绞线特性阻抗约 120 Ω，端接相等才不反射。两端各一个，并联后断电量 CAN_H 与 CAN_L 之间应约 60 Ω。量到 120 Ω 说明少接了一个，量到 40 Ω 左右说明多接了一个。</p></div></details>
+    <details><summary>CAN 的应答是怎么实现的？</summary>
+      <div class="ans"><p>发送方在 ACK 槽里发隐性，同时回读。只要总线上任何一个节点正确收到了这一帧，就在 ACK 槽发显性。发送方读到显性就知道至少有人收到了；读到隐性就报应答错误并自动重发。所以总线上只有一个节点时，它发的帧永远没有应答。</p></div></details>
+    <details><summary>CAN 为什么抗干扰强？</summary>
+      <div class="ans"><p>物理层是差分加双绞线，外界干扰同时叠加到两根线上，差值基本不变。协议层有 CRC、位填充检查、格式检查和应答检查，发现错误就发错误帧，发送方自动重发。节点还有错误计数，错得太多会自己退到被动甚至离线，不会一直拖垮总线。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="03-I2C.html"><span>上一页</span>I2C</a><a class="next" href="05-RS485.html"><span>下一页</span>RS485</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+function stepPts(lv,xs,yOf){
+  const p=[];
+  lv.forEach((b,i)=>{const x=xs[i].toFixed(1);
+    if(i===0)p.push(x+','+yOf(b));
+    else if(b!==lv[i-1])p.push(x+','+yOf(lv[i-1]),x+','+yOf(b));});
+  p.push(xs[lv.length].toFixed(1)+','+yOf(lv[lv.length-1]));
+  return p.join(' ');
+}
+const hex3=v=>'0x'+v.toString(16).toUpperCase().padStart(3,'0');
+
+/* 1. 显性与隐性 */
+const s1={d:[0,1,1]},s1X=[150,270,390],s1N=['A','B','C'];
+function s1u(){
+  const d=s1.d,dom=d.includes(0),H=dom?3.5:2.5,L=dom?1.5:2.5,vd=H-L;
+  $('s1-h').classList.toggle('s-hi',dom);$('s1-l').classList.toggle('s-lo',dom);
+  $('s1-vh').textContent=H.toFixed(1)+' V';$('s1-vl').textContent=L.toFixed(1)+' V';
+  $('s1-vh').classList.toggle('hi',dom);$('s1-vl').classList.toggle('lo',dom);
+  ['a','b','c'].forEach((k,i)=>{$('s1-t'+k).textContent=d[i]?'隐性 1，不驱动':'显性 0，驱动';$('s1-b'+k).classList.toggle('lit',!d[i]);});
+  const f=d.indexOf(0);
+  show($('s1-fl'),dom);show($('s1-fr'),dom);
+  if(dom){const x=s1X[f];
+    $('s1-fl').setAttribute('d',`M${x-15},170 V62 H42 V128 H${x+15} V170`);
+    $('s1-fr').setAttribute('d',`M${x-15},170 V62 H498 V128 H${x+15} V170`);}
+  $('s1-rh').textContent=fmtV(H,1);$('s1-rl').textContent=fmtV(L,1);
+  $('s1-rd').textContent=fmtV(vd,1)+(vd>0.9?'，大于 0.9 V 判显性':'，小于 0.5 V 判隐性');
+  const bus=dom?0:1;
+  $('s1-rb').textContent=d.map((v,i)=>s1N[i]+' 发 '+v+' 读 '+bus).join('；');
+  chip($('s1-st'),dom?'显性 0':'隐性 1',dom?'on':'off');
+  const nd=d.filter(v=>v===0).length,over=d.map((v,i)=>v===1&&dom?s1N[i]:null).filter(Boolean);
+  $('s1-note').textContent=!dom?'所有节点都发隐性，收发器输出全关。终端电阻把两根线连在一起，收发器内部偏置让它们都停在约 2.5 V，差压约 0。这时任何一个节点发显性都能改写总线。'
+    :(nd>1?nd+' 个节点同时发显性，和一个节点发显性结果一样：差压约 2 V。':'节点 '+s1N[f]+' 发显性，差压约 2 V，电流经两端终端电阻从 CAN_H 流到 CAN_L。')
+     +(over.length?'节点 '+over.join('、')+' 发的是隐性，但回读到显性，它们的 1 被盖住了。仲裁就是靠这个发现“有人比我优先”。':'');
+}
+['a','b','c'].forEach((k,i)=>seg('s1-'+k,v=>{s1.d[i]=+v;s1u();}));
+s1u();
+
+/* 2. 逐位仲裁 */
+const s2={id:[0x120,0x128,0x124],n:3,bit:12},s2dx=470/14,s2X=c=>70+c*s2dx,s2Y=[[56,76],[104,124],[152,172]];
+const s2NM=['A','B','C'],s2CL=['real','real2','real3'];
+function s2seq(id){const s=[0];for(let j=10;j>=0;j--)s.push((id>>j)&1);s.push(0);return s;}
+function s2name(k){return k===0?'SOF':k===12?'RTR':'ID'+(11-k);}
+function s2calc(){
+  const n=s2.n,seqs=s2.id.slice(0,n).map(s2seq),act=Array(n).fill(true),lost=Array(n).fill(-1),bus=[],tx=[];
+  for(let k=0;k<13;k++){const t=seqs.map((s,i)=>act[i]?s[k]:1);tx.push(t);const b=Math.min(...t);bus.push(b);
+    t.forEach((v,i)=>{if(act[i]&&v===1&&b===0){act[i]=false;lost[i]=k;}});}
+  return {seqs,lost,bus,tx,n};
+}
+function s2u(){
+  const {seqs,lost,bus,tx,n}=s2calc(),cur=s2.bit,g=$('s2-w'),lab=$('s2-lab'),gr=$('s2-grid'),ax=$('s2-ax');
+  [g,lab,gr,ax].forEach(e=>e.textContent='');
+  const xs=[];for(let c=0;c<=14;c++)xs.push(s2X(c));
+  for(let c=0;c<14;c++){
+    if(c>0)gr.append(svgEl('line',{class:'gl',x1:xs[c].toFixed(1),y1:46,x2:xs[c].toFixed(1),y2:232}));
+    lab.append(svgEl('text',{x:((xs[c]+xs[c+1])/2).toFixed(1),y:40,'text-anchor':'middle',class:'tm'},c===0?'闲':c===1?'SOF':c===13?'RTR':String(12-c)));
+  }
+  for(let c=0;c<=14;c+=2){ax.append(svgEl('line',{class:'ax',x1:xs[c].toFixed(1),y1:244,x2:xs[c].toFixed(1),y2:249}));
+    if(c>=1)ax.append(svgEl('text',{x:xs[c].toFixed(1),y:262,'text-anchor':'middle',class:'v'},(c-1)*2));}
+  const last=cur+2;
+  for(let i=0;i<n;i++){const [yH,yL]=s2Y[i],yOf=v=>v?yH:yL,lv=[1].concat(tx.map(t=>t[i]));
+    const solidEnd=lost[i]>=0?Math.min(lost[i]+2,last):last;
+    g.append(svgEl('polyline',{class:s2CL[i],points:stepPts(lv.slice(0,solidEnd),xs.slice(0,solidEnd+1),yOf)}));
+    if(solidEnd<last)g.append(svgEl('polyline',{class:'ideal',points:xs[solidEnd].toFixed(1)+','+yH+' '+xs[last].toFixed(1)+','+yH}));
+    if(lost[i]>=0&&lost[i]<=cur)g.append(svgEl('text',{x:(xs[lost[i]+1]+2).toFixed(1),y:yL+14,class:'t',style:'fill:var(--danger)'},'✕ '+s2name(lost[i])+' 退出'));
+  }
+  g.append(svgEl('polyline',{class:'cv',style:'stroke-width:2.5',points:stepPts([1].concat(bus).slice(0,last),xs.slice(0,last+1),v=>v?204:224)}));
+  show($('s2-cn'),n===3);show($('s2-icw'),n===3);
+  $('s2-hl').setAttribute('x',xs[cur+1].toFixed(1));$('s2-hl').setAttribute('width',s2dx.toFixed(1));
+  const nm=s2name(cur);$('s2-bv').textContent=nm;$('s2-bit').setAttribute('aria-valuetext',nm);
+  $('s2-tx').textContent=tx[cur].map((v,i)=>s2NM[i]+(lost[i]>=0&&lost[i]<cur?' 已退出':' 发 '+v)).join('，');
+  $('s2-bus').textContent=bus[cur]+(bus[cur]?'，隐性':'，显性');
+  const alive=s2NM.slice(0,n).filter((_,i)=>lost[i]<0||lost[i]>cur);
+  $('s2-in').textContent=alive.join('、');
+  const winners=s2NM.slice(0,n).filter((_,i)=>lost[i]<0);
+  const now=s2NM.slice(0,n).filter((_,i)=>lost[i]===cur);
+  let note;
+  if(now.length)note=now.join('、')+' 在 '+nm+' 发的是隐性 1，回读却是显性 0，说明有人的 ID 更小，立即停发，转为接收。发显性的节点没察觉任何冲突，照常往下发。';
+  else if(cur===0)note='SOF 是一个显性位。几个节点几乎同时开始发，都以这个下降沿同步，之后逐位比较 ID。';
+  else if(cur===12)note='RTR 位：数据帧发显性。到这里仲裁段结束，'+(winners.length===1?'只剩节点 '+winners[0]+'，它赢得总线继续发控制段和数据。':'还有多个节点没分出胜负。');
+  else note=nm+'：'+(alive.length>1?'还在仲裁的节点发的都一样，总线就是这个值，没人退出。':'只剩节点 '+alive[0]+' 在发，其余节点都已转为接收。');
+  if(winners.length>1){chip($('s2-st'),'ID 相同，分不出胜负','bad');note+=' 注意：'+winners.join('、')+' 的 ID 完全相同，仲裁区分不了，后面的数据段一定会冲突出错。所以同一个 ID 只能分配给一个节点。';}
+  else if(cur<12&&alive.length>1)chip($('s2-st'),'仲裁中','warn');
+  else chip($('s2-st'),'节点 '+winners[0]+' 赢，ID '+hex3(s2.id[s2NM.indexOf(winners[0])]),'on');
+  $('s2-note').textContent=note;
+}
+['a','b','c'].forEach((k,i)=>$('s2-i'+k).addEventListener('input',()=>{
+  const s=$('s2-i'+k).value.trim().replace(/^0x/i,'');
+  if(/^[0-9a-f]{1,3}$/i.test(s)){const v=parseInt(s,16);if(v<=0x7FF){s2.id[i]=v;s2u();}}}));
+seg('s2-n',v=>{s2.n=+v;s2u();});
+$('s2-bit').addEventListener('input',()=>{s2.bit=+$('s2-bit').value;s2u();});
+let s2tm=null;
+$('s2-play').addEventListener('click',()=>{const b=$('s2-play');
+  if(s2tm){clearInterval(s2tm);s2tm=null;b.textContent='▶ 从头逐位播放';b.setAttribute('aria-pressed','false');return;}
+  b.textContent='⏸ 暂停';b.setAttribute('aria-pressed','true');s2.bit=0;$('s2-bit').value=0;s2u();
+  s2tm=setInterval(()=>{if(s2.bit>=12){clearInterval(s2tm);s2tm=null;b.textContent='▶ 从头逐位播放';b.setAttribute('aria-pressed','false');return;}
+    s2.bit++;$('s2-bit').value=s2.bit;s2u();},800);});
+s2u();
+
+/* 3. 终端电阻与反射 */
+const s3P={
+  none:{vd:2.8,dom:{k:.7,ts:.05,tr:.5},rec:{k:.35,ts:1.2,tr:.5},req:'开路，只剩收发器输入电阻，几十 kΩ',gam:'两端都是 +1，来回反射'},
+  one:{vd:2.3,dom:{k:.45,ts:.05,tr:.3},rec:{k:.45,ts:.08,tr:.3},req:'120 Ω',gam:'近端 0，远端 +1，反射一次后被吸收'},
+  two:{vd:2.0,dom:{k:0,ts:.04,tr:.1},rec:{k:0,ts:.06,tr:.1},req:'60 Ω，两个 120 Ω 并联',gam:'两端都是 0，没有反射'}
+};
+const s3={t:'two',br:500},s3B=[0,1,0,0,1,0,1,1];
+function s3u(){
+  const P=s3P[s3.t],Tb=1000/s3.br,T=8*Tb,X=scale(0,T,70,540),Y=v=>254-v*40,f=2;
+  const segs=[];
+  s3B.forEach((b,j)=>{if(j===0||b!==s3B[j-1])segs.push({t0:j*Tb,Vt:b?0:P.vd,pr:b?P.rec:P.dom,v0:null});});
+  const ev=(s,t)=>{const u=t-s.t0,r=s.pr;return s.Vt+(s.v0-s.Vt)*((1-r.k)*Math.exp(-u/r.ts)+r.k*Math.exp(-u/r.tr)*Math.cos(2*Math.PI*f*u));};
+  segs.forEach((s,i)=>{s.v0=i===0?0:ev(segs[i-1],s.t0);});
+  const vAt=t=>{let s=segs[0];for(const x of segs)if(x.t0<=t)s=x;return ev(s,t);};
+  const pts=[];let os=0;
+  for(let k=0;k<=700;k++){const t=T*k/700,v=vAt(t),b=s3B[Math.min(7,Math.floor(t/Tb))],tg=b?0:P.vd;
+    os=Math.max(os,b?Math.abs(v):v-tg);
+    pts.push(X(t).toFixed(1)+','+Y(Math.max(-0.8,Math.min(3.3,v))).toFixed(1));}
+  $('s3-wave').setAttribute('points',pts.join(' '));
+  const xs=[];for(let j=0;j<=8;j++)xs.push(X(j*Tb));
+  $('s3-ideal').setAttribute('points',stepPts(s3B,xs,b=>Y(b?0:P.vd)));
+  const mk=$('s3-mk'),lab=$('s3-lab'),ax=$('s3-ax');[mk,lab,ax].forEach(e=>e.textContent='');
+  let err=0,unc=0;
+  s3B.forEach((b,j)=>{const ts=(j+0.75)*Tb,v=vAt(ts),rd=v>0.9?0:v<0.5?1:null,cls=rd===null?'warn':rd===b?'':'bad';
+    if(rd===null)unc++;else if(rd!==b)err++;
+    const x=X(ts).toFixed(1);
+    mk.append(svgEl('line',{class:'mk '+cls,x1:x,y1:124,x2:x,y2:254}));
+    mk.append(svgEl('circle',{class:'smp '+cls,cx:x,cy:Y(Math.max(-0.8,Math.min(3.3,v))).toFixed(1),r:3.5}));
+    lab.append(svgEl('text',{x:((xs[j]+xs[j+1])/2).toFixed(1),y:118,'text-anchor':'middle',class:'v'},b?'1 隐':'0 显'));});
+  for(let j=0;j<=8;j+=2){const x=xs[j].toFixed(1);ax.append(svgEl('line',{class:'ax',x1:x,y1:254,x2:x,y2:259}));
+    ax.append(svgEl('text',{x,y:304,'text-anchor':'middle',class:'v'},+(j*Tb).toFixed(1)));}
+  show($('s3-rt1'),s3.t!=='none');show($('s3-rt2'),s3.t==='two');
+  $('s3-req').textContent=P.req;$('s3-gam').textContent=P.gam;$('s3-vd').textContent=fmtV(P.vd,1);
+  $('s3-os').textContent=fmtV(os,2);
+  $('s3-err').textContent=(8-err-unc)+' 位判对，'+unc+' 位不确定，'+err+' 位判错';
+  let note;
+  if(err||unc){chip($('s3-st'),'会出错','bad');
+    note=(s3.t==='none'?'没有终端电阻：隐性时没人把差压放掉，显性到隐性的边沿拖着长尾巴，还叠着来回反射的振铃。':'只有一端有终端：远端开路的反射回到近端才被吸收，振铃明显。')+'这个速率下一位只有 '+fmtT(Tb*1e-6)+'，采样点落在拖尾或振铃上，判不准。';}
+  else if(os>0.25){chip($('s3-st'),'能通，但振铃明显','warn');
+    note='采样点落在 75% 处时振铃已经衰减，暂时判得对，但过冲 '+fmtV(os,2)+'，EMC 差、余量小。'+(s3.br<1000?'把速率提到 1 M 看看。':'');}
+  else{chip($('s3-st'),'干净','on');note='两端各 120 Ω，与线的特性阻抗匹配，信号到头被吸收，没有反射；隐性时两个电阻并联成 60 Ω，很快把差压放回 0。';}
+  if(s3.t==='none'&&!err&&!unc)note='低速时一位足够长，拖尾和振铃在采样点前就衰减完了，所以短线、低速时没终端也可能凑合能用。这是隐患，速率一高马上出问题。';
+  $('s3-note').textContent=note;
+}
+seg('s3-t',v=>{s3.t=v;s3u();});
+seg('s3-br',v=>{s3.br=+v;s3u();});
+s3u();
+</script>
+</body>
+</html>

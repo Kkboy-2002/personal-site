@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 04 课 计数器、分频与流水灯</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="04" data-root="../">
+
+<aside class="side">
+  <a class="brand" href="../index.html">Verilog 十二课<span>FPGA RTL 实训</span></a>
+  <ol></ol>
+  <div class="foot">
+    <button class="themer" type="button">主题</button>
+    <p>iverilog + GTKWave<br>Vivado / Quartus 可选</p>
+  </div>
+</aside>
+
+<main>
+<div class="ruler"></div>
+
+<p class="eyebrow">Lesson 04 <em>／ 计数与节拍</em></p>
+<h1>计数器、分频与流水灯</h1>
+<p class="lede">计数器是 FPGA 里出现频率最高的电路 —— 定时、分频、状态机的超时、串口的波特率,底下全是它。这一课把它写成一个能反复例化的模块,顺便纠正一个几乎人人都会犯的错:<strong>不要分频出新时钟</strong>。</p>
+
+<dl class="goals">
+  <dt>学完这一课你能</dt>
+  <dd>写出参数化的模 N 计数器,位宽由 <code>$clog2</code> 自动算</dd>
+  <dd>说清“分频时钟”和“时钟使能”的区别,并解释为什么前者是坑</dd>
+  <dd>用一个 <code>tick</code> 驱动流水灯,整个设计只有一个时钟域</dd>
+  <dd>用参数把 0.5 秒的定时压成几百纳秒,让仿真跑得动</dd>
+</dl>
+
+<nav class="toc"><h2>本课路线</h2><ol></ol></nav>
+
+<h2 id="s1">计数器:一个模板走天下</h2>
+<p>模 N 计数器只有三个分支,顺序不能乱:<strong>先判复位,再判计满,最后才是加一</strong>。</p>
+
+<figure class="file">
+  <figcaption><span class="path">code/lesson04/counter.v</span><span class="note">可综合 · 后面每一课都会例化它</span></figcaption>
+  <div class="body"><pre><code>module counter #(
+    parameter MAX = 50_000_000,      // 模值:cnt 走 0 … MAX-1
+    parameter W   = $clog2(MAX)      // 位宽自动算出来,不用手数
+)(
+    input  wire         clk,
+    input  wire         rst_n,
+    output reg  [W-1:0] cnt,         // 当前计数值
+    output wire         tick         // 计到 MAX-1 的那一拍拉高,只高一个周期
+);
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)                 cnt &lt;= {W{1'b0}};
+        else if (cnt == MAX - 1)    cnt &lt;= {W{1'b0}};   // 计满回零
+        else                        cnt &lt;= cnt + 1'b1;
+    end
+
+    // tick 是纯组合逻辑,和 cnt 同时有效
+    assign tick = (cnt == MAX - 1);
+
+endmodule</code></pre></div>
+</figure>
+
+<div class="tw">
+<table>
+  <caption>三个细节</caption>
+  <thead><tr><th>写法</th><th>为什么</th></tr></thead>
+  <tbody>
+    <tr><td><code>cnt == MAX - 1</code></td><td>计到 <code>MAX-1</code> 就回零,所以一圈恰好 <code>MAX</code> 拍。写成 <code>== MAX</code> 会变成 <code>MAX+1</code> 拍,是最常见的差一错误</td></tr>
+    <tr><td><code>cnt + 1'b1</code></td><td>不写成 <code>cnt + 1</code>:裸的 <code>1</code> 是 32 位,会把表达式撑宽。位宽显式化是好习惯</td></tr>
+    <tr><td><code>$clog2(MAX)</code></td><td>向上取整的 log₂。<code>MAX=50_000_000</code> 时算出 26,不用自己数位宽</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="box pit">
+  <b>$clog2 的边界</b>
+  <p><code>$clog2(4) = 2</code>,能表示 0–3,正好够模 4 用。但如果你要计到 <em>包含</em> <code>MAX</code> 这个值(比如 0…4 共 5 个状态),就得用 <code>$clog2(MAX+1)</code>。差一位就是溢出回零,而且波形上很不容易看出来。</p>
+</div>
+
+<h2 id="s2">不要分频出新时钟</h2>
+<p>“我要 1Hz 的信号,那就用计数器分频出一个 1Hz 的时钟” —— 这是初学者最常写、也最该改掉的一种代码:</p>
+<div class="vs">
+  <div class="bad">
+    <b>不要这样写</b>
+    <pre>reg clk_1hz;
+always @(posedge clk)
+    if (tick) clk_1hz &lt;= ~clk_1hz;
+
+// 然后拿它当时钟用
+always @(posedge clk_1hz)
+    led &lt;= ~led;</pre>
+    <p>凭空造出第二个时钟域。</p>
+  </div>
+  <div class="good">
+    <b>要这样写</b>
+    <pre>// 只有一个时钟,tick 当使能
+always @(posedge clk)
+    if (tick) led &lt;= ~led;</pre>
+    <p>行为完全一样,但整个设计仍然是单时钟域。</p>
+  </div>
+</div>
+
+<figure class="dia">
+<svg viewBox="0 0 620 280" role="img" aria-label="两种做法对比:分频法把用户逻辑放进了由普通逻辑产生的第二个时钟域;使能法让计数器和用户逻辑都跑在原始时钟上,只用 tick 控制什么时候动">
+  <defs>
+    <marker id="ar-4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon class="d-mk" points="0,1 10,5 0,9"/>
+    </marker>
+    <marker id="arh-4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon class="d-mk-hl" points="0,1 10,5 0,9"/>
+    </marker>
+  </defs>
+
+  <text class="d-sub" x="16" y="22" text-anchor="start">做法一:分频出新时钟</text>
+  <rect class="d-box-dash" x="278" y="30" width="154" height="76"/>
+  <text class="w-marktxt" x="355" y="24" text-anchor="middle">第二个时钟域</text>
+  <line class="d-arw" x1="16" y1="67" x2="97" y2="67" marker-end="url(#ar-4)"/>
+  <text class="d-edge" x="56" y="58" text-anchor="middle">clk</text>
+  <rect class="d-box" x="100" y="44" width="120" height="46"/>
+  <text class="d-txt" x="160" y="73">分频计数器</text>
+  <line class="d-arw-hl" x1="222" y1="67" x2="287" y2="67" marker-end="url(#arh-4)"/>
+  <text class="d-edge-hl" x="255" y="58" text-anchor="middle">clk_div</text>
+  <rect class="d-box" x="290" y="44" width="130" height="46"/>
+  <text class="d-txt" x="355" y="66">用户逻辑</text>
+  <text class="d-sub" x="355" y="84">跑在 clk_div 上</text>
+
+  <text class="d-sub" x="16" y="148" text-anchor="start">做法二:计数器产生使能</text>
+  <rect class="d-box-dash" x="88" y="164" width="344" height="100"/>
+  <text class="d-sub" x="260" y="158" text-anchor="middle">始终只有一个时钟域</text>
+  <line class="d-arw" x1="16" y1="201" x2="97" y2="201" marker-end="url(#ar-4)"/>
+  <text class="d-edge" x="56" y="192" text-anchor="middle">clk</text>
+  <circle class="d-dot" cx="70" cy="201" r="3.5"/>
+  <polyline class="d-arw" points="70,201 70,250 355,250 355,226" marker-end="url(#ar-4)"/>
+  <text class="d-edge" x="215" y="244" text-anchor="middle">同一个 clk 也直接接到用户逻辑</text>
+  <rect class="d-box" x="100" y="178" width="120" height="46"/>
+  <text class="d-txt" x="160" y="207">计数器</text>
+  <line class="d-arw-hl" x1="222" y1="201" x2="287" y2="201" marker-end="url(#arh-4)"/>
+  <text class="d-edge-hl" x="255" y="192" text-anchor="middle">tick</text>
+  <rect class="d-box" x="290" y="178" width="130" height="46"/>
+  <text class="d-txt" x="355" y="200">用户逻辑</text>
+  <text class="d-sub" x="355" y="218">if (tick) …</text>
+</svg>
+<figcaption><b>差别只有一根线的去向。</b>做法一让 <code>clk_div</code> 去当时钟,于是用户逻辑跑在一个由普通查找表产生的时钟上;做法二让 <code>tick</code> 只当数据信号,时钟还是原来那一个。<em>后者少了一个时钟域,这就是全部的收益</em>。</figcaption>
+</figure>
+
+<div class="box err">
+  <b>分频时钟的四宗罪</b>
+  <ul>
+    <li><strong>走普通布线</strong>。FPGA 的全局时钟网络是专用资源,数量有限;LUT 产生的时钟走普通线,到各处的延迟不一致,天生带偏斜(skew)。</li>
+    <li><strong>时序分析报不准</strong>。工具默认不认识这个“时钟”,你得手写约束去声明它,漏了就等于没做时序分析。</li>
+    <li><strong>凭空多一个时钟域</strong>。两个域之间传信号就要做跨时钟同步,不做就有亚稳态风险(第 06 课)。</li>
+    <li><strong>组合逻辑上的毛刺会变成假时钟沿</strong>,让下游寄存器莫名跳变。</li>
+  </ul>
+  <p>真要一个不同频率的<em>时钟</em>(比如给外设供时钟),用芯片里的 PLL / MMCM IP,别用逻辑分频。</p>
+</div>
+
+<h2 id="s3">流水灯:tick 当使能怎么用</h2>
+<figure class="file">
+  <figcaption><span class="path">code/lesson04/led_flow.v</span><span class="note">可综合 · 例化了 counter</span></figcaption>
+  <div class="body"><pre><code>module led_flow #(
+    parameter DIV = 25_000_000       // 50MHz 时约 0.5 秒换一次
+)(
+    input  wire       clk,
+    input  wire       rst_n,
+    output reg  [7:0] led            // 8 个 LED,1 = 亮
+);
+
+    wire tick;
+
+    counter #(.MAX(DIV)) u_cnt (
+        .clk   (clk),
+        .rst_n (rst_n),
+        .cnt   (),                   // 用不到的输出可以悬空
+        .tick  (tick)
+    );
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            led &lt;= 8'b0000_0001;             // 复位后只亮最低位那一个
+        else if (tick)                        // tick 就是时钟使能
+            led &lt;= {led[6:0], led[7]};       // 循环左移一位
+    end
+
+endmodule</code></pre></div>
+</figure>
+<ul>
+  <li><code>counter #(.MAX(DIV))</code> —— 例化时传参数,和传端口一样按名字写。</li>
+  <li><code>.cnt ()</code> —— 用不到的输出留空。<strong>输入端口不能留空</strong>(会变成 <code>z</code>),输出端口可以。</li>
+  <li><code>else if (tick)</code> 后面<strong>没有 <code>else</code></strong> —— 时序块里不赋值就是保持,这正是我们要的行为。组合块里可就不行了。</li>
+  <li>循环左移用拼接:<code>{led[6:0], led[7]}</code>,最高位绕回最低位。</li>
+</ul>
+
+<h2 id="s4">让仿真跑得动:把参数改小</h2>
+<p><code>DIV = 25_000_000</code> 意味着换一次灯要 25000000 × 20ns = <strong>0.5 秒</strong>的仿真时间。仿真器要老老实实算 2500 万个时钟沿,几分钟过去了才看到第一次变化 —— 这不是仿真的用法。</p>
+<div class="box tip">
+  <b>整门课最实用的一个技巧</b>
+  <p>把时间相关的量<strong>全部做成 parameter</strong>,上板用真实值,仿真时在例化处压到几个时钟。功能逻辑一个字都不用改:</p>
+  <pre>// 上板
+led_flow u_led (…);                  // 用默认 DIV = 25_000_000
+
+// 仿真
+led_flow #(.DIV(4)) u_led (…);       // 4 个时钟就换一次灯</pre>
+  <p>这条习惯会一直用到第 10 课的 UART —— 那里的波特率分频比是 5208,仿真时压到 8 就够验证协议了。</p>
+</div>
+
+<div class="term"><pre><span class="cmd">.\sim.bat lesson04 counter_tb</span>
+[TB] MAX=5:cnt 应在 0..4 循环,每 5 拍出一个 tick
+[TB]   51 ns  cnt=1  tick=0
+[TB]   71 ns  cnt=2  tick=0
+[TB]   91 ns  cnt=3  tick=0
+[TB]  111 ns  cnt=4  tick=1
+[TB]  131 ns  cnt=0  tick=0
+[TB]  151 ns  cnt=1  tick=0
+   ...
+[结果] 16 拍里出了 3 个 tick —— 符合预期
+
+<span class="cmd">.\sim.bat lesson04 led_flow_tb</span>
+[TB] DIV=4:每 4 个时钟换一个灯,应该看到 1 在 8 位里循环左移
+[TB]  111 ns  led = 00000010
+[TB]  191 ns  led = 00000100
+[TB]  271 ns  led = 00001000
+[TB]  351 ns  led = 00010000
+[TB]  431 ns  led = 00100000
+[TB]  511 ns  led = 01000000
+[TB]  591 ns  led = 10000000
+[TB]  671 ns  led = 00000001
+[TB]  751 ns  led = 00000010
+[TB]  831 ns  led = 00000100
+[TB] 若 led 依次是 00000010 00000100 … 10000000 00000001,就对了</pre></div>
+<p>注意 <code>cnt=4</code> 那一拍 <code>tick=1</code>,下一拍 <code>cnt</code> 就回到 0 —— <code>tick</code> 只高一个周期,这是它能当使能用的前提。在 GTKWave 里把 <code>cnt</code> 设成 <em>Analog → Step</em> 显示,能看到一个漂亮的锯齿波,一眼看出周期。</p>
+
+<h2 id="ex">练习</h2>
+<ol class="tasks">
+<li>
+  <h3>制造一次差一错误<span class="lv">热身</span></h3>
+  <p>先把 <code>counter_tb.v</code> 的 <code>MAX</code> 改成 10 验证一遍。然后把 <code>counter.v</code> 里的 <code>cnt == MAX - 1</code> 改成 <code>cnt == MAX</code>,分别用 <code>MAX=10</code> 和 <code>MAX=8</code> 跑一次。<code>MAX=8</code> 时发生了什么?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p><code>MAX=10</code> 时:<code>$clog2(10)=4</code>,4 位能数到 15,所以 <code>cnt</code> 能走到 10,只是一圈变成 11 拍 —— 一个安静的差一错误。</p>
+    <p><code>MAX=8</code> 时:<code>$clog2(8)=3</code>,3 位最大只能表示 7。<code>cnt</code> 永远等不到 8,回零分支<strong>永远不成立</strong>,计数器变成靠自然溢出的模 8 计数器,而 <code>tick</code> 恒为 0 —— 下游整个不动,而且编译毫无警告。</p>
+    <p>这就是为什么“<code>MAX-1</code>”这一个减一必须写对:位宽刚好够的时候,差一错误会直接让电路失效而不是只偏一拍。</p>
+  </div></details>
+</li>
+<li>
+  <h3>8 位 PWM<span class="lv">动手</span></h3>
+  <p>写 <code>code/lesson04/pwm.v</code>:输入 8 位 <code>duty</code>,输出 <code>pwm_out</code>,占空比 = <code>duty/256</code>。核心是一个计数器加一次比较。写 TB 分别验 <code>duty=0</code>、<code>64</code>、<code>255</code>。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <pre>module pwm (
+    input  wire       clk,
+    input  wire       rst_n,
+    input  wire [7:0] duty,          // 0 … 255
+    output wire       pwm_out
+);
+    reg [7:0] cnt;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) cnt &lt;= 8'd0;
+        else        cnt &lt;= cnt + 1'b1;   // 8 位自然溢出,正好模 256
+    end
+
+    assign pwm_out = (cnt &lt; duty);       // cnt 在低段时输出高
+endmodule</pre>
+    <p>验证要点:<code>duty=0</code> 时输出恒低;<code>duty=255</code> 时占空比是 255/256,<strong>到不了 100%</strong>。要真正的满占空,把比较器做成 9 位(<code>{1'b0,cnt} &lt; {1'b0,duty} + 1</code>)或者对 <code>duty==255</code> 特判。这类“端点差一”在调亮度时会表现为“最亮档还是有一点闪”。</p>
+  </div></details>
+</li>
+<li>
+  <h3>呼吸灯<span class="lv">动手</span></h3>
+  <p>写 <code>breath_led.v</code>:让 LED 的亮度自动由暗到亮、再由亮到暗,循环往复。提示:在 PWM 外面套一个慢速的 <code>tick</code>,每个 <code>tick</code> 让 <code>duty</code> 走一步,加一个方向寄存器控制加还是减。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <pre>module breath_led #(
+    parameter STEP_DIV = 100_000     // 每 STEP_DIV 个时钟走一步亮度
+)(
+    input  wire clk,
+    input  wire rst_n,
+    output wire led
+);
+    wire       tick;
+    reg  [7:0] duty;
+    reg        up;                   // 1 = 正在变亮
+
+    counter #(.MAX(STEP_DIV)) u_cnt (
+        .clk(clk), .rst_n(rst_n), .cnt(), .tick(tick)
+    );
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            duty &lt;= 8'd0;
+            up   &lt;= 1'b1;
+        end else if (tick) begin
+            if (up) begin
+                if (duty == 8'd254) up &lt;= 1'b0;   // 到顶了,换方向
+                duty &lt;= duty + 1'b1;
+            end else begin
+                if (duty == 8'd1)   up &lt;= 1'b1;   // 到底了,换方向
+                duty &lt;= duty - 1'b1;
+            end
+        end
+    end
+
+    pwm u_pwm (.clk(clk), .rst_n(rst_n), .duty(duty), .pwm_out(led));
+endmodule</pre>
+    <p>换向判断故意用 <code>254</code> 和 <code>1</code> 而不是 <code>255</code> 和 <code>0</code>:因为 <code>up</code> 和 <code>duty</code> 在同一个沿更新,判断用的是旧值。用边界值会多停一拍或者直接绕回去 —— 自己把两种都跑一遍,在波形上看 <code>duty</code> 的顶点长什么样,这个练习的价值全在这里。</p>
+    <p>仿真时把 <code>STEP_DIV</code> 压到 2,几微秒就能看到一个完整的呼吸周期。</p>
+  </div></details>
+</li>
+<li>
+  <h3>tick 为什么不寄存一拍<span class="lv">想清楚</span></h3>
+  <p><code>counter.v</code> 里 <code>tick</code> 是 <code>assign</code> 出来的组合信号。如果改成寄存一拍(<code>always @(posedge clk) tick_r &lt;= (cnt == MAX-1);</code>),流水灯的行为会有什么变化?什么情况下反而应该寄存?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>组合版本的 <code>tick</code> 和 <code>cnt</code> 同时有效,所以下游在<strong>同一个时钟沿</strong>动作,而这个沿也正是 <code>cnt</code> 回零的沿 —— 节拍严丝合缝,例化者不需要知道 <code>counter</code> 内部有几级延迟。</p>
+    <p>寄存一拍后,下游整体晚一拍动作。单独用一个 <code>tick</code> 时看不出问题(周期还是 <code>MAX</code>),但一旦有的模块用组合 <code>tick</code>、有的用寄存版,两边的节拍就错开一拍,这类 bug 在波形上极难发现。</p>
+    <p><strong>什么时候该寄存</strong>:<code>MAX</code> 很大时(比如 26 位),<code>cnt == MAX-1</code> 是一个 26 位比较器,再往下游驱动一大片逻辑,这条组合路径可能成为关键路径卡住主频。这时的正确做法是<em>提前一拍</em>比较再寄存:</p>
+    <pre>always @(posedge clk)
+    tick_r &lt;= (cnt == MAX - 2);   // 提前一个数比较,寄存后正好对齐</pre>
+    <p>既缩短了组合路径,又没有改变节拍。这是时序收敛阶段的常规手段。</p>
+  </div></details>
+</li>
+</ol>
+
+<nav class="pager"></nav>
+</main>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

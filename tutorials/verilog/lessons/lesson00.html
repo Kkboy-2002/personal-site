@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 00 课 环境搭建与第一次仿真</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="00" data-root="../">
+
+<aside class="side">
+  <a class="brand" href="../index.html">Verilog 十二课<span>FPGA RTL 实训</span></a>
+  <ol></ol>
+  <div class="foot">
+    <button class="themer" type="button">主题</button>
+    <p>iverilog + GTKWave<br>Vivado / Quartus 可选</p>
+  </div>
+</aside>
+
+<main>
+<div class="ruler"></div>
+
+<p class="eyebrow">Lesson 00 <em>／ 环境与工具链</em></p>
+<h1>环境搭建与第一次仿真</h1>
+<p class="lede">在写任何逻辑之前,先把“改一行代码 → 看到波形变化”这条路打通。这条路通了,后面十课都只是在上面反复走;这条路不通,看再多语法也是纸上功夫。</p>
+
+<dl class="goals">
+  <dt>学完这一课你能</dt>
+  <dd>说清楚 Verilog 代码最终变成了 FPGA 里的什么东西</dd>
+  <dd>在 Windows 上装好 iverilog 与 GTKWave,并验证安装成功</dd>
+  <dd>读懂一个最小模块和它的 Testbench,知道每一行在干什么</dd>
+  <dd>用一条命令跑完仿真,并在波形窗口里量出时钟周期</dd>
+</dl>
+
+<nav class="toc"><h2>本课路线</h2><ol></ol></nav>
+
+<h2 id="s1">写 Verilog 到底在写什么</h2>
+<p>FPGA 芯片内部是一大片可以配置的资源:查找表(<strong>LUT</strong>)、触发器(<strong>DFF</strong>)、块 RAM、DSP 乘法器,以及连接它们的可编程布线开关。综合工具做的事,就是把你写的 Verilog 翻译成“哪些 LUT 装什么真值表、哪些触发器接到哪根线上”。</p>
+<p>所以有一句话要先立住:<strong>Verilog 不是编程语言,是电路描述语言</strong>。代码里没有“先执行这句再执行那句”,只有“这些硬件同时存在”。</p>
+
+<figure class="dia">
+<svg viewBox="0 0 560 215" role="img" aria-label="一行 assign 语句经综合后变成一个 LUT3 的真值表配置,FPGA 内部并没有真正的与门或门">
+  <defs>
+    <marker id="ar-0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon class="d-mk" points="0,1 10,5 0,9"/>
+    </marker>
+  </defs>
+
+  <text class="d-sub" x="150" y="30">你写的 RTL</text>
+  <rect class="d-box" x="16" y="44" width="268" height="76"/>
+  <text class="d-code" x="32" y="72">wire y;</text>
+  <text class="d-code" x="32" y="98">assign y = (a &amp; b) | c;</text>
+
+  <line class="d-arw" x1="292" y1="82" x2="351" y2="82" marker-end="url(#ar-0)"/>
+  <text class="d-edge" x="322" y="72" text-anchor="middle">综合</text>
+
+  <rect class="d-box" x="360" y="14" width="180" height="182"/>
+  <text class="d-txt" x="450" y="34">LUT3</text>
+  <line class="d-arw" x1="360" y1="44" x2="540" y2="44"/>
+  <line class="d-arw" x1="492" y1="44" x2="492" y2="196"/>
+  <text class="d-sub" x="428" y="62">c  b  a</text>
+  <text class="d-sub" x="516" y="62">y</text>
+  <text class="d-tab" x="398" y="80">0  0  0</text><text class="d-tab" x="512" y="80">0</text>
+  <text class="d-tab" x="398" y="95">0  0  1</text><text class="d-tab" x="512" y="95">0</text>
+  <text class="d-tab" x="398" y="110">0  1  0</text><text class="d-tab" x="512" y="110">0</text>
+  <text class="d-tab" x="398" y="125">0  1  1</text><text class="d-tab" x="512" y="125">1</text>
+  <text class="d-tab" x="398" y="140">1  0  0</text><text class="d-tab" x="512" y="140">1</text>
+  <text class="d-tab" x="398" y="155">1  0  1</text><text class="d-tab" x="512" y="155">1</text>
+  <text class="d-tab" x="398" y="170">1  1  0</text><text class="d-tab" x="512" y="170">1</text>
+  <text class="d-tab" x="398" y="185">1  1  1</text><text class="d-tab" x="512" y="185">1</text>
+</svg>
+<figcaption><b>综合的结果不是门,是一张表。</b>FPGA 里没有物理的与门和或门 —— 三个输入的任意逻辑,统统塞进一个 LUT3,配置值就是这张真值表。这也是为什么“逻辑写得复杂一点”常常并不多花资源。</figcaption>
+</figure>
+
+<p>完整的开发流程有六步,但这门课的前十节只用到前两步:</p>
+<ol>
+  <li><strong>写 RTL</strong> —— 用 Verilog 描述电路。</li>
+  <li><strong>功能仿真</strong> —— 在电脑上验证逻辑对不对。<em>本课就到这里</em>。</li>
+  <li>综合 —— 映射到 LUT、DFF、块 RAM。</li>
+  <li>布局布线 —— 决定用芯片上哪几个具体资源、怎么连。</li>
+  <li>时序分析 —— 确认在目标频率下建立/保持时间都满足。</li>
+  <li>生成 bitstream 并下载 —— 上板。</li>
+</ol>
+<div class="box tip">
+  <b>没有开发板照样能学</b>
+  <p>第 3 到第 6 步需要 Vivado / Quartus 和一块板子,但它们不解决“逻辑写错了”的问题。真正的功能 bug 全部在第 2 步暴露。所以先把仿真练熟,买板子的钱可以晚点花。</p>
+</div>
+
+<h2 id="s2">装哪些工具</h2>
+<div class="tw">
+<table>
+  <caption>工具清单</caption>
+  <thead><tr><th>工具</th><th>作用</th><th>命令</th><th>要不要装</th></tr></thead>
+  <tbody>
+    <tr><td>Icarus Verilog</td><td>编译 Verilog、运行仿真</td><td><code>iverilog</code> <code>vvp</code></td><td>必装</td></tr>
+    <tr><td>GTKWave</td><td>打开 <code>.vcd</code> 看波形</td><td><code>gtkwave</code></td><td>必装</td></tr>
+    <tr><td>VS Code + Verilog 插件</td><td>高亮、跳转、格式化</td><td>—</td><td>强烈建议</td></tr>
+    <tr><td>Vivado 或 Quartus</td><td>综合、布线、生成 bitstream</td><td>—</td><td>有板子再装</td></tr>
+  </tbody>
+</table>
+</div>
+<p>Windows 上最省事的做法:装 <strong>iverilog 的 Windows 安装包</strong>(<code>bleyer.org/icarus</code> 提供,<em>安装包里已经带了 GTKWave</em>),安装过程中勾选把可执行文件加入 <code>PATH</code>。装完<strong>重开一个 PowerShell 窗口</strong>,然后验证:</p>
+
+<div class="term"><pre><span class="cmd">iverilog -V</span>
+Icarus Verilog version 12.0 (stable)
+<span class="cmd">gtkwave --version</span>
+GTKWave Analyzer v3.3.x</pre></div>
+<p>两条命令都能打印版本号,就算装好了。报“无法将‘iverilog’项识别为 cmdlet”,说明 <code>PATH</code> 没生效 —— 重开终端,还不行就重装并确认勾选了加入 PATH。</p>
+
+<h2 id="s3">第一个模块:每个时钟翻一次</h2>
+<p>这个模块只做一件事:每来一个时钟上升沿,输出翻转一次。它的输出频率正好是时钟的一半,所以也叫<strong>二分频</strong>。</p>
+
+<figure class="file">
+  <figcaption><span class="path">code/lesson00/toggle.v</span><span class="note">可综合的设计文件</span></figcaption>
+  <div class="body"><pre><code>// ============================================================
+//  toggle.v  ——  每来一个时钟上升沿就翻转一次的一位输出
+// ============================================================
+`timescale 1ns/1ps
+
+module toggle (
+    input  wire clk,     // 时钟
+    input  wire rst_n,   // 复位,低电平有效,异步
+    output reg  q        // 每个上升沿翻转一次 —— 相当于二分频
+);
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            q &lt;= 1'b0;   // 复位:输出清零
+        else
+            q &lt;= ~q;     // 正常:翻转
+    end
+
+endmodule</code></pre></div>
+</figure>
+
+<p>逐行看:</p>
+<ul>
+  <li><code>`timescale 1ns/1ps</code> —— 后面写 <code>#10</code> 就表示 10ns,仿真精度 1ps。<span class="tag sim">仅仿真</span></li>
+  <li><code>module toggle ( … );</code> 到 <code>endmodule</code> —— 一个模块的全部边界。括号里是端口清单。</li>
+  <li><code>input wire</code> / <code>output reg</code> —— 输入永远是 <code>wire</code>;输出在 <code>always</code> 里被赋值,所以声明成 <code>reg</code>。</li>
+  <li><code>always @(posedge clk or negedge rst_n)</code> —— 敏感列表。这一句就决定了它会被综合成<strong>一个带异步复位的触发器</strong>。</li>
+  <li><code>q &lt;= ~q;</code> —— 非阻塞赋值。读到的 <code>q</code> 是<em>这个沿之前</em>的值,写进去的是沿之后的新值。这正是触发器的行为。</li>
+</ul>
+<div class="box pit">
+  <b>output reg 不代表“寄存器”</b>
+  <p><code>reg</code> 只是“能在过程块里被赋值的变量”。这里之所以真的综合出触发器,是因为它写在 <code>@(posedge clk)</code> 的 <code>always</code> 里。同一个 <code>reg</code> 写在 <code>always @(*)</code> 里就只是一堆组合逻辑。这一点第 03 课会专门拆开讲。</p>
+</div>
+
+<h3>Testbench:仿真世界里的“外部电路”</h3>
+<p>设计文件里没有时钟源,也没有人按复位键 —— 这些都由 Testbench 提供。一个 Testbench 永远只干三件事:<strong>产生时钟</strong>、<strong>驱动激励</strong>、<strong>记录波形</strong>。</p>
+
+<figure class="file">
+  <figcaption><span class="path">code/lesson00/toggle_tb.v</span><span class="note">只用于仿真,不参与综合</span></figcaption>
+  <div class="body"><pre><code>`timescale 1ns/1ps                  // 时间单位 1ns,精度 1ps
+
+module toggle_tb;                   // Testbench 没有端口
+
+    reg  clk   = 1'b0;              // 时钟由 TB 产生
+    reg  rst_n = 1'b0;              // 一开始就按住复位
+    wire q;                         // 被测模块的输出用 wire 接
+
+    // ---- 时钟:每 10ns 翻一次 = 周期 20ns = 50MHz ----
+    always #10 clk = ~clk;
+
+    // ---- 例化被测模块(DUT) ----
+    toggle u_toggle (
+        .clk   (clk),
+        .rst_n (rst_n),
+        .q     (q)
+    );
+
+    integer i;
+
+    initial begin
+        $dumpfile("build/toggle_tb.vcd");   // 波形写到哪
+        $dumpvars(0, toggle_tb);            // 0 = 连同所有层级一起记录
+        $timeformat(-9, 0, "", 10);         // 让 %t 按 ns 打印
+
+        $display("[TB] 仿真开始,时钟周期 20ns");
+
+        #35 rst_n = 1'b1;                   // 35ns 释放复位
+        $display("[TB] %0t ns 复位释放", $time);
+
+        for (i = 0; i &lt; 8; i = i + 1) begin
+            @(posedge clk);                 // 等一个上升沿
+            #1;                             // 稍等 1ns,避开沿上的竞争
+            $display("[TB] %0t ns  q = %b", $time, q);
+        end
+
+        $display("[TB] q 若是 1 0 1 0 交替,工具链就没问题");
+        $finish;                            // 结束仿真
+    end
+
+endmodule</code></pre></div>
+</figure>
+
+<div class="tw">
+<table>
+  <caption>Testbench 里的每一种写法</caption>
+  <thead><tr><th>写法</th><th>含义</th></tr></thead>
+  <tbody>
+    <tr><td><code>module toggle_tb;</code></td><td>Testbench 自己是顶层,不需要端口</td></tr>
+    <tr><td><code>reg clk = 1'b0;</code></td><td>激励信号由 TB 驱动,所以是 <code>reg</code>,声明时可直接给初值</td></tr>
+    <tr><td><code>wire q;</code></td><td>DUT 的输出只能观察,用 <code>wire</code> 接</td></tr>
+    <tr><td><code>always #10 clk = ~clk;</code></td><td>无终止条件的时钟源;这里用阻塞赋值 <code>=</code> 是标准写法</td></tr>
+    <tr><td><code>.clk (clk)</code></td><td>按名字连接:左边是 DUT 的端口名,右边是 TB 的信号名</td></tr>
+    <tr><td><code>$dumpfile</code> / <code>$dumpvars</code></td><td>缺任何一句都不会生成 <code>.vcd</code>,也就没有波形可看</td></tr>
+    <tr><td><code>$timeformat(-9, 0, "", 10)</code></td><td>让 <code>%t</code> 按 <strong>ns</strong> 打印。不写这句,<code>timescale</code> 的精度是 1ps,<code>%t</code> 会把 71ns 印成 <code>71000</code></td></tr>
+    <tr><td><code>@(posedge clk)</code></td><td>“等到下一个上升沿”,是等待而不是判断</td></tr>
+    <tr><td><code>#1</code></td><td>沿后延迟 1ns 再采样,避免读到沿上正在变化的值</td></tr>
+    <tr><td><code>$finish</code></td><td>忘了写,仿真就永远跑不完(时钟是个死循环)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s4">跑起来</h2>
+<ol class="steps">
+  <li>打开 PowerShell,进入代码目录:<code>cd D:\desktop\learn\FPGA\code</code></li>
+  <li>执行:<code>.\sim.bat lesson00 toggle_tb</code></li>
+  <li>终端应打印 8 行 <code>q</code> 在 1 和 0 之间交替的日志,并自动弹出 GTKWave</li>
+</ol>
+
+<div class="term"><pre><span class="cmd">cd D:\desktop\learn\FPGA\code</span>
+<span class="cmd">.\sim.bat lesson00 toggle_tb</span>
+[编译] iverilog -g2012 -s toggle_tb -o build/toggle_tb.vvp lesson00/*.v
+[运行] vvp build/toggle_tb.vvp
+[TB] 仿真开始,时钟周期 20ns
+[TB] 35 ns 复位释放
+[TB] 51 ns  q = 1
+[TB] 71 ns  q = 0
+[TB] 91 ns  q = 1
+[TB] 111 ns  q = 0
+[TB] 131 ns  q = 1
+[TB] 151 ns  q = 0
+[TB] 171 ns  q = 1
+[TB] 191 ns  q = 0
+[TB] q 若是 1 0 1 0 交替,工具链就没问题
+[波形] gtkwave build/toggle_tb.vcd</pre></div>
+
+<p>不想用脚本的话,三条命令完全等价:</p>
+<div class="term"><pre><span class="cmd">iverilog -g2012 -s toggle_tb -o build/toggle_tb.vvp lesson00/*.v</span>
+<span class="cmd">vvp build/toggle_tb.vvp</span>
+<span class="cmd">gtkwave build/toggle_tb.vcd</span></pre></div>
+<p><code>-s toggle_tb</code> 指定顶层模块,<code>-g2012</code> 打开较新的语法支持(后面几课会用到)。</p>
+
+<h2 id="s5">在 GTKWave 里看什么</h2>
+<p>GTKWave 打开后是空的,信号要自己拖出来:左上角 <strong>SST</strong> 面板点开 <code>toggle_tb</code>,下面的信号列表里选中 <code>clk</code>、<code>rst_n</code>、<code>q</code>,点 <strong>Append</strong>。然后按 <kbd>Shift</kbd>+<kbd>Ctrl</kbd>+<kbd>Z</kbd> 或工具栏的 <em>Zoom Fit</em> 让整段波形铺满窗口。</p>
+
+<figure class="dia">
+<svg viewBox="0 0 700 200" role="img" aria-label="toggle 模块的仿真波形:时钟周期 20ns,复位在 35ns 释放,之后 q 在每个时钟上升沿翻转一次,周期 40ns 正好是时钟的两倍">
+  <line class="w-grid" x1="110" y1="28" x2="110" y2="172"/>
+  <line class="w-grid" x1="170" y1="28" x2="170" y2="172"/>
+  <line class="w-grid" x1="230" y1="28" x2="230" y2="172"/>
+  <line class="w-grid" x1="290" y1="28" x2="290" y2="172"/>
+  <line class="w-grid" x1="350" y1="28" x2="350" y2="172"/>
+  <line class="w-grid" x1="410" y1="28" x2="410" y2="172"/>
+  <line class="w-grid" x1="470" y1="28" x2="470" y2="172"/>
+  <line class="w-grid" x1="530" y1="28" x2="530" y2="172"/>
+  <line class="w-grid" x1="590" y1="28" x2="590" y2="172"/>
+  <line class="w-grid" x1="650" y1="28" x2="650" y2="172"/>
+
+  <text class="w-lbl" x="70" y="52" text-anchor="end">clk</text>
+  <polyline class="w-clk" points="80,60 110,60 110,36 140,36 140,60 170,60 170,36 200,36 200,60 230,60 230,36 260,36 260,60 290,60 290,36 320,36 320,60 350,60 350,36 380,36 380,60 410,60 410,36 440,36 440,60 470,60 470,36 500,36 500,60 530,60 530,36 560,36 560,60 590,60 590,36 620,36 620,60 650,60 650,36 680,36"/>
+
+  <text class="w-lbl" x="70" y="102" text-anchor="end">rst_n</text>
+  <polyline class="w-ink" points="80,110 185,110 185,86 680,86"/>
+
+  <text class="w-lbl" x="70" y="152" text-anchor="end">q</text>
+  <polyline class="w-sig" points="80,160 230,160 230,136 290,136 290,160 350,160 350,136 410,136 410,160 470,160 470,136 530,136 530,160 590,160 590,136 650,136 650,160 680,160"/>
+
+  <line class="w-mark" x1="185" y1="26" x2="185" y2="172"/>
+  <text class="w-marktxt" x="185" y="20" text-anchor="middle">35ns 释放复位</text>
+
+  <line class="w-mark" x1="230" y1="124" x2="230" y2="132"/>
+  <line class="w-mark" x1="350" y1="124" x2="350" y2="132"/>
+  <line class="w-mark" x1="230" y1="128" x2="350" y2="128"/>
+  <text class="w-marktxt" x="290" y="120" text-anchor="middle">q 周期 40ns</text>
+
+  <text class="w-note" x="80" y="190" text-anchor="middle">0</text>
+  <text class="w-note" x="230" y="190" text-anchor="middle">50ns</text>
+  <text class="w-note" x="380" y="190" text-anchor="middle">100ns</text>
+  <text class="w-note" x="530" y="190" text-anchor="middle">150ns</text>
+  <text class="w-note" x="680" y="190" text-anchor="middle">200ns</text>
+</svg>
+<figcaption><b>这张图要看出三件事。</b>一、<code>q</code> 只在 <code>clk</code> 的<em>上升沿</em>变化,别的时刻纹丝不动 —— 这就是触发器;二、复位按住期间 <code>q</code> 恒为 0,35ns 释放后才开始动;三、<code>q</code> 的周期 40ns 是 <code>clk</code> 的两倍,这就是“二分频”。</figcaption>
+</figure>
+
+<div class="box tip">
+  <b>波形窗口里最该练的两个动作</b>
+  <p>一是<strong>量周期</strong>:在波形区左键点一下放主游标,右键拖出第二个游标,窗口底部会直接显示时间差。二是<strong>找第一次出错的沿</strong>:调试时永远从“第一个不对的时刻”往前看,而不是盯着最后的结果猜。</p>
+</div>
+
+<h2 id="s6">六个几乎人人都会撞一次的报错</h2>
+<div class="tw">
+<table>
+  <caption>报错对照表</caption>
+  <thead><tr><th>现象</th><th>真正的原因</th><th>怎么办</th></tr></thead>
+  <tbody>
+    <tr><td>无法将“iverilog”项识别为 cmdlet</td><td><code>PATH</code> 里没有它</td><td>重开终端;仍不行就重装并勾选加入 PATH</td></tr>
+    <tr><td><code>syntax error</code> 后面跟一句 <code>I give up.</code></td><td>语法错</td><td>看报错行号<strong>往上找一两行</strong>:漏分号、<code>begin</code>/<code>end</code> 不配对最常见</td></tr>
+    <tr><td><code>Unable to bind wire/reg 'xxx'</code></td><td>信号名拼错或没声明</td><td>检查拼写;文件开头加 <code>`default_nettype none</code> 能让这类错误提前暴露</td></tr>
+    <tr><td>编译通过,但没有 <code>.vcd</code></td><td>忘了 <code>$dumpfile</code>/<code>$dumpvars</code>,或 <code>build\</code> 不存在</td><td>补上两句;用 <code>sim.bat</code> 会自动建目录</td></tr>
+    <tr><td>仿真跑起来就停不下来</td><td>忘了 <code>$finish</code>,而时钟是死循环</td><td>在 <code>initial</code> 末尾加 <code>$finish;</code></td></tr>
+    <tr><td>波形里一片 <code>x</code>(红色)</td><td>复位没释放、信号没初始化、端口没接</td><td>从<strong>第一个</strong> <code>x</code> 出现的时刻往前查,不要看最后</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="ex">练习</h2>
+<p>四道题都在 <code>code/lesson00/</code> 里改或新建文件,改完用 <code>.\sim.bat lesson00 &lt;顶层名&gt;</code> 验证。</p>
+
+<ol class="tasks">
+<li>
+  <h3>把时钟周期改成 8ns<span class="lv">热身</span></h3>
+  <p>把 TB 里的 <code>always #10 clk = ~clk;</code> 改成 <code>#4</code>,重跑。<code>q</code> 的周期变成多少?为什么整个仿真的总时长也跟着变短了?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>时钟周期变成 8ns,<code>q</code> 的周期是它的两倍 = <strong>16ns</strong>。</p>
+    <p>总时长变短,是因为这个 TB 的结束条件是“数满 8 个上升沿”,而不是“跑到 200ns”。沿来得快,8 个沿就早早数完,<code>$finish</code> 也就提前执行。这说明一件事:<strong>仿真的时间跨度由激励决定</strong>。想固定跑 200ns,应该另开一个 <code>initial</code> 写 <code>#200 $finish;</code>。</p>
+  </div></details>
+</li>
+<li>
+  <h3>把异步复位改成同步复位<span class="lv">改一行</span></h3>
+  <p>把敏感列表里的 <code>or negedge rst_n</code> 删掉,重跑。波形有变化吗?再把 TB 的复位释放时刻从 <code>#35</code> 改成 <code>#25</code> 试试。什么情况下两种复位才会表现出差别?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>同步复位的写法:</p>
+    <pre>always @(posedge clk) begin      // 敏感列表里只有时钟
+    if (!rst_n) q &lt;= 1'b0;       // 复位也要等时钟沿才生效
+    else        q &lt;= ~q;
+end</pre>
+    <p>本例波形几乎看不出差别,因为复位从 0 时刻就按住、中途只释放一次,释放后第一个时钟沿的行为两者相同。</p>
+    <p>差别出现在<strong>复位脉冲比一个时钟周期还窄</strong>的时候:异步复位在拉低的瞬间就把 <code>q</code> 清零,同步复位则可能整个漏掉这个脉冲。代价是异步复位的释放时刻若靠近时钟沿,会有恢复时间(recovery time)风险 —— 工程上常用的折中是“异步复位、同步释放”,第 06 课会写到。</p>
+  </div></details>
+</li>
+<li>
+  <h3>自己写一个四分频<span class="lv">动手</span></h3>
+  <p>新建 <code>code/lesson00/div4.v</code>,让 <code>q</code> 每 <strong>2 个</strong>时钟周期翻转一次(即 <code>q</code> 的周期 = 4 × <code>clk</code> 周期),再写 <code>div4_tb.v</code> 验证。提示:需要一个 1 位的计数器。</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <pre>module div4 (
+    input  wire clk,
+    input  wire rst_n,
+    output reg  q
+);
+    reg cnt;                     // 1 位计数器:0 → 1 → 0 → 1 …
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            cnt &lt;= 1'b0;
+            q   &lt;= 1'b0;
+        end else begin
+            cnt &lt;= ~cnt;         // 每个沿都翻
+            if (cnt)             // 只在 cnt 已经是 1 的那个沿让 q 翻
+                q &lt;= ~q;
+        end
+    end
+endmodule</pre>
+    <p>关键在 <code>if (cnt)</code> 读到的是<strong>这个沿之前</strong>的 <code>cnt</code>。两个沿里只有一个满足条件,所以 <code>q</code> 每两个沿翻一次,周期正好四倍。Testbench 直接把第 00 课的抄过来改个模块名即可。</p>
+  </div></details>
+</li>
+<li>
+  <h3>把 <code>&lt;=</code> 换成 <code>=</code> 会怎样<span class="lv">想清楚</span></h3>
+  <p>把 <code>toggle.v</code> 里的 <code>q &lt;= ~q;</code> 改成 <code>q = ~q;</code>,重跑仿真。波形变了吗?为什么这里看不出差别,而“时序逻辑必须用 <code>&lt;=</code>”这条规矩仍然要守?</p>
+  <details class="sol"><summary>参考答案</summary><div>
+    <p>波形<strong>不变</strong>。因为这个 <code>always</code> 块里只有一个赋值,而且没有第二个信号在同一个沿上读 <code>q</code>,阻塞与非阻塞的执行差异体现不出来。</p>
+    <p>差别在“<strong>同一个时钟沿有多个寄存器互相引用</strong>”时才出现,最典型的就是移位寄存器:用 <code>&lt;=</code> 得到一条 3 级移位链,用 <code>=</code> 则可能塌成 1 级 —— 同一份代码在不同仿真器/综合器上还可能给出不同结果。第 03 课会把这两种波形并排画出来。</p>
+    <p>所以规矩先无条件记住:<strong>时序 <code>always</code> 一律 <code>&lt;=</code>,组合 <code>always</code> 一律 <code>=</code></strong>。</p>
+  </div></details>
+</li>
+</ol>
+
+<nav class="pager"></nav>
+</main>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

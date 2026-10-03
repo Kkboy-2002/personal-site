@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>应用场景与选型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#igbt">IGBT</a><span class="sp"></span><span>07 / 07</span></nav>
+<header>
+  <span class="eyebrow">IGBT · 应用与选型</span>
+  <h1>IGBT 用在哪、怎么选</h1>
+  <p class="lede">IGBT 的地盘是中高压、大电流、中低频：600 V 以上、几十安以上、几 kHz 到几十 kHz。频率一高让给 MOSFET，追求效率让给 SiC。下面先看场景，再拖电压和频率看每种器件的适用区。</p>
+</header>
+
+<section id="where">
+  <span class="eyebrow">典型场景</span>
+  <h2>哪些地方在用 IGBT</h2>
+  <p>记住一句话：电压高、电流大、频率不高，就是 IGBT。因为它靠电导调制，高压下导通压降仍然只有 1.5 ~ 2.5 V，大电流时比同耐压的 Si MOS 省得多；代价是有拖尾电流，频率上不去。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>场景</th><th>母线电压</th><th>常用器件</th><th>开关频率（典型值）</th><th>原因</th></tr></thead>
+    <tbody>
+      <tr><td>通用变频器</td><td class="n">约 540 V</td><td>1200 V IGBT 模块</td><td class="n">2 ~ 16 kHz</td><td>380 V 交流整流后 540 V，电流大，频率不高</td></tr>
+      <tr><td>伺服、电机驱动</td><td class="n">310 ~ 540 V</td><td>650 / 1200 V IGBT，常用 IPM</td><td class="n">8 ~ 20 kHz</td><td>IPM 把驱动和保护集成在一起</td></tr>
+      <tr><td>光伏逆变器</td><td class="n">600 ~ 1500 V 直流</td><td>650 / 1200 V IGBT，多电平；高效机型用 SiC</td><td class="n">16 ~ 30 kHz</td><td>大功率看成本，追求效率和体积用 SiC</td></tr>
+      <tr><td>电动车主驱</td><td class="n">400 V 或 800 V</td><td>750 V IGBT；800 V 平台多用 1200 V SiC</td><td class="n">8 ~ 20 kHz</td><td>几百安电流；SiC 续航好但贵</td></tr>
+      <tr><td>电磁炉</td><td class="n">约 310 V，谐振峰值约 1 kV</td><td>1200 V 逆导型 IGBT</td><td class="n">20 ~ 40 kHz</td><td>谐振软开关，开关损耗小，便宜是关键</td></tr>
+      <tr><td>UPS</td><td class="n">400 ~ 800 V</td><td>650 / 1200 V IGBT</td><td class="n">10 ~ 20 kHz</td><td>中大功率，效率和成本折中</td></tr>
+      <tr><td>轨道牵引、电网</td><td class="n">1.5 kV 以上</td><td>3.3 ~ 6.5 kV IGBT</td><td class="n">几百 Hz ~ 2 kHz</td><td>这么高的电压和电流，只有 IGBT 扛得住</td></tr>
+    </tbody>
+  </table></div>
+  <p>反过来，手机充电器、服务器电源、DC-DC 这类几百 V 以下、几十 kHz 以上的场合，基本都是 Si MOSFET 或 GaN，几乎看不到 IGBT。</p>
+</section>
+
+<section id="map">
+  <span class="eyebrow">二维选型图 · 电压 × 频率</span>
+  <h2>拖电压和频率，看落在谁的地盘</h2>
+  <p>纵轴是器件耐压，一般取母线电压的 1.5 ~ 2 倍；横轴是开关频率。Si MOS 耐压一高 Rds(on) 就急剧变大，所以守在 650 V 以下。IGBT 耐压最高、电流最大，但拖尾让它频率上不去，而且电压越高越慢。SiC MOS 耐压高、开关又快，正在从高频一侧挤占 IGBT 的地盘。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 300" role="img" aria-label="器件适用区二维图：横轴开关频率，纵轴器件耐压，Si MOSFET 在 650 V 以下，SiC MOSFET 在 650 到 1700 V 的中高频，IGBT 在 600 V 以上的中低频">
+        <g id="m-grid"></g>
+        <polygon id="m-zm" class="zone-cut" style="stroke:var(--low);stroke-width:1" points=""/>
+        <polygon id="m-zi" class="zone-sat" style="stroke:var(--copper);stroke-width:1" points=""/>
+        <polygon id="m-zs" class="zone-ok" style="stroke:var(--flow);stroke-width:1" points=""/>
+        <text x="76" y="110" class="t" style="fill:var(--copper)">IGBT</text>
+        <text x="76" y="126" class="tm">600 V ~ 6.5 kV，中低频</text>
+        <text x="350" y="158" class="t" style="fill:var(--flow)">SiC MOSFET</text>
+        <text x="350" y="174" class="tm">650 ~ 1700 V</text>
+        <text x="360" y="222" class="t" style="fill:var(--low)">Si MOSFET</text>
+        <text x="360" y="238" class="tm">≤ 650 V</text>
+        <line id="m-vx" class="ax dash" x1="0" y1="30" x2="0" y2="250"/>
+        <line id="m-hy" class="ax dash" x1="64" y1="0" x2="484" y2="0"/>
+        <circle id="m-pt" class="dot" r="6"/>
+      </svg>
+      <figcaption>示意边界，按工程上常见的典型值画，不是硬界限：高速型 IGBT 可以跑得更高，超结 Si MOS 耐压可到 900 V 左右，GaN 在 650 V 以下的高频区。图里没画电流这一维，电流越大越偏向 IGBT 和 SiC 模块。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">典型场景</span>
+        <div class="seg" id="m-p"><button id="m-p-inv" data-v="inv" aria-pressed="true">变频器</button><button id="m-p-pv" data-v="pv" aria-pressed="false">光伏</button><button id="m-p-ev" data-v="ev" aria-pressed="false">电动车</button><button id="m-p-rail" data-v="rail" aria-pressed="false">高铁牵引</button><button id="m-p-chg" data-v="chg" aria-pressed="false">手机快充</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="m-v">器件耐压</label>
+        <span class="rv" id="m-vv">1200 V</span>
+        <input type="range" id="m-v" min="0" max="8" step="1" value="4"></div>
+      <div class="ctl"><label class="ctl-l" for="m-f">开关频率</label>
+        <span class="rv" id="m-fv">10 kHz</span>
+        <input type="range" id="m-f" min="0" max="12" step="1" value="6"></div>
+      <dl class="read">
+        <dt>Si MOSFET</dt><dd id="m-rm"></dd>
+        <dt>IGBT</dt><dd id="m-ri"></dd>
+        <dt>SiC MOSFET</dt><dd id="m-rs"></dd>
+        <dt>推荐</dt><dd><span id="m-chip" class="chip on">IGBT</span></dd>
+      </dl>
+      <p class="note" id="m-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="cmp">
+  <span class="eyebrow">选型对比表</span>
+  <h2>Si MOSFET、IGBT、SiC MOSFET 一张表</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>对比项</th><th>Si MOSFET</th><th>IGBT</th><th>SiC MOSFET</th></tr></thead>
+    <tbody>
+      <tr><td>常用耐压</td><td>低压到 650 V，超结可到 900 V 左右</td><td>600 V ~ 6.5 kV</td><td>650 V ~ 1.7 kV，3.3 kV 级开始应用</td></tr>
+      <tr><td>导通特性</td><td>纯电阻 Rds(on)，耐压越高越大</td><td>约 0.7 V 起步再加小电阻，大电流时划算</td><td>纯电阻，同耐压下比 Si MOS 小得多</td></tr>
+      <tr><td>常用频率</td><td>几十 kHz ~ MHz</td><td>几 kHz ~ 几十 kHz</td><td>几十 kHz ~ 几百 kHz</td></tr>
+      <tr><td>开关损耗</td><td>小</td><td>大，关断有拖尾</td><td>很小</td></tr>
+      <tr><td>反向导通</td><td>自带体二极管</td><td>没有，要反并快恢复二极管，模块里已封装</td><td>自带体二极管，压降较高，常用同步整流</td></tr>
+      <tr><td>驱动电压（典型值）</td><td>0 / +10 ~ +12 V</td><td>−8 / +15 V</td><td>−2 ~ −5 / +15 ~ +20 V，看型号</td></tr>
+      <tr><td>短路耐受</td><td>一般不标，较弱</td><td>强，约 5 ~ 10 µs</td><td>较弱，常见 2 ~ 3 µs</td></tr>
+      <tr><td>价格</td><td>低</td><td>中</td><td>高</td></tr>
+      <tr><td>典型应用</td><td>适配器、DC-DC、服务器电源、低压电机</td><td>变频器、电机驱动、光伏、电磁炉、UPS、牵引</td><td>电动车主驱、车载充电机、充电桩、高效光伏</td></tr>
+    </tbody>
+  </table></div>
+  <p>面试时这样说：先看电压，650 V 以下优先 MOS；再看频率，几十 kHz 以上 IGBT 损耗扛不住；最后看电流和成本，大电流、低频、看重成本和耐短路选 IGBT，看重效率和体积选 SiC。</p>
+</section>
+
+<section id="vclass">
+  <span class="eyebrow">电压等级 · 留余量</span>
+  <h2>380 V 电网为什么用 1200 V 的 IGBT</h2>
+  <p>IGBT 的耐压等级是一档一档的：650 V、1200 V、1700 V、3300 V……选型时要把三样东西叠起来：交流整流后的直流电压 √2·Vac，电网波动（按高 10% 算），关断时杂散电感上的过压 Ls·di/dt。</p>
+  <p>工程上常用两条经验规则：关断峰值不超过额定的约 80%；长期直流电压不超过额定的约 2/3，因为宇宙射线引起的失效率随直流电压升高而急剧上升。</p>
+  <p class="eq">峰值 = 1.1·√2·Vac + Ls·di/dt ≤ 0.8·额定　　直流 1.1·√2·Vac ≤ 约 2/3·额定</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 270" role="img" aria-label="电压叠加柱：整流峰值、电网波动、关断过压依次叠加，与 650 V、1200 V、1700 V 三个耐压等级比较">
+        <g id="v-ax"></g>
+        <rect id="v-b1" class="zone-cut" x="110" y="0" width="80" height="0" style="stroke:var(--low);stroke-width:1"/>
+        <rect id="v-b2" class="zone-sat" x="110" y="0" width="80" height="0" style="stroke:var(--copper);stroke-width:1"/>
+        <rect id="v-b3" x="110" y="0" width="80" height="0" style="fill:var(--danger);fill-opacity:.18;stroke:var(--danger);stroke-width:1"/>
+        <text id="v-t1" x="198" y="0" class="tm" style="fill:var(--low)">整流峰值</text>
+        <text id="v-t2" x="198" y="0" class="tm" style="fill:var(--copper)">电网 +10%</text>
+        <text id="v-t3" x="198" y="0" class="tm" style="fill:var(--danger)">关断过压</text>
+        <text id="v-pk" x="150" y="0" text-anchor="middle" class="v">峰值</text>
+        <line id="v-l80" class="w s-bad" x1="56" y1="0" x2="480" y2="0" style="stroke-width:1.2;stroke-dasharray:2 3"/>
+        <text id="v-l80t" x="480" y="0" text-anchor="end" class="tm" style="fill:var(--danger)">80%</text>
+      </svg>
+      <figcaption>灰色虚线是三个耐压等级，红色点线是推荐等级的 80%。示意：关断 di/dt 按 2 kA/µs 估算，80% 和 2/3 都是经验值，不同厂家、不同可靠性要求会有差别。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">交流输入</span>
+        <div class="seg" id="v-in"><button id="v-in-220" data-v="220" aria-pressed="false">220 V 单相</button><button id="v-in-380" data-v="380" aria-pressed="true">380 V 三相</button><button id="v-in-690" data-v="690" aria-pressed="false">690 V 三相</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="v-ls">换流回路杂散电感 Ls</label>
+        <span class="rv" id="v-lsv">50 nH</span>
+        <input type="range" id="v-ls" min="20" max="120" step="10" value="50"></div>
+      <dl class="read">
+        <dt>整流后直流</dt><dd id="v-r1"></dd>
+        <dt>关断过压</dt><dd id="v-r2"></dd>
+        <dt>关断峰值</dt><dd id="v-r3"></dd>
+        <dt>占推荐等级</dt><dd id="v-r4"></dd>
+        <dt>推荐</dt><dd><span id="v-chip" class="chip on">选 1200 V 级</span></dd>
+      </dl>
+      <p class="note" id="v-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>IGBT 主要用在哪些场合？为什么？</summary>
+      <div class="ans"><p>中高压、大电流、中低频的场合：变频器、电机驱动、光伏逆变器、电动车主驱、电磁炉、UPS、轨道牵引。因为 IGBT 靠电导调制，高压下导通压降仍只有 1.5 ~ 2.5 V，大电流时导通损耗比同耐压的 MOS 小得多，又是电压驱动、耐短路；缺点是有拖尾，开关损耗大，频率一般在几 kHz 到几十 kHz。</p></div></details>
+    <details><summary>IGBT、MOSFET、SiC MOSFET 怎么选？</summary>
+      <div class="ans"><p>先看电压：650 V 以下优先 Si MOS。再看频率：几十 kHz 以上 IGBT 的开关损耗扛不住，选 MOS 或 SiC。最后看电流和成本：大电流、低频、看重成本和短路耐受，选 IGBT；看重效率、功率密度，能接受价格，选 SiC。具体要算导通损耗加开关损耗，看总损耗和散热。</p></div></details>
+    <details><summary>380 V 交流输入的变频器，为什么选 1200 V 的 IGBT，不用 650 V？</summary>
+      <div class="ans"><p>380 V 整流后直流约 537 V，电网高 10% 时约 590 V，再加上关断时杂散电感上的 Ls·di/dt 过压，峰值到 700 V 左右，已经超过 650 V。再考虑长期直流电压要低于额定的约 2/3（宇宙射线失效率），只能选 1200 V。同理，220 V 单相用 600 / 650 V，690 V 电网用 1700 V。</p></div></details>
+    <details><summary>电动车主驱为什么开始从 IGBT 换成 SiC？</summary>
+      <div class="ans"><p>SiC 开关损耗小，而且是纯电阻导通，没有 IGBT 那 0.7 V 左右的起步压降。车在大部分时间是轻载巡航，这时 SiC 的损耗优势最大，逆变器效率提高，续航能多几个百分点。800 V 平台要用 1200 V 器件，SiC 的优势更明显。代价是贵，短路耐受时间也更短，对驱动保护要求更高。</p></div></details>
+    <details><summary>低压大电流场合为什么不用 IGBT？</summary>
+      <div class="ans"><p>IGBT 导通时要先越过一个约 0.7 V 的 PN 结压降，低压 MOS 的 Rds(on) 只有几 mΩ，同样电流下 MOS 压降更小。IGBT 的优势是在高压下靠电导调制降低漂移区电阻，低压器件的漂移区本来就薄，这个优势用不上，还白白多了拖尾和结压降。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="06-驱动要求正负压.html"><span>上一页</span>驱动要求正负压</a><a class="next" href="../index.html#igbt"><span>下一页</span>返回目录</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+const setVL=(el,x)=>{el.setAttribute('x1',x.toFixed(1));el.setAttribute('x2',x.toFixed(1));};
+const setHL=(el,y)=>{el.setAttribute('y1',y.toFixed(1));el.setAttribute('y2',y.toFixed(1));};
+/* 1. 二维选型图：横轴频率 100 Hz ~ 1 MHz，纵轴耐压 200 V ~ 10 kV，均为对数 */
+const mX=f=>64+(Math.log10(f)-2)*105,mY=v=>250-(Math.log10(v)-Math.log10(200))*220/Math.log10(50);
+const mPts=a=>a.map(([f,v])=>mX(f).toFixed(1)+','+mY(v).toFixed(1)).join(' ');
+(function(){const g=$('m-grid');
+  [200,650,1200,1700,3300,6500,10000].forEach(v=>{const y=mY(v).toFixed(1);g.append(svgEl('line',{class:'gl',x1:64,x2:484,y1:y,y2:y}),svgEl('text',{x:58,y:(+y+4).toFixed(1),'text-anchor':'end',class:'v'},v));});
+  [[100,'100 Hz'],[1e3,'1 k'],[1e4,'10 k'],[1e5,'100 k'],[1e6,'1 MHz']].forEach(([f,l],i)=>{const x=mX(f).toFixed(1);g.append(svgEl('line',{class:'gl',x1:x,x2:x,y1:30,y2:250}),svgEl('text',{x,y:268,'text-anchor':i===0?'start':i===4?'end':'middle',class:'v'},l));});
+  g.append(svgEl('path',{class:'ax',d:'M64,30 V250 H484'}),svgEl('text',{x:68,y:20,class:'tm'},'器件耐压 / V（对数）'),svgEl('text',{x:484,y:286,'text-anchor':'end',class:'tm'},'开关频率（对数）'));})();
+$('m-zm').setAttribute('points',mPts([[100,200],[1e6,200],[1e6,650],[100,650]]));
+$('m-zs').setAttribute('points',mPts([[5e3,650],[5e5,650],[5e5,1700],[5e3,1700]]));
+$('m-zi').setAttribute('points',mPts([[100,600],[4e4,600],[4e4,1200],[2e4,1700],[3e3,3300],[1e3,6500],[100,6500]]));
+const IB=[[1200,4e4],[1700,2e4],[3300,3e3],[6500,1e3]];
+function fmaxI(V){if(V<600||V>6500)return 0;if(V<=1200)return 4e4;
+  for(let k=1;k<IB.length;k++){const [v0,f0]=IB[k-1],[v1,f1]=IB[k];
+    if(V<=v1){const t=Math.log(V/v0)/Math.log(v1/v0);return Math.exp(Math.log(f0)+t*Math.log(f1/f0));}}
+  return 0;}
+const MV=[200,400,650,750,1200,1700,3300,4500,6500],MF=[100,200,500,1e3,2e3,5e3,1e4,2e4,5e4,1e5,2e5,5e5,1e6];
+const MP={inv:[4,6],pv:[4,7],ev:[3,6],rail:[6,2],chg:[2,10]};
+function mU(){
+  const V=MV[+$('m-v').value],f=MF[+$('m-f').value],fm=fmaxI(V);
+  const inM=V<=650,inS=V>=650&&V<=1700&&f>=5e3&&f<=5e5,inI=V>=600&&V<=6500&&f<=fm;
+  $('m-vv').textContent=V+' V';$('m-v').setAttribute('aria-valuetext',V+' V');
+  $('m-fv').textContent=fmtF(f);$('m-f').setAttribute('aria-valuetext',fmtF(f));
+  const x=mX(f),y=mY(V);setVL($('m-vx'),x);setHL($('m-hy'),y);
+  $('m-pt').setAttribute('cx',x.toFixed(1));$('m-pt').setAttribute('cy',y.toFixed(1));
+  $('m-rm').textContent=inM?'适用':'耐压不够，超结最高约 900 V';
+  $('m-rs').textContent=V<650?'能用，但耐压浪费，不划算':V>1700?'耐压不够，3.3 kV 级还少见':f<5e3?'能用，低频时开关快的优势用不上':f>5e5?'频率超出常用范围':'适用';
+  $('m-ri').textContent=V<600?'电压太低，约 0.7 V 的起步压降不划算':V>6500?'超过最高 6.5 kV':f>fm?'频率太高，此耐压下上限约 '+fmtF(fm):'适用';
+  let r,n;
+  if(inI&&inM){r='三者交界';n='600 ~ 650 V 是三种器件的交界：小电流、高频用超结 Si MOS；大电流、低频用 IGBT；追求效率用 SiC。电流越大越偏向 IGBT 和 SiC 模块。';}
+  else if(inI&&inS){r=f<=1e4?'IGBT 首选':'IGBT 或 SiC';
+    n=f<=1e4?'IGBT 和 SiC 都能做。频率不高时 IGBT 的开关损耗还压得住，又便宜、成熟、耐短路，所以通用变频器、电机驱动几乎都用 IGBT。'
+      :'IGBT 和 SiC 都能做。IGBT 便宜、耐短路；SiC 开关损耗小、效率高，频率提高后电感和滤波器都能变小。看成本和效率哪个优先，电动车 800 V 平台已大量换成 SiC。';}
+  else if(inI){r='IGBT';n='高压、中低频是 IGBT 独占的地盘：电导调制让它在高压下压降仍低，频率不高时开关损耗压得住。3.3 kV 以上的轨道牵引、电网只能靠它。';}
+  else if(inS&&inM){r='Si MOS 或 SiC';n='650 V 附近的高频区：超结 Si MOS 便宜，SiC 损耗更低，GaN 也在这一带。IGBT 的拖尾在这个频率下损耗太大。';}
+  else if(inM){r='Si MOSFET';n='电压不高，Si MOS 单极导电、开关快，频率可以做得很高。低压大电流更是 MOS 的天下，IGBT 约 0.7 V 的起步压降反而吃亏。';}
+  else if(inS){r='SiC MOSFET';n='电压高于 650 V、频率又超出 IGBT 的范围，Si MOS 耐压不够，只有 SiC 能兼顾高压和高频。';}
+  else{r='超出单管范围';n=V>1700?'这么高的电压下 IGBT 跑不了这么高的频率，高压 SiC 又不普及。只能降频、用软开关，或者用多电平拓扑让每个器件承受更低的电压。':'频率超出 SiC 的常用范围。要么降频，要么用软开关拓扑降低开关损耗。';}
+  chip($('m-chip'),r,r==='超出单管范围'?'bad':'on');$('m-note').textContent=n;
+}
+seg('m-p',v=>{const p=MP[v];$('m-v').value=p[0];$('m-f').value=p[1];mU();});
+['m-v','m-f'].forEach(id=>$(id).addEventListener('input',()=>{$('m-p').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed','false'));mU();}));
+mU();
+/* 2. 电压等级 */
+const vY=scale(0,1800,250,30),VC=[650,1200,1700],vS={ac:380};
+(function(){const g=$('v-ax');
+  [0,600,1200,1800].forEach(v=>g.append(svgEl('text',{x:50,y:(vY(v)+4).toFixed(1),'text-anchor':'end',class:'v'},v)));
+  g.append(svgEl('path',{class:'ax',d:'M56,30 V250 H480'}),svgEl('text',{x:60,y:20,class:'tm'},'电压 / V'));
+  VC.forEach(v=>{const y=vY(v).toFixed(1);g.append(svgEl('line',{class:'ax dash',x1:56,x2:480,y1:y,y2:y}),svgEl('text',{x:480,y:(+y-4).toFixed(1),'text-anchor':'end',class:'tm'},v+' V 级'));});})();
+function vU(){
+  const ac=vS.ac,ls=+$('v-ls').value,vpk=Math.SQRT2*ac,vdc=1.1*vpk,dv=ls*1e-9*2e9,pk=vdc+dv;
+  const cls=VC.find(r=>pk<=0.8*r&&vdc<=0.67*r)||1700;
+  let lastY=999;
+  [[0,vpk,'v-b1','v-t1','整流峰值 '+vpk.toFixed(0)+' V'],[vpk,vdc,'v-b2','v-t2','电网 +10%，'+vdc.toFixed(0)+' V'],[vdc,pk,'v-b3','v-t3','关断过压 +'+dv.toFixed(0)+' V']].forEach(([a,b,rid,tid,txt])=>{
+    const y0=vY(a),y1=vY(b),r=$(rid);r.setAttribute('y',y1.toFixed(1));r.setAttribute('height',(y0-y1).toFixed(1));
+    let ty=(y0+y1)/2+4;if(ty>lastY-14)ty=lastY-14;lastY=ty;$(tid).setAttribute('y',ty.toFixed(1));$(tid).textContent=txt;});
+  $('v-pk').setAttribute('y',(vY(pk)-6).toFixed(1));$('v-pk').textContent='峰值 '+pk.toFixed(0)+' V';
+  const y8=vY(0.8*cls);setHL($('v-l80'),y8);$('v-l80t').setAttribute('y',(y8-4).toFixed(1));$('v-l80t').textContent=cls+' V × 80% = '+(0.8*cls).toFixed(0)+' V';
+  $('v-lsv').textContent=ls+' nH';$('v-ls').setAttribute('aria-valuetext',ls+' nH');
+  $('v-r1').textContent=vpk.toFixed(0)+' V，电网高 10% 时 '+vdc.toFixed(0)+' V';
+  $('v-r2').textContent=dv.toFixed(0)+' V = '+ls+' nH × 2 kA/µs';
+  $('v-r3').textContent=pk.toFixed(0)+' V';
+  $('v-r4').textContent='峰值 '+(pk/cls*100).toFixed(0)+'%，直流 '+(vdc/cls*100).toFixed(0)+'%';
+  chip($('v-chip'),'选 '+cls+' V 级','on');
+  const lower=VC.filter(r=>r<cls).pop();let n;
+  if(!lower)n='峰值 '+pk.toFixed(0)+' V 没超过 650 V 的 80%，直流也低于 2/3，650 V 级就够。单相 220 V 的逆变、电机驱动常用 600 / 650 V 器件。';
+  else{const wp=pk>0.8*lower,wd=vdc>0.67*lower;
+    n=lower+' V 级不够：'+(wp?'峰值 '+pk.toFixed(0)+' V 超过它的 80%（'+(0.8*lower).toFixed(0)+' V）':'')+(wp&&wd?'，':'')+(wd?'长期直流 '+vdc.toFixed(0)+' V 超过它的 2/3，宇宙射线失效率会明显升高':'')+'。所以要选 '+cls+' V 级。';
+    if(ac===380)n+='这就是 380 V 变频器几乎都用 1200 V IGBT 的原因。';
+    else if(ac===690)n+='690 V 工业电网的变频器因此用 1700 V 器件。';
+    else n+='这是杂散电感太大、过压逼出来的。先改布局、加吸收电容，比换高一档的器件划算。';}
+  $('v-note').textContent=n;
+}
+seg('v-in',v=>{vS.ac=+v;vU();});
+$('v-ls').addEventListener('input',vU);
+vU();
+</script>
+</body>
+</html>

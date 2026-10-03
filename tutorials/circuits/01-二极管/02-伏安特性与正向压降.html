@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>伏安特性与正向压降</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+<style>
+.mk{fill:var(--copper);stroke:var(--panel);stroke-width:2}
+.mk2{fill:var(--low);stroke:var(--panel);stroke-width:2}
+.dim{opacity:.35}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#diode">二极管</a><span class="sp"></span><span>02 / 08</span></nav>
+<header>
+  <span class="eyebrow">二极管 · 伏安特性</span>
+  <h1>伏安特性与正向压降</h1>
+  <p class="lede">一条 I-V 曲线分四段：死区、导通区、反向截止区、击穿区。硅管导通约 0.6~0.7 V，锗管约 0.2~0.3 V，温度每升高 1 °C 压降约少 2 mV。</p>
+</header>
+
+<section id="iv">
+  <span class="eyebrow">四个区 · 硅与锗</span>
+  <h2>完整的 I-V 曲线</h2>
+  <p>正向电压很小时，势垒还没压下去，电流几乎为零，这段叫死区。过了死区电压，电流按指数上升，曲线几乎竖直，这时两端电压基本不变，就是常说的正向压降。反向时只有极小的反向饱和电流，直到反向电压达到击穿电压，电流突然增大。</p>
+  <p class="eq">I = Is·(e^(V / (n·VT)) − 1)，VT = kT / q ≈ 26 mV（室温）</p>
+  <p>Is 是反向饱和电流，n 是理想因子，一般在 1~2 之间。因为指数很陡，n = 1 时电压每增加约 60 mV，电流就变为 10 倍。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 320" role="img" aria-label="二极管完整伏安特性：右上是正向导通曲线，左下是反向截止和击穿，硅和锗两条曲线对比">
+        <rect id="s1-dz" class="zone-sat" x="330" y="162" width="85" height="16"/>
+        <line class="gl" x1="330" y1="30" x2="500" y2="30"/>
+        <line class="gl" x1="330" y1="100" x2="500" y2="100"/>
+        <line class="gl" x1="415" y1="30" x2="415" y2="170"/>
+        <line class="gl" x1="500" y1="30" x2="500" y2="170"/>
+        <line class="gl" x1="40" y1="230" x2="330" y2="230"/>
+        <line class="gl" x1="40" y1="290" x2="330" y2="290"/>
+        <line class="gl" x1="233.3" y1="170" x2="233.3" y2="290"/>
+        <line class="gl" x1="136.7" y1="170" x2="136.7" y2="290"/>
+        <line class="gl" x1="40" y1="170" x2="40" y2="290"/>
+        <path class="ax" d="M40,170 H500 M330,30 V290"/>
+        <line class="ax dash" x1="88.3" y1="170" x2="88.3" y2="290"/>
+        <text x="324" y="34" text-anchor="end" class="v">20</text>
+        <text x="324" y="104" text-anchor="end" class="v">10</text>
+        <text x="336" y="234" class="v">−2</text>
+        <text x="336" y="294" class="v">−4</text>
+        <text x="324" y="186" text-anchor="end" class="v">0</text>
+        <text x="415" y="186" text-anchor="middle" class="v">0.5</text>
+        <text x="500" y="186" text-anchor="end" class="v">1.0</text>
+        <text x="233.3" y="162" text-anchor="middle" class="v">−20</text>
+        <text x="136.7" y="162" text-anchor="middle" class="v">−40</text>
+        <text x="40" y="162" class="v">−60</text>
+        <text x="336" y="22" class="tm">正向 I / mA</text>
+        <text x="500" y="160" text-anchor="end" class="tm">V / V</text>
+        <text x="336" y="312" class="tm">反向 I / µA（已放大）</text>
+        <text x="44" y="140" class="tm">击穿区</text>
+        <text x="200" y="140" text-anchor="middle" class="tm">反向截止区</text>
+        <text x="94" y="286" class="tm">−VBR</text>
+        <text id="s1-dzt" x="372" y="200" text-anchor="middle" class="tm">死区</text>
+        <text id="s1-ont" x="490" y="200" text-anchor="end" class="tm">导通区</text>
+        <polyline id="s1-si" class="real" points="330,170"/>
+        <polyline id="s1-ge" class="real2" points="330,170"/>
+        <text id="s1-sil" x="458" y="44" class="t hi">硅</text>
+        <text id="s1-gel" x="392" y="44" class="t lo">锗</text>
+        <text x="200" y="186" text-anchor="middle" class="t hi">硅：nA 级，贴着横轴</text>
+        <text x="200" y="222" text-anchor="middle" class="t lo">锗：µA 级</text>
+        <circle id="s1-pt" class="mk" cx="440" cy="130" r="5.5"/>
+      </svg>
+      <figcaption>正向和反向用了不同的刻度：正向电流是 mA，反向电流是 µA 且放大画。击穿电压取 50 V 示意，实际从几伏到上千伏都有。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">材料</span>
+        <div class="seg" id="s1-m"><button id="s1-m-si" data-v="si" aria-pressed="true">硅</button><button id="s1-m-ge" data-v="ge" aria-pressed="false">锗</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-rng">两端电压 V</label>
+        <span class="rv" id="s1-vv">0.65 V</span>
+        <input type="range" id="s1-rng" min="0" max="160" step="1" value="125"></div>
+      <dl class="read">
+        <dt>所在区域</dt><dd><span id="s1-state" class="chip on">导通区</span></dd>
+        <dt>电流 I</dt><dd id="s1-i">5.8 mA</dd>
+        <dt>动态电阻 rd = n·VT / I</dt><dd id="s1-rd">8 Ω</dd>
+        <dt>死区电压</dt><dd id="s1-vth">约 0.5 V</dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+      <p class="note">示意参数：硅 Is = 5 nA、n = 1.8；锗 Is = 1 µA、n = 1.3。滑块左边 60 格是反向电压，每格 1 V；右边 100 格是正向电压，每格 10 mV。</p>
+    </div>
+  </div>
+</section>
+
+<section id="temp">
+  <span class="eyebrow">温度系数 · −2 mV/°C</span>
+  <h2>温度升高，曲线左移</h2>
+  <p>温度升高，本征载流子增多，Is 大约每 10 °C 翻一倍。同样的电流只需要更低的电压，所以正向压降下降，约 −2 mV/°C。在图上看，就是整条正向曲线往左平移。</p>
+  <p>这个负温度系数有两面。好的一面：可以拿二极管或三极管的 VBE 测温。坏的一面：二极管直接并联时，热的那只压降更低、分到的电流更多、更热，最后热失控。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 292" role="img" aria-label="硅二极管正向曲线在 25 摄氏度和所选温度下的对比，温度升高时曲线左移">
+        <line class="gl" x1="50" y1="50" x2="490" y2="50"/>
+        <line class="gl" x1="50" y1="100" x2="490" y2="100"/>
+        <line class="gl" x1="50" y1="150" x2="490" y2="150"/>
+        <line class="gl" x1="50" y1="200" x2="490" y2="200"/>
+        <path class="ax" d="M50,40 V250 H490"/>
+        <text x="44" y="54" text-anchor="end" class="v">20</text>
+        <text x="44" y="104" text-anchor="end" class="v">15</text>
+        <text x="44" y="154" text-anchor="end" class="v">10</text>
+        <text x="44" y="204" text-anchor="end" class="v">5</text>
+        <text x="44" y="254" text-anchor="end" class="v">0</text>
+        <text x="50" y="268" text-anchor="middle" class="v">0.3</text>
+        <text x="123.3" y="268" text-anchor="middle" class="v">0.4</text>
+        <text x="196.7" y="268" text-anchor="middle" class="v">0.5</text>
+        <text x="270" y="268" text-anchor="middle" class="v">0.6</text>
+        <text x="343.3" y="268" text-anchor="middle" class="v">0.7</text>
+        <text x="416.7" y="268" text-anchor="middle" class="v">0.8</text>
+        <text x="490" y="268" text-anchor="middle" class="v">0.9</text>
+        <text x="56" y="34" class="tm">I / mA</text>
+        <text x="490" y="286" text-anchor="end" class="tm">VF / V</text>
+        <polyline id="s2-c0" class="ideal" points="50,250"/>
+        <polyline id="s2-c1" class="real" points="50,250"/>
+        <text id="s2-l0" x="360" y="44" class="tm">25 °C</text>
+        <text id="s2-l1" x="300" y="44" text-anchor="end" class="t hi">100 °C</text>
+        <path id="s2-sh" class="w s-hi" d="M343,150 H300"/>
+        <polygon id="s2-shh" class="hi" points="290,150 300,145 300,155"/>
+        <circle id="s2-p0" class="mk2" cx="343" cy="150" r="5"/>
+        <circle id="s2-p1" class="mk" cx="290" cy="150" r="5"/>
+        <text id="s2-dvt" x="316" y="140" text-anchor="middle" class="v hi">−150 mV</text>
+      </svg>
+      <figcaption>虚线是 25 °C 的曲线，橙线是所选温度。两个圆点是 10 mA 时的正向压降，箭头长度就是 ΔVF。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="s2-t">结温 T</label>
+        <span class="rv" id="s2-tv">100 °C</span>
+        <input type="range" id="s2-t" min="-40" max="125" step="5" value="100"></div>
+      <dl class="read">
+        <dt>VF（10 mA，25 °C）</dt><dd id="s2-v0">0.675 V</dd>
+        <dt>VF（10 mA，T）</dt><dd id="s2-v1">0.525 V</dd>
+        <dt>ΔVF = −2 mV/°C × ΔT</dt><dd id="s2-dv">−150 mV</dd>
+        <dt>电压不变时电流</dt><dd id="s2-ir">变为 25 °C 时的 25 倍</dd>
+        <dt>反向漏电</dt><dd id="s2-lk">约 181 倍</dd>
+        <dt>趋势</dt><dd><span id="s2-state" class="chip on">VF 下降</span></dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+      <p class="note">示意：用 −2 mV/°C 把 25 °C 曲线平移得到；漏电按每 10 °C 翻倍估算。实际温度系数在 −1.5 ~ −2.5 mV/°C 之间，电流越小绝对值越大。</p>
+    </div>
+  </div>
+</section>
+
+<section id="vf">
+  <span class="eyebrow">典型值 · 背下来</span>
+  <h2>各类二极管的正向压降</h2>
+  <p>导通压降主要由势垒高度决定。锗的禁带比硅窄，Is 大好几个数量级，所以同样电流下压降低约 0.4 V，但漏电也大得多。肖特基用金属-半导体结，势垒更低，见本组第 8 页。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>类型</th><th>死区电压</th><th>导通压降（典型值）</th><th>反向电流（典型值）</th><th>原因</th></tr></thead>
+    <tbody>
+      <tr><td>硅 PN 结</td><td class="n">约 0.5 V</td><td class="n">0.6 ~ 0.7 V</td><td>nA 级</td><td>禁带 1.12 eV</td></tr>
+      <tr><td>锗 PN 结</td><td class="n">约 0.1 V</td><td class="n">0.2 ~ 0.3 V</td><td>µA 级</td><td>禁带 0.66 eV，本征载流子多</td></tr>
+      <tr><td>肖特基</td><td class="n">约 0.1 ~ 0.2 V</td><td class="n">0.2 ~ 0.45 V</td><td>µA ~ mA 级</td><td>金属-半导体势垒低</td></tr>
+      <tr><td>红光 LED</td><td class="n">—</td><td class="n">1.8 ~ 2.2 V</td><td>—</td><td>发光材料禁带宽</td></tr>
+      <tr><td>蓝光、白光 LED</td><td class="n">—</td><td class="n">2.8 ~ 3.3 V</td><td>—</td><td>禁带更宽</td></tr>
+    </tbody>
+  </table></div>
+  <p>功率二极管电流大，体电阻上也有压降，1N4007 在 1 A 时约 0.9~1.0 V，所以看数据手册要看具体电流下的 VF。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>硅管和锗管的导通压降各是多少？为什么不同？</summary>
+      <div class="ans"><p>硅管约 0.6~0.7 V，死区约 0.5 V；锗管约 0.2~0.3 V，死区约 0.1 V。因为锗的禁带宽度只有 0.66 eV，硅是 1.12 eV，锗的反向饱和电流大得多，同样电流需要的正向电压就低。代价是锗管漏电大、耐温差。</p></div></details>
+    <details><summary>写一下二极管的电流方程。</summary>
+      <div class="ans"><p>I = Is·(e^(V / (n·VT)) − 1)。Is 是反向饱和电流，n 是理想因子，VT = kT / q，室温约 26 mV。正偏几百 mV 以上时括号里的 1 可以忽略，电流随电压指数增长；反偏时指数项趋于 0，电流约等于 −Is。</p></div></details>
+    <details><summary>正向压降的温度系数是多少？有什么用？</summary>
+      <div class="ans"><p>约 −2 mV/°C，温度越高压降越低。可以用来测温，芯片里的温度传感器很多就是测 PN 结压降。也要注意它的坏处：二极管直接并联会因为负温度系数抢电流，要串均流电阻。</p></div></details>
+    <details><summary>二极管的动态电阻是多少？</summary>
+      <div class="ans"><p>对电流方程求导得 rd = n·VT / I。n = 1、电流 1 mA 时约 26 Ω，10 mA 时约 2.6 Ω。电流越大动态电阻越小，这也是导通区曲线几乎竖直的原因。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="01-单向导电性与PN结.html"><span>上一页</span>单向导电性与PN结</a><a class="next" href="03-反向击穿齐纳与雪崩.html"><span>下一页</span>反向击穿齐纳与雪崩</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+const VT=0.02585;
+/* 1. 完整 I-V 曲线 */
+const MAT={si:{Is:5e-9,n:1.8,vth:0.5,vbr:50,name:'硅'},ge:{Is:1e-6,n:1.3,vth:0.1,vbr:50,name:'锗'}};
+function ivI(m,V){const p=MAT[m];let I=p.Is*(Math.exp(V/(p.n*VT))-1);if(V<0)I-=1e-6*Math.exp((-V-p.vbr)/0.4);return I;}
+const X1=V=>V>=0?330+V*170:330+V*290/60;
+const Y1=I=>I>=0?170-I*7000:170-I*3e7;
+const clampY=y=>Math.max(30,Math.min(290,y));
+function ivPts(m){
+  const fw=[],rv=[];
+  for(let k=0;k<=400;k++){const V=k*0.0025,I=ivI(m,V);fw.push(X1(V).toFixed(1)+','+clampY(Y1(I)).toFixed(1));if(I>0.02)break;}
+  for(let k=1;k<=1200;k++){const V=-k*0.05,I=ivI(m,V);rv.push(X1(V).toFixed(1)+','+clampY(Y1(I)).toFixed(1));if(I<-4e-6)break;}
+  return rv.reverse().concat(fw).join(' ');
+}
+const vAt=(m,I)=>MAT[m].n*VT*Math.log(I/MAT[m].Is+1);
+$('s1-si').setAttribute('points',ivPts('si'));
+$('s1-ge').setAttribute('points',ivPts('ge'));
+$('s1-sil').setAttribute('x',(X1(vAt('si',0.02))+6).toFixed(1));
+$('s1-gel').setAttribute('x',(X1(vAt('ge',0.02))+6).toFixed(1));
+const s1={m:'si'};
+const idxV=i=>i<60?i-60:(i-60)*0.01;
+function s1u(){
+  const m=s1.m,p=MAT[m],V=idxV(+$('s1-rng').value),I=ivI(m,V);
+  $('s1-si').classList.toggle('dim',m!=='si');$('s1-ge').classList.toggle('dim',m!=='ge');
+  $('s1-vv').textContent=fmtV(V);$('s1-rng').setAttribute('aria-valuetext',fmtV(V));
+  const dz=$('s1-dz');dz.setAttribute('width',(X1(p.vth)-330).toFixed(1));
+  $('s1-dzt').setAttribute('x',((330+X1(p.vth))/2).toFixed(1));
+  $('s1-vth').textContent='约 '+p.vth+' V';
+  const pt=$('s1-pt');pt.setAttribute('cx',X1(V).toFixed(1));pt.setAttribute('cy',clampY(Y1(I)).toFixed(1));
+  pt.setAttribute('class',m==='si'?'mk':'mk2');
+  let st,cls,note;
+  if(V<=-p.vbr){st='击穿区';cls='bad';note='反向电压超过击穿电压，耗尽层里的电场强到把大量电子拉出来，电流急剧增大，大小由外电路限流决定。只要功耗不超标，击穿本身可逆，下一页细讲。';
+    $('s1-i').textContent='急剧增大';}
+  else if(V<0){st='反向截止区';cls='off';note='反向电流约等于 −Is，'+(m==='si'?'硅管只有 nA 级':'锗管有 µA 级')+'，而且几乎不随反向电压变化，所以叫反向饱和电流。';
+    $('s1-i').textContent=fmtA(I);}
+  else if(V<p.vth){st='死区';cls='warn';note='正向电压还不够压下势垒，电流很小。'+p.name+'管的死区电压约 '+p.vth+' V。';
+    $('s1-i').textContent=V===0?'0':fmtA(I);}
+  else{st='导通区';cls='on';note='电流随电压指数上升，曲线几乎竖直，电流变化很大而电压变化很小。'+(m==='si'?'硅管在 mA 级电流下压降约 0.6~0.7 V。':'锗管在 mA 级电流下压降约 0.2~0.3 V。');
+    $('s1-i').textContent=I>0.02?fmtA(I)+'，超出坐标':fmtA(I);}
+  chip($('s1-state'),st,cls);
+  $('s1-rd').textContent=V>0?fmtR(p.n*VT/(I+p.Is)):'—';
+  $('s1-note').textContent=note;
+}
+seg('s1-m',v=>{s1.m=v;s1u();});
+$('s1-rng').addEventListener('input',s1u);
+s1u();
+
+/* 2. 温度 */
+const T2={Is:5e-9,n:1.8,k:0.002};
+const vf25=I=>T2.n*VT*Math.log(I/T2.Is+1);
+const X2=V=>50+(V-0.3)*733.33,Y2=ma=>250-ma*10;
+function tPts(dv){const p=[];
+  for(let k=0;k<=160;k++){const I=0.02*Math.pow(k/160,2),V=vf25(I)+dv;if(V<0.3)continue;p.push(X2(V).toFixed(1)+','+Y2(I*1e3).toFixed(1));}
+  return p.join(' ');}
+$('s2-c0').setAttribute('points',tPts(0));
+const v25=vf25(0.01);
+$('s2-l0').setAttribute('x',(X2(vf25(0.02))+6).toFixed(1));
+function s2u(){
+  const T=+$('s2-t').value,dT=T-25,dv=-T2.k*dT,vT=v25+dv;
+  $('s2-tv').textContent=T+' °C';$('s2-t').setAttribute('aria-valuetext',T+' °C');
+  $('s2-c1').setAttribute('points',tPts(dv));show($('s2-c1'),dT!==0);
+  const l1=$('s2-l1');show(l1,dT!==0);l1.textContent=T+' °C';
+  const xt=X2(vf25(0.02)+dv);
+  if(dv<0){l1.setAttribute('x',(xt-6).toFixed(1));l1.setAttribute('text-anchor','end');}
+  else{l1.setAttribute('x',(xt+6).toFixed(1));l1.setAttribute('text-anchor','start');}
+  if(dv>0)$('s2-l0').setAttribute('x',(X2(vf25(0.02))-6).toFixed(1)),$('s2-l0').setAttribute('text-anchor','end');
+  else $('s2-l0').setAttribute('x',(X2(vf25(0.02))+6).toFixed(1)),$('s2-l0').setAttribute('text-anchor','start');
+  const x0=X2(v25),x1=X2(vT);
+  $('s2-p0').setAttribute('cx',x0.toFixed(1));$('s2-p1').setAttribute('cx',x1.toFixed(1));show($('s2-p1'),dT!==0);
+  const big=Math.abs(x1-x0)>16,d=x1<x0?-1:1;
+  show($('s2-sh'),big);show($('s2-shh'),big);
+  if(big){$('s2-sh').setAttribute('d',`M${(x0+d*6).toFixed(1)},150 H${(x1-d*16).toFixed(1)}`);
+    $('s2-shh').setAttribute('points',`${(x1-d*6).toFixed(1)},150 ${(x1-d*16).toFixed(1)},145 ${(x1-d*16).toFixed(1)},155`);}
+  const dvt=$('s2-dvt');show(dvt,dT!==0);dvt.setAttribute('x',((x0+x1)/2).toFixed(1));
+  dvt.textContent=(dv<0?'−':'+')+Math.abs(dv*1e3).toFixed(0)+' mV';
+  $('s2-v0').textContent=fmtV(v25,3);$('s2-v1').textContent=fmtV(vT,3);
+  $('s2-dv').textContent=(dv<0?'−':dv>0?'+':'')+Math.abs(dv*1e3).toFixed(0)+' mV';
+  const ir=Math.exp(-dv/(T2.n*VT)),lk=Math.pow(2,dT/10);
+  const fx=x=>x>=10?x.toFixed(0):x>=1?x.toFixed(1):x.toFixed(2);
+  $('s2-ir').textContent='变为 25 °C 时的 '+fx(ir)+' 倍';
+  $('s2-lk').textContent='约为 25 °C 时的 '+fx(lk)+' 倍';
+  let note;
+  if(dT>0){chip($('s2-state'),'VF 下降','on');note='升温 '+dT+' °C，10 mA 时压降少了 '+Math.abs(dv*1e3).toFixed(0)+' mV。反过来如果两端电压被固定住，电流会涨到 '+fx(ir)+' 倍，这就是二极管不能直接并联的原因。';}
+  else if(dT<0){chip($('s2-state'),'VF 升高','warn');note='低温下压降变大，曲线右移。低温启动时整流桥、续流管的压降比常温高，低压电源要留余量。';}
+  else{chip($('s2-state'),'基准 25 °C','off');note='这是数据手册常用的测试温度。拖动滑块看曲线怎么平移。';}
+  $('s2-note').textContent=note;
+}
+$('s2-t').addEventListener('input',s2u);
+s2u();
+</script>
+</body>
+</html>

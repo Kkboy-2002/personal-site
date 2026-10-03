@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>饱和失真与截止失真</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#bjt">三极管</a><span class="sp"></span><span>08 / 09</span></nav>
+<header>
+  <span class="eyebrow">三极管 · 非线性失真</span>
+  <h1>饱和失真与截止失真</h1>
+  <p class="lede">Q 点太高，信号一冲就进饱和区；Q 点太低，信号一回就进截止区。难点在方向：NPN 共射输出是反相的，削顶还是削底，一定要从 ic 推到 uce 再下结论。</p>
+</header>
+
+<section id="mech">
+  <span class="eyebrow">机理 · ib → ic → uce</span>
+  <h2>从输入一路推到输出</h2>
+  <p>以 NPN 共射为例。输入正半周 ib 增大，ic 增大，Rc 上压降增大，uce 减小。所以 <b>ic 的波峰对应 uce 的波谷</b>。</p>
+  <p>Q 点过高：ib 正半周把 ic 推到饱和极限 (Vcc − Uces) / Rc，ic 顶部被削平，对应 <b>uce 底部被削平，这是饱和失真</b>。Q 点过低：ib 负半周把管子推进截止，ic 底部被削到零，对应 <b>uce 顶部被削平，这是截止失真</b>。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 480 330" role="img" aria-label="左边是负载线和工作点摆动范围，右边从上到下是 ib、ic、uce 三个波形">
+        <rect class="zone-sat" x="40" y="70" width="9" height="210"/>
+        <line class="gl" x1="40" y1="80" x2="200" y2="80"/>
+        <line class="gl" x1="40" y1="180" x2="200" y2="180"/>
+        <path class="ax" d="M40,70 V280 H200"/>
+        <text x="34" y="84" text-anchor="end" class="v">6</text>
+        <text x="34" y="184" text-anchor="end" class="v">3</text>
+        <text x="34" y="284" text-anchor="end" class="v">0</text>
+        <text x="44" y="62" class="tm">Ic / mA</text>
+        <text x="40" y="298" text-anchor="middle" class="v">0</text>
+        <text x="120" y="298" text-anchor="middle" class="v">6</text>
+        <text x="200" y="298" text-anchor="end" class="v">12</text>
+        <text x="200" y="314" text-anchor="end" class="tm">Uce / V</text>
+        <line class="real" x1="40" y1="80" x2="200" y2="280"/>
+        <text x="58" y="170" class="tm">饱和</text>
+        <text x="150" y="272" class="tm">截止</text>
+        <line id="d1-sw" class="real3" x1="100" y1="150" x2="140" y2="200" style="stroke-width:6;opacity:.7"/>
+        <circle id="d1-q" class="dot" cx="120" cy="180" r="6"/>
+        <text id="d1-qt" x="130" y="172" class="t">Q</text>
+
+        <path class="ax" d="M256,20 V100 H466"/>
+        <text x="250" y="24" text-anchor="end" class="v">80</text>
+        <text x="250" y="104" text-anchor="end" class="v">0</text>
+        <text x="262" y="14" class="tm">输入 ib / µA</text>
+        <polyline id="d1-ib" class="real2" points="256,60 466,60"/>
+        <g id="d1-ibx"></g>
+
+        <path class="ax" d="M256,120 V200 H466"/>
+        <line class="ax dash" x1="256" y1="121.3" x2="466" y2="121.3"/>
+        <text x="250" y="124" text-anchor="end" class="v">6</text>
+        <text x="250" y="204" text-anchor="end" class="v">0</text>
+        <text x="262" y="114" class="tm">ic / mA，虚线是饱和极限</text>
+        <polyline id="d1-ic" class="real" points="256,160 466,160"/>
+        <g id="d1-icx"></g>
+
+        <path class="ax" d="M256,220 V300 H466"/>
+        <line class="ax dash" x1="256" y1="220" x2="466" y2="220"/>
+        <text x="250" y="224" text-anchor="end" class="v">12</text>
+        <text x="250" y="304" text-anchor="end" class="v">0</text>
+        <text x="262" y="214" class="tm">输出 uce / V，虚线是 Vcc</text>
+        <polyline id="d1-uc" class="real" points="256,260 466,260"/>
+        <g id="d1-ucx"></g>
+        <text x="466" y="318" text-anchor="end" class="tm">时间，两个周期</text>
+      </svg>
+      <figcaption>红色段是被削掉的部分。示意参数：Vcc 12 V，Rc 2 kΩ，β 取 100，Uces 取 0.2 V；ib 小于 0 时按截止处理。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="d1-q0">静态基极电流 IbQ（Q 点高低）</label>
+        <span class="rv" id="d1-q0v">29 µA</span>
+        <input type="range" id="d1-q0" min="5" max="55" step="1" value="29"></div>
+      <div class="ctl"><label class="ctl-l" for="d1-a">输入幅度 ibm</label>
+        <span class="rv" id="d1-av">20 µA</span>
+        <input type="range" id="d1-a" min="0" max="40" step="1" value="20"></div>
+      <dl class="read">
+        <dt>IcQ / UceQ</dt><dd id="d1-qv">—</dd>
+        <dt>ib 往上的余量</dt><dd id="d1-up">—</dd>
+        <dt>ib 往下的余量</dt><dd id="d1-dn">—</dd>
+        <dt>输出 uce</dt><dd><span id="d1-st" class="chip on">不失真</span></dd>
+      </dl>
+      <p class="note" id="d1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="fix">
+  <span class="eyebrow">怎么消除 · 调 Rb</span>
+  <h2>看到削波，怎么调 Rb</h2>
+  <p>固定偏置里 IbQ = (Vcc − 0.7) / Rb。饱和失真说明 Q 点太高，要<b>增大 Rb</b>，减小 IbQ；截止失真说明 Q 点太低，要<b>减小 Rb</b>，增大 IbQ。如果上下同时削，说明信号太大，Q 点已经居中也没用，只能减小输入或提高 Vcc。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 360 250" role="img" aria-label="固定偏置共射放大电路，输入经 C1 耦合到基极，输出经 C2 从集电极引出">
+        <text x="170" y="18" text-anchor="middle" class="v">Vcc 12 V</text>
+        <path class="w" d="M110,26 H232 M110,26 V50 M220,26 V50"/>
+        <rect class="r" x="101" y="50" width="18" height="40" rx="2"/>
+        <text x="94" y="66" text-anchor="end" class="t">Rb</text>
+        <text id="d2-rbt" x="94" y="84" text-anchor="end" class="v">390 kΩ</text>
+        <path class="w" d="M110,90 V172 M76,172 H198 M44,172 H68"/>
+        <circle class="dot" cx="110" cy="172" r="3.5"/>
+        <path class="w" style="stroke-width:2.5" d="M68,160 V184 M76,160 V184"/>
+        <text x="72" y="152" text-anchor="middle" class="t">C1</text>
+        <circle class="r" cx="40" cy="172" r="4"/>
+        <text x="40" y="198" text-anchor="middle" class="t">vi</text>
+        <rect class="r" x="211" y="50" width="18" height="40" rx="2"/>
+        <text x="236" y="66" class="t">Rc</text>
+        <text x="236" y="84" class="v">2 kΩ</text>
+        <path class="w" d="M220,90 V150 M198,164 L220,150 M198,180 L220,194 V226 M206,226 H234 M211,231 H229 M216,236 H224"/>
+        <line class="bar" x1="198" y1="154" x2="198" y2="190"/>
+        <polygon class="ah" points="217,192 208,191 212,184"/>
+        <text x="256" y="182" class="t">NPN</text>
+        <path class="w" d="M220,120 H262 M270,120 H300"/>
+        <circle class="dot" cx="220" cy="120" r="3.5"/>
+        <path class="w" style="stroke-width:2.5" d="M262,108 V132 M270,108 V132"/>
+        <text x="266" y="100" text-anchor="middle" class="t">C2</text>
+        <circle class="r" cx="304" cy="120" r="4"/>
+        <text x="304" y="146" text-anchor="middle" class="t">vo</text>
+        <text id="d2-uq" x="214" y="112" text-anchor="end" class="v hi">UceQ 6.2 V</text>
+        <path id="d2-f" class="flow" d="M220,30 V150 L202,162 V182 L220,194 V224"/>
+        <path id="d2-fb" class="flow thin" d="M110,30 V172 H196"/>
+      </svg>
+      <svg viewBox="0 0 480 150" role="img" aria-label="示波器上看到的集电极电压波形">
+        <path class="ax" d="M56,20 V130 H456"/>
+        <line class="ax dash" x1="56" y1="20" x2="456" y2="20"/>
+        <line class="ax dash" x1="56" y1="128.2" x2="456" y2="128.2"/>
+        <text x="50" y="24" text-anchor="end" class="v">12</text>
+        <text x="50" y="134" text-anchor="end" class="v">0</text>
+        <text x="452" y="34" text-anchor="end" class="tm">Vcc</text>
+        <text x="452" y="122" text-anchor="end" class="tm">Uces</text>
+        <text x="60" y="14" class="tm">集电极电压 / V</text>
+        <polyline id="d2-w" class="real" points="56,75 456,75"/>
+        <g id="d2-x"></g>
+        <text x="456" y="146" text-anchor="end" class="tm">时间</text>
+      </svg>
+      <figcaption>示意参数同上，β 取 100。下图相当于示波器接在集电极，红色段是被削掉的部分。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><label class="ctl-l" for="d2-rb">基极电阻 Rb</label>
+        <span class="rv" id="d2-rbv">390 kΩ</span>
+        <input type="range" id="d2-rb" min="15" max="120" step="1" value="39"></div>
+      <div class="ctl"><span class="ctl-l">输入幅度 ibm</span>
+        <div class="seg" id="d2-a"><button id="d2-a-10" data-v="10" aria-pressed="false">小 ±10 µA</button><button id="d2-a-25" data-v="25" aria-pressed="true">中 ±25 µA</button><button id="d2-a-40" data-v="40" aria-pressed="false">大 ±40 µA</button></div></div>
+      <dl class="read">
+        <dt>IbQ</dt><dd id="d2-ib">—</dd>
+        <dt>IcQ</dt><dd id="d2-ic">—</dd>
+        <dt>诊断</dt><dd><span id="d2-st" class="chip on">不失真</span></dd>
+        <dt>该怎么调</dt><dd id="d2-adv">—</dd>
+      </dl>
+      <p class="note" id="d2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="dir">
+  <span class="eyebrow">方向 · 别背反</span>
+  <h2>削顶还是削底，取决于管型</h2>
+  <p>别死记"饱和削底"。它只对 NPN 共射成立。换成 PNP，输出对地电压和 ic 同相，方向就反过来了。最稳的办法是现场推一遍：先判断 ic 哪边被削，再看输出和 ic 同相还是反相。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>电路（输出取集电极对地电压）</th><th>Q 点过高 → 饱和失真</th><th>Q 点过低 → 截止失真</th></tr></thead>
+    <tbody>
+      <tr><td>NPN 共射，Rc 接 Vcc</td><td>ic 削顶，<b>输出削底</b></td><td>ic 削底，<b>输出削顶</b></td></tr>
+      <tr><td>PNP 共射，Rc 接地</td><td>ic 削顶，<b>输出削顶</b></td><td>ic 削底，<b>输出削底</b></td></tr>
+    </tbody>
+  </table></div>
+  <p>另外两点：截止失真实际上来得更早，因为发射结在 Ube 接近门槛时输入特性已经弯曲，ib 本身就不再是正弦；饱和失真的削波边缘比较硬，截止失真往往更圆滑。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>什么是饱和失真和截止失真？</summary>
+      <div class="ans"><p>都是 Q 点设置不当引起的非线性失真。Q 点过高，信号正半周让管子进入饱和区，ic 顶部被削，这是饱和失真；Q 点过低，信号负半周让管子进入截止区，ic 底部被削，这是截止失真。</p></div></details>
+    <details><summary>NPN 共射放大器输出波形底部被削平，是什么失真？怎么调？</summary>
+      <div class="ans"><p>是饱和失真。共射输出和 ic 反相，uce 底部被削对应 ic 顶部被削，说明 Q 点太高、IcQ 太大。应增大 Rb，减小 IbQ，让 Q 点沿负载线往右下移。</p></div></details>
+    <details><summary>输出顶部被削平呢？</summary>
+      <div class="ans"><p>NPN 共射下是截止失真，Q 点太低。应减小 Rb，增大 IbQ，把 Q 点往左上移。</p></div></details>
+    <details><summary>上下同时被削平怎么办？</summary>
+      <div class="ans"><p>说明输入信号超过了最大不失真幅度，调 Q 点已经解决不了。可以减小输入幅度、降低增益，或提高电源电压、换更大的摆幅空间。Q 点应放在负载线中点，让两边同时到极限。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="07-三种组态对比.html"><span>上一页</span>三种组态对比</a><a class="next" href="09-上拉电阻配三极管.html"><span>下一页</span>上拉电阻配三极管</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+/* 共用模型：Vcc 12 V，Rc 2 kΩ，β 100，Ic(sat) = 5.9 mA，对应 ib = 59 µA */
+const dSatIb=59;
+const dIc=ib=>Math.min(Math.max(ib,0)/10,5.9); /* ib µA → ic mA */
+const dClip=ib=>ib<0||ib>dSatIb;
+/* 在 g 里画出被削掉的红色段 */
+function dRuns(g,ibFn,valFn,X,Y){
+  g.replaceChildren();let run=[];
+  const flush=()=>{if(run.length>1)g.append(svgEl('polyline',{class:'leak',points:run.join(' ')}));run=[];};
+  for(let k=0;k<=240;k++){const t=2*k/240,ib=ibFn(t);
+    if(dClip(ib))run.push(X(t).toFixed(1)+','+Y(valFn(ib)).toFixed(1));else flush();}
+  flush();
+}
+function dDiag(ibQ,A){const sat=A>dSatIb-ibQ,cut=A>ibQ;return {sat,cut};}
+
+/* 1. 机理 */
+const d1X=scale(0,2,256,466),d1IbY=v=>scale(0,80,100,20)(Math.min(Math.max(v,-2),80)),d1IcY=scale(0,6,200,120),d1UcY=scale(0,12,300,220);
+const d1LX=scale(0,12,40,200),d1LY=scale(0,6,280,80);
+function d1u(){
+  const ibQ=+$('d1-q0').value,A=+$('d1-a').value,ibFn=t=>ibQ+A*Math.sin(2*Math.PI*t);
+  $('d1-ib').setAttribute('points',plot(t=>ibFn(t),0,2,d1X,d1IbY,240));
+  $('d1-ic').setAttribute('points',plot(t=>dIc(ibFn(t)),0,2,d1X,d1IcY,240));
+  $('d1-uc').setAttribute('points',plot(t=>12-2*dIc(ibFn(t)),0,2,d1X,d1UcY,240));
+  dRuns($('d1-ibx'),ibFn,ib=>Math.max(ib,0),d1X,d1IbY);
+  dRuns($('d1-icx'),ibFn,ib=>dIc(ib),d1X,d1IcY);
+  dRuns($('d1-ucx'),ibFn,ib=>12-2*dIc(ib),d1X,d1UcY);
+  const icQ=dIc(ibQ),uQ=12-2*icQ,icHi=dIc(ibQ+A),icLo=dIc(ibQ-A);
+  $('d1-q').setAttribute('cx',d1LX(uQ).toFixed(1));$('d1-q').setAttribute('cy',d1LY(icQ).toFixed(1));
+  $('d1-qt').setAttribute('x',(d1LX(uQ)+10).toFixed(1));$('d1-qt').setAttribute('y',(d1LY(icQ)-8).toFixed(1));
+  $('d1-sw').setAttribute('x1',d1LX(12-2*icHi).toFixed(1));$('d1-sw').setAttribute('y1',d1LY(icHi).toFixed(1));
+  $('d1-sw').setAttribute('x2',d1LX(12-2*icLo).toFixed(1));$('d1-sw').setAttribute('y2',d1LY(icLo).toFixed(1));
+  $('d1-q0v').textContent=ibQ+' µA';$('d1-q0').setAttribute('aria-valuetext',ibQ+' µA');
+  $('d1-av').textContent=A+' µA';$('d1-a').setAttribute('aria-valuetext',A+' µA');
+  $('d1-qv').textContent=fmtA(icQ/1000)+' / '+fmtV(uQ);
+  $('d1-up').textContent=Math.max(0,dSatIb-ibQ)+' µA，到饱和';
+  $('d1-dn').textContent=ibQ+' µA，到截止';
+  const d=dDiag(ibQ,A);let note;
+  if(d.sat&&d.cut){chip($('d1-st'),'上下都削','bad');note='幅度 '+A+' µA 超过了两边余量，ic 顶部碰到饱和极限、底部掉到零，uce 上下都被削平。只调 Q 点救不回来，要减小输入。';}
+  else if(d.sat){chip($('d1-st'),'底部削平：饱和失真','bad');note='Q 点偏高，ib 正半周冲到 '+(ibQ+A)+' µA，β·ib 超过了 Rc 能给的 5.9 mA，管子饱和，ic 顶部被削平。共射反相，ic 的顶对应 uce 的底，所以输出底部被削。';}
+  else if(d.cut){chip($('d1-st'),'顶部削平：截止失真','bad');note='Q 点偏低，ib 负半周掉到零以下，管子截止，ic 底部被削到零。ic 的底对应 uce 的顶，所以输出顶部被削，顶在 Vcc 上。';}
+  else{chip($('d1-st'),'不失真','on');note='ib 的整个摆动都在 0 到 59 µA 之间，工作点始终在放大区。把 IbQ 往右拖看饱和失真，往左拖看截止失真。';}
+  $('d1-note').textContent=note;
+}
+$('d1-q0').addEventListener('input',d1u);
+$('d1-a').addEventListener('input',d1u);
+d1u();
+
+/* 2. 调 Rb 消除失真 */
+const d2X=scale(0,2,56,456),d2Y=scale(0,12,130,20);
+const d2={A:25};
+function d2u(){
+  const rb=+$('d2-rb').value*1e4,A=d2.A,ibQ=11.3/rb*1e6,ibFn=t=>ibQ+A*Math.sin(2*Math.PI*t);
+  const icQ=dIc(ibQ),uQ=12-2*icQ,lbl=fmtR(rb);
+  $('d2-w').setAttribute('points',plot(t=>12-2*dIc(ibFn(t)),0,2,d2X,d2Y,240));
+  dRuns($('d2-x'),ibFn,ib=>12-2*dIc(ib),d2X,d2Y);
+  $('d2-rbv').textContent=lbl;$('d2-rb').setAttribute('aria-valuetext',lbl);$('d2-rbt').textContent=lbl;
+  $('d2-uq').textContent='UceQ '+fmtV(uQ,1);setLv($('d2-uq'),null,uQ>6);
+  $('d2-ib').textContent=fmtA(ibQ*1e-6);$('d2-ic').textContent=fmtA(icQ/1000);
+  $('d2-f').classList.toggle('thin',icQ<2);
+  const d=dDiag(ibQ,A);let adv,note;
+  if(ibQ>dSatIb){chip($('d2-st'),'静态就已饱和','bad');adv='大幅增大 Rb';note='Rb 太小，没有信号时管子就饱和了，输出几乎是一条贴着 0.2 V 的直线。';}
+  else if(d.sat&&d.cut){chip($('d2-st'),'双向削波','bad');adv='减小输入，Rb 取约 383 kΩ 让 Q 点居中';note='信号太大，两边都不够用。Q 点居中时最大不失真的 ib 幅度约 ±29 µA。';}
+  else if(d.sat){chip($('d2-st'),'饱和失真，削底','bad');adv='增大 Rb';note='输出底部被削，Q 点太高。增大 Rb 让 IbQ 变小，Q 点沿负载线往右下移，直到底部恢复。';}
+  else if(d.cut){chip($('d2-st'),'截止失真，削顶','bad');adv='减小 Rb';note='输出顶部被削，Q 点太低。减小 Rb 让 IbQ 变大，Q 点沿负载线往左上移，直到顶部恢复。';}
+  else{chip($('d2-st'),'不失真','on');adv='不用调';note='上下都有余量。试试把幅度切到"大"，这时只有 Q 点正好居中才能勉强不削波。';}
+  $('d2-adv').textContent=adv;$('d2-note').textContent=note;
+}
+$('d2-rb').addEventListener('input',d2u);
+seg('d2-a',v=>{d2.A=+v;d2u();});
+d2u();
+</script>
+</body>
+</html>

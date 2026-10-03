@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>稳压电路</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="../_assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="crumb"><a href="../index.html">硬件电路图解</a><span>/</span><a href="../index.html#basic">基本电路</a><span class="sp"></span><span>04 / 07</span></nav>
+<header>
+  <span class="eyebrow">基本电路 · 稳压</span>
+  <h1>稳压电路：齐纳、LDO、开关</h1>
+  <p class="lede">三种办法都能把不稳的输入变成稳定的 5 V，区别在于多出来的电压怎么处理：齐纳和 LDO 把它变成热，开关电源靠电感储能"搬运"过去。</p>
+</header>
+
+<section id="ckt">
+  <span class="eyebrow">电路 · 损耗去向</span>
+  <h2>切换三种电路，拖输入电压和负载电流</h2>
+  <p>齐纳稳压：串联电阻 Rs 限流，稳压管把多余电流分流到地。LDO：调整管串在路上，误差放大器比较反馈电压和基准，调节调整管的压降，所以效率 ≈ Vout / Vin。开关稳压（以 Buck 为例）：开关管高速通断，电感和电容把方波平均成直流，理想情况下没有损耗。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 420 300" role="img" aria-label="三种稳压电路：齐纳稳压、LDO 线性稳压和 Buck 开关稳压">
+        <text x="26" y="48" class="t">Vin</text>
+        <circle class="r" cx="30" cy="60" r="3.5"/><circle class="r" cx="30" cy="270" r="3.5"/>
+        <path class="w" d="M166,270 V282 M154,282 H178 M158,287 H174 M162,292 H170"/>
+        <circle class="dot" cx="166" cy="270" r="3.5"/>
+        <g id="s1-gz">
+          <path class="w" d="M34,60 H80 M130,60 H330 V145 M330,185 V270 H34 M230,60 V130 M230,190 V270"/>
+          <rect class="r" x="80" y="52" width="50" height="16" rx="2"/>
+          <text x="105" y="44" text-anchor="middle" class="t">Rs 27 Ω</text>
+          <g id="s1-dz"></g>
+          <circle class="dot" cx="230" cy="60" r="3.5"/><circle class="dot" cx="230" cy="270" r="3.5"/>
+          <rect class="r" x="321" y="145" width="18" height="40" rx="2"/>
+          <text x="346" y="170" class="t">RL</text>
+          <text id="s1-izt" x="246" y="200" class="v">Iz</text>
+          <path id="s1-fz1" class="flow" d="M34,60 H330 V270 H34"/>
+          <path id="s1-fz2" class="flow thin" d="M230,64 V266"/>
+        </g>
+        <g id="s1-gl">
+          <path class="w" d="M34,60 H200 V78 L178,92 M178,108 L200,122 V160 H330 V190 M330,230 V270 H34 M270,160 V168 M270,208 V224 M270,264 V270 M270,216 H80 V110 H100 M140,100 H178 M100,90 H60 V118 M60,146 V270"/>
+          <polygon class="ah" points="183,89 192,88 188,81"/>
+          <line class="bar" x1="178" y1="82" x2="178" y2="118"/>
+          <text x="210" y="104" class="t">调整管</text>
+          <polygon class="r" points="100,78 100,122 140,100"/>
+          <text x="104" y="95" class="tm">−</text><text x="104" y="115" class="tm">+</text>
+          <text x="100" y="140" class="tm">误差放大</text>
+          <circle class="r" cx="60" cy="132" r="14"/><text x="60" y="128" text-anchor="middle" class="tm">+</text>
+          <text x="44" y="164" text-anchor="end" class="v">Vref</text>
+          <rect class="r" x="261" y="168" width="18" height="40" rx="2"/><rect class="r" x="261" y="224" width="18" height="40" rx="2"/>
+          <text x="256" y="192" text-anchor="end" class="t">R1</text><text x="256" y="248" text-anchor="end" class="t">R2</text>
+          <rect class="r" x="321" y="190" width="18" height="40" rx="2"/><text x="346" y="215" class="t">RL</text>
+          <circle class="dot" cx="270" cy="160" r="3.5"/><circle class="dot" cx="270" cy="216" r="3.5"/><circle class="dot" cx="270" cy="270" r="3.5"/><circle class="dot" cx="60" cy="270" r="3.5"/>
+          <path id="s1-fl" class="flow" d="M34,60 H200 V78 L182,90 V110 L200,122 V160 H330 V270 H34"/>
+        </g>
+        <g id="s1-gb">
+          <path class="w" d="M34,60 H110 M110,60 L146,48 M150,60 H200 M280,60 H350 V145 M350,185 V270 H34 M290,60 V150 M290,162 V270 M130,110 V66 M190,60 V140 M190,200 V270"/>
+          <circle class="r" cx="110" cy="60" r="3"/><circle class="r" cx="150" cy="60" r="3"/>
+          <text x="130" y="36" text-anchor="middle" class="t">开关管 S</text>
+          <rect class="box" x="96" y="110" width="68" height="34" rx="4"/><text x="130" y="132" text-anchor="middle" class="t">PWM 控制</text>
+          <path class="w" d="M200,60 a10,10 0 0 1 20,0 a10,10 0 0 1 20,0 a10,10 0 0 1 20,0 a10,10 0 0 1 20,0"/>
+          <text x="240" y="44" text-anchor="middle" class="t">L</text>
+          <g id="s1-db"></g>
+          <line class="bar" x1="276" y1="150" x2="304" y2="150"/><line class="bar" x1="276" y1="162" x2="304" y2="162"/>
+          <text x="310" y="160" class="t">C</text>
+          <rect class="r" x="341" y="145" width="18" height="40" rx="2"/><text x="366" y="170" class="t">RL</text>
+          <circle class="dot" cx="190" cy="60" r="3.5"/><circle class="dot" cx="290" cy="60" r="3.5"/><circle class="dot" cx="190" cy="270" r="3.5"/><circle class="dot" cx="290" cy="270" r="3.5"/>
+          <path id="s1-fb1" class="flow" d="M34,64 H350 V270 H34"/>
+          <path id="s1-fb2" class="flow thin" style="stroke:var(--copper)" d="M186,266 V60 H350 V270 H190"/>
+        </g>
+        <text id="s1-vot" x="410" y="44" text-anchor="end" class="v hi">5.00 V</text>
+      </svg>
+      <figcaption id="s1-cap">绿线为负载电流路径，细线为齐纳管分流。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">稳压方式</span>
+        <div class="seg" id="s1-m"><button id="s1-m-z" data-v="z" aria-pressed="false">齐纳</button><button id="s1-m-l" data-v="l" aria-pressed="true">LDO</button><button id="s1-m-b" data-v="b" aria-pressed="false">开关 Buck</button></div></div>
+      <div class="ctl"><label class="ctl-l" for="s1-vin">输入电压 Vin</label><span class="rv" id="s1-vinv">12 V</span>
+        <input type="range" id="s1-vin" min="6" max="24" step="0.5" value="12"></div>
+      <div class="ctl"><label class="ctl-l" for="s1-i">负载电流 IL</label><span class="rv" id="s1-iv">100 mA</span>
+        <input type="range" id="s1-i" min="0" max="8" step="1" value="3"></div>
+      <dl class="read">
+        <dt>输出电压</dt><dd id="s1-vo">—</dd>
+        <dt>输出功率</dt><dd id="s1-po">—</dd>
+        <dt>输入功率</dt><dd id="s1-pi">—</dd>
+        <dt>损耗</dt><dd id="s1-pl">—</dd>
+        <dt>效率 η</dt><dd id="s1-eta">—</dd>
+        <dt>状态</dt><dd><span id="s1-st" class="chip on">—</span></dd>
+      </dl>
+      <p class="note" id="s1-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="eff">
+  <span class="eyebrow">效率 · 随输入电压</span>
+  <h2>三条效率曲线放在一起比</h2>
+  <p>输出固定 5 V。LDO 的效率只由 Vout / Vin 决定，和负载电流几乎无关，输入越高越差。齐纳还要多付出稳压管上的分流电流，轻载时反而最浪费。开关电源效率高且平，但轻载时驱动和静态损耗占比变大，效率会掉下来。</p>
+  <div class="demo">
+    <figure>
+      <svg viewBox="0 0 520 280" role="img" aria-label="齐纳、LDO、Buck 三种稳压方式的效率随输入电压变化的曲线">
+        <g id="s2-grid"></g>
+        <path class="ax" d="M50,20 V240 H470"/>
+        <text x="54" y="14" class="tm">效率 η / %</text>
+        <text x="470" y="274" text-anchor="end" class="tm">输入电压 Vin / V</text>
+        <polyline id="s2-z" class="real" points=""/>
+        <polyline id="s2-l" class="real2" points=""/>
+        <polyline id="s2-b" class="real3" points=""/>
+        <text id="s2-zt" x="476" y="200" class="t" style="fill:var(--copper)">齐纳</text>
+        <text id="s2-lt" x="476" y="180" class="t" style="fill:var(--low)">LDO</text>
+        <text id="s2-bt" x="476" y="40" class="t" style="fill:var(--flow)">Buck</text>
+        <line id="s2-mk" class="ax dash" x1="190" x2="190" y1="20" y2="240"/>
+      </svg>
+      <figcaption>示意模型：Vout = 5 V。齐纳 Rs = 27 Ω；LDO 静态电流 1 mA、压差 0.3 V；Buck 按导通电阻 0.2 Ω、开关损耗 0.01·Vin·IL、固定损耗 0.1 W 估算。齐纳曲线缺的部分是电流不够、已失去稳压。虚线是上一节选的 Vin。</figcaption>
+    </figure>
+    <div class="panel">
+      <div class="ctl"><span class="ctl-l">负载电流</span>
+        <div class="seg" id="s2-i"><button id="s2-i-10" data-v="0.01" aria-pressed="false">10 mA</button><button id="s2-i-100" data-v="0.1" aria-pressed="true">100 mA</button><button id="s2-i-1" data-v="1" aria-pressed="false">1 A</button></div></div>
+      <dl class="read">
+        <dt>在 Vin = <span id="s2-vin">12</span> V 时</dt><dd></dd>
+        <dt>齐纳</dt><dd id="s2-rz">—</dd>
+        <dt>LDO</dt><dd id="s2-rl">—</dd>
+        <dt>Buck</dt><dd id="s2-rb">—</dd>
+      </dl>
+      <p class="note" id="s2-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="tbl">
+  <span class="eyebrow">对比 · 选型</span>
+  <h2>三种稳压方式对比</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>项目</th><th>齐纳稳压</th><th>LDO 线性稳压</th><th>开关稳压（Buck）</th></tr></thead>
+    <tbody>
+      <tr><td>原理</td><td>稳压管反向击穿，分流多余电流</td><td>调整管工作在线性区，当可变电阻</td><td>开关管通断 + LC 储能平均</td></tr>
+      <tr><td>效率</td><td>低，轻载更低</td><td>≈ Vout / Vin</td><td>高，典型 80%~95%</td></tr>
+      <tr><td>输出电流</td><td>小，mA 到几十 mA</td><td>中，mA 到几 A</td><td>大，可到几十 A</td></tr>
+      <tr><td>噪声 / 纹波</td><td>稳压管噪声较大</td><td>低噪声，PSRR 好</td><td>有开关纹波和 EMI</td></tr>
+      <tr><td>能否升压</td><td>不能</td><td>不能</td><td>换 Boost 等拓扑可以</td></tr>
+      <tr><td>成本 / 体积</td><td>最低</td><td>低，外围只要电容</td><td>要电感、布局讲究</td></tr>
+      <tr><td>典型用途</td><td>基准、钳位、小电流偏置</td><td>ADC、射频、传感器供电，开关电源后级</td><td>主电源轨，大压差大电流</td></tr>
+    </tbody>
+  </table></div>
+  <p>常见组合：开关电源先把 12 V 高效降到 3.6 V，再用 LDO 降到 3.3 V 滤掉开关纹波，兼顾效率和噪声。更细的对比见 <a href="../07-电源相关/01-LDO与开关电源对比.html">LDO与开关电源对比</a>，Buck 原理见 <a href="../07-电源相关/02-Buck拓扑.html">Buck拓扑</a>。</p>
+</section>
+
+<section id="qa">
+  <span class="eyebrow">面试怎么答</span>
+  <h2>常见追问</h2>
+  <div class="qa">
+    <details open><summary>LDO 的效率为什么约等于 Vout / Vin？</summary>
+      <div class="ans"><p>因为调整管和负载串联，流过同一个电流，输入电流 ≈ 输出电流（静态电流很小）。所以 η = Vout·I / (Vin·I) = Vout / Vin。多出来的 (Vin − Vout)·I 全变成调整管上的热。12 V 降 5 V、1 A，调整管要耗 7 W。</p></div></details>
+    <details><summary>LDO 的"低压差"是什么意思？</summary>
+      <div class="ans"><p>压差（dropout）是维持稳压所需的最小 Vin − Vout。传统 7805 用 NPN 达林顿做调整管，压差约 2 V；LDO 用 PNP 或 PMOS 做调整管，可以接近饱和，压差可以低到一两百 mV（典型值）。输入低于 Vout + 压差，输出就跟着输入往下掉。</p></div></details>
+    <details><summary>齐纳稳压的串联电阻怎么选？</summary>
+      <div class="ans"><p>要在最坏情况下稳压管仍有最小工作电流：Rs ≤ (Vin_min − Vz) / (IL_max + Iz_min)。同时要检查最坏的另一头：Vin 最高、负载最轻时，全部电流流进稳压管，功耗 Vz·(Vin_max − Vz) / Rs 不能超过额定值。所以它只适合小电流。</p></div></details>
+    <details><summary>什么时候选 LDO，什么时候选开关电源？</summary>
+      <div class="ans"><p>压差小、电流小、对噪声敏感（ADC 基准、射频、音频）选 LDO；压差大或电流大、在乎效率和发热选开关电源。两者常组合使用：开关电源做主降压，LDO 做后级清理纹波。</p></div></details>
+  </div>
+</section>
+
+<nav class="pager"><a class="prev" href="03-LC滤波.html"><span>上一页</span>LC滤波</a><a class="next" href="05-分压偏置.html"><span>下一页</span>分压偏置</a></nav>
+</div>
+<script src="../_assets/kit.js"></script>
+<script>
+function dio(g,x1,y1,x2,y2,lab,zen){
+  const cx=(x1+x2)/2,cy=(y1+y2)/2,a=Math.atan2(y2-y1,x2-x1)*180/Math.PI;
+  g.append(svgEl('path',{class:'w',d:`M${x1},${y1} L${x2},${y2}`}));
+  const k=svgEl('g',{transform:`translate(${cx},${cy}) rotate(${a})`});
+  const tri=svgEl('polygon',{class:'r',points:'-8,-9 -8,9 8,0'});
+  k.append(tri,svgEl('path',{class:'w',d:zen?'M4,-12 L8,-9 V9 L12,12':'M8,-9 V9'}));g.append(k);
+  g.append(svgEl('text',{x:cx+14,y:cy+5,class:'t'},lab));
+  return tri;
+}
+/* 齐纳：阳极在下、阴极在上，反向工作 */
+const s1Z=dio($('s1-dz'),230,190,230,130,'Dz 5 V',true);
+const s1B=dio($('s1-db'),190,200,190,140,'D 续流');
+const IL=[0.01,0.02,0.05,0.1,0.2,0.3,0.5,0.7,1];
+/* 三种模型，返回 {vo, pin, pl, ok, st, cls, extra} */
+function mZ(vin,il){const rs=27,is=(vin-5)/rs,iz=is-il;
+  if(iz<0.005){const vo=Math.max(0,Math.min(5,vin-il*rs)),pin=vin*il;return {vo,pin,pl:pin-vo*il,ok:false,iz:0,st:'失去稳压',cls:'bad'};}
+  const pz=5*iz;return {vo:5,pin:vin*is,pl:vin*is-5*il,ok:true,iz,pz,st:pz>1?'稳压管过功耗':'稳压',cls:pz>1?'bad':'on'};}
+function mL(vin,il){const iq=1e-3,vo=Math.min(5,vin-0.3),pl=(vin-vo)*il+vin*iq,tj=25+pl*60;
+  return {vo,pin:vin*(il+iq),pl,ok:vo>=5,tj,st:vo<5?'掉出稳压':tj>125?'过热':'稳压',cls:vo<5||tj>125?'bad':'on'};}
+function mB(vin,il){const pl=il*il*0.2+0.01*vin*il+0.1;return {vo:5,pin:5*il+pl,pl,ok:vin>=5.3,st:'稳压',cls:'on'};}
+const MD={z:mZ,l:mL,b:mB};
+const s1={m:'l'};
+function s1u(){
+  const vin=+$('s1-vin').value,il=IL[+$('s1-i').value],m=s1.m,r=MD[m](vin,il),eta=r.vo*il/r.pin;
+  $('s1-vinv').textContent=vin+' V';$('s1-vin').setAttribute('aria-valuetext',vin+' V');
+  $('s1-iv').textContent=fmtA(il);$('s1-i').setAttribute('aria-valuetext',fmtA(il));
+  show($('s1-gz'),m==='z');show($('s1-gl'),m==='l');show($('s1-gb'),m==='b');
+  $('s1-vo').textContent=fmtV(r.vo);$('s1-vot').textContent='Vout '+fmtV(r.vo);
+  $('s1-po').textContent=fmtP(r.vo*il);$('s1-pi').textContent=fmtP(r.pin);$('s1-pl').textContent=fmtP(r.pl);
+  $('s1-eta').textContent=(eta*100).toFixed(0)+' %';
+  chip($('s1-st'),r.st,r.cls);
+  let note,cap;
+  if(m==='z'){
+    s1Z.classList.toggle('lit',r.ok);show($('s1-fz2'),r.ok);$('s1-izt').textContent='Iz = '+(r.ok?fmtA(r.iz):'0');
+    $('s1-fz2').style.strokeWidth=r.ok?(1.5+4*Math.min(1,r.iz/0.5)).toFixed(1):'';
+    cap='绿线为负载电流，竖直细线为稳压管分流 Iz，线越粗电流越大。Rs 上的电流 = Iz + IL。';
+    note=!r.ok?'负载要的电流超过了 Rs 能提供的 (Vin − Vz) / Rs，稳压管退出击穿，输出跟着掉下去。齐纳稳压只适合小电流。'
+      :'Rs 上电流固定为 (Vin − 5) / Rs = '+fmtA((vin-5)/27)+'，负载不用的部分全部流进稳压管变成热。稳压管功耗 '+fmtP(r.pz)+(r.pz>1?'，超过 1 W 额定值。':'。')+'负载越轻，浪费越多。';
+  }else if(m==='l'){
+    cap='绿线为负载电流，调整管和负载串联。R1、R2 把输出分压送回误差放大器，与 Vref 比较。';
+    note=!r.ok?'Vin − Vout 小于压差 0.3 V，调整管已经全开，输出只能跟着输入往下掉，这叫掉出稳压（dropout）。'
+      :'调整管压降 = Vin − Vout = '+fmtV(vin-5,1)+'，乘负载电流就是它的发热 '+fmtP((vin-5)*il)+'。效率 ≈ 5 / '+vin+' = '+(500/vin).toFixed(0)+'%，和电流无关。按热阻 60 °C/W（示意）估算结温约 '+r.tj.toFixed(0)+' °C'+(r.tj>125?'，已超过 125 °C。':'。');
+  }else{
+    s1B.classList.remove('lit');
+    cap='绿线：开关管导通时，电流从 Vin 经电感流向负载。橙线：开关管关断时，电感电流经续流二极管继续流（同步整流时换成下管）。';
+    note='占空比 D = Vout / Vin = '+(5/vin*100).toFixed(0)+'%。电感把能量存起来再放出去，不需要把多余电压烧掉。损耗主要是导通损耗 I²·R、开关损耗和驱动/静态损耗。'+(il<=0.02?'轻载时固定损耗占大头，效率明显下降。':'');
+  }
+  $('s1-cap').textContent=cap;$('s1-note').textContent=note;
+  $('s2-vin').textContent=vin;const x=s2X(vin).toFixed(1);$('s2-mk').setAttribute('x1',x);$('s2-mk').setAttribute('x2',x);s2r();
+}
+seg('s1-m',v=>{s1.m=v;s1u();});
+$('s1-vin').addEventListener('input',s1u);$('s1-i').addEventListener('input',s1u);
+
+/* 2. 效率曲线 */
+const s2X=scale(6,24,50,470),s2Y=scale(0,100,240,20),s2={i:0.1};
+(function(){const g=$('s2-grid');
+  [0,25,50,75,100].forEach(v=>{const y=s2Y(v);g.append(svgEl('line',{class:'gl',x1:50,x2:470,y1:y,y2:y}),svgEl('text',{x:44,y:y+4,'text-anchor':'end',class:'v'},v));});
+  [6,9,12,15,18,21,24].forEach(v=>{g.append(svgEl('text',{x:s2X(v),y:256,'text-anchor':v===24?'end':'middle',class:'v'},v));});})();
+function eta(fn,vin,il){const r=fn(vin,il);return r.ok?r.vo*il/r.pin*100:NaN;}
+function s2r(){
+  const vin=+$('s1-vin').value,il=s2.i;
+  const f=(fn)=>{const e=eta(fn,vin,il);return isFinite(e)?e.toFixed(0)+' %，损耗 '+fmtP(fn(vin,il).pl):'失去稳压';};
+  $('s2-rz').textContent=f(mZ);$('s2-rl').textContent=f(mL);$('s2-rb').textContent=f(mB);
+}
+function s2u(){
+  const il=s2.i;
+  [['z',mZ],['l',mL],['b',mB]].forEach(([k,fn])=>{
+    $('s2-'+k).setAttribute('points',plot(v=>eta(fn,v,il),6,24,s2X,s2Y,180));
+    const e=eta(fn,24,il);$('s2-'+k+'t').setAttribute('y',(s2Y(isFinite(e)?e:0)+4).toFixed(1));
+  });
+  const ez=eta(mZ,24,il),el=eta(mL,24,il);
+  if(Math.abs(ez-el)<6){$('s2-zt').setAttribute('y',(s2Y(ez)+(ez<el?14:-6)).toFixed(1));}
+  $('s2-note').textContent=il<=0.01?'10 mA 轻载：Buck 的固定损耗 0.1 W 比输出功率 50 mW 还大，效率反而不如 LDO。实际芯片会在轻载切到 PFM / 跳脉冲模式来改善。'
+    :il>=1?'1 A 重载：齐纳根本供不了这么大电流，曲线消失。LDO 在 24 V 输入时要烧掉 19 W，基本不可用；Buck 仍在 85% 以上。'
+    :'100 mA：齐纳在 Vin 较低时稳不住，Vin 高了又大部分电流流进稳压管。LDO 是一条 5 / Vin 的曲线。Buck 始终最高。';
+  s2r();
+}
+seg('s2-i',v=>{s2.i=+v;s2u();});
+s2u();s1u();
+</script>
+</body>
+</html>
