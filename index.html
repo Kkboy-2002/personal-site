@@ -1,147 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>任佳欢 · 个人站</title>
 <meta name="description" content="任佳欢,电子信息硕士,FPGA/光电系统方向。项目作品、交互式教程与知识分享。">
+<meta name="theme-color" content="#f7f9f8">
+<script>
+document.documentElement.classList.add('js');
+(function(){try{var m=localStorage.getItem('theme');if(m==='light'||m==='dark')document.documentElement.setAttribute('data-theme',m);
+var d=m==='dark'||(!m&&matchMedia('(prefers-color-scheme: dark)').matches);
+document.querySelector('meta[name=theme-color]').setAttribute('content',d?'#0c1211':'#f7f9f8');}catch(e){}})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@600;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f3f5f4;
+  --bg:#f7f9f8;
+  --bg-trans:rgba(247,249,248,.86);
   --surface:#ffffff;
-  --fg:#1c2b28;
-  --fg-soft:#5b6b67;
-  --line:#d8e0dd;
-  --accent:#0e7c66;
-  --accent-soft:#e2f0ec;
-  --warn:#a05a12;
-  --warn-soft:#f7ead6;
+  --surface-2:#eef3f1;
+  --fg:#0f1a18;
+  --fg-soft:#57665f;
+  --line:#dee6e2;
+  --accent:#0b7a63;
+  --accent-2:#0d9488;
+  --accent-fg:#ffffff;
+  --accent-soft:#e3f2ed;
+  --warn:#8f4f0d;
+  --warn-soft:#f8ecdb;
+  --shadow:0 1px 2px rgba(15,26,24,.05),0 10px 28px -14px rgba(15,26,24,.18);
+  --radius:14px;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#121716;
-  --surface:#1a2120;
-  --fg:#e4ebe8;
-  --fg-soft:#93a29d;
-  --line:#2b3533;
-  --accent:#4fc3a5;
-  --accent-soft:#173029;
+  --bg:#0c1211;
+  --bg-trans:rgba(12,18,17,.86);
+  --surface:#141c1a;
+  --surface-2:#1b2523;
+  --fg:#e7eeeb;
+  --fg-soft:#8d9f99;
+  --line:#253230;
+  --accent:#5ad3b4;
+  --accent-2:#2dd4bf;
+  --accent-fg:#08120f;
+  --accent-soft:#10302a;
   --warn:#e0a458;
   --warn-soft:#3a2c17;
+  --shadow:0 1px 2px rgba(0,0,0,.45),0 12px 32px -16px rgba(0,0,0,.8);
   color-scheme:dark;
 }}
 :root[data-theme="dark"]{
-  --bg:#121716;
-  --surface:#1a2120;
-  --fg:#e4ebe8;
-  --fg-soft:#93a29d;
-  --line:#2b3533;
-  --accent:#4fc3a5;
-  --accent-soft:#173029;
+  --bg:#0c1211;
+  --bg-trans:rgba(12,18,17,.86);
+  --surface:#141c1a;
+  --surface-2:#1b2523;
+  --fg:#e7eeeb;
+  --fg-soft:#8d9f99;
+  --line:#253230;
+  --accent:#5ad3b4;
+  --accent-2:#2dd4bf;
+  --accent-fg:#08120f;
+  --accent-soft:#10302a;
   --warn:#e0a458;
   --warn-soft:#3a2c17;
+  --shadow:0 1px 2px rgba(0,0,0,.45),0 12px 32px -16px rgba(0,0,0,.8);
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-body{
-  margin:0;background:var(--bg);color:var(--fg);
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);
   font-family:"Noto Sans SC",system-ui,-apple-system,"Microsoft YaHei",sans-serif;
-  font-size:15px;line-height:1.75;padding:0 16px;
-}
-.wrap{max-width:960px;margin:0 auto;padding-block:0 64px}
-a{color:var(--accent)}
-h1,h2,h3{font-family:"Noto Serif SC","Noto Sans SC",serif;text-wrap:balance;margin:0}
+  font-size:15.5px;line-height:1.7;-webkit-font-smoothing:antialiased}
+img{max-width:100%;height:auto;display:block}
+a{color:inherit}
+h1,h2,h3,h4{margin:0;font-weight:700;letter-spacing:-.01em;line-height:1.28}
 .mono{font-family:"JetBrains Mono",Consolas,monospace}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:12px;top:12px;z-index:100;background:var(--accent);color:var(--accent-fg);padding:9px 15px;border-radius:9px;text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:7px}
 
-/* hero */
-.hero{padding-block:64px 40px;border-bottom:1px solid var(--line)}
-.kicker{letter-spacing:.18em;font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px}
-.hero h1{font-size:clamp(30px,6vw,46px);font-weight:900;line-height:1.25}
-.hero .role{margin-top:12px;font-size:16px;color:var(--fg-soft)}
-.hero .role b{color:var(--fg)}
-.hero-links{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap}
-.btn{display:inline-block;text-decoration:none;font-size:13.5px;font-weight:500;padding:7px 16px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-.wave{margin-top:34px;width:100%;height:44px;display:block}
+/* ── 顶栏 ── */
+.topbar{position:sticky;top:0;z-index:50;background:var(--bg-trans);
+  backdrop-filter:saturate(160%) blur(14px);-webkit-backdrop-filter:saturate(160%) blur(14px);
+  border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:14px;min-height:58px;padding-block:8px}
+.brand{display:flex;align-items:center;gap:9px;text-decoration:none;font-weight:700;flex:none;font-size:14.5px}
+.brand .mark{display:grid;place-items:center;width:29px;height:29px;border-radius:9px;background:var(--accent);color:var(--accent-fg);font-size:11px;font-weight:600;letter-spacing:.02em}
+nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin-left:auto}
+nav::-webkit-scrollbar{display:none}
+nav a{flex:none;text-decoration:none;font-size:13px;color:var(--fg-soft);padding:6px 11px;border-radius:8px;
+  white-space:nowrap;transition:color .18s,background .18s}
+nav a:hover{color:var(--fg);background:var(--surface-2)}
+nav a.on{color:var(--accent);background:var(--accent-soft);font-weight:600}
+.icon-btn{flex:none;width:35px;height:35px;display:grid;place-items:center;border:1px solid var(--line);
+  background:var(--surface);color:var(--fg-soft);border-radius:10px;cursor:pointer;
+  transition:color .18s,border-color .18s}
+.icon-btn:hover{color:var(--accent);border-color:var(--accent)}
+.icon-btn svg{width:17px;height:17px}
 
-/* nav */
-nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:10px 0 8px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
-nav a{text-decoration:none;font-size:12.5px;font-weight:500;padding:4px 11px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+/* ── Hero ── */
+.hero{padding:56px 0 0}
+.hero-grid{display:grid;grid-template-columns:1.4fr .95fr;gap:38px;align-items:center}
+.kicker{font-size:11px;letter-spacing:.2em;color:var(--accent);margin:0 0 15px;text-transform:uppercase}
+h1{font-family:"Noto Serif SC","Noto Sans SC",serif;font-size:clamp(38px,6.2vw,60px);font-weight:900;line-height:1.06}
+.role{margin:16px 0 0;font-size:15.5px;color:var(--fg-soft)}
+.role b{color:var(--fg);font-weight:600}
+.role-sub{margin:10px 0 0;font-size:14.5px;color:var(--fg-soft);max-width:54ch}
+.hero-cta{margin-top:26px;display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:7px;text-decoration:none;font-size:14px;font-weight:500;
+  padding:10px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);
+  transition:transform .18s,border-color .18s,box-shadow .18s}
+.btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{box-shadow:0 10px 24px -12px var(--accent)}
+.chips{list-style:none;display:flex;flex-wrap:wrap;gap:7px;margin:26px 0 0;padding:0}
+.chips li{font-family:"JetBrains Mono",Consolas,monospace;font-size:11px;padding:4px 10px;border-radius:7px;
+  background:var(--surface-2);color:var(--fg-soft);border:1px solid var(--line)}
+.hero-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:15px 15px 10px}
+.panel-head{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.14em;
+  color:var(--fg-soft);padding:0 3px 12px;text-transform:uppercase}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2.2s ease-in-out infinite;flex:none}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.75)}}
+.hero-panel svg{width:100%;height:auto;display:block}
+.nd-t{font-size:13px;font-weight:600;fill:var(--fg)}
+.nd-s{font-size:9.5px;fill:var(--fg-soft);letter-spacing:.03em}
+.flow{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:5 5;animation:dash 1.4s linear infinite;fill:none}
+@keyframes dash{to{stroke-dashoffset:-20}}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin:44px 0 0;padding:0;
+  background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;list-style:none}
+.stats li{background:var(--surface);padding:17px 20px}
+.stats .k{font-family:"JetBrains Mono",Consolas,monospace;font-size:10.5px;letter-spacing:.14em;
+  color:var(--fg-soft);text-transform:uppercase}
+.stats .v{margin-top:5px;font-size:27px;font-weight:700;letter-spacing:-.02em;color:var(--accent);line-height:1.2}
 
-/* sections */
-section{margin-top:52px;scroll-margin-top:70px}
-.sec-head{border-bottom:2px solid var(--fg);padding-bottom:8px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-.sec-head h2{font-size:22px;font-weight:900}
-.sec-head .cnt{font-size:13px;color:var(--fg-soft)}
-.sec-intro{color:var(--fg-soft);margin:12px 0 0;font-size:14px}
+/* ── 区块 ── */
+section{margin-top:82px;scroll-margin-top:78px}
+.sec-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:7px}
+.sec-head h2{font-size:clamp(20px,2.5vw,26px);font-weight:700}
+.snum{font-family:"JetBrains Mono",Consolas,monospace;font-size:11px;color:var(--accent);letter-spacing:.08em}
+.cnt{font-family:"JetBrains Mono",Consolas,monospace;font-size:11px;color:var(--fg-soft);margin-left:auto;letter-spacing:.06em}
+.sec-rule{height:1px;background:linear-gradient(90deg,var(--accent),var(--line) 42%,transparent);margin-bottom:22px}
+.sec-intro{color:var(--fg-soft);font-size:14px;margin:0 0 22px;max-width:64ch}
 
-/* cards */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:18px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column}
-.card .top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
-.card h3{font-size:16.5px;font-weight:700}
-.card .year{font-size:12px;color:var(--fg-soft);flex:none}
-.card p{margin:8px 0 0;font-size:13.5px;color:var(--fg);flex:1}
-.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
-.tag{font-family:"JetBrains Mono",Consolas,monospace;font-size:10.5px;padding:2px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
-.card .go{margin-top:12px;font-size:13px;font-weight:500;text-decoration:none}
-.badge{font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;background:var(--warn-soft);color:var(--warn)}
+/* ── 卡片 ── */
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;
+  display:flex;flex-direction:column;overflow:hidden;
+  transition:border-color .2s,box-shadow .2s,transform .2s}
+.card:hover{border-color:var(--accent);box-shadow:var(--shadow);transform:translateY(-2px)}
+.card.s2{grid-column:span 2}
+.card.s3{grid-column:span 3}
+.card-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.card h3{font-size:16px;font-weight:700}
+.year{margin-left:auto;flex:none;font-family:"JetBrains Mono",Consolas,monospace;font-size:11px;color:var(--fg-soft)}
+.card p{margin:9px 0 0;font-size:13.5px;color:var(--fg-soft);line-height:1.72}
+.card p a{color:var(--accent)}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:auto;padding-top:14px}
+.tag{font-family:"JetBrains Mono",Consolas,monospace;font-size:10px;padding:2px 8px;border-radius:6px;
+  background:var(--accent-soft);color:var(--accent)}
+.spec{display:flex;flex-wrap:wrap;gap:4px 16px;margin:15px 0 0;padding-top:14px;border-top:1px dashed var(--line)}
+.spec span{font-family:"JetBrains Mono",Consolas,monospace;font-size:10.5px;color:var(--fg-soft)}
+.spec span::before{content:"▸";color:var(--accent);margin-right:6px}
+.badge{font-family:"JetBrains Mono",Consolas,monospace;font-size:10px;font-weight:600;padding:3px 9px;
+  border-radius:99px;background:var(--warn-soft);color:var(--warn)}
+.shot{margin:-20px -20px 16px;border-bottom:1px solid var(--line);background:var(--surface-2);overflow:hidden}
+.shot img{width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;object-position:top center;transition:transform .35s ease}
+.card:hover .shot img{transform:scale(1.03)}
 
-/* tutorial list */
-.tlist{margin-top:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
-.trow{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px;text-decoration:none;color:var(--fg)}
-.trow:hover{border-color:var(--accent)}
-.trow .t{font-weight:500;font-size:14px;min-width:0}
-.trow .d{display:block;font-size:12px;color:var(--fg-soft);font-weight:400;margin-top:2px}
-.trow .arrow{color:var(--accent);flex:none;font-family:"JetBrains Mono",monospace}
+/* ── 教程瓦片 ── */
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.tiles.two{grid-template-columns:repeat(2,1fr)}
+.tile{display:flex;flex-direction:column;text-decoration:none;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+  transition:border-color .2s,box-shadow .2s,transform .2s}
+.tile:hover{border-color:var(--accent);box-shadow:var(--shadow);transform:translateY(-2px)}
+.tile .thumb{background:var(--surface-2);border-bottom:1px solid var(--line);overflow:hidden}
+.tile .thumb img{width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;object-position:top center;transition:transform .35s ease}
+.tile:hover .thumb img{transform:scale(1.03)}
+.tile .body{padding:15px 17px 17px;display:flex;flex-direction:column;gap:6px;flex:1}
+.tile h3{font-size:15px;font-weight:700}
+.tile .d{font-size:12.5px;color:var(--fg-soft);line-height:1.65;flex:1}
+.tile .meta{display:flex;align-items:center;gap:8px;margin-top:5px}
+.tile .meta .p{font-family:"JetBrains Mono",Consolas,monospace;font-size:10.5px;color:var(--fg-soft)}
+.tile .meta .go{margin-left:auto;font-family:"JetBrains Mono",Consolas,monospace;font-size:12.5px;
+  color:var(--accent);transition:transform .2s}
+.tile:hover .meta .go{transform:translateX(3px)}
 
-/* about */
-.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
-@media (max-width:640px){.about-grid{grid-template-columns:1fr}}
-.about-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
-.about-card h3{font-size:15px;margin-bottom:8px}
-.about-card ul{margin:0;padding-left:18px}
-.about-card li{font-size:13.5px;margin-top:5px}
-.about-card li b{font-weight:600}
+/* ── 行列表 ── */
+.rows{display:grid;gap:10px}
+.row{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;padding:13px 18px;text-decoration:none;transition:border-color .2s,transform .2s}
+.row:hover{border-color:var(--accent);transform:translateX(2px)}
+.row .rt{font-weight:600;font-size:14.5px;flex:none}
+.row .rd{font-size:12.5px;color:var(--fg-soft);min-width:0}
+.row .go{margin-left:auto;color:var(--accent);font-family:"JetBrains Mono",Consolas,monospace;flex:none}
 
-/* footer */
-footer{margin-top:64px;border-top:1px solid var(--line);padding-top:20px;color:var(--fg-soft);font-size:13px}
-footer .mono{font-size:11.5px}
-.note{margin-top:10px;font-size:12px;color:var(--fg-soft)}
+/* ── 关于我 ── */
+.about{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.about h3{font-size:14px;margin-bottom:9px;padding-bottom:9px;border-bottom:1px dashed var(--line)}
+.about ul{margin:0;padding-left:17px}
+.about li{font-size:13.5px;color:var(--fg-soft);margin-top:6px;line-height:1.7}
+.about li b{color:var(--fg);font-weight:600}
+
+/* ── 页脚 ── */
+footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface)}
+.foot{display:grid;grid-template-columns:1.5fr 1fr;gap:30px;padding:34px 20px 42px;max-width:1120px;margin:0 auto}
+.foot h4{font-size:11px;letter-spacing:.16em;color:var(--fg-soft);text-transform:uppercase;
+  font-family:"JetBrains Mono",Consolas,monospace;font-weight:600}
+.foot p{margin:10px 0 0;font-size:13.5px;color:var(--fg-soft)}
+.foot a{color:var(--accent);text-decoration:none}
+.foot a:hover{text-decoration:underline}
+.note{font-size:12px;color:var(--fg-soft)}
+
+/* ── 动效 ── */
+.js .rv{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease}
+.js .rv.in{opacity:1;transform:none}
+
+@media (max-width:960px){
+  .hero-grid{grid-template-columns:1fr;gap:30px}
+  .bento{grid-template-columns:repeat(4,1fr)}
+  .card.s2{grid-column:span 2}
+  .card.s3{grid-column:span 4}
+  .tiles,.tiles.two{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:640px){
+  body{font-size:15px}
+  .wrap{padding:0 16px}
+  .bar{min-height:54px}
+  .brand .bt{display:none}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .bento{grid-template-columns:1fr}
+  .card.s2,.card.s3{grid-column:span 1}
+  .tiles,.tiles.two{grid-template-columns:1fr}
+  .about{grid-template-columns:1fr}
+  .foot{grid-template-columns:1fr;padding:30px 16px 38px}
+  section{margin-top:64px}
+  .row .rd{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .js .rv{opacity:1;transform:none;transition:none}
+  .tile:hover .thumb img,.card:hover .shot img{transform:none}
+  .dot,.flow{animation:none}
+  .card:hover,.tile:hover,.btn:hover,.row:hover{transform:none}
+}
 </style>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
 
-<div class="wrap">
+<header class="topbar">
+  <div class="wrap bar">
+    <a class="brand" href="#top"><span class="mark mono">RJ</span><span class="bt">任佳欢</span></a>
+    <nav id="nav" aria-label="页面导航">
+      <a href="#about">关于</a>
+      <a href="#projects">硬件 / FPGA</a>
+      <a href="#software">软件工程</a>
+      <a href="#tutorials">交互式教程</a>
+      <a href="#academic">竞赛学术</a>
+      <a href="#freelance">项目定制</a>
+      <a href="#demos">在线 Demo</a>
+    </nav>
+    <button id="theme" class="icon-btn" type="button" aria-label="切换主题" title="切换主题(自动 / 浅色 / 深色)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4.2"/>
+        <path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.4 5.4l1.5 1.5M17.1 17.1l1.5 1.5M18.6 5.4l-1.5 1.5M6.9 17.1l-1.5 1.5"/>
+      </svg>
+    </button>
+  </div>
+</header>
+<main id="main" class="wrap">
 
-  <header class="hero">
-    <div class="kicker">REN JIAHUAN · PORTFOLIO & NOTES</div>
-    <h1>任佳欢</h1>
-    <p class="role"><b>电子信息硕士</b>(西安工业大学,2027 届)· 光电信息科学与工程本科 · 专注 <b>FPGA 逻辑</b>、<b>光电系统设计</b> 与 <b>嵌入式开发</b></p>
-    <div class="hero-links">
-      <a class="btn primary" href="#tutorials">交互式教程</a>
-      <a class="btn" href="#projects">项目作品</a>
-      <a class="btn" href="#demos">在线 Demo</a>
+  <!-- ============ Hero ============ -->
+  <section class="hero" id="top">
+    <div class="hero-grid">
+      <div>
+        <p class="kicker mono">REN JIAHUAN · PORTFOLIO &amp; NOTES</p>
+        <h1>任佳欢</h1>
+        <p class="role"><b>电子信息硕士</b>(西安工业大学,2027 届)· 光电信息科学与工程本科</p>
+        <p class="role-sub">专注 <b>FPGA 逻辑设计</b>、<b>光电成像系统</b> 与 <b>嵌入式开发</b>。把做过的东西整理成可交互的教程与能直接打开的 Demo —— 教程全部自制,离线可用。</p>
+        <div class="hero-cta">
+          <a class="btn primary" href="#tutorials">浏览交互式教程</a>
+          <a class="btn" href="#projects">查看项目作品</a>
+        </div>
+        <ul class="chips">
+          <li>Artix-7 / Vivado / Verilog</li>
+          <li>STM32 / C</li>
+          <li>Altium / 立创 EDA</li>
+          <li>Python / PyQt5</li>
+          <li>ROS2 / 激光 SLAM</li>
+        </ul>
+      </div>
+      <aside class="hero-panel" aria-label="双波段 ISP 处理链示意">
+        <div class="panel-head mono"><span class="dot"></span>ISP PIPELINE · 双波段融合</div>
+        <svg viewBox="0 0 420 288" role="img" aria-label="双波段 ISP 处理链:RAW8 采集 → 去马赛克 → 色彩校正 → 差分融合">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/>
+            </marker>
+          </defs>
+          <rect x="16" y="12" width="388" height="48" rx="11" fill="var(--surface-2)" stroke="var(--line)"/>
+          <text class="nd-t" x="34" y="33">RAW8 采集</text>
+          <text class="nd-s mono" x="34" y="49">双路 OV5640 · 四时钟域跨域</text>
+          <circle cx="384" cy="36" r="4" fill="var(--accent)"/>
+          <path class="flow" d="M210 62 L210 78" marker-end="url(#ah)"/>
+          <rect x="16" y="84" width="388" height="48" rx="11" fill="var(--surface-2)" stroke="var(--line)"/>
+          <text class="nd-t" x="34" y="105">去马赛克</text>
+          <text class="nd-s mono" x="34" y="121">Bilinear · 边缘感知 · VNG</text>
+          <circle cx="384" cy="108" r="4" fill="var(--accent)"/>
+          <path class="flow" d="M210 134 L210 150" marker-end="url(#ah)"/>
+          <rect x="16" y="156" width="388" height="48" rx="11" fill="var(--surface-2)" stroke="var(--line)"/>
+          <text class="nd-t" x="34" y="177">色彩校正</text>
+          <text class="nd-s mono" x="34" y="193">CCM 标定 · 24 色卡双光源</text>
+          <circle cx="384" cy="180" r="4" fill="var(--accent)"/>
+          <path class="flow" d="M210 206 L210 222" marker-end="url(#ah)"/>
+          <rect x="16" y="228" width="388" height="48" rx="11" fill="var(--surface-2)" stroke="var(--line)"/>
+          <text class="nd-t" x="34" y="249">差分融合 · 输出</text>
+          <text class="nd-s mono" x="34" y="265">GDF 金字塔 · 自适应权重</text>
+          <circle cx="384" cy="252" r="4" fill="var(--accent)"/>
+        </svg>
+      </aside>
     </div>
-    <svg class="wave" viewBox="0 0 900 44" preserveAspectRatio="none" aria-hidden="true">
-      <polyline fill="none" stroke="var(--accent)" stroke-width="1.5" opacity=".55"
-        points="0,22 60,22 75,4 90,40 105,22 200,22 215,4 230,40 245,22 360,22 375,4 390,40 405,22 520,22 535,4 550,40 565,22 700,22 715,4 730,40 745,22 900,22"/>
-      <polyline fill="none" stroke="var(--accent)" stroke-width="1" opacity=".25"
-        points="0,30 120,30 135,14 150,42 165,30 300,30 315,14 330,42 345,30 520,30 535,14 550,42 565,30 760,30 775,14 790,42 805,30 900,30"/>
-    </svg>
-  </header>
-
-  <nav>
-    <a href="#about">关于</a>
-    <a href="#projects">硬件 / FPGA</a>
-    <a href="#software">软件工程</a>
-    <a href="#tutorials">交互式教程</a>
-    <a href="#academic">竞赛学术</a>
-    <a href="#freelance">项目定制</a>
-    <a href="#demos">在线 Demo</a>
-  </nav>
+    <ul class="stats">
+      <li><div class="k">教程专题</div><div class="v">12</div></li>
+      <li><div class="k">教程页面</div><div class="v">117</div></li>
+      <li><div class="k">项目条目</div><div class="v">21</div></li>
+      <li><div class="k">国家级奖项</div><div class="v">1</div></li>
+    </ul>
+  </section>
 
   <!-- ============ 关于 ============ -->
   <section id="about">
-    <div class="sec-head"><h2>关于我</h2></div>
-    <div class="about-grid">
-      <div class="about-card">
+    <div class="sec-head"><span class="snum">01</span><h2>关于我</h2></div>
+    <div class="sec-rule"></div>
+    <div class="about">
+      <div class="card">
         <h3>教育背景</h3>
         <ul>
           <li><b>2024.09 – 2027.06</b> 西安工业大学 · 电子信息 · 全日制硕士</li>
@@ -149,7 +346,7 @@ footer .mono{font-size:11.5px}
           <li>主修:数字图像处理、多光谱成像技术、光电成像技术与系统、单片机原理及接口技术、传感器原理等</li>
         </ul>
       </div>
-      <div class="about-card">
+      <div class="card">
         <h3>技术栈</h3>
         <ul>
           <li><b>FPGA:</b> Xilinx Artix-7 / Vivado / Verilog,时序收敛、ILA 调试、ISP 流水线算法</li>
@@ -159,7 +356,7 @@ footer .mono{font-size:11.5px}
           <li><b>机器人:</b> LIO-SAM + AMCL + Nav2 激光 SLAM,Jetson AGX Orin / RK3588</li>
         </ul>
       </div>
-      <div class="about-card">
+      <div class="card">
         <h3>荣誉奖项</h3>
         <ul>
           <li><b>国家级二等奖</b> — "华为杯"中国研究生数学建模竞赛(2025)</li>
@@ -168,7 +365,7 @@ footer .mono{font-size:11.5px}
           <li>校级数学建模三等奖(2022、2023)· 校级三等奖学金(2022、2023)</li>
         </ul>
       </div>
-      <div class="about-card">
+      <div class="card">
         <h3>经历(节选)</h3>
         <ul>
           <li><b>FPGA 多波段成像课题</b> — 独立承担系统方案、硬件设计、FPGA 逻辑与算法建模</li>
@@ -182,170 +379,353 @@ footer .mono{font-size:11.5px}
 
   <!-- ============ 硬件/FPGA ============ -->
   <section id="projects">
-    <div class="sec-head"><h2>硬件 / FPGA 项目</h2><span class="cnt">原创设计</span></div>
-    <div class="grid">
-      <div class="card">
-        <div class="top"><h3>FPGA 多波段远摄成像系统</h3><span class="year">2025.10 – 至今</span></div>
+    <div class="sec-head"><span class="snum">02</span><h2>硬件 / FPGA 项目</h2><span class="cnt">原创设计</span></div>
+    <div class="sec-rule"></div>
+    <div class="bento">
+      <article class="card s3 rv">
+        <div class="card-top"><h3>FPGA 多波段远摄成像系统</h3><span class="year">2025.10 – 至今</span></div>
         <p>研究生课题,独立承担全部环节。低成本可见光/近红外双波段成像:双目 OV5640 + IR-CUT 切换 + 主动近红外照明 + 差分融合。纯 Verilog 双路 RAW8 采集链路(四时钟域跨域、DDR3 缓存、千兆以太网上传),配 ISP/融合 C-model 与 24 色卡双光源标定、PyQt5 调参平台。应用于伪装目标识别、低照度远距离观测。</p>
+        <div class="spec"><span>可见光 / 近红外双波段</span><span>四时钟域跨域</span><span>DDR3 帧缓存</span><span>千兆以太网上传</span></div>
         <div class="tags"><span class="tag">Verilog</span><span class="tag">Artix-7</span><span class="tag">DDR3</span><span class="tag">ISP</span><span class="tag">STM32</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>算法 C-Model 验证库</h3><span class="year">配套课题</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="card-top"><h3>算法 C-Model 验证库</h3><span class="year">配套课题</span></div>
         <p>FPGA 上板前的算法验证体系:GDF 广义差分融合框架(金字塔/Sobel/自适应权重)、Q15/Q8.8 定点化、Vitis HLS 综合报告(目标 xc7a200t)、OV5640 双路去马赛克验证、CCM 色彩标定(多色温实测数据)、Bayer 仿真 GUI。</p>
+        <div class="spec"><span>定点化 Q15 / Q8.8</span><span>Vitis HLS 综合</span><span>多色温标定</span></div>
         <div class="tags"><span class="tag">Python</span><span class="tag">C++</span><span class="tag">Vitis HLS</span><span class="tag">定点化</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>RJH 四路恒流驱动控制板</h3><span class="year">2025</span></div>
+      </article>
+      <article class="card s2 rv">
+        <div class="card-top"><h3>RJH 四路恒流驱动控制板</h3><span class="year">2025</span></div>
         <p>原创合板方案:STM32F103RBT6 主控 + 四路 PT4115 恒流 LED 驱动(PWM 调光)+ MX1508 H 桥 IR-CUT 双向切换 + RS485 通信,12V 输入。独立完成原理图、选型、PCB、焊接调试,经实测修正迭代一版。</p>
         <div class="tags"><span class="tag">PCB</span><span class="tag">PT4115</span><span class="tag">RS485</span><span class="tag">立创EDA</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>ISP 去马赛克算法对比研究</h3><span class="year">2025</span></div>
+      </article>
+      <article class="card s2 rv">
+        <div class="card-top"><h3>ISP 去马赛克算法对比研究</h3><span class="year">2025</span></div>
         <p>以尼康 NEF 14bit 与 BMPCC braw 真 RAW 数据驱动,横向量化对比双线性、边缘感知、OpenCV VNG 三种去马赛克算法(PSNR/SSIM/MAE),给出各算法的 FPGA 实现难度评级与开发路线建议。</p>
         <div class="tags"><span class="tag">RAW</span><span class="tag">Bayer</span><span class="tag">PSNR/SSIM</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>多波段照明光源驱动电路</h3><span class="year">2025</span></div>
+      </article>
+      <article class="card s2 rv">
+        <div class="card-top"><h3>多波段照明光源驱动电路</h3><span class="year">2025</span></div>
         <p>四通道恒流驱动设计:TPS92515HV ×4(冷白 6500K / 暖白 3000K / 近红外 850nm / 880nm),STM32G030 PWM 调光,24/48V 输入,≤40W,含完整选型论证与供电方案。</p>
         <div class="tags"><span class="tag">TPS92515</span><span class="tag">恒流</span><span class="tag">STM32G0</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>激光雷达协议逆向 + ROS2 驱动</h3><span class="year">2025</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="card-top"><h3>激光雷达协议逆向 + ROS2 驱动</h3><span class="year">2025</span></div>
         <p>串口抓包逆向解析 YDLidar 帧协议(角度/距离编码),据此适配 ROS2 Humble C++ 驱动(460800 波特率),发布 LaserScan,含 SLAM launch、URDF、RViz 配置与完整中文复现文档。</p>
         <div class="tags"><span class="tag">ROS2</span><span class="tag">C++</span><span class="tag">协议逆向</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>Verilog 数字设计练习</h3><span class="year">2025</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="card-top"><h3>Verilog 数字设计练习</h3><span class="year">2025</span></div>
         <p>跨时钟域边沿检测模块与二进制转七段数码管译码器,含 testbench 与仿真验证——与 CDC 实验台教程互为印证的数字设计功底。</p>
         <div class="tags"><span class="tag">Verilog</span><span class="tag">CDC</span><span class="tag">Testbench</span></div>
-      </div>
+      </article>
     </div>
   </section>
 
   <!-- ============ 软件工程 ============ -->
   <section id="software">
-    <div class="sec-head"><h2>软件工程项目</h2><span class="cnt">全栈 / AI</span></div>
-    <div class="grid">
-      <div class="card">
-        <div class="top"><h3>制造执行工单管理系统</h3><span class="year">2025</span></div>
-        <p>离散制造全流程系统:工单-派工-报工-物料闭环。ASP.NET Core 分层架构 + SQL Server + JWT 认证 + RBAC 三级角色权限,Playwright 端到端测试、并发上报测试、部署脚本与完整中文文档。</p>
-        <div class="tags"><span class="tag">ASP.NET Core</span><span class="tag">SQL Server</span><span class="tag">RBAC</span><span class="tag">Playwright</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>SyncWatch 同步观影平台</h3><span class="year">2025</span></div>
+    <div class="sec-head"><span class="snum">03</span><h2>软件工程项目</h2><span class="cnt">全栈 / AI</span></div>
+    <div class="sec-rule"></div>
+    <div class="bento">
+      <article class="card s2 rv">
+        <div class="shot"><img src="assets/shots/p-syncwatch.jpg" alt="SyncWatch 同步观影平台登录界面截图" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>SyncWatch 同步观影平台</h3><span class="year">2025</span></div>
         <p>自研零注册房间制异地同步观影网站:Node.js + Express + Socket.IO + better-sqlite3 + ArtPlayer 播放器,含产品 PRD、管理员后台、nginx/HTTPS/PM2 部署配置。</p>
         <div class="tags"><span class="tag">Node.js</span><span class="tag">Socket.IO</span><span class="tag">SQLite</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>管道缺陷智能检测系统</h3><span class="year">2024 – 2025</span></div>
-        <p>工业视觉项目:YOLO OBB 旋转框管道缺陷检测 + SAM 分割 + 自研算法(DTAS 动态阈值自适应分割、AGPC、AMFD、TAWA),含专利申请草稿与 PyQt 桌面端。</p>
-        <div class="tags"><span class="tag">YOLO OBB</span><span class="tag">SAM</span><span class="tag">PyQt</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>多模态客服智能体</h3><span class="year">2025</span></div>
-        <p>高校创新创业大赛赛题:FastAPI 后端 + RAG 知识检索引擎(索引构建与评测)+ Qwen2.5-VL 多模态理解 + 会话记忆管理,按评分权重倒推架构的完整落地工程。</p>
-        <div class="tags"><span class="tag">FastAPI</span><span class="tag">RAG</span><span class="tag">VLM</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>电商系统(双版本)</h3><span class="year">2024 – 2025</span></div>
+      </article>
+      <article class="card s2 rv">
+        <div class="shot"><img src="assets/shots/p-ecommerce.jpg" alt="麦·衣女装电商网站首页截图" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>电商系统(双版本)</h3><span class="year">2024 – 2025</span></div>
         <p>"麦·衣"女装电商:Flask + SQLite + Jinja2 版本(双店铺、管理后台、下单流程)与 Next.js 14 + Prisma + PostgreSQL 前后端分离重写版。</p>
         <div class="tags"><span class="tag">Flask</span><span class="tag">Next.js 14</span><span class="tag">Prisma</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>游戏开发练习</h3><span class="year">2024 – 2025</span></div>
+      </article>
+      <article class="card s2 rv">
+        <div class="shot"><img src="assets/shots/p-game.jpg" alt="像素沙盒游戏运行画面截图" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>游戏开发练习</h3><span class="year">2024 – 2025</span></div>
         <p>Pygame"吸血鬼幸存者猫"(PyInstaller 打包 exe)、Godot 4"七天还债"(完整经济/存档系统)、纯 JS 像素沙盒、C++ 小项目若干——前后端与引擎的练兵场。</p>
         <div class="tags"><span class="tag">Pygame</span><span class="tag">Godot 4</span><span class="tag">Canvas</span></div>
-      </div>
+      </article>
+      <article class="card s2 rv">
+        <div class="card-top"><h3>制造执行工单管理系统</h3><span class="year">2025</span></div>
+        <p>离散制造全流程系统:工单-派工-报工-物料闭环。ASP.NET Core 分层架构 + SQL Server + JWT 认证 + RBAC 三级角色权限,Playwright 端到端测试、并发上报测试、部署脚本与完整中文文档。</p>
+        <div class="tags"><span class="tag">ASP.NET Core</span><span class="tag">SQL Server</span><span class="tag">RBAC</span><span class="tag">Playwright</span></div>
+      </article>
+      <article class="card s2 rv">
+        <div class="card-top"><h3>管道缺陷智能检测系统</h3><span class="year">2024 – 2025</span></div>
+        <p>工业视觉项目:YOLO OBB 旋转框管道缺陷检测 + SAM 分割 + 自研算法(DTAS 动态阈值自适应分割、AGPC、AMFD、TAWA),含专利申请草稿与 PyQt 桌面端。</p>
+        <div class="tags"><span class="tag">YOLO OBB</span><span class="tag">SAM</span><span class="tag">PyQt</span></div>
+      </article>
+      <article class="card s2 rv">
+        <div class="card-top"><h3>多模态客服智能体</h3><span class="year">2025</span></div>
+        <p>高校创新创业大赛赛题:FastAPI 后端 + RAG 知识检索引擎(索引构建与评测)+ Qwen2.5-VL 多模态理解 + 会话记忆管理,按评分权重倒推架构的完整落地工程。</p>
+        <div class="tags"><span class="tag">FastAPI</span><span class="tag">RAG</span><span class="tag">VLM</span></div>
+      </article>
     </div>
   </section>
-
   <!-- ============ 教程 ============ -->
   <section id="tutorials">
-    <div class="sec-head"><h2>交互式教程与科普</h2><span class="cnt">全部自制 · 可在线阅读</span></div>
-    <p class="sec-intro">学习嵌入式与硬件过程中自己写的交互式教程,共 80+ 页,覆盖 FPGA、模拟电路、通信协议与面试准备,点击直接打开。</p>
-    <div class="tlist">
-      <a class="trow" href="tutorials/cdc-lab.html"><span class="t">CDC 跨时钟域实验台<span class="d">数字 IC 教学实验台,含代码与主题切换</span></span><span class="arrow">→</span></a>
-      <a class="trow" href="tutorials/fpga-interview.html"><span class="t">FPGA 面试图解<span class="d">高频考点波形图解,信号/时钟语义配色</span></span><span class="arrow">→</span></a>
-      <a class="trow" href="tutorials/verilog/"><span class="t">Verilog 十二课<span class="d">从入门到实践,12 节互动课 + 仿真验证</span></span><span class="arrow">→</span></a>
-      <a class="trow" href="tutorials/protocols/"><span class="t">通信协议动态图解<span class="d">UART / SPI / I2C / CAN / RS232 / RS485</span></span><span class="arrow">→</span></a>
-      <a class="trow" href="tutorials/circuits/"><span class="t">元器件原理图解<span class="d">二极管 8 讲 · 三极管 · MOS · IGBT · 运放 · 电源</span></span><span class="arrow">→</span></a>
-      <a class="trow" href="tutorials/adc-dac/"><span class="t">ADC / DAC 交互教学<span class="d">采样、量化与转换原理可视化</span></span><span class="arrow">→</span></a>
-      <a class="trow" href="tutorials/topology/"><span class="t">硬件拓扑图实验室<span class="d">交互式电路拓扑绘制与推演</span></span><span class="arrow">→</span></a>
-      <a class="trow" href="tutorials/c/c-interview.html"><span class="t">C 语言面试 + 内存专题<span class="d">指针、内存管理、结构体高频题</span></span><span class="arrow">→</span></a>
-      <a class="trow" href="tutorials/c/embedded-c-cheatsheet.html"><span class="t">嵌入式 C 速查表<span class="d">关键字、位操作、 volatile 等速查</span></span><span class="arrow">→</span></a>
-      <a class="trow" href="tutorials/rtos-interview.html"><span class="t">RTOS 面试题<span class="d">任务调度、信号量、优先级反转等</span></span><span class="arrow">→</span></a>
-      <a class="trow" href="tutorials/rtos-kaodian/"><span class="t">RTOS 考点复习页<span class="d">交互式知识点抽认与自测</span></span><span class="arrow">→</span></a>
-      <a class="trow" href="tutorials/python-learning.html"><span class="t">Python 学习互动站<span class="d">语法要点 + 可运行示例</span></span><span class="arrow">→</span></a>
+    <div class="sec-head"><span class="snum">04</span><h2>交互式教程与科普</h2><span class="cnt">全部自制 · 12 专题 / 117 页</span></div>
+    <div class="sec-rule"></div>
+    <p class="sec-intro">学习嵌入式与硬件过程中自己写的交互式教程,覆盖 FPGA、模拟电路、通信协议与面试准备。纯 HTML / SVG / JavaScript,无需构建,点击直接打开。</p>
+    <div class="tiles">
+      <a class="tile rv" href="tutorials/cdc-lab.html">
+        <div class="thumb"><img src="assets/shots/t-cdc.jpg" alt="CDC 跨时钟域实验台页面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>CDC 跨时钟域实验台</h3>
+          <p class="d">数字 IC 教学实验台,含代码与主题切换</p>
+          <div class="meta"><span class="p">单页</span><span class="go">打开 →</span></div>
+        </div>
+      </a>
+      <a class="tile rv" href="tutorials/fpga-interview.html">
+        <div class="thumb"><img src="assets/shots/t-fpga-interview.jpg" alt="FPGA 面试图解页面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>FPGA 面试图解</h3>
+          <p class="d">高频考点波形图解,信号/时钟语义配色</p>
+          <div class="meta"><span class="p">单页</span><span class="go">打开 →</span></div>
+        </div>
+      </a>
+      <a class="tile rv" href="tutorials/verilog/">
+        <div class="thumb"><img src="assets/shots/t-verilog.jpg" alt="Verilog 十二课课程目录页面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>Verilog 十二课</h3>
+          <p class="d">从入门到实践,12 节互动课 + 在线仿真</p>
+          <div class="meta"><span class="p">14 页</span><span class="go">打开 →</span></div>
+        </div>
+      </a>
+      <a class="tile rv" href="tutorials/protocols/">
+        <div class="thumb"><img src="assets/shots/t-protocols.jpg" alt="通信协议动态图解目录页面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>通信协议动态图解</h3>
+          <p class="d">UART / SPI / I2C / CAN / RS232 / RS485</p>
+          <div class="meta"><span class="p">8 页</span><span class="go">打开 →</span></div>
+        </div>
+      </a>
+      <a class="tile rv" href="tutorials/circuits/">
+        <div class="thumb"><img src="assets/shots/t-circuits.jpg" alt="元器件原理图解目录页面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>元器件原理图解</h3>
+          <p class="d">二极管 · 三极管 · MOS · IGBT · 运放 · 电源 · PCB</p>
+          <div class="meta"><span class="p">84 页</span><span class="go">打开 →</span></div>
+        </div>
+      </a>
+      <a class="tile rv" href="tutorials/adc-dac/">
+        <div class="thumb"><img src="assets/shots/t-adc-dac.jpg" alt="ADC/DAC 交互教学页面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>ADC / DAC 交互教学</h3>
+          <p class="d">采样、量化与转换原理可视化</p>
+          <div class="meta"><span class="p">单页</span><span class="go">打开 →</span></div>
+        </div>
+      </a>
+      <a class="tile rv" href="tutorials/topology/">
+        <div class="thumb"><img src="assets/shots/t-topology.jpg" alt="硬件拓扑图实验室页面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>硬件拓扑图实验室</h3>
+          <p class="d">交互式电路拓扑绘制与推演</p>
+          <div class="meta"><span class="p">单页</span><span class="go">打开 →</span></div>
+        </div>
+      </a>
+      <a class="tile rv" href="tutorials/c/c-interview.html">
+        <div class="thumb"><img src="assets/shots/t-c.jpg" alt="C 语言面试与内存专题页面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>C 语言面试 + 内存专题</h3>
+          <p class="d">指针、内存管理、结构体高频题</p>
+          <div class="meta"><span class="p">2 页</span><span class="go">打开 →</span></div>
+        </div>
+      </a>
+      <a class="tile rv" href="tutorials/c/embedded-c-cheatsheet.html">
+        <div class="thumb"><img src="assets/shots/t-embedded-c.jpg" alt="嵌入式 C 速查表页面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>嵌入式 C 速查表</h3>
+          <p class="d">关键字、位操作、volatile 等速查</p>
+          <div class="meta"><span class="p">单页</span><span class="go">打开 →</span></div>
+        </div>
+      </a>
+      <a class="tile rv" href="tutorials/rtos-interview.html">
+        <div class="thumb"><img src="assets/shots/t-rtos-interview.jpg" alt="RTOS 面试题页面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>RTOS 面试题</h3>
+          <p class="d">任务调度、信号量、优先级反转等</p>
+          <div class="meta"><span class="p">单页</span><span class="go">打开 →</span></div>
+        </div>
+      </a>
+      <a class="tile rv" href="tutorials/rtos-kaodian/">
+        <div class="thumb"><img src="assets/shots/t-rtos-kaodian.jpg" alt="RTOS 考点复习页页面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>RTOS 考点复习页</h3>
+          <p class="d">交互式知识点抽认与自测</p>
+          <div class="meta"><span class="p">2 页</span><span class="go">打开 →</span></div>
+        </div>
+      </a>
+      <a class="tile rv" href="tutorials/python-learning.html">
+        <div class="thumb"><img src="assets/shots/t-python.jpg" alt="Python 学习互动站页面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>Python 学习互动站</h3>
+          <p class="d">语法要点 + 可运行示例</p>
+          <div class="meta"><span class="p">单页</span><span class="go">打开 →</span></div>
+        </div>
+      </a>
     </div>
   </section>
 
   <!-- ============ 竞赛学术 ============ -->
   <section id="academic">
-    <div class="sec-head"><h2>竞赛与学术</h2></div>
-    <div class="grid">
-      <div class="card">
-        <div class="top"><h3>"华为杯"研究生数学建模 <span class="badge">国家级二等奖</span></h3><span class="year">2025</span></div>
+    <div class="sec-head"><span class="snum">05</span><h2>竞赛与学术</h2></div>
+    <div class="sec-rule"></div>
+    <div class="bento">
+      <article class="card s3 rv">
+        <div class="card-top"><h3>"华为杯"研究生数学建模</h3><span class="badge">国家级二等奖</span><span class="year">2025</span></div>
         <p>E 题《高速列车轴承智能故障诊断》:48kHz 振动信号的时频域特征工程、故障特征分析与模型对比,完成最终论文与预测。</p>
         <div class="tags"><span class="tag">信号处理</span><span class="tag">特征工程</span><span class="tag">Python</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>数字普惠金融空间计量研究</h3><span class="year">2025</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="card-top"><h3>数字普惠金融空间计量研究</h3><span class="year">2025</span></div>
         <p>基于 CFPS-2022 / CHFS-2021 微观数据与北大数字金融指数的实证研究:熵值法 → 固定效应 → 中介效应 → 空间杜宾模型 → 市级 Moran's I,20+ 步可复现脚本流水线。</p>
         <div class="tags"><span class="tag">计量经济</span><span class="tag">空间杜宾</span><span class="tag">可视化</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>睿创杯创新创业大赛</h3><span class="year">2025</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="card-top"><h3>睿创杯创新创业大赛</h3><span class="year">2025</span></div>
         <p>赛题三《多模态客服智能体设计》:RAG + 多模态 + 会话管理的完整工程实现与技术方案,详见软件工程板块。</p>
         <div class="tags"><span class="tag">RAG</span><span class="tag">Qwen2.5-VL</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>SolidWorks 机械设计</h3><span class="year">2025</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="card-top"><h3>SolidWorks 机械设计</h3><span class="year">2025</span></div>
         <p>多 LED 灯泡装配体(E27 灯座 / 反光杯 / LED,含 STEP/STL 与渲染图)、工业相机 + 镜头、V 型槽定位结构——课题靶标与光源结构的配套设计。</p>
         <div class="tags"><span class="tag">SolidWorks</span><span class="tag">结构设计</span></div>
-      </div>
+      </article>
     </div>
   </section>
 
   <!-- ============ 接单 ============ -->
   <section id="freelance">
-    <div class="sec-head"><h2>项目定制案例</h2><span class="cnt">受托开发 · 已匿名</span></div>
+    <div class="sec-head"><span class="snum">06</span><h2>项目定制案例</h2><span class="cnt">受托开发 · 已匿名</span></div>
+    <div class="sec-rule"></div>
     <p class="sec-intro">为他人承接的毕业设计与课程项目,应委托方要求隐去一切身份信息,仅展示技术内容。</p>
-    <div class="grid">
-      <div class="card">
-        <div class="top"><h3>后量子混合密钥协商系统</h3><span class="year">硕士毕设级</span></div>
+    <div class="bento">
+      <article class="card s3 rv">
+        <div class="card-top"><h3>后量子混合密钥协商系统</h3><span class="year">硕士毕设级</span></div>
         <p>X25519 + ML-KEM-768 混合密钥建立方案:C 密码库实现 + NS-3 网络仿真 + Python GUI + 性能基准测试,配论文与答辩讲稿。</p>
         <div class="tags"><span class="tag">密码学</span><span class="tag">ML-KEM</span><span class="tag">NS-3</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>FPGA 宽动态瞬态高温测量系统</h3><span class="year">研究课题级</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="card-top"><h3>FPGA 宽动态瞬态高温测量系统</h3><span class="year">研究课题级</span></div>
         <p>比色测温原理 + AD9259 采集 + Artix-IV 信号处理:触发、SDRAM 缓存与 HDR 处理链的完整技术方案与 PRD。</p>
         <div class="tags"><span class="tag">FPGA</span><span class="tag">测温</span><span class="tag">AD9259</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>学生信息管理系统</h3><span class="year">课程设计</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="shot"><img src="assets/shots/p-student-ms.jpg" alt="学生信息管理系统主界面截图" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>学生信息管理系统</h3><span class="year">课程设计</span></div>
         <p>纯前端(HTML/JS)在宿学生信息管理系统,登录与管理流程完整,<a href="demos/student-ms/">在线可玩</a>。</p>
         <div class="tags"><span class="tag">HTML</span><span class="tag">JavaScript</span></div>
-      </div>
-      <div class="card">
-        <div class="top"><h3>其他定制</h3><span class="year">2024 – 2025</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="card-top"><h3>其他定制</h3><span class="year">2024 – 2025</span></div>
         <p>K-Means 聚类 MNIST 实验、HBase + Kafka 海量数据存储系统、MADDPG 多智能体强化学习复现、MATLAB 光伏建模、PPT 定制全流程(需求文档 → 逐页设计 → 成品)等。</p>
         <div class="tags"><span class="tag">机器学习</span><span class="tag">大数据</span><span class="tag">强化学习</span></div>
-      </div>
+      </article>
     </div>
   </section>
 
   <!-- ============ Demos ============ -->
   <section id="demos">
-    <div class="sec-head"><h2>在线 Demo</h2><span class="cnt">直接玩</span></div>
-    <div class="tlist">
-      <a class="trow" href="demos/sandbox-game/"><span class="t">像素沙盒游戏<span class="d">纯 JS Canvas:挖掘建造、合成、Boss 战</span></span><span class="arrow">→</span></a>
-      <a class="trow" href="demos/student-ms/"><span class="t">学生信息管理系统<span class="d">纯前端 CRUD,登录与管理</span></span><span class="arrow">→</span></a>
+    <div class="sec-head"><span class="snum">07</span><h2>在线 Demo</h2><span class="cnt">浏览器直接玩 · 无需安装</span></div>
+    <div class="sec-rule"></div>
+    <div class="tiles two">
+      <a class="tile rv" href="demos/sandbox-game/">
+        <div class="thumb"><img src="assets/shots/p-game.jpg" alt="像素沙盒游戏运行画面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>像素沙盒游戏</h3>
+          <p class="d">纯 JS Canvas:地形生成、挖掘建造、物品合成、Boss 战</p>
+          <div class="meta"><span class="p">CANVAS</span><span class="go">开始游戏 →</span></div>
+        </div>
+      </a>
+      <a class="tile rv" href="demos/student-ms/">
+        <div class="thumb"><img src="assets/shots/p-student-ms.jpg" alt="学生信息管理系统界面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>学生信息管理系统</h3>
+          <p class="d">纯前端 CRUD,登录与管理流程完整</p>
+          <div class="meta"><span class="p">HTML / JS</span><span class="go">打开系统 →</span></div>
+        </div>
+      </a>
     </div>
   </section>
 
-  <footer>
-    <p>© 2026 任佳欢 · 本站由静态 HTML 构建,托管于 GitHub Pages</p>
-    <p class="mono">renjiahuan2002@qq.com</p>
-    <p class="note">教程与笔记均为原创,转载请注明出处;项目定制案例已匿名处理。</p>
-  </footer>
-</div>
+</main>
+
+<footer>
+  <div class="foot">
+    <div>
+      <h4>Contact</h4>
+      <p>本站由静态 HTML 构建,托管于 GitHub Pages。教程与笔记均为原创,转载请注明出处。</p>
+      <p><a href="mailto:renjiahuan2002@qq.com">renjiahuan2002@qq.com</a></p>
+    </div>
+    <div>
+      <h4>Colophon</h4>
+      <p class="note">© 2026 任佳欢 · 117 页自制交互教程 · 项目定制案例已匿名处理</p>
+      <p class="note">设计:无框架静态实现,浅色 / 深色双主题</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var root=document.documentElement;
+  try{
+    /* —— 主题切换:自动 / 浅色 / 深色 —— */
+    var btn=document.getElementById('theme');
+    var modes=['auto','light','dark'];
+    var label={auto:'跟随系统',light:'浅色',dark:'深色'};
+    function get(){try{var v=localStorage.getItem('theme');return (v==='light'||v==='dark')?v:'auto';}catch(e){return 'auto';}}
+    function apply(m){
+      if(m==='auto'){root.removeAttribute('data-theme');}else{root.setAttribute('data-theme',m);}
+      var dark=(m==='dark')||(m==='auto'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+      var meta=document.querySelector('meta[name=theme-color]');
+      if(meta){meta.setAttribute('content',dark?'#0c1211':'#f7f9f8');}
+      if(btn){btn.setAttribute('aria-label','当前主题:'+label[m]+',点击切换');btn.setAttribute('title','当前主题:'+label[m]);}
+    }
+    apply(get());
+    if(btn){
+      btn.addEventListener('click',function(){
+        var m=modes[(modes.indexOf(get())+1)%3];
+        try{localStorage.setItem('theme',m);}catch(e){}
+        apply(m);
+      });
+    }
+    var mq=window.matchMedia('(prefers-color-scheme: dark)');
+    var onSys=function(){if(get()==='auto'){apply('auto');}};
+    if(mq.addEventListener){mq.addEventListener('change',onSys);}else if(mq.addListener){mq.addListener(onSys);}
+
+    /* —— 导航滚动高亮 —— */
+    var nav=document.getElementById('nav');
+    if(nav && 'IntersectionObserver' in window){
+      var links=[].slice.call(nav.querySelectorAll('a'));
+      var secs=links.map(function(a){return document.querySelector(a.getAttribute('href'));}).filter(Boolean);
+      var spy=new IntersectionObserver(function(entries){
+        entries.forEach(function(en){
+          if(!en.isIntersecting){return;}
+          links.forEach(function(l){l.classList.toggle('on',l.getAttribute('href')==='#'+en.target.id);});
+        });
+      },{rootMargin:'-46% 0px -50% 0px',threshold:0});
+      secs.forEach(function(s){spy.observe(s);});
+    }
+
+    /* —— 滚动进场 —— */
+    var rv=[].slice.call(document.querySelectorAll('.rv'));
+    var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduce||!('IntersectionObserver' in window)){
+      rv.forEach(function(e){e.classList.add('in');});
+    }else{
+      var io=new IntersectionObserver(function(entries){
+        entries.forEach(function(en){
+          if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}
+        });
+      },{rootMargin:'0px 0px -6% 0px'});
+      rv.forEach(function(e){io.observe(e);});
+    }
+  }catch(e){
+    /* 任何脚本异常都不应让内容不可见 */
+    [].slice.call(document.querySelectorAll('.rv')).forEach(function(el){el.classList.add('in');});
+  }
+})();
+</script>
+</body>
+</html>
