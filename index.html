@@ -329,9 +329,10 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
         </div>
         <ul class="chips">
           <li>Artix-7 / Vivado / Verilog</li>
-          <li>STM32 / C</li>
-          <li>Altium / 立创 EDA</li>
-          <li>Python / PyQt5</li>
+          <li>STM32 / FreeRTOS / C</li>
+          <li>STM32CubeMX / Keil MDK</li>
+          <li>Altium / 立创 EDA / Proteus</li>
+          <li>Python / PySide6</li>
           <li>ROS2 / 激光 SLAM</li>
         </ul>
         <table class="specs">
@@ -340,7 +341,7 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
           <tr><th>本科专业</th><td>西安工业大学 · 光电信息科学与工程(2020.09 – 2024.06)</td></tr>
           <tr><th>研究方向</th><td>FPGA 逻辑设计 · 多波段光电成像 · 嵌入式系统 · 激光 SLAM</td></tr>
           <tr><th>编程语言</th><td>Verilog / C / C++ / Python / MATLAB / JavaScript</td></tr>
-          <tr><th>主力工具</th><td>Vivado · Altium Designer · 立创 EDA · Keil · Simulink · PySide6</td></tr>
+          <tr><th>主力工具</th><td>Vivado / Vitis · STM32CubeMX · Keil MDK · Altium Designer · 立创 EDA · Proteus · MATLAB / Simulink · PySide6</td></tr>
         </table>
 
       </div>
@@ -370,11 +371,11 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
       <div class="card">
         <h3>技术栈</h3>
         <ul>
-          <li><b>FPGA:</b> Xilinx Artix-7 / Vivado / Verilog,时序收敛、ILA 调试、ISP 流水线算法</li>
-          <li><b>嵌入式:</b> STM32 / ARM / C,UART · CAN · SPI · I2C,ESP8266 / LoRa / 蓝牙</li>
-          <li><b>硬件:</b> Altium Designer、立创 EDA,独立完成原理图与 PCB 设计</li>
-          <li><b>软件:</b> Python(C-model / 上位机 PyQt5)、.NET Core、Node.js</li>
-          <li><b>机器人:</b> LIO-SAM + AMCL + Nav2 激光 SLAM,Jetson AGX Orin / RK3588</li>
+          <li><b>FPGA:</b> Xilinx Artix-7 / Vivado / Vitis / ISE,Verilog HDL,时序收敛、ILA 调试、跨时钟域同步、ISP 流水线算法</li>
+          <li><b>嵌入式:</b> STM32(F1 / F0)/ ARM Cortex-M / C,STM32CubeMX 初始化与 HAL 库、Keil MDK 在线调试,FreeRTOS 任务调度与队列 / 信号量 / 互斥,UART · CAN · SPI · I2C · RS485,ESP8266 / LoRa / 蓝牙</li>
+          <li><b>硬件:</b> Altium Designer、立创 EDA,独立完成原理图与 PCB 设计;Proteus 电路与单片机联合仿真,万用表 / 示波器 / 逻辑分析仪调试</li>
+          <li><b>软件:</b> Python(C-model / 上位机 PySide6)、C++、C# / .NET、Node.js、SQL Server / PostgreSQL、Docker</li>
+          <li><b>感知 / 机器人:</b> YOLO 目标检测、CLIP 跨模态检索、CUDA 加速推理、LIO-SAM + AMCL + Nav2 激光 SLAM,Jetson AGX Orin / RK3588</li>
         </ul>
       </div>
       <div class="card">
@@ -598,6 +599,15 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
         <div class="tags"><span class="tag">Node.js</span><span class="tag">Socket.IO</span><span class="tag">SQLite</span></div>
       </article>
       <article class="card s2 rv">
+        <div class="shot"><img src="assets/shots/p-zxd-1.jpg" alt="知行电路学习平台:学习首页的学习路线、进度统计与推荐下一课" width="1000" height="764" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>知行电路 · 电子与嵌入式学习工坊</h3><span class="year">2026</span></div>
+        <p>自研的零基础电子与嵌入式学习平台:浏览器端(React + Vite)与 Qt 桌面端共用一套 Python 服务。18 阶段课程地图、90 节课程、41 个可调参交互实验(实时波形、单步播放与 CSV 导出)、22 个 STM32 例程 × 2 种板卡共 44 个完整固件工程(Keil 工程 + CubeMX 配置),以及一块可编辑的 KiCad 练习板(ERC / DRC 与原理图一致性检查均为 0 违规)。</p>
+        <div class="spec"><span>90 节课程</span><span>41 个交互实验</span><span>44 个固件工程</span><span>KiCad 练习板</span><span>Qt + 浏览器双端</span></div>
+        <div class="inline-shot"><img src="assets/shots/p-zxd-2.jpg" alt="交互实验工作台:拖动滑块调节电源电压与限流电阻,实时观察 LED 电流、功耗与电压波形" width="1000" height="666" loading="lazy" decoding="async"></div>
+        <div class="inline-shot"><img src="assets/shots/p-zxd-3.jpg" alt="PCB 工程页:可编辑 KiCad 练习板的板级预览、BOM 与制造文件" width="1000" height="666" loading="lazy" decoding="async"></div>
+        <div class="tags"><span class="tag">React + Vite</span><span class="tag">PySide6</span><span class="tag">FastAPI</span><span class="tag">STM32 / FreeRTOS</span><span class="tag">KiCad</span></div>
+      </article>
+      <article class="card s2 rv">
         <div class="shot"><img src="assets/shots/p-ecommerce.jpg" alt="麦·衣女装电商网站首页截图" width="900" height="600" loading="lazy" decoding="async"></div>
         <div class="card-top"><h3>电商系统(双版本)</h3><span class="year">2024 – 2025</span></div>
         <p>"麦·衣"女装电商:Flask + SQLite + Jinja2 版本(双店铺、管理后台、下单流程)与 Next.js 14 + Prisma + PostgreSQL 前后端分离重写版。</p>
@@ -752,9 +762,11 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
         <div class="card-top"><h3>"华为杯"研究生数学建模</h3><span class="badge">国家级二等奖</span><span class="year">2025</span></div>
         <p>2025 年"华为杯"中国研究生数学建模竞赛 E 题《高速列车轴承智能故障诊断》,获<b>国家级二等奖</b>。</p>
         <p>以 48 kHz 采样的轴承振动信号为输入,构建"时域统计量 + 频域谱特征 + 包络谱"三段式特征工程;针对不同负载工况分别建模,对比多种回归与集成模型在故障特征上的拟合与泛化表现,并给出预测结果与误差分析,最终提交完整论文与代码附件。</p>
-        <div class="spec"><span>48 kHz 振动信号</span><span>时频域特征工程</span><span>多模型横向对比</span><span>国家级二等奖</span></div>
-        <div class="inline-shot"><img src="assets/shots/a-hwba-1.jpg" alt="不同风力等级下轴承振动信号的时域与频域特征趋势分析" width="900" height="600" loading="lazy" decoding="async"></div>
-        <div class="inline-shot"><img src="assets/shots/a-hwba-2.jpg" alt="不同模型综合性能对比分析:柱状对比与占比构成" width="900" height="600" loading="lazy" decoding="async"></div>
+        <p>在 E 题数据(2,153 个样本 / 42 维特征)上,LightGBM 交叉验证准确率 <b>100.00%</b>、随机森林 <b>99.30%</b>、支持向量机 <b>95.13%</b>;并完成 BPFO / BPFI / BSF 特征频率公式与理论值的偏差校验,以及 0–3 HP 四种负载下的特征频率热力图分析。</p>
+        <div class="spec"><span>48 kHz 振动信号</span><span>42 维时频特征</span><span>特征频率公式校验</span><span>四负载工况热力图</span><span>国家级二等奖</span></div>
+        <div class="inline-shot"><img src="assets/shots/a-hwba-1.jpg" alt="故障特征频率公式与理论误差:BPFO / BPFI / BSF 三组系数对比,以及外圈故障特征频率与转频关系的理论与实测对照" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="inline-shot"><img src="assets/shots/a-hwba-2.jpg" alt="四种马力(负载)下正常、内圈、外圈与滚动体故障的特征频率热力图" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="inline-shot"><img src="assets/shots/a-hwba-3.jpg" alt="传统机器学习模型性能对比:LightGBM 100.00%、随机森林 99.30%、支持向量机 95.13% 准确率柱状与占比分布" width="900" height="600" loading="lazy" decoding="async"></div>
         <div class="tags"><span class="tag">信号处理</span><span class="tag">特征工程</span><span class="tag">机器学习</span><span class="tag">Python</span></div>
       </article>
       <article class="card s3 rv">
