@@ -170,6 +170,8 @@ section{margin-top:82px;scroll-margin-top:78px}
 .shot{margin:-20px -20px 16px;border-bottom:1px solid var(--line);background:var(--surface-2);overflow:hidden}
 .shot img{width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;object-position:top center;transition:transform .35s ease}
 .card:hover .shot img{transform:scale(1.03)}
+.shot.fit img{object-fit:contain;background:var(--surface-2)}
+.card:hover .shot.fit img{transform:none}
 
 /* ── 教程瓦片 ── */
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
@@ -259,6 +261,7 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
     <nav id="nav" aria-label="页面导航">
       <a href="#about">关于</a>
       <a href="#projects">硬件 / FPGA</a>
+      <a href="#hardware">硬件与电路</a>
       <a href="#software">软件工程</a>
       <a href="#tutorials">交互式教程</a>
       <a href="#academic">竞赛学术</a>
@@ -422,9 +425,77 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
     </div>
   </section>
 
+  <!-- ============ 硬件与电路 ============ -->
+  <section id="hardware">
+    <div class="sec-head"><span class="snum">03</span><h2>硬件与电路设计</h2><span class="cnt">原理图 / PCB / 仿真 / 实测</span></div>
+    <div class="sec-rule"></div>
+    <p class="sec-intro">从电路原理图、PCB 设计、电路仿真到上机实测标定的完整硬件链路。下列为可公开展示的原理图、系统框图与实测曲线。</p>
+    <div class="bento">
+      <article class="card s3 rv">
+        <div class="shot fit"><img src="assets/shots/h-hall-photo.jpg" alt="霍尔转速测量模块实物照片,OLED 显示 HZ 132 / DIR CW" width="535" height="600" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>STM32 霍尔转速测量模块</h3><span class="year">2026</span></div>
+        <p>面向小型涡喷发动机的转速测试模块:VM821Q1 霍尔开关 + MTXS0102 电平转换 + STM32F103(TIM2 输入捕获)+ OLED1306 实时显示,含原理图、PCB、固件与实测标定。</p>
+        <div class="spec"><span>量程 0–12 万 RPM</span><span>相对误差 &lt;±0.5%</span><span>OLED 实时显示</span></div>
+        <div class="tags"><span class="tag">STM32F103</span><span class="tag">输入捕获</span><span class="tag">PCB</span><span class="tag">实测标定</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="shot fit"><img src="assets/shots/h-hall-sch.jpg" alt="霍尔测速模块原理图,含 MCU、NRST、BOOT0、HSE/LSE、OLED1306、USB&USART、SWD 等模块" width="900" height="471" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>测速模块原理图设计</h3><span class="year">2026</span></div>
+        <p>自绘主控板原理图:STM32F103 最小系统(NRST / BOOT0 / HSE / LSE)、SWD 调试口、USB&amp;USART 转串口、5V-3V3 供电、OLED1306 与霍尔接口,分模块绘制并标注网络标号。</p>
+        <div class="tags"><span class="tag">原理图</span><span class="tag">STM32</span><span class="tag">SWD</span><span class="tag">电源</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="shot fit"><img src="assets/shots/h-hall-error.jpg" alt="相对误差随输入频率变化曲线,实测误差小于正负 0.5%" width="873" height="600" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>转速标定与误差实测</h3><span class="year">2026</span></div>
+        <p>以标准转速源逐点比对,给出实测相对误差随输入频率的变化曲线。全量程内相对误差优于 ±0.5%,并对高低频段的偏差来源做了分析。</p>
+        <div class="spec"><span>实测误差 &lt;±0.5%</span><span>全频段标定</span></div>
+        <div class="tags"><span class="tag">标定</span><span class="tag">误差分析</span><span class="tag">测试</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="shot fit"><img src="assets/shots/h-51-sch.jpg" alt="STM32 智能温湿度监测调节系统 Proteus 整机原理图" width="899" height="403" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>STM32 智能温湿度监测调节系统</h3><span class="year">2025</span></div>
+        <p>基于 STM32F103C8T6 的温湿度监测与调节系统:Type-C + LDO 供电、DHT11 采集、ST7735S 彩屏显示、蜂鸣器报警、双路电机调节,含整机原理图、Keil 固件与 Proteus 仿真验证。</p>
+        <div class="spec"><span>DHT11 采集</span><span>ST7735S 彩屏</span><span>双路电机</span></div>
+        <div class="tags"><span class="tag">STM32F103</span><span class="tag">Proteus</span><span class="tag">Keil</span><span class="tag">SPI</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="shot fit"><img src="assets/shots/h-51-arch.jpg" alt="温湿度监测系统硬件组成框图" width="900" height="578" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>温湿度系统硬件架构</h3><span class="year">2025</span></div>
+        <p>系统硬件组成框图:主控、供电、采集、显示、报警与执行机构的分层划分,以及 SPI / GPIO / ADC 等接口的资源分配。</p>
+        <div class="tags"><span class="tag">系统框图</span><span class="tag">接口分配</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="shot fit"><img src="assets/shots/h-opt-layout.jpg" alt="Zemax 光学系统布局图与像质评价" width="726" height="600" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>Zemax 光学系统设计与像质评价</h3><span class="year">2026</span></div>
+        <p>用 Zemax 完成透镜组布局设计与像质评价:给出 2D 布局图与光扇/点列分析,通过评价函数优化后系统总长与像差指标满足设计要求。</p>
+        <div class="spec"><span>Zemax 建模</span><span>评价函数优化</span><span>像质分析</span></div>
+        <div class="tags"><span class="tag">Zemax</span><span class="tag">光学设计</span><span class="tag">像差</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="shot fit"><img src="assets/shots/h-opt-princ.jpg" alt="物镜与目镜光路原理图" width="876" height="284" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>光学系统光路原理</h3><span class="year">2026</span></div>
+        <p>物镜 / 目镜两级光路的原理示意与光瞳、视场光阑位置关系,用于确认系统的成像链路与放大倍率。</p>
+        <div class="tags"><span class="tag">光路设计</span><span class="tag">光阑</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="shot fit"><img src="assets/shots/h-pv-irr.jpg" alt="不同光照强度下的光伏电池 P-V 特性曲线" width="899" height="600" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>光伏电池建模与 Simulink 仿真</h3><span class="year">2025</span></div>
+        <p>单二极管模型参数辨识与 Simulink 仿真:输出 P-V / I-V 特性曲线,并对比光照强度、温度与理想因子对最大功率点的影响。</p>
+        <div class="spec"><span>单二极管模型</span><span>P-V / I-V 扫描</span><span>MPPT 特性</span></div>
+        <div class="tags"><span class="tag">Simulink</span><span class="tag">光伏建模</span><span class="tag">MATLAB</span></div>
+      </article>
+      <article class="card s3 rv">
+        <div class="shot fit"><img src="assets/shots/h-sphere.jpg" alt="积分球光源结构设计,12V 100W 卤钨灯与陶瓷灯座" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>积分球光源结构设计</h3><span class="year">2026</span></div>
+        <p>积分球均匀光源的灯源选型与结构方案:12V 100W 卤钨灯(GY6.35 双针脚)+ 陶瓷灯座 + 石英泡壳,配合钨丝发光位置约束完成结构排布。</p>
+        <div class="tags"><span class="tag">光学结构</span><span class="tag">光源选型</span><span class="tag">积分球</span></div>
+      </article>
+    </div>
+  </section>
+
   <!-- ============ 软件工程 ============ -->
   <section id="software">
-    <div class="sec-head"><span class="snum">03</span><h2>软件工程项目</h2><span class="cnt">全栈 / AI</span></div>
+    <div class="sec-head"><span class="snum">04</span><h2>软件工程项目</h2><span class="cnt">全栈 / AI</span></div>
     <div class="sec-rule"></div>
     <div class="bento">
       <article class="card s2 rv">
@@ -446,11 +517,13 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
         <div class="tags"><span class="tag">Pygame</span><span class="tag">Godot 4</span><span class="tag">Canvas</span></div>
       </article>
       <article class="card s2 rv">
+        <div class="shot"><img src="assets/shots/wms-dashboard.jpg" alt="制造执行工单管理系统数据看板界面" width="900" height="600" loading="lazy" decoding="async"></div>
         <div class="card-top"><h3>制造执行工单管理系统</h3><span class="year">2025</span></div>
         <p>离散制造全流程系统:工单-派工-报工-物料闭环。ASP.NET Core 分层架构 + SQL Server + JWT 认证 + RBAC 三级角色权限,Playwright 端到端测试、并发上报测试、部署脚本与完整中文文档。</p>
         <div class="tags"><span class="tag">ASP.NET Core</span><span class="tag">SQL Server</span><span class="tag">RBAC</span><span class="tag">Playwright</span></div>
       </article>
       <article class="card s2 rv">
+        <div class="shot"><img src="assets/shots/p-pipe-demo.jpg" alt="管道缺陷检测:YOLO 水平框与 SAM2 像素级分割对比" width="900" height="300" loading="lazy" decoding="async"></div>
         <div class="card-top"><h3>管道缺陷智能检测系统</h3><span class="year">2024 – 2025</span></div>
         <p>工业视觉项目:YOLO OBB 旋转框管道缺陷检测 + SAM 分割 + 自研算法(DTAS 动态阈值自适应分割、AGPC、AMFD、TAWA),含专利申请草稿与 PyQt 桌面端。</p>
         <div class="tags"><span class="tag">YOLO OBB</span><span class="tag">SAM</span><span class="tag">PyQt</span></div>
@@ -464,7 +537,7 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
   </section>
   <!-- ============ 教程 ============ -->
   <section id="tutorials">
-    <div class="sec-head"><span class="snum">04</span><h2>交互式教程与科普</h2><span class="cnt">全部自制 · 12 专题 / 117 页</span></div>
+    <div class="sec-head"><span class="snum">05</span><h2>交互式教程与科普</h2><span class="cnt">全部自制 · 12 专题 / 117 页</span></div>
     <div class="sec-rule"></div>
     <p class="sec-intro">学习嵌入式与硬件过程中自己写的交互式教程,覆盖 FPGA、模拟电路、通信协议与面试准备。纯 HTML / SVG / JavaScript,无需构建,点击直接打开。</p>
     <div class="tiles">
@@ -569,7 +642,7 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
 
   <!-- ============ 竞赛学术 ============ -->
   <section id="academic">
-    <div class="sec-head"><span class="snum">05</span><h2>竞赛与学术</h2></div>
+    <div class="sec-head"><span class="snum">06</span><h2>竞赛与学术</h2></div>
     <div class="sec-rule"></div>
     <div class="bento">
       <article class="card s3 rv">
@@ -597,7 +670,7 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
 
   <!-- ============ 接单 ============ -->
   <section id="freelance">
-    <div class="sec-head"><span class="snum">06</span><h2>项目定制案例</h2><span class="cnt">受托开发 · 已匿名</span></div>
+    <div class="sec-head"><span class="snum">07</span><h2>项目定制案例</h2><span class="cnt">受托开发 · 已匿名</span></div>
     <div class="sec-rule"></div>
     <p class="sec-intro">为他人承接的毕业设计与课程项目,应委托方要求隐去一切身份信息,仅展示技术内容。</p>
     <div class="bento">
@@ -628,7 +701,7 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
 
   <!-- ============ Demos ============ -->
   <section id="demos">
-    <div class="sec-head"><span class="snum">07</span><h2>在线 Demo</h2><span class="cnt">浏览器直接玩 · 无需安装</span></div>
+    <div class="sec-head"><span class="snum">08</span><h2>在线 Demo</h2><span class="cnt">浏览器直接玩 · 无需安装</span></div>
     <div class="sec-rule"></div>
     <div class="tiles two">
       <a class="tile rv" href="demos/sandbox-game/">
