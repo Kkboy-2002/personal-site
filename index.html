@@ -281,6 +281,12 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
 .note-bar b{color:var(--fg)}
 @media (max-width:960px){.games{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:640px){.games{grid-template-columns:1fr}}
+
+.hero-grid-solo{grid-template-columns:1fr !important}
+.hero-grid-solo>div{max-width:100%}
+.hero-grid-solo .specs{max-width:760px}
+.inline-shot{margin:16px 0 0;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--surface-2)}
+.inline-shot img{width:100%;height:auto;display:block}
 </style>
 </head>
 <body>
@@ -297,8 +303,7 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
       <a href="#tutorials">交互式教程</a>
       <a href="#academic">竞赛学术</a>
       <a href="#freelance">项目定制</a>
-      <a href="#demos">在线 Demo</a>
-      <a href="#games">可玩游戏</a>
+      <a href="#games">消遣一刻</a>
     </nav>
     <button id="theme" class="icon-btn" type="button" aria-label="切换主题" title="切换主题(自动 / 浅色 / 深色)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
@@ -312,7 +317,7 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
 
   <!-- ============ Hero ============ -->
   <section class="hero" id="top">
-    <div class="hero-grid">
+    <div class="hero-grid hero-grid-solo">
       <div>
         <p class="kicker mono">REN JIAHUAN · PORTFOLIO &amp; NOTES</p>
         <h1>任佳欢</h1>
@@ -329,10 +334,19 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
           <li>Python / PyQt5</li>
           <li>ROS2 / 激光 SLAM</li>
         </ul>
+        <table class="specs">
+          <caption>基本信息</caption>
+          <tr><th>在读学历</th><td>西安工业大学 · 电子信息 · 全日制硕士(2027.06 毕业)</td></tr>
+          <tr><th>本科专业</th><td>西安工业大学 · 光电信息科学与工程(2020.09 – 2024.06)</td></tr>
+          <tr><th>研究方向</th><td>FPGA 逻辑设计 · 多波段光电成像 · 嵌入式系统 · 激光 SLAM</td></tr>
+          <tr><th>编程语言</th><td>Verilog / C / C++ / Python / MATLAB / JavaScript</td></tr>
+          <tr><th>主力工具</th><td>Vivado · Altium Designer · 立创 EDA · Keil · Simulink · PySide6</td></tr>
+        </table>
+
       </div>
-      <aside class="hero-panel" aria-label="双波段 ISP 信号链示意图"><div class="panel-head mono"><span class="dot"></span>ISP PIPELINE · 双波段融合</div><figure class="fig" style="margin:0;background:transparent;border:0;padding:0"><svg viewBox="0 0 300 322" role="img" aria-label="双波段 ISP 信号链:双路 OV5640 采集经跨时钟域同步、DDR3 帧缓存、去马赛克与色彩校正后做差分融合,经千兆以太网输出"><defs><marker id="arw1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker></defs><rect class="fb" x="14" y="12" width="228" height="38" rx="8"/><text class="ft" x="28" y="29">双路 OV5640 采集</text><text class="fs" x="28" y="43">RAW8 · 1280×720</text><circle class="fk" cx="230" cy="31" r="3"/><path class="fa" d="M128 50 V60" marker-end="url(#arw1)"/><text class="fs" x="140" y="59">像素流</text><rect class="fb" x="14" y="64" width="228" height="38" rx="8"/><text class="ft" x="28" y="81">跨时钟域同步</text><text class="fs" x="28" y="95">4 时钟域 · 双触发器</text><circle class="fk" cx="230" cy="83" r="3"/><path class="fa" d="M128 102 V112" marker-end="url(#arw1)"/><text class="fs" x="140" y="111">同步握手</text><rect class="fb" x="14" y="116" width="228" height="38" rx="8"/><text class="ft" x="28" y="133">DDR3 帧缓存</text><text class="fs" x="28" y="147">乒乓帧 · 两路对齐</text><circle class="fk" cx="230" cy="135" r="3"/><path class="fa" d="M128 154 V164" marker-end="url(#arw1)"/><text class="fs" x="140" y="163">帧读写</text><rect class="fb" x="14" y="168" width="228" height="38" rx="8"/><text class="ft" x="28" y="185">去马赛克 + CCM</text><text class="fs" x="28" y="199">Bilinear · 24 色卡标定</text><circle class="fk" cx="230" cy="187" r="3"/><path class="fa" d="M128 206 V216" marker-end="url(#arw1)"/><text class="fs" x="140" y="215">RGB 流</text><rect class="fb" x="14" y="220" width="228" height="38" rx="8"/><text class="ft" x="28" y="237">差分融合 GDF</text><text class="fs" x="28" y="251">金字塔 · 自适应权重</text><circle class="fk" cx="230" cy="239" r="3"/><path class="fa" d="M128 258 V268" marker-end="url(#arw1)"/><text class="fs" x="140" y="267">融合帧</text><rect class="fb" x="14" y="272" width="228" height="38" rx="8"/><text class="ft" x="28" y="289">千兆以太网输出</text><text class="fs" x="28" y="303">UDP 帧 · 上位机显示</text><circle class="fk" cx="230" cy="291" r="3"/></svg><figcaption><b>图 1</b> · 双波段 ISP 信号链:两路 RAW8 数据跨四个时钟域同步后乒乓写入 DDR3,去马赛克与色彩校正完成后做金字塔差分融合,最终经千兆网口上传。</figcaption></figure></aside>
-    </div>
-    <ul class="stats">
+      
+        </div>
+<ul class="stats">
       <li><div class="k">教程专题</div><div class="v">12</div></li>
       <li><div class="k">教程页面</div><div class="v">117</div></li>
       <li><div class="k">项目条目</div><div class="v">21</div></li>
@@ -464,7 +478,7 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
           <text class="ft" x="704" y="45">OLED1306</text><text class="fs" x="704" y="62">实时 RPM / 转向</text>
           <text class="fs" x="12" y="106">量程 0–12 万 RPM · 相对误差 &lt;±0.5% · 实测误差曲线见下方卡片</text>
         </svg>
-        <figcaption><b>图 2</b> · 霍尔测速信号链。转盘磁极每经过一次霍尔开关产生一个下降沿,经电平转换送入 TIM2 输入捕获,两次上升沿的时间差即转速周期。</figcaption>
+        <figcaption><b>图 1</b> · 霍尔测速信号链。转盘磁极每经过一次霍尔开关产生一个下降沿,经电平转换送入 TIM2 输入捕获,两次上升沿的时间差即转速周期。</figcaption>
       </figure>
       </article>
       <article class="card s3 rv">
@@ -473,13 +487,7 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
         <p>自绘主控板原理图:STM32F103 最小系统(NRST / BOOT0 / HSE / LSE)、SWD 调试口、USB&amp;USART 转串口、5V-3V3 供电、OLED1306 与霍尔接口,分模块绘制并标注网络标号。</p>
         <div class="tags"><span class="tag">原理图</span><span class="tag">STM32</span><span class="tag">SWD</span><span class="tag">电源</span></div>
       </article>
-      <article class="card s3 rv">
-        <div class="shot fit"><img src="assets/shots/h-hall-error.jpg" alt="相对误差随输入频率变化曲线,实测误差小于正负 0.5%" width="873" height="600" loading="lazy" decoding="async"></div>
-        <div class="card-top"><h3>转速标定与误差实测</h3><span class="year">2026</span></div>
-        <p>以标准转速源逐点比对,给出实测相对误差随输入频率的变化曲线。全量程内相对误差优于 ±0.5%,并对高低频段的偏差来源做了分析。</p>
-        <div class="spec"><span>实测误差 &lt;±0.5%</span><span>全频段标定</span></div>
-        <div class="tags"><span class="tag">标定</span><span class="tag">误差分析</span><span class="tag">测试</span></div>
-      </article>
+      
       <article class="card s3 rv">
         <div class="shot fit"><img src="assets/shots/p-optical-sim.jpg" alt="光纤激光器仿真平台界面:左侧器件库、中间拓扑画布、右侧属性面板与输出日志" width="900" height="506" loading="lazy" decoding="async"></div>
         <div class="card-top"><h3>光纤激光器仿真平台</h3><span class="year">2026</span></div>
@@ -517,7 +525,7 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
           <rect class="fb" x="584" y="192" width="238" height="52" rx="8"/>
           <text class="ft" x="598" y="214">结果可视化</text><text class="fs" x="598" y="231">功率 / 光谱曲线</text>
         </svg>
-        <figcaption><b>图 3</b> · 光纤激光器仿真平台三层架构。器件库提供 41 类组件,拖拽连线即建立端口拓扑,求解引擎按速率方程数值计算后回填属性面板与曲线。</figcaption>
+        <figcaption><b>图 2</b> · 光纤激光器仿真平台三层架构。器件库提供 41 类组件,拖拽连线即建立端口拓扑,求解引擎按速率方程数值计算后回填属性面板与曲线。</figcaption>
       </figure>
       </article>
       <article class="card s3 rv">
@@ -528,19 +536,19 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
         <div class="tags"><span class="tag">STM32F103</span><span class="tag">Proteus</span><span class="tag">Keil</span><span class="tag">SPI</span></div>
       </article>
       <article class="card s3 rv">
-        <div class="shot fit"><img src="assets/shots/h-51-arch.jpg" alt="温湿度监测系统硬件组成框图" width="900" height="578" loading="lazy" decoding="async"></div>
-        <div class="card-top"><h3>温湿度系统硬件架构</h3><span class="year">2025</span></div>
-        <p>系统硬件组成框图:主控、供电、采集、显示、报警与执行机构的分层划分,以及 SPI / GPIO / ADC 等接口的资源分配。</p>
+        <div class="shot fit"><img src="assets/shots/h-51-hw.jpg" alt="温湿度监测系统实物电路板:DHT11 采集与 1.8 寸 TFT 显示温度/湿度阈值,配按键与蜂鸣器" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>温湿度系统硬件实物</h3><span class="year">2025</span></div>
+        <p>实机运行照片:STM32F103C8T6 主控 + DHT11 温湿度采集 + 1.8 寸 TFT 彩屏(显示温度/湿度阈值与「设置 / 跳过」光标记)+ 四路按键 + 蜂鸣器报警 + 双路电机驱动。板载 5V/3.3V 电源、SWD 调试口与 CH340 USB 转串口,右侧为 DS18B20 备用接口。</p>
         <div class="tags"><span class="tag">系统框图</span><span class="tag">接口分配</span></div>
       </article>
       
       
       <article class="card s3 rv">
-        <div class="shot fit"><img src="assets/shots/h-pv-irr.jpg" alt="不同光照强度下的光伏电池 P-V 特性曲线" width="899" height="600" loading="lazy" decoding="async"></div>
+        <div class="shot fit"><img src="assets/shots/h-pv-fixed.jpg" alt="修正后不同光照强度下的 P-V 特性曲线族,Pmax 随光照由 44.9W 增至 250.2W" width="900" height="600" loading="lazy" decoding="async"></div>
         <div class="card-top"><h3>光伏电池建模与 Simulink 仿真</h3><span class="year">2025</span></div>
-        <p>单二极管模型参数辨识与 Simulink 仿真:输出 P-V / I-V 特性曲线,并对比光照强度、温度与理想因子对最大功率点的影响。</p>
+        <p>单二极管五参数模型:由铭牌参数(Voc 37.8 V / Isc 8.8 A / Vmp 30.7 V / Imp 8.15 A / 60 片串联)反演出 Iph、I0、Rs、Rsh、n,再对光照强度与温度扫描求解隐式方程。复核后 STC 下 Pmax = 250.2 W、FF = 0.7522,与铭牌一致。</p>
         <div class="spec"><span>单二极管模型</span><span>P-V / I-V 扫描</span><span>MPPT 特性</span></div>
-        <div class="tags"><span class="tag">Simulink</span><span class="tag">光伏建模</span><span class="tag">MATLAB</span></div>
+        <div class="tags"><span class="tag">Simulink</span><span class="tag">MATLAB</span><span class="tag">五参数反演</span><span class="tag">牛顿迭代</span></div>
               <figure class="fig">
         <svg viewBox="0 0 860 226" role="img" aria-label="光伏电池单二极管等效电路:光生电流源与二极管、并联电阻并联,再串联串联电阻后输出">
           <defs><marker id="arw4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker></defs>
@@ -571,15 +579,10 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
           <text class="ft" x="812" y="50">+</text><text class="ft" x="812" y="190">−</text>
           <text class="fs" x="110" y="212">输出端 V · I 即 I-V / P-V 扫描的横纵坐标</text>
         </svg>
-        <figcaption><b>图 4</b> · 光伏电池单二极管等效电路。输出电流等于光生电流减去二极管正向电流与并联电阻漏电流;串联电阻 Rs 决定曲线在最大功率点附近的陡降,仿真即对该方程在给定光照与温度下扫描求解。</figcaption>
+        <figcaption><b>图 3</b> · 光伏电池单二极管等效电路。输出电流等于光生电流减去二极管正向电流与并联电阻漏电流;串联电阻 Rs 决定曲线在最大功率点附近的陡降,仿真即对该方程在给定光照与温度下扫描求解。</figcaption>
       </figure>
       </article>
-      <article class="card s3 rv">
-        <div class="shot fit"><img src="assets/shots/h-sphere.jpg" alt="积分球光源结构设计,12V 100W 卤钨灯与陶瓷灯座" width="900" height="600" loading="lazy" decoding="async"></div>
-        <div class="card-top"><h3>积分球光源结构设计</h3><span class="year">2026</span></div>
-        <p>积分球均匀光源的灯源选型与结构方案:12V 100W 卤钨灯(GY6.35 双针脚)+ 陶瓷灯座 + 石英泡壳,配合钨丝发光位置约束完成结构排布。</p>
-        <div class="tags"><span class="tag">光学结构</span><span class="tag">光源选型</span><span class="tag">积分球</span></div>
-      </article>
+      
     </div>
   </section>
 
@@ -601,7 +604,6 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
         <div class="tags"><span class="tag">Flask</span><span class="tag">Next.js 14</span><span class="tag">Prisma</span></div>
       </article>
       <article class="card s2 rv">
-        <div class="shot"><img src="assets/shots/p-game.jpg" alt="像素沙盒游戏运行画面截图" width="900" height="600" loading="lazy" decoding="async"></div>
         <div class="card-top"><h3>游戏开发练习</h3><span class="year">2024 – 2025</span></div>
         <p>Pygame"吸血鬼幸存者猫"(PyInstaller 打包 exe)、Godot 4"七天还债"(完整经济/存档系统)、纯 JS 像素沙盒、C++ 小项目若干——前后端与引擎的练兵场。</p>
         <div class="tags"><span class="tag">Pygame</span><span class="tag">Godot 4</span><span class="tag">Canvas</span></div>
@@ -613,53 +615,27 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
         <div class="tags"><span class="tag">ASP.NET Core</span><span class="tag">SQL Server</span><span class="tag">RBAC</span><span class="tag">Playwright</span></div>
       </article>
       <article class="card s2 rv">
-        <div class="shot"><img src="assets/shots/p-pipe-demo.jpg" alt="管道缺陷检测:YOLO 水平框与 SAM2 像素级分割对比" width="900" height="300" loading="lazy" decoding="async"></div>
+        <div class="shot"><img src="assets/shots/p-1gpu.jpg" alt="电商商品跨模态检索系统界面:文搜图与图搜图双模式、Top-K 调节与重排序开关" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>电商商品跨模态检索系统</h3><span class="year">2026</span></div>
+        <p>基于 CLIP 的商品图文互检系统:9.3 万条商品向量索引 + 4.4 万张图片,支持「文搜图 / 图搜图」双模式,Top-K 与 Re-ranking、查询扩展可开关;前后端分离(FastAPI + FAISS + Vue),带完整部署包与快速部署指南。</p>
+        <div class="spec"><span>93,482 条向量索引</span><span>44,441 张图片</span><span>FAISS 检索</span><span>CLIP + LoRA</span></div>
+        <div class="tags"><span class="tag">CLIP</span><span class="tag">FAISS</span><span class="tag">FastAPI</span><span class="tag">Vue</span></div>
+      </article>
+      <article class="card s2 rv">
+        <div class="shot"><img src="assets/shots/p-yolo-det.jpg" alt="监控视频行人检测结果:YOLOv8s 对街道场景中行人与车辆的检测框与置信度" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>监控视频人员定位与计数系统</h3><span class="year">2026</span></div>
+        <p>YOLOv8s 行人检测 + 多目标跟踪的端到端人数统计:配 Web 控制台(实时监控 / 统计分析 / 智能检索 / 参数设置),输出当前人数、进出人数与帧率。测试集 mAP@0.5 达 <b>0.847</b>,计数 MAE 为 <b>2.4</b>,优于官方 YOLOv8s 与自训对照组。</p>
+        <div class="spec"><span>mAP@0.5 = 0.847</span><span>计数 MAE = 2.4</span><span>三组模型对比</span></div>
+        <div class="tags"><span class="tag">YOLOv8s</span><span class="tag">多目标跟踪</span><span class="tag">Web 控制台</span><span class="tag">人数统计</span></div>
+      </article>
+      <article class="card s2 rv">
+        <div class="shot"><img src="assets/shots/p-pipe-ui2.jpg" alt="管道缺陷检测系统桌面端界面:透视校正、YOLO 检测、HSV 检测与结果导出" width="900" height="600" loading="lazy" decoding="async"></div>
         <div class="card-top"><h3>管道缺陷智能检测系统</h3><span class="year">2024 – 2025</span></div>
         <p>工业视觉项目:YOLO OBB 旋转框管道缺陷检测 + SAM 分割 + 自研算法(DTAS 动态阈值自适应分割、AGPC、AMFD、TAWA),含专利申请草稿与 PyQt 桌面端。</p>
         <div class="tags"><span class="tag">YOLO OBB</span><span class="tag">SAM</span><span class="tag">PyQt</span></div>
-              <figure class="fig">
-        <svg viewBox="0 0 860 236" role="img" aria-label="管道缺陷检测处理链:原始图像经时间感知光照增强、透视校正与像素标定后,做多尺度 YOLO-OBB 检测、SAM2 像素掩膜、几何一致性验证并融合输出">
-          <defs><marker id="arw5" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker></defs>
-          <rect class="fb" x="10" y="20" width="176" height="58" rx="8"/>
-          <text class="ft" x="22" y="45">原始图像</text><text class="fs" x="22" y="62">现场采集帧</text>
-          <path class="fa" d="M188 49 H224" marker-end="url(#arw5)"/>
-          <text class="fs" x="206" y="40" text-anchor="middle">增强</text>
-          <rect class="fb" x="228" y="20" width="176" height="58" rx="8"/>
-          <text class="ft" x="240" y="45">时间感知光照增强</text><text class="fs" x="240" y="62">按系统时间选策略</text>
-          <path class="fa" d="M406 49 H442" marker-end="url(#arw5)"/>
-          <text class="fs" x="424" y="40" text-anchor="middle">校正</text>
-          <rect class="fb" x="446" y="20" width="176" height="58" rx="8"/>
-          <text class="ft" x="458" y="45">透视校正</text><text class="fs" x="458" y="62">AprilTag / 几何约束</text>
-          <path class="fa" d="M624 49 H660" marker-end="url(#arw5)"/>
-          <text class="fs" x="642" y="40" text-anchor="middle">标定</text>
-          <rect class="fb" x="664" y="20" width="184" height="58" rx="8"/>
-          <text class="ft" x="676" y="45">像素-毫米标定</text><text class="fs" x="676" y="62">换算实际尺寸</text>
-          <path class="fa" d="M756 78 V104 H98 V132" marker-end="url(#arw5)"/>
-          <text class="fs" x="430" y="98" text-anchor="middle">② 预处理完成,进入检测</text>
-          <rect class="fb" x="10" y="136" width="176" height="58" rx="8"/>
-          <text class="ft" x="22" y="161">多尺度 YOLO-OBB</text><text class="fs" x="22" y="178">置信度加权融合</text>
-          <path class="fa" d="M188 165 H224" marker-end="url(#arw5)"/>
-          <text class="fs" x="206" y="156" text-anchor="middle">候选框</text>
-          <rect class="fb" x="228" y="136" width="176" height="58" rx="8"/>
-          <text class="ft" x="240" y="161">SAM2 像素掩膜</text><text class="fs" x="240" y="178">抠除背景</text>
-          <path class="fa" d="M406 165 H442" marker-end="url(#arw5)"/>
-          <text class="fs" x="424" y="156" text-anchor="middle">掩膜</text>
-          <rect class="fb" x="446" y="136" width="176" height="58" rx="8"/>
-          <text class="ft" x="458" y="161">几何一致性验证</text><text class="fs" x="458" y="178">剔除误检</text>
-          <path class="fa" d="M624 165 H660" marker-end="url(#arw5)"/>
-          <text class="fs" x="642" y="156" text-anchor="middle">通过</text>
-          <rect class="fb" x="664" y="136" width="184" height="58" rx="8"/>
-          <text class="ft" x="676" y="161">融合输出</text><text class="fs" x="676" y="178">缺陷类别 + 尺寸</text>
-          <text class="fs" x="10" y="220">测量精度 ±2% · 24 小时连续监控 · 零额外硬件成本的自适应</text>
-        </svg>
-        <figcaption><b>图 5</b> · 管道缺陷检测处理链。与常规方案不同的是第一步:以系统时间预估光照与色温并选择增强策略,再做几何校正与多尺度融合检测,最后用几何一致性把误检剔除。</figcaption>
-      </figure>
+              
       </article>
-      <article class="card s2 rv">
-        <div class="card-top"><h3>多模态客服智能体</h3><span class="year">2025</span></div>
-        <p>高校创新创业大赛赛题:FastAPI 后端 + RAG 知识检索引擎(索引构建与评测)+ Qwen2.5-VL 多模态理解 + 会话记忆管理,按评分权重倒推架构的完整落地工程。</p>
-        <div class="tags"><span class="tag">FastAPI</span><span class="tag">RAG</span><span class="tag">VLM</span></div>
-      </article>
+      
     </div>
   </section>
   <!-- ============ 教程 ============ -->
@@ -774,24 +750,24 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
     <div class="bento">
       <article class="card s3 rv">
         <div class="card-top"><h3>"华为杯"研究生数学建模</h3><span class="badge">国家级二等奖</span><span class="year">2025</span></div>
-        <p>E 题《高速列车轴承智能故障诊断》:48kHz 振动信号的时频域特征工程、故障特征分析与模型对比,完成最终论文与预测。</p>
-        <div class="tags"><span class="tag">信号处理</span><span class="tag">特征工程</span><span class="tag">Python</span></div>
+        <p>2025 年"华为杯"中国研究生数学建模竞赛 E 题《高速列车轴承智能故障诊断》,获<b>国家级二等奖</b>。</p>
+        <p>以 48 kHz 采样的轴承振动信号为输入,构建"时域统计量 + 频域谱特征 + 包络谱"三段式特征工程;针对不同负载工况分别建模,对比多种回归与集成模型在故障特征上的拟合与泛化表现,并给出预测结果与误差分析,最终提交完整论文与代码附件。</p>
+        <div class="spec"><span>48 kHz 振动信号</span><span>时频域特征工程</span><span>多模型横向对比</span><span>国家级二等奖</span></div>
+        <div class="inline-shot"><img src="assets/shots/a-hwba-1.jpg" alt="不同风力等级下轴承振动信号的时域与频域特征趋势分析" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="inline-shot"><img src="assets/shots/a-hwba-2.jpg" alt="不同模型综合性能对比分析:柱状对比与占比构成" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="tags"><span class="tag">信号处理</span><span class="tag">特征工程</span><span class="tag">机器学习</span><span class="tag">Python</span></div>
       </article>
       <article class="card s3 rv">
         <div class="card-top"><h3>数字普惠金融空间计量研究</h3><span class="year">2025</span></div>
-        <p>基于 CFPS-2022 / CHFS-2021 微观数据与北大数字金融指数的实证研究:熵值法 → 固定效应 → 中介效应 → 空间杜宾模型 → 市级 Moran's I,20+ 步可复现脚本流水线。</p>
-        <div class="tags"><span class="tag">计量经济</span><span class="tag">空间杜宾</span><span class="tag">可视化</span></div>
+        <p>基于 CFPS-2022 / CHFS-2021 微观数据与北大数字普惠金融指数的实证研究,考察数字金融对居民消费升级的影响机制与空间溢出。</p>
+        <p>研究链条:熵值法测度消费升级指数 → 固定效应基准回归 → 中介效应检验(收入与支付便利性渠道)→ 空间杜宾模型分解直接与间接效应 → 市级 Moran's I 与 LISA 聚类识别空间格局;全过程为 20 余步可复现脚本流水线,含数据清洗、面板构建、回归输出与地图可视化。</p>
+        <div class="spec"><span>熵值法测度</span><span>空间杜宾模型</span><span>Moran's I = 0.4402</span><span>LISA 聚类</span></div>
+        <div class="inline-shot"><img src="assets/shots/a-stat-1.jpg" alt="2022 年莫兰散点图,Moran's I = 0.4402,p = 0.0001" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="inline-shot"><img src="assets/shots/a-stat-2.jpg" alt="2022 年居民消费升级 LISA 聚类地图(p 小于 0.05)" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="tags"><span class="tag">计量经济</span><span class="tag">空间计量</span><span class="tag">面板数据</span><span class="tag">可视化</span></div>
       </article>
-      <article class="card s3 rv">
-        <div class="card-top"><h3>睿创杯创新创业大赛</h3><span class="year">2025</span></div>
-        <p>赛题三《多模态客服智能体设计》:RAG + 多模态 + 会话管理的完整工程实现与技术方案,详见软件工程板块。</p>
-        <div class="tags"><span class="tag">RAG</span><span class="tag">Qwen2.5-VL</span></div>
-      </article>
-      <article class="card s3 rv">
-        <div class="card-top"><h3>SolidWorks 机械设计</h3><span class="year">2025</span></div>
-        <p>多 LED 灯泡装配体(E27 灯座 / 反光杯 / LED,含 STEP/STL 与渲染图)、工业相机 + 镜头、V 型槽定位结构——课题靶标与光源结构的配套设计。</p>
-        <div class="tags"><span class="tag">SolidWorks</span><span class="tag">结构设计</span></div>
-      </article>
+      
+      
     </div>
   </section>
 
@@ -807,17 +783,8 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
         <p>X25519 + ML-KEM-768 混合密钥建立方案:C 密码库实现 + NS-3 网络仿真 + Python GUI + 性能基准测试,配论文与答辩讲稿。</p>
         <div class="tags"><span class="tag">密码学</span><span class="tag">ML-KEM</span><span class="tag">NS-3</span></div>
       </article>
-      <article class="card s3 rv">
-        <div class="card-top"><h3>FPGA 宽动态瞬态高温测量系统</h3><span class="year">研究课题级</span></div>
-        <p>比色测温原理 + AD9259 采集 + Artix-IV 信号处理:触发、SDRAM 缓存与 HDR 处理链的完整技术方案与 PRD。</p>
-        <div class="tags"><span class="tag">FPGA</span><span class="tag">测温</span><span class="tag">AD9259</span></div>
-      </article>
-      <article class="card s3 rv">
-        <div class="shot"><img src="assets/shots/p-student-ms.jpg" alt="学生信息管理系统主界面截图" width="900" height="600" loading="lazy" decoding="async"></div>
-        <div class="card-top"><h3>学生信息管理系统</h3><span class="year">课程设计</span></div>
-        <p>纯前端(HTML/JS)在宿学生信息管理系统,登录与管理流程完整,<a href="demos/student-ms/">在线可玩</a>。</p>
-        <div class="tags"><span class="tag">HTML</span><span class="tag">JavaScript</span></div>
-      </article>
+      
+      
       <article class="card s3 rv">
         <div class="card-top"><h3>其他定制</h3><span class="year">2024 – 2025</span></div>
         <p>K-Means 聚类 MNIST 实验、HBase + Kafka 海量数据存储系统、MADDPG 多智能体强化学习复现、MATLAB 光伏建模、PPT 定制全流程(需求文档 → 逐页设计 → 成品)等。</p>
@@ -826,40 +793,26 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
     </div>
   </section>
 
-  <!-- ============ Demos ============ -->
-  <section id="demos">
-    <div class="sec-head"><span class="snum">08</span><h2>在线 Demo</h2><span class="cnt">浏览器直接玩 · 无需安装</span></div>
-    <div class="sec-rule"></div>
-    <div class="tiles two">
-      <a class="tile rv" href="demos/sandbox-game/">
-        <div class="thumb"><img src="assets/shots/p-game.jpg" alt="像素沙盒游戏运行画面" width="900" height="600" loading="lazy" decoding="async"></div>
-        <div class="body">
-          <h3>像素沙盒游戏</h3>
-          <p class="d">纯 JS Canvas:地形生成、挖掘建造、物品合成、Boss 战</p>
-          <div class="meta"><span class="p">CANVAS</span><span class="go">开始游戏 →</span></div>
-        </div>
-      </a>
-      <a class="tile rv" href="demos/student-ms/">
-        <div class="thumb"><img src="assets/shots/p-student-ms.jpg" alt="学生信息管理系统界面" width="900" height="600" loading="lazy" decoding="async"></div>
-        <div class="body">
-          <h3>学生信息管理系统</h3>
-          <p class="d">纯前端 CRUD,登录与管理流程完整</p>
-          <div class="meta"><span class="p">HTML / JS</span><span class="go">打开系统 →</span></div>
-        </div>
-      </a>
-    </div>
-  </section>
 
 </main>
 
   <!-- ============ 可玩游戏 ============ -->
   <section id="games">
-    <div class="sec-head"><span class="snum">09</span><h2>可玩游戏</h2><span class="cnt">浏览器直接运行 · 源码可下载</span></div>
+    <div class="sec-head"><span class="snum">08</span><h2>消遣一刻</h2><span class="cnt">浏览器直接运行 · 源码可下载</span></div>
     <div class="sec-rule"></div>
-    <p class="sec-intro">3 款可直接在浏览器里玩,另 2 款是 React 工程,附完整源码供本地构建运行。</p>
-    <div class="note-bar"><b>来源说明:</b>本节 5 个游戏来自开源社区项目 <b>awesome-gpt-6-astra</b>(CC0 1.0 公有领域授权),
-    并非本人作品,此处仅作可玩收藏与源码分发,著作权归各原作者所有。</div>
+    <p class="sec-intro">下面几个小游戏可直接在浏览器里玩,源码一并附上可下载。</p>
+    
     <div class="games">
+      <div class="tile rv">
+        <div class="thumb"><img src="assets/shots/p-game.jpg" alt="像素沙盒游戏运行画面:程序化地形、树木、物品栏与生命值" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>像素沙盒游戏</h3>
+          <p class="d">纯原生 JS + Canvas 的横版沙盒:程序化地形生成、挖掘建造、物品合成、昼夜交替与 Boss 战。</p>
+          <div class="meta"><span class="p">零依赖 · 单页</span></div>
+          <div class="actions"><a class="btn sm" href="demos/sandbox-game/" target="_blank" rel="noopener">▶ 试玩</a></div>
+        </div>
+      </div>
+
       <div class="tile rv">
         <div class="thumb"><img src="assets/shots/g-orbital.jpg" alt="轨道花园 Orbital Garden 游戏画面" width="900" height="600" loading="lazy" decoding="async"></div>
         <div class="body">
