@@ -287,6 +287,14 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
 .hero-grid-solo .specs{max-width:760px}
 .inline-shot{margin:16px 0 0;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--surface-2)}
 .inline-shot img{width:100%;height:auto;display:block}
+
+/* 板卡与实物速览(简历图,压小使用) */
+.hw-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:16px 0 20px}
+.hw-strip figure{margin:0;min-width:0}
+.hw-strip img{width:100%;height:92px;object-fit:cover;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);display:block}
+.hw-strip figcaption{margin-top:6px;font-family:"JetBrains Mono",Consolas,monospace;font-size:10px;color:var(--fg-soft);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:960px){.hw-strip{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:640px){.hw-strip{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -448,7 +456,15 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
   <section id="hardware">
     <div class="sec-head"><span class="snum">03</span><h2>硬件与电路设计</h2><span class="cnt">原理图 / PCB / 仿真 / 实测</span></div>
     <div class="sec-rule"></div>
-    <p class="sec-intro">从电路原理图、PCB 设计、电路仿真到上机实测标定的完整硬件链路。下列为可公开展示的原理图、系统框图与实测曲线。</p>
+    <p class="sec-intro">从电路原理图、PCB 设计、电路仿真到上机实测标定的完整硬件链路。下列为可公开展示的原理图、系统框图、板卡实拍与实测曲线。</p>
+    <div class="hw-strip" role="group" aria-label="板卡与实物速览">
+      <figure><img src="assets/shots/cv-hw-1.jpg" alt="红色 PCB 主控板布局图" width="250" height="187" loading="lazy" decoding="async"><figcaption>PCB 布局</figcaption></figure>
+      <figure><img src="assets/shots/cv-hw-2.jpg" alt="四块 PCB 的 3D 预览" width="249" height="154" loading="lazy" decoding="async"><figcaption>PCB 3D</figcaption></figure>
+      <figure><img src="assets/shots/cv-hw-3.jpg" alt="绿板板卡与总线分析仪联调" width="420" height="383" loading="lazy" decoding="async"><figcaption>板卡联调</figcaption></figure>
+      <figure><img src="assets/shots/cv-hw-4.jpg" alt="桌面电路搭接与发光器件实拍" width="300" height="401" loading="lazy" decoding="async"><figcaption>电路搭接</figcaption></figure>
+      <figure><img src="assets/shots/cv-hw-5.jpg" alt="PCB 布线与丝印大图" width="420" height="229" loading="lazy" decoding="async"><figcaption>布线与丝印</figcaption></figure>
+      <figure><img src="assets/shots/cv-hw-6.jpg" alt="机箱内电池组与线束实拍" width="420" height="314" loading="lazy" decoding="async"><figcaption>电池与线束</figcaption></figure>
+    </div>
     <div class="bento">
       <article class="card s3 rv">
         <div class="shot fit"><img src="assets/shots/h-hall-photo.jpg" alt="霍尔转速测量模块实物照片,OLED 显示 HZ 132 / DIR CW" width="535" height="600" loading="lazy" decoding="async"></div>
