@@ -289,12 +289,10 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
 .inline-shot img{width:100%;height:auto;display:block}
 
 /* 板卡与实物速览(简历图,压小使用) */
-.hw-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:16px 0 20px}
+.hw-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:10px;margin:16px 0 20px}
 .hw-strip figure{margin:0;min-width:0}
 .hw-strip img{width:100%;height:92px;object-fit:cover;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);display:block}
 .hw-strip figcaption{margin-top:6px;font-family:"JetBrains Mono",Consolas,monospace;font-size:10px;color:var(--fg-soft);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:960px){.hw-strip{grid-template-columns:repeat(3,1fr)}}
-@media (max-width:640px){.hw-strip{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -460,8 +458,9 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
     <div class="hw-strip" role="group" aria-label="板卡与实物速览">
       <figure><img src="assets/shots/cv-hw-1.jpg" alt="红色 PCB 主控板布局图" width="250" height="187" loading="lazy" decoding="async"><figcaption>PCB 布局</figcaption></figure>
       <figure><img src="assets/shots/cv-hw-2.jpg" alt="四块 PCB 的 3D 预览" width="249" height="154" loading="lazy" decoding="async"><figcaption>PCB 3D</figcaption></figure>
+      <figure><img src="assets/shots/cv-hw-7.jpg" alt="PCB 焊接实物:四路恒流驱动板与主控板的焊接成品" width="480" height="298" loading="lazy" decoding="async"><figcaption>PCB 焊接实物图</figcaption></figure>
       <figure><img src="assets/shots/cv-hw-3.jpg" alt="嵌入式硬件调试:绿板板卡与总线分析仪联调实拍" width="420" height="383" loading="lazy" decoding="async"><figcaption>嵌入式硬件调试</figcaption></figure>
-      <figure><img src="assets/shots/cv-hw-4.jpg" alt="桌面电路搭接与发光器件实拍" width="300" height="401" loading="lazy" decoding="async"><figcaption>电路搭接</figcaption></figure>
+      <figure><img src="assets/shots/cv-hw-4.jpg" alt="板级联调:桌面电路搭接与发光器件通电实测" width="300" height="401" loading="lazy" decoding="async"><figcaption>板级联调</figcaption></figure>
       <figure><img src="assets/shots/cv-hw-5.jpg" alt="PCB 布线与丝印大图" width="420" height="229" loading="lazy" decoding="async"><figcaption>布线与丝印</figcaption></figure>
       <figure><img src="assets/shots/cv-hw-6.jpg" alt="机箱内电池组与线束实拍" width="420" height="314" loading="lazy" decoding="async"><figcaption>电池与线束</figcaption></figure>
     </div>
