@@ -250,6 +250,37 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
   .dot,.flow{animation:none}
   .card:hover,.tile:hover,.btn:hover,.row:hover{transform:none}
 }
+
+/* ══════════ 工科风格:示意图 / 参数表 / 下载 ══════════ */
+.fig{margin:16px 0 0;padding:14px 15px 11px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px}
+.fig svg{width:100%;height:auto;display:block;color:var(--fg)}
+.fig figcaption{margin-top:11px;font-family:"JetBrains Mono",Consolas,monospace;font-size:10.5px;line-height:1.65;color:var(--fg-soft)}
+.fig figcaption b{color:var(--accent);font-weight:600}
+.ft{font-size:11px;font-weight:600;fill:currentColor}
+.fs{font-size:8.6px;fill:currentColor;opacity:.6;font-family:"JetBrains Mono",Consolas,monospace}
+.fb{fill:var(--surface);stroke:var(--line)}
+.fa{stroke:var(--accent);fill:none;stroke-width:1.6}
+.fl{stroke:currentColor;stroke-width:1.15;opacity:.5;fill:none}
+.fk{fill:var(--accent)}
+.specs{width:100%;border-collapse:collapse;margin-top:16px}
+.specs caption{caption-side:top;text-align:left;font-family:"JetBrains Mono",Consolas,monospace;font-size:10.5px;color:var(--fg-soft);padding-bottom:9px}
+.specs th,.specs td{text-align:left;padding:7px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+.specs th{font-weight:500;color:var(--fg-soft);font-size:12px;width:40%}
+.specs td{font-family:"JetBrains Mono",Consolas,monospace;font-size:12px;color:var(--fg)}
+.specs tr:last-child th,.specs tr:last-child td{border-bottom:0}
+.btn.sm{font-size:12.5px;padding:7px 13px;border-radius:8px;gap:5px}
+.btn.ghost{background:var(--surface-2);color:var(--fg-soft)}
+.btn.ghost:hover{color:var(--fg);border-color:var(--accent)}
+.games{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.tile.off{cursor:default}
+.tile.off:hover{transform:none;border-color:var(--line);box-shadow:none}
+.tile .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.tile .actions .btn{font-size:12px;padding:6px 11px}
+.flag{font-family:"JetBrains Mono",Consolas,monospace;font-size:9.5px;padding:2px 7px;border-radius:5px;background:var(--warn-soft);color:var(--warn)}
+.note-bar{margin:14px 0 0;padding:11px 14px;border-left:2px solid var(--accent);background:var(--surface-2);border-radius:0 9px 9px 0;font-size:12.5px;color:var(--fg-soft);line-height:1.7}
+.note-bar b{color:var(--fg)}
+@media (max-width:960px){.games{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.games{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -267,6 +298,7 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
       <a href="#academic">竞赛学术</a>
       <a href="#freelance">项目定制</a>
       <a href="#demos">在线 Demo</a>
+      <a href="#games">可玩游戏</a>
     </nav>
     <button id="theme" class="icon-btn" type="button" aria-label="切换主题" title="切换主题(自动 / 浅色 / 深色)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
@@ -298,35 +330,7 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
           <li>ROS2 / 激光 SLAM</li>
         </ul>
       </div>
-      <aside class="hero-panel" aria-label="双波段 ISP 处理链示意">
-        <div class="panel-head mono"><span class="dot"></span>ISP PIPELINE · 双波段融合</div>
-        <svg viewBox="0 0 420 288" role="img" aria-label="双波段 ISP 处理链:RAW8 采集 → 去马赛克 → 色彩校正 → 差分融合">
-          <defs>
-            <marker id="ah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-              <path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/>
-            </marker>
-          </defs>
-          <rect x="16" y="12" width="388" height="48" rx="11" fill="var(--surface-2)" stroke="var(--line)"/>
-          <text class="nd-t" x="34" y="33">RAW8 采集</text>
-          <text class="nd-s mono" x="34" y="49">双路 OV5640 · 四时钟域跨域</text>
-          <circle cx="384" cy="36" r="4" fill="var(--accent)"/>
-          <path class="flow" d="M210 62 L210 78" marker-end="url(#ah)"/>
-          <rect x="16" y="84" width="388" height="48" rx="11" fill="var(--surface-2)" stroke="var(--line)"/>
-          <text class="nd-t" x="34" y="105">去马赛克</text>
-          <text class="nd-s mono" x="34" y="121">Bilinear · 边缘感知 · VNG</text>
-          <circle cx="384" cy="108" r="4" fill="var(--accent)"/>
-          <path class="flow" d="M210 134 L210 150" marker-end="url(#ah)"/>
-          <rect x="16" y="156" width="388" height="48" rx="11" fill="var(--surface-2)" stroke="var(--line)"/>
-          <text class="nd-t" x="34" y="177">色彩校正</text>
-          <text class="nd-s mono" x="34" y="193">CCM 标定 · 24 色卡双光源</text>
-          <circle cx="384" cy="180" r="4" fill="var(--accent)"/>
-          <path class="flow" d="M210 206 L210 222" marker-end="url(#ah)"/>
-          <rect x="16" y="228" width="388" height="48" rx="11" fill="var(--surface-2)" stroke="var(--line)"/>
-          <text class="nd-t" x="34" y="249">差分融合 · 输出</text>
-          <text class="nd-s mono" x="34" y="265">GDF 金字塔 · 自适应权重</text>
-          <circle cx="384" cy="252" r="4" fill="var(--accent)"/>
-        </svg>
-      </aside>
+      <aside class="hero-panel" aria-label="双波段 ISP 信号链示意图"><div class="panel-head mono"><span class="dot"></span>ISP PIPELINE · 双波段融合</div><figure class="fig" style="margin:0;background:transparent;border:0;padding:0"><svg viewBox="0 0 300 322" role="img" aria-label="双波段 ISP 信号链:双路 OV5640 采集经跨时钟域同步、DDR3 帧缓存、去马赛克与色彩校正后做差分融合,经千兆以太网输出"><defs><marker id="arw1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker></defs><rect class="fb" x="14" y="12" width="228" height="38" rx="8"/><text class="ft" x="28" y="29">双路 OV5640 采集</text><text class="fs" x="28" y="43">RAW8 · 1280×720</text><circle class="fk" cx="230" cy="31" r="3"/><path class="fa" d="M128 50 V60" marker-end="url(#arw1)"/><text class="fs" x="140" y="59">像素流</text><rect class="fb" x="14" y="64" width="228" height="38" rx="8"/><text class="ft" x="28" y="81">跨时钟域同步</text><text class="fs" x="28" y="95">4 时钟域 · 双触发器</text><circle class="fk" cx="230" cy="83" r="3"/><path class="fa" d="M128 102 V112" marker-end="url(#arw1)"/><text class="fs" x="140" y="111">同步握手</text><rect class="fb" x="14" y="116" width="228" height="38" rx="8"/><text class="ft" x="28" y="133">DDR3 帧缓存</text><text class="fs" x="28" y="147">乒乓帧 · 两路对齐</text><circle class="fk" cx="230" cy="135" r="3"/><path class="fa" d="M128 154 V164" marker-end="url(#arw1)"/><text class="fs" x="140" y="163">帧读写</text><rect class="fb" x="14" y="168" width="228" height="38" rx="8"/><text class="ft" x="28" y="185">去马赛克 + CCM</text><text class="fs" x="28" y="199">Bilinear · 24 色卡标定</text><circle class="fk" cx="230" cy="187" r="3"/><path class="fa" d="M128 206 V216" marker-end="url(#arw1)"/><text class="fs" x="140" y="215">RGB 流</text><rect class="fb" x="14" y="220" width="228" height="38" rx="8"/><text class="ft" x="28" y="237">差分融合 GDF</text><text class="fs" x="28" y="251">金字塔 · 自适应权重</text><circle class="fk" cx="230" cy="239" r="3"/><path class="fa" d="M128 258 V268" marker-end="url(#arw1)"/><text class="fs" x="140" y="267">融合帧</text><rect class="fb" x="14" y="272" width="228" height="38" rx="8"/><text class="ft" x="28" y="289">千兆以太网输出</text><text class="fs" x="28" y="303">UDP 帧 · 上位机显示</text><circle class="fk" cx="230" cy="291" r="3"/></svg><figcaption><b>图 1</b> · 双波段 ISP 信号链:两路 RAW8 数据跨四个时钟域同步后乒乓写入 DDR3,去马赛克与色彩校正完成后做金字塔差分融合,最终经千兆网口上传。</figcaption></figure></aside>
     </div>
     <ul class="stats">
       <li><div class="k">教程专题</div><div class="v">12</div></li>
@@ -437,6 +441,31 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
         <p>面向小型涡喷发动机的转速测试模块:VM821Q1 霍尔开关 + MTXS0102 电平转换 + STM32F103(TIM2 输入捕获)+ OLED1306 实时显示,含原理图、PCB、固件与实测标定。</p>
         <div class="spec"><span>量程 0–12 万 RPM</span><span>相对误差 &lt;±0.5%</span><span>OLED 实时显示</span></div>
         <div class="tags"><span class="tag">STM32F103</span><span class="tag">输入捕获</span><span class="tag">PCB</span><span class="tag">实测标定</span></div>
+              <figure class="fig">
+        <svg viewBox="0 0 860 132" role="img" aria-label="霍尔测速信号链:磁极转盘调制磁场,VM821Q1 霍尔开关输出方波,MTXS0102 做 3.3V 电平转换,STM32 TIM2 上升沿捕获后换算转速并送 OLED 显示">
+          <defs><marker id="arw2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker></defs>
+          <rect class="fb" x="12" y="20" width="132" height="58" rx="8"/>
+          <text class="ft" x="24" y="45">磁极转盘</text><text class="fs" x="24" y="62">旋转调制磁场</text>
+          <path class="fa" d="M146 49 H178" marker-end="url(#arw2)"/>
+          <text class="fs" x="162" y="40" text-anchor="middle">磁场变化</text>
+          <rect class="fb" x="182" y="20" width="132" height="58" rx="8"/>
+          <text class="ft" x="194" y="45">VM821Q1</text><text class="fs" x="194" y="62">霍尔开关</text>
+          <path class="fa" d="M316 49 H348" marker-end="url(#arw2)"/>
+          <text class="fs" x="332" y="40" text-anchor="middle">方波(开漏)</text>
+          <rect class="fb" x="352" y="20" width="132" height="58" rx="8"/>
+          <text class="ft" x="364" y="45">MTXS0102</text><text class="fs" x="364" y="62">电平转换 3.3V</text>
+          <path class="fa" d="M486 49 H518" marker-end="url(#arw2)"/>
+          <text class="fs" x="502" y="40" text-anchor="middle">电平匹配</text>
+          <rect class="fb" x="522" y="20" width="132" height="58" rx="8"/>
+          <text class="ft" x="534" y="45">STM32 TIM2</text><text class="fs" x="534" y="62">输入捕获 PA1</text>
+          <path class="fa" d="M656 49 H688" marker-end="url(#arw2)"/>
+          <text class="fs" x="672" y="40" text-anchor="middle">上升沿捕获</text>
+          <rect class="fb" x="692" y="20" width="156" height="58" rx="8"/>
+          <text class="ft" x="704" y="45">OLED1306</text><text class="fs" x="704" y="62">实时 RPM / 转向</text>
+          <text class="fs" x="12" y="106">量程 0–12 万 RPM · 相对误差 &lt;±0.5% · 实测标定曲线见图 2 对应卡片下方</text>
+        </svg>
+        <figcaption><b>图 2</b> · 霍尔测速信号链。转盘磁极每经过一次霍尔开关产生一个下降沿,经电平转换送入 TIM2 输入捕获,两次上升沿的时间差即转速周期。</figcaption>
+      </figure>
       </article>
       <article class="card s3 rv">
         <div class="shot fit"><img src="assets/shots/h-hall-sch.jpg" alt="霍尔测速模块原理图,含 MCU、NRST、BOOT0、HSE/LSE、OLED1306、USB&USART、SWD 等模块" width="900" height="471" loading="lazy" decoding="async"></div>
@@ -452,6 +481,46 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
         <div class="tags"><span class="tag">标定</span><span class="tag">误差分析</span><span class="tag">测试</span></div>
       </article>
       <article class="card s3 rv">
+        <div class="shot fit"><img src="assets/shots/p-optical-sim.jpg" alt="光纤激光器仿真平台界面:左侧器件库、中间拓扑画布、右侧属性面板与输出日志" width="900" height="506" loading="lazy" decoding="async"></div>
+        <div class="card-top"><h3>光纤激光器仿真平台</h3><span class="year">2026</span></div>
+        <p>Simulink 风格的桌面建模与仿真工具:器件库内置 41 类有源/无源光器件,拖拽连线建立光路拓扑,右侧编辑器件参数,一键运行仿真并输出功率与光谱曲线。PySide6 界面加 numpy/scipy 求解内核,配 12 章原理与实现文档。</p>
+        <div class="spec"><span>41 类光器件</span><span>拖拽式拓扑建模</span><span>速率方程求解</span><span>PySide6 桌面端</span></div>
+        <div class="tags"><span class="tag">PySide6</span><span class="tag">numpy/scipy</span><span class="tag">光路建模</span><span class="tag">仿真内核</span></div>
+        <figure class="fig">
+        <svg viewBox="0 0 860 268" role="img" aria-label="光纤激光器仿真平台三层架构:建模层的器件库提供组件,求解层把连线解析成拓扑并数值求解,呈现层输出属性、日志与曲线">
+          <defs><marker id="arw3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker></defs>
+          <text class="fs" x="8" y="44">建模层</text>
+          <rect class="fb" x="88" y="16" width="238" height="52" rx="8"/>
+          <text class="ft" x="102" y="38">有源器件</text><text class="fs" x="102" y="55">增益光纤 · 泵浦源 · 种子源</text>
+          <rect class="fb" x="336" y="16" width="238" height="52" rx="8"/>
+          <text class="ft" x="350" y="38">无源器件</text><text class="fs" x="350" y="55">光纤 · 合束器 · WDM · 滤波</text>
+          <rect class="fb" x="584" y="16" width="238" height="52" rx="8"/>
+          <text class="ft" x="598" y="38">调制与探测</text><text class="fs" x="598" y="55">调制器 · 探测器 · 隔离器</text>
+          <path class="fa" d="M430 68 V96" marker-end="url(#arw3)"/>
+          <text class="fs" x="440" y="88">器件参数 + 端口定义</text>
+          <text class="fs" x="8" y="132">求解层</text>
+          <rect class="fb" x="88" y="104" width="228" height="52" rx="8"/>
+          <text class="ft" x="102" y="126">端口 / 连线模型</text><text class="fs" x="102" y="143">拖拽连线 = 建立拓扑</text>
+          <path class="fa" d="M316 130 H338" marker-end="url(#arw3)"/>
+          <rect class="fb" x="346" y="104" width="212" height="52" rx="8"/>
+          <text class="ft" x="360" y="126">拓扑解析</text><text class="fs" x="360" y="143">端口匹配 · 环路检测</text>
+          <path class="fa" d="M558 130 H580" marker-end="url(#arw3)"/>
+          <rect class="fb" x="588" y="104" width="234" height="52" rx="8"/>
+          <text class="ft" x="602" y="126">数值求解引擎</text><text class="fs" x="602" y="143">速率方程 · numpy / scipy</text>
+          <path class="fa" d="M430 156 V184" marker-end="url(#arw3)"/>
+          <text class="fs" x="440" y="176">仿真结果</text>
+          <text class="fs" x="8" y="220">呈现层</text>
+          <rect class="fb" x="88" y="192" width="238" height="52" rx="8"/>
+          <text class="ft" x="102" y="214">属性面板</text><text class="fs" x="102" y="231">逐器件参数编辑</text>
+          <rect class="fb" x="336" y="192" width="238" height="52" rx="8"/>
+          <text class="ft" x="350" y="214">输出日志</text><text class="fs" x="350" y="231">收敛与告警信息</text>
+          <rect class="fb" x="584" y="192" width="238" height="52" rx="8"/>
+          <text class="ft" x="598" y="214">结果可视化</text><text class="fs" x="598" y="231">功率 / 光谱曲线</text>
+        </svg>
+        <figcaption><b>图 3</b> · 光纤激光器仿真平台三层架构。器件库提供 41 类组件,拖拽连线即建立端口拓扑,求解引擎按速率方程数值计算后回填属性面板与曲线。</figcaption>
+      </figure>
+      </article>
+      <article class="card s3 rv">
         <div class="shot fit"><img src="assets/shots/h-51-sch.jpg" alt="STM32 智能温湿度监测调节系统 Proteus 整机原理图" width="899" height="403" loading="lazy" decoding="async"></div>
         <div class="card-top"><h3>STM32 智能温湿度监测调节系统</h3><span class="year">2025</span></div>
         <p>基于 STM32F103C8T6 的温湿度监测与调节系统:Type-C + LDO 供电、DHT11 采集、ST7735S 彩屏显示、蜂鸣器报警、双路电机调节,含整机原理图、Keil 固件与 Proteus 仿真验证。</p>
@@ -464,25 +533,46 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
         <p>系统硬件组成框图:主控、供电、采集、显示、报警与执行机构的分层划分,以及 SPI / GPIO / ADC 等接口的资源分配。</p>
         <div class="tags"><span class="tag">系统框图</span><span class="tag">接口分配</span></div>
       </article>
-      <article class="card s3 rv">
-        <div class="shot fit"><img src="assets/shots/h-opt-layout.jpg" alt="Zemax 光学系统布局图与像质评价" width="726" height="600" loading="lazy" decoding="async"></div>
-        <div class="card-top"><h3>Zemax 光学系统设计与像质评价</h3><span class="year">2026</span></div>
-        <p>用 Zemax 完成透镜组布局设计与像质评价:给出 2D 布局图与光扇/点列分析,通过评价函数优化后系统总长与像差指标满足设计要求。</p>
-        <div class="spec"><span>Zemax 建模</span><span>评价函数优化</span><span>像质分析</span></div>
-        <div class="tags"><span class="tag">Zemax</span><span class="tag">光学设计</span><span class="tag">像差</span></div>
-      </article>
-      <article class="card s3 rv">
-        <div class="shot fit"><img src="assets/shots/h-opt-princ.jpg" alt="物镜与目镜光路原理图" width="876" height="284" loading="lazy" decoding="async"></div>
-        <div class="card-top"><h3>光学系统光路原理</h3><span class="year">2026</span></div>
-        <p>物镜 / 目镜两级光路的原理示意与光瞳、视场光阑位置关系,用于确认系统的成像链路与放大倍率。</p>
-        <div class="tags"><span class="tag">光路设计</span><span class="tag">光阑</span></div>
-      </article>
+      
+      
       <article class="card s3 rv">
         <div class="shot fit"><img src="assets/shots/h-pv-irr.jpg" alt="不同光照强度下的光伏电池 P-V 特性曲线" width="899" height="600" loading="lazy" decoding="async"></div>
         <div class="card-top"><h3>光伏电池建模与 Simulink 仿真</h3><span class="year">2025</span></div>
         <p>单二极管模型参数辨识与 Simulink 仿真:输出 P-V / I-V 特性曲线,并对比光照强度、温度与理想因子对最大功率点的影响。</p>
         <div class="spec"><span>单二极管模型</span><span>P-V / I-V 扫描</span><span>MPPT 特性</span></div>
         <div class="tags"><span class="tag">Simulink</span><span class="tag">光伏建模</span><span class="tag">MATLAB</span></div>
+              <figure class="fig">
+        <svg viewBox="0 0 860 226" role="img" aria-label="光伏电池单二极管等效电路:光生电流源与二极管、并联电阻并联,再串联串联电阻后输出">
+          <defs><marker id="arw4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker></defs>
+          <line class="fl" x1="110" y1="46" x2="620" y2="46"/>
+          <line class="fl" x1="110" y1="186" x2="780" y2="186"/>
+          <line class="fl" x1="110" y1="46" x2="110" y2="86"/>
+          <line class="fl" x1="110" y1="146" x2="110" y2="186"/>
+          <circle class="fb" cx="110" cy="116" r="30"/>
+          <path class="fa" d="M110 134 V98" marker-end="url(#arw4)"/>
+          <text class="ft" x="152" y="120">Iph 光生电流</text>
+          <text class="fs" x="152" y="137">正比于光照强度</text>
+          <line class="fl" x1="330" y1="46" x2="330" y2="88"/>
+          <line class="fl" x1="330" y1="144" x2="330" y2="186"/>
+          <path class="fb" d="M308 88 H352 L330 144 Z"/>
+          <line class="fl" x1="308" y1="144" x2="352" y2="144"/>
+          <text class="ft" x="366" y="112">D 二极管</text>
+          <text class="fs" x="366" y="129">q(V+IRs)/nkT</text>
+          <line class="fl" x1="510" y1="46" x2="510" y2="98"/>
+          <line class="fl" x1="510" y1="134" x2="510" y2="186"/>
+          <rect class="fb" x="490" y="98" width="40" height="36" rx="4"/>
+          <text class="ft" x="546" y="112">Rsh 并联电阻</text>
+          <text class="fs" x="546" y="129">漏电流路径</text>
+          <line class="fl" x1="620" y1="46" x2="660" y2="46"/>
+          <line class="fl" x1="700" y1="46" x2="780" y2="46"/>
+          <rect class="fb" x="660" y="26" width="40" height="40" rx="4"/>
+          <text class="ft" x="640" y="16">Rs 串联电阻</text>
+          <circle class="fb" cx="796" cy="46" r="6"/><circle class="fb" cx="796" cy="186" r="6"/>
+          <text class="ft" x="812" y="50">+</text><text class="ft" x="812" y="190">−</text>
+          <text class="fs" x="110" y="212">输出端 V · I 即 I-V / P-V 扫描的横纵坐标</text>
+        </svg>
+        <figcaption><b>图 4</b> · 光伏电池单二极管等效电路。输出电流等于光生电流减去二极管正向电流与并联电阻漏电流;串联电阻 Rs 决定曲线在最大功率点附近的陡降,仿真即对该方程在给定光照与温度下扫描求解。</figcaption>
+      </figure>
       </article>
       <article class="card s3 rv">
         <div class="shot fit"><img src="assets/shots/h-sphere.jpg" alt="积分球光源结构设计,12V 100W 卤钨灯与陶瓷灯座" width="900" height="600" loading="lazy" decoding="async"></div>
@@ -527,6 +617,43 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
         <div class="card-top"><h3>管道缺陷智能检测系统</h3><span class="year">2024 – 2025</span></div>
         <p>工业视觉项目:YOLO OBB 旋转框管道缺陷检测 + SAM 分割 + 自研算法(DTAS 动态阈值自适应分割、AGPC、AMFD、TAWA),含专利申请草稿与 PyQt 桌面端。</p>
         <div class="tags"><span class="tag">YOLO OBB</span><span class="tag">SAM</span><span class="tag">PyQt</span></div>
+              <figure class="fig">
+        <svg viewBox="0 0 860 236" role="img" aria-label="管道缺陷检测处理链:原始图像经时间感知光照增强、透视校正与像素标定后,做多尺度 YOLO-OBB 检测、SAM2 像素掩膜、几何一致性验证并融合输出">
+          <defs><marker id="arw5" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker></defs>
+          <rect class="fb" x="10" y="20" width="176" height="58" rx="8"/>
+          <text class="ft" x="22" y="45">原始图像</text><text class="fs" x="22" y="62">现场采集帧</text>
+          <path class="fa" d="M188 49 H224" marker-end="url(#arw5)"/>
+          <text class="fs" x="206" y="40" text-anchor="middle">增强</text>
+          <rect class="fb" x="228" y="20" width="176" height="58" rx="8"/>
+          <text class="ft" x="240" y="45">时间感知光照增强</text><text class="fs" x="240" y="62">按系统时间选策略</text>
+          <path class="fa" d="M406 49 H442" marker-end="url(#arw5)"/>
+          <text class="fs" x="424" y="40" text-anchor="middle">校正</text>
+          <rect class="fb" x="446" y="20" width="176" height="58" rx="8"/>
+          <text class="ft" x="458" y="45">透视校正</text><text class="fs" x="458" y="62">AprilTag / 几何约束</text>
+          <path class="fa" d="M624 49 H660" marker-end="url(#arw5)"/>
+          <text class="fs" x="642" y="40" text-anchor="middle">标定</text>
+          <rect class="fb" x="664" y="20" width="184" height="58" rx="8"/>
+          <text class="ft" x="676" y="45">像素-毫米标定</text><text class="fs" x="676" y="62">换算实际尺寸</text>
+          <path class="fa" d="M756 78 V104 H98 V132" marker-end="url(#arw5)"/>
+          <text class="fs" x="430" y="98" text-anchor="middle">② 预处理完成,进入检测</text>
+          <rect class="fb" x="10" y="136" width="176" height="58" rx="8"/>
+          <text class="ft" x="22" y="161">多尺度 YOLO-OBB</text><text class="fs" x="22" y="178">置信度加权融合</text>
+          <path class="fa" d="M188 165 H224" marker-end="url(#arw5)"/>
+          <text class="fs" x="206" y="156" text-anchor="middle">候选框</text>
+          <rect class="fb" x="228" y="136" width="176" height="58" rx="8"/>
+          <text class="ft" x="240" y="161">SAM2 像素掩膜</text><text class="fs" x="240" y="178">抠除背景</text>
+          <path class="fa" d="M406 165 H442" marker-end="url(#arw5)"/>
+          <text class="fs" x="424" y="156" text-anchor="middle">掩膜</text>
+          <rect class="fb" x="446" y="136" width="176" height="58" rx="8"/>
+          <text class="ft" x="458" y="161">几何一致性验证</text><text class="fs" x="458" y="178">剔除误检</text>
+          <path class="fa" d="M624 165 H660" marker-end="url(#arw5)"/>
+          <text class="fs" x="642" y="156" text-anchor="middle">通过</text>
+          <rect class="fb" x="664" y="136" width="184" height="58" rx="8"/>
+          <text class="ft" x="676" y="161">融合输出</text><text class="fs" x="676" y="178">缺陷类别 + 尺寸</text>
+          <text class="fs" x="10" y="220">测量精度 ±2% · 24 小时连续监控 · 零额外硬件成本的自适应</text>
+        </svg>
+        <figcaption><b>图 5</b> · 管道缺陷检测处理链。与常规方案不同的是第一步:以系统时间预估光照与色温并选择增强策略,再做几何校正与多尺度融合检测,最后用几何一致性把误检剔除。</figcaption>
+      </figure>
       </article>
       <article class="card s2 rv">
         <div class="card-top"><h3>多模态客服智能体</h3><span class="year">2025</span></div>
@@ -724,6 +851,62 @@ footer{margin-top:92px;border-top:1px solid var(--line);background:var(--surface
   </section>
 
 </main>
+
+  <!-- ============ 可玩游戏 ============ -->
+  <section id="games">
+    <div class="sec-head"><span class="snum">09</span><h2>可玩游戏</h2><span class="cnt">浏览器直接运行 · 源码可下载</span></div>
+    <div class="sec-rule"></div>
+    <p class="sec-intro">3 款可直接在浏览器里玩,另 2 款是 React 工程,附完整源码供本地构建运行。</p>
+    <div class="note-bar"><b>来源说明:</b>本节 5 个游戏来自开源社区项目 <b>awesome-gpt-6-astra</b>(CC0 1.0 公有领域授权),
+    并非本人作品,此处仅作可玩收藏与源码分发,著作权归各原作者所有。</div>
+    <div class="games">
+      <div class="tile rv">
+        <div class="thumb"><img src="assets/shots/g-orbital.jpg" alt="轨道花园 Orbital Garden 游戏画面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>轨道花园 Orbital Garden</h3>
+          <p class="d">48,000 颗粒子的生成艺术:星之花 / 引力环 / 漩涡星系三种形态,生命力和时间流速实时可调。</p>
+          <div class="meta"><span class="p">单文件 · 零依赖 · WebGL</span></div>
+          <div class="actions"><a class="btn sm" href="games/orbital-garden/index.html" target="_blank" rel="noopener">▶ 试玩</a><a class="btn ghost sm" href="downloads/orbital-garden-src.zip" download>↓ 源码 22KB</a></div>
+        </div>
+      </div>
+      <div class="tile rv">
+        <div class="thumb"><img src="assets/shots/g-thunderfall.jpg" alt="雷霆战机 · 天穹远征 游戏画面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>雷霆战机 · 天穹远征</h3>
+          <p class="d">五段航线的弹幕射击:散射 / 穿透 / 追踪 / 爆裂四种补给,带 BOSS 与机炮切换。</p>
+          <div class="meta"><span class="p">原生 JS 模块 · 需 http 服务</span></div>
+          <div class="actions"><a class="btn sm" href="games/thunderfall/index.html" target="_blank" rel="noopener">▶ 试玩</a><a class="btn ghost sm" href="downloads/thunderfall-src.zip" download>↓ 源码 62KB</a></div>
+        </div>
+      </div>
+      <div class="tile rv">
+        <div class="thumb"><img src="assets/shots/g-apex.jpg" alt="APEX 卡丁车 · 海湾大奖赛 游戏画面" width="900" height="600" loading="lazy" decoding="async"></div>
+        <div class="body">
+          <h3>APEX 卡丁车 · 海湾大奖赛</h3>
+          <p class="d">3D 卡丁车竞速:6 辆车可选、2 条赛道、Team 4v4 与 Solo 两种赛制,自带改装车间。</p>
+          <div class="meta"><span class="p">Three.js · 自带 vendor</span></div>
+          <div class="actions"><a class="btn sm" href="games/apex-club/index.html" target="_blank" rel="noopener">▶ 试玩</a><a class="btn ghost sm" href="downloads/apex-club-src.zip" download>↓ 源码 342KB</a></div>
+        </div>
+      </div>
+      <div class="tile rv off">
+        
+        <div class="body">
+          <h3>榫境 · 木锁华容道</h3>
+          <p class="d">以传统榫卯木锁为原型的滑块解谜,含规则引擎与关卡设计;界面层为 React 19 + vinext。</p>
+          <div class="meta"><span class="p">React 19 · 规则测试 8/8 通过</span><span class="flag">需本地构建</span></div>
+          <div class="actions"><a class="btn ghost sm" href="downloads/sunjing-puzzles-src.zip" download>↓ 源码 115KB</a></div>
+        </div>
+      </div>
+      <div class="tile rv off">
+        
+        <div class="body">
+          <h3>三分天下 · 百将风云</h3>
+          <p class="d">三国题材领地策略:武将、城池与回合制推演,引擎层有独立测试脚本。</p>
+          <div class="meta"><span class="p">React 19 · 引擎自带测试</span><span class="flag">需本地构建</span></div>
+          <div class="actions"><a class="btn ghost sm" href="downloads/three-kingdoms-src.zip" download>↓ 源码 3.0MB</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
 <footer>
   <div class="foot">
